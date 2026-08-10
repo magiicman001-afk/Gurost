@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Templates — Gurost</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/styles-legacy.css">
+<link rel="stylesheet" href="shared/widget.css">
+<style>
+  .gal-header { display: flex; justify-content: space-between; align-items: center; padding: 48px 0 20px; }
+  .filter-bar { display: flex; gap: 8px; padding-bottom: 28px; flex-wrap: wrap; }
+  .pill { font-size: 13px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-dim); cursor: pointer; }
+  .pill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; padding-bottom: 64px; }
+  .t-card { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .t-thumb { height: 130px; background: var(--surface); display: flex; align-items: center; justify-content: center; color: var(--text-dim); font-size: 12px; }
+  .t-body { padding: 14px; }
+  .t-body h4 { font-size: 14px; }
+  .t-body p { font-size: 12px; color: var(--text-dim); margin: 4px 0 10px; }
+  @media (max-width: 960px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="logo" style="display:flex; align-items:center; gap:8px;"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCKX7OEmVO7BAqh5zSnqJsLoGDgdZQ0KjVOl6XXAF23sRfCo5MKU577jkFX_CgnGtSIwLfQJ2w-ZnNRuGYK4HXuKmZeA3zDIidU6XhbLip9YcBTsLAsAqO-7nBrG9DmxgZZpIo0XSC8n8IfJHTDcaX1Y-xS4fDiDUYeaVdPa-9xD_4b9OyqqntrRzHvCursskogPuSa8tjyMIhVCHDId7Zpt_1H1NVLI6OGrSThNorkk4oUXk5Q2ptS_uYx1cxH1ro8CI" alt="Gurost" style="width:32px; height:32px; border-radius:50%; object-fit:cover;"/>Gurost</a>
+    <div class="nav-links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="builder.html">Builder</a>
+      <a href="templates.html" class="active">Templates</a>
+      <a href="resources.html">Resources</a>
+    </div>
+    <div class="nav-actions"><a href="settings.html" class="btn btn-text">Account</a></div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="gal-header">
+    <h1 style="font-size:28px;">Start from a template</h1>
+    <input type="search" placeholder="Search templates" style="width:240px;">
+  </div>
+
+  <div class="filter-bar">
+    <div class="pill active">All</div>
+    <div class="pill">Restaurants</div>
+    <div class="pill">Retail</div>
+    <div class="pill">Services</div>
+    <div class="pill">Portfolio</div>
+    <div class="pill">SaaS</div>
+  </div>
+
+  <div class="grid">
+    <div class="t-card"><div class="t-thumb">Preview</div><div class="t-body"><h4>Corner Table</h4><p>Restaurant, warm & inviting</p><a href="#" onclick='useTemplate("A cozy neighborhood restaurant called Corner Table, warm and inviting."); return false;' class="btn btn-outline" style="font-size:12px; padding:7px 12px;">Use Template</a></div></div>
+    <div class="t-card"><div class="t-thumb">Preview</div><div class="t-body"><h4>Northline Studio</h4><p>Architecture portfolio</p><a href="#" onclick='useTemplate("An architecture portfolio site for Northline Studio."); return false;' class="btn btn-outline" style="font-size:12px; padding:7px 12px;">Use Template</a></div></div>
+    <div class="t-card"><div class="t-thumb">Preview</div><div class="t-body"><h4>Loop Retail</h4><p>Ecommerce storefront</p><a href="#" onclick='useTemplate("An ecommerce storefront for a retail brand called Loop."); return false;' class="btn btn-outline" style="font-size:12px; padding:7px 12px;">Use Template</a></div></div>
+    <div class="t-card"><div class="t-thumb">Preview</div><div class="t-body"><h4>Basecamp SaaS</h4><p>Product landing page</p><a href="#" onclick='useTemplate("A SaaS product landing page for a project management tool called Basecamp."); return false;' class="btn btn-outline" style="font-size:12px; padding:7px 12px;">Use Template</a></div></div>
+    <div class="t-card"><div class="t-thumb">Preview</div><div class="t-body"><h4>Amber Hour</h4><p>Coffee roastery</p><a href="#" onclick='useTemplate("A coffee roastery called Amber Hour."); return false;' class="btn btn-outline" style="font-size:12px; padding:7px 12px;">Use Template</a></div></div>
+    <div class="t-card"><div class="t-thumb">Preview</div><div class="t-body"><h4>Fieldwork Consulting</h4><p>Professional services</p><a href="#" onclick='useTemplate("A professional services website for a consulting firm called Fieldwork."); return false;' class="btn btn-outline" style="font-size:12px; padding:7px 12px;">Use Template</a></div></div>
+    <div class="t-card"><div class="t-thumb">Preview</div><div class="t-body"><h4>Bloom Studio</h4><p>Florist, playful</p><a href="#" onclick='useTemplate("A playful florist website called Bloom Studio."); return false;' class="btn btn-outline" style="font-size:12px; padding:7px 12px;">Use Template</a></div></div>
+    <div class="t-card"><div class="t-thumb">Preview</div><div class="t-body"><h4>Ironworks Mfg</h4><p>Manufacturing, corporate</p><a href="#" onclick='useTemplate("A corporate manufacturing company website for Ironworks Mfg."); return false;' class="btn btn-outline" style="font-size:12px; padding:7px 12px;">Use Template</a></div></div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col"><div class="logo" style="display:flex; align-items:center; gap:8px;"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCKX7OEmVO7BAqh5zSnqJsLoGDgdZQ0KjVOl6XXAF23sRfCo5MKU577jkFX_CgnGtSIwLfQJ2w-ZnNRuGYK4HXuKmZeA3zDIidU6XhbLip9YcBTsLAsAqO-7nBrG9DmxgZZpIo0XSC8n8IfJHTDcaX1Y-xS4fDiDUYeaVdPa-9xD_4b9OyqqntrRzHvCursskogPuSa8tjyMIhVCHDId7Zpt_1H1NVLI6OGrSThNorkk4oUXk5Q2ptS_uYx1cxH1ro8CI" alt="Gurost" style="width:28px; height:28px; border-radius:50%; object-fit:cover;"/>Gurost</div><p class="text-dim mt-8" style="font-size:14px; max-width:260px;">Build with your voice.</p></div>
+      <div class="footer-col"><h4>Product</h4><a href="index.html">Overview</a><a href="pricing.html">Pricing</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="#">Terms</a><a href="#">Privacy</a></div>
+    </div>
+    <div class="footer-bottom">&copy; 2026 Gurost. All rights reserved.</div>
+  </div>
+</footer>
+
+<script src="shared/api-client.js"></script>
+<script src="shared/pulse-voice.js"></script>
+<script src="shared/widget.js"></script>
+<script>
+  // No backend "templates" library exists in Gurost — this reuses the
+  // exact same real generation pipeline as onboarding.html, seeded with
+  // a template-specific description.
+  function useTemplate(prompt) {
+    if (!GurostAPI.requireLogin()) return;
+    localStorage.setItem('gurost_pending_generate', JSON.stringify({ prompt, mode: 'website' }));
+    window.location.href = 'builder.html';
+  }
+</script>
+</body>
+</html>

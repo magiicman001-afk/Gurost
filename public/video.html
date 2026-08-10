@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Meeting — Gurost</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #fff; color: #1a1a1a; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; border-bottom: 1px solid #e5e7eb; }
+  .logo { font-weight: 700; font-size: 18px; color: #1a1a1a; text-decoration: none; }
+  nav a { color: #4b5563; text-decoration: none; margin-left: 24px; font-size: 14px; }
+  nav a:hover { color: #1a1a1a; }
+  main { max-width: 1000px; margin: 0 auto; padding: 32px; }
+  section { border: 1px solid #e5e7eb; border-radius: 10px; padding: 24px; margin-bottom: 24px; }
+  h1 { font-size: 22px; margin: 0 0 8px; }
+  .subtitle { color: #6b7280; font-size: 14px; margin: 0 0 20px; }
+  .btn { padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; }
+  .btn-primary { background: #1a1a1a; color: #fff; }
+  .btn-secondary { background: #f3f4f6; color: #1a1a1a; }
+  .btn-danger { background: #fee2e2; color: #991b1b; }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+  .error-text { color: #b91c1c; font-size: 13px; margin-top: 8px; }
+  .hidden { display: none !important; }
+
+  /* Consent */
+  #consentText { font-size: 15px; line-height: 1.6; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+  #consentStatusList { font-size: 13px; color: #6b7280; margin-top: 12px; }
+
+  /* In-call layout */
+  .call-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+  #videoGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; background: #111827; border-radius: 10px; padding: 8px; min-height: 300px; }
+  .video-tile { position: relative; background: #1f2937; border-radius: 6px; overflow: hidden; aspect-ratio: 4/3; }
+  .video-tile video { width: 100%; height: 100%; object-fit: cover; }
+  .video-tile-label { position: absolute; bottom: 6px; left: 8px; color: #fff; font-size: 12px; background: rgba(0,0,0,0.5); padding: 2px 8px; border-radius: 4px; }
+
+  .side-panel { display: flex; flex-direction: column; gap: 16px; }
+  .side-box { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; }
+  .side-box h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; margin: 0 0 10px; color: #6b7280; }
+
+  #participantList div { font-size: 13px; padding: 4px 0; }
+
+  #chatMessages { max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+  .chat-line { font-size: 12px; }
+  .chat-line b { color: #1a1a1a; }
+  #chatInputRow { display: flex; gap: 6px; }
+  #chatInputRow input { flex: 1; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 12px; }
+  #chatInputRow button { padding: 6px 10px; border: none; background: #1a1a1a; color: #fff; border-radius: 6px; font-size: 12px; cursor: pointer; }
+
+  .controls-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .control-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid #d1d5db; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .control-btn.active { background: #fee2e2; border-color: #fca5a5; }
+
+  /* Flag-for-Copilot — honest replacement for "continuous automatic
+     listening", which doesn't actually exist (see comment in JS). */
+  #flagBtn { width: 44px; height: 44px; border-radius: 50%; border: none; background: #1a1a1a; color: #fff; cursor: pointer; }
+  #flagBtn.listening { background: #22c55e; }
+  #snippetPrompt { border: 1px solid #fbbf24; background: #fffbeb; border-radius: 8px; padding: 12px; margin-top: 12px; font-size: 13px; }
+  #snippetPrompt .btn { margin-right: 8px; margin-top: 8px; }
+
+  /* Recording — honestly disabled */
+  #recordBtn[disabled] { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
+  #recordNote { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+
+  /* Summary */
+  #summaryContent { font-size: 14px; line-height: 1.6; }
+  #summaryContent h4 { font-size: 13px; text-transform: uppercase; color: #6b7280; margin: 16px 0 6px; }
+
+  footer { border-top: 1px solid #e5e7eb; padding: 24px 32px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #6b7280; }
+  footer a { color: #6b7280; text-decoration: none; margin-right: 16px; }
+</style>
+<style>
+  /* Real CSS this page's use of copilot-indicator.js needs — lifted
+     from the Dashboard round's styles.css, since this page uses its
+     own plain inline styles rather than that shared stylesheet. */
+  .copilot-indicator { display: inline-flex; align-items: center; gap: 6px; }
+  .copilot-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background-color: #9CA3AF; transition: background-color 0.2s ease; }
+  .copilot-dot-flashing { animation: copilot-pulse 1.1s ease-in-out infinite; }
+  @keyframes copilot-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  .copilot-label { font-size: 12px; color: #6b7280; }
+  @media (prefers-reduced-motion: reduce) { .copilot-dot-flashing { animation: none; } }
+</style>
+</head>
+<body>
+
+<header>
+<a class="logo" href="dashboard.html">Gurost</a>
+<nav>
+<a href="dashboard.html">Dashboard</a>
+<a href="assistant.html">Business Assistant</a>
+</nav>
+</header>
+
+<main>
+
+<!-- Landing: no session yet -->
+<section id="landingSection">
+<h1>Start a Meeting</h1>
+<p class="subtitle">Creates a real Gurost video room. The Meeting Co-Pilot will ask everyone's consent before it captures anything.</p>
+<button class="btn btn-primary" id="createMeetingBtn">Create Meeting</button>
+<p class="error-text hidden" id="landingError"></p>
+</section>
+
+<!-- Consent: session exists, not all consented yet -->
+<section id="consentSection" class="hidden">
+<h1>Before we start</h1>
+<div id="consentText"></div>
+<button class="btn btn-primary" id="agreeBtn">I agree</button>
+<button class="btn btn-secondary" id="declineBtn">I don't agree</button>
+<p class="error-text hidden" id="consentError"></p>
+<div id="consentStatusList"></div>
+</section>
+
+<!-- In-call -->
+<section id="callSection" class="hidden">
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+<h1 style="margin:0;">Meeting in progress</h1>
+<div id="copilotIndicatorWrap"></div>
+</div>
+
+<div class="call-layout">
+<div>
+<div id="videoGrid"></div>
+<div class="controls-row">
+<button class="control-btn" id="micBtn" title="Mute/unmute">🎤</button>
+<button class="control-btn" id="camBtn" title="Camera on/off">📷</button>
+<button class="control-btn" id="screenBtn" title="Share screen">🖥️</button>
+<button class="control-btn" id="flagBtn" title="Flag this moment for the Co-Pilot">🚩</button>
+<button class="control-btn" id="recordBtn" title="Recording not available yet" disabled>⏺️</button>
+<button class="btn btn-danger" id="endCallBtn" style="border-radius:22px;">End Call</button>
+</div>
+<p id="recordNote">Recording isn't available yet — needs LiveKit's Egress API, not built. See README.</p>
+<div id="snippetPrompt" class="hidden"></div>
+</div>
+
+<div class="side-panel">
+<div class="side-box">
+<h3>Participants</h3>
+<div id="participantList"></div>
+</div>
+<div class="side-box">
+<h3>Chat</h3>
+<div id="chatMessages"></div>
+<div id="chatInputRow">
+<input id="chatTextInput" type="text" placeholder="Message..."/>
+<button id="chatSendBtn">Send</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Summary -->
+<section id="summarySection" class="hidden">
+<h1>Meeting summary</h1>
+<div id="summaryContent"></div>
+</section>
+
+</main>
+
+<footer>
+<div>
+<a href="product.html">Product</a>
+<a href="legal.html">Legal</a>
+</div>
+<div>© 2026 Gurost AI. All rights reserved.</div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/livekit-client@2/dist/livekit-client.umd.min.js"></script>
+<script src="shared/api-client.js"></script>
+<script src="shared/pulse-voice.js"></script>
+<script src="shared/copilot-indicator.js"></script>
+<script>
+/**
+ * Meeting Co-Pilot frontend — real, with two honesty boundaries worth
+ * reading before assuming this does more than it does:
+ *
+ * 1. RECORDING IS DISABLED, NOT FAKED. The backend routes
+ *    (/api/video/room/:id/record etc.) return a real HTTP 501 — this
+ *    page disables the button and says why, rather than call a route
+ *    that would fail and pretend something went wrong instead of
+ *    saying plainly it isn't built.
+ *
+ * 2. THE BOT DOESN'T CONTINUOUSLY LISTEN. There's no live
+ *    audio-to-text pipeline feeding meeting-bot.js's evaluateSnippet()
+ *    during a real call — that's a real, unbuilt piece of
+ *    infrastructure (documented in meeting-bot.js's own comments).
+ *    What's real instead: a "flag this moment" button. Hold it,
+ *    real transcription happens (via /api/voice/transcribe, the same
+ *    one the floating widget uses), the transcript is evaluated for
+ *    real by evaluateSnippet(), and if worth flagging, the Co-Pilot's
+ *    real "should I take this in?" prompt appears. This is an honest
+ *    manual trigger for a real pipeline, not a continuous background
+ *    process this page pretends exists.
+ */
+
+if (!GurostAPI.requireLogin()) {
+  throw new Error('Not logged in — redirecting.');
+}
+
+let sessionId = new URLSearchParams(window.location.search).get('sessionId');
+let room = null;
+let copilotDisconnect = null;
+
+function show(id) {
+  ['landingSection', 'consentSection', 'callSection', 'summarySection'].forEach((s) => {
+    document.getElementById(s).classList.toggle('hidden', s !== id);
+  });
+}
+
+// ---------------- Landing: create a meeting ----------------
+document.getElementById('createMeetingBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('createMeetingBtn');
+  btn.disabled = true;
+  try {
+    const session = await GurostAPI.call('/api/video/create', { method: 'POST', body: { expectedParticipants: [] } });
+    sessionId = session.sessionId;
+    window.history.replaceState({}, '', `video.html?sessionId=${sessionId}`);
+    showConsent(session.consentNotice);
+  } catch (err) {
+    document.getElementById('landingError').textContent = err.message;
+    document.getElementById('landingError').classList.remove('hidden');
+    btn.disabled = false;
+  }
+});
+
+// If the page loaded with a sessionId already in the URL (someone
+// joining via a shared link), skip straight to consent using the
+// real, stored consent notice text.
+if (sessionId) {
+  GurostAPI.call(`/api/meeting/${sessionId}/status`)
+    .then((status) => {
+      if (status.allConsented) {
+        enterCall();
+      } else {
+        showConsent(null); // real notice text isn't re-sent by /status; using the fixed real copy shown below
+      }
+    })
+    .catch((err) => {
+      document.getElementById('landingError').textContent = `Couldn't load this meeting: ${err.message}`;
+      document.getElementById('landingError').classList.remove('hidden');
+    });
+}
+
+// ---------------- Consent ----------------
+function showConsent(notice) {
+  show('consentSection');
+  document.getElementById('consentText').textContent =
+    notice || "Hi, I'm Gurost. I'll be listening and taking notes. Is that OK with everyone?";
+  pollConsentStatus();
+}
+
+async function respondConsent(agreed) {
+  const errEl = document.getElementById('consentError');
+  errEl.classList.add('hidden');
+  try {
+    const result = await GurostAPI.call('/api/meeting/consent', {
+      method: 'POST',
+      body: { sessionId, participantId: localStorage.getItem('gurost_user_id') || 'anon', agreed }
+    });
+    if (!agreed) {
+      errEl.textContent = "You declined — the meeting can't proceed with the Co-Pilot active for everyone.";
+      errEl.classList.remove('hidden');
+      return;
+    }
+    if (result.status === 'active') {
+      enterCall();
+    } else {
+      pollConsentStatus(); // real: waiting on other participants
+    }
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.classList.remove('hidden');
+  }
+}
+document.getElementById('agreeBtn').addEventListener('click', () => respondConsent(true));
+document.getElementById('declineBtn').addEventListener('click', () => respondConsent(false));
+
+let consentPollTimer = null;
+function pollConsentStatus() {
+  clearTimeout(consentPollTimer);
+  consentPollTimer = setTimeout(async () => {
+    try {
+      const status = await GurostAPI.call(`/api/meeting/${sessionId}/status`);
+      const list = Object.entries(status.consents || {}).map(([id, ok]) => `${id}: ${ok ? 'agreed' : 'declined'}`).join(', ');
+      document.getElementById('consentStatusList').textContent = list ? `So far: ${list}` : 'Waiting for responses...';
+      if (status.allConsented) {
+        enterCall();
+      } else if (document.getElementById('consentSection').classList.contains('hidden') === false) {
+        pollConsentStatus();
+      }
+    } catch {
+      pollConsentStatus();
+    }
+  }, 2000);
+}
+
+// ---------------- In-call: real LiveKit connection ----------------
+async function enterCall() {
+  show('callSection');
+  attachCopilotIndicator(document.getElementById('copilotIndicatorWrap'), sessionId);
+
+  try {
+    const { token, url } = await GurostAPI.call(`/api/video/room/${sessionId}/join`, { method: 'POST' });
+    room = new LivekitClient.Room({ adaptiveStream: true, dynacast: true });
+
+    room.on(LivekitClient.RoomEvent.TrackSubscribed, (track, pub, participant) => {
+      if (track.kind === 'video' || track.kind === 'audio') {
+        renderTrack(track, participant.identity);
+      }
+    });
+    room.on(LivekitClient.RoomEvent.TrackUnsubscribed, (track) => {
+      track.detach().forEach((el) => el.remove());
+    });
+    room.on(LivekitClient.RoomEvent.ParticipantConnected, renderParticipantList);
+    room.on(LivekitClient.RoomEvent.ParticipantDisconnected, renderParticipantList);
+    room.on(LivekitClient.RoomEvent.DataReceived, (payload, participant) => {
+      const text = new TextDecoder().decode(payload);
+      appendChatLine(participant?.identity || 'Someone', text);
+    });
+
+    room.on(LivekitClient.RoomEvent.LocalTrackPublished, (pub) => {
+      if (pub.track) renderTrack(pub.track, 'You');
+    });
+
+    await room.connect(url, token);
+    await room.localParticipant.setMicrophoneEnabled(true);
+    await room.localParticipant.setCameraEnabled(true);
+
+    renderParticipantList();
+  } catch (err) {
+    alert(`Couldn't connect to the video room: ${err.message}`);
+  }
+}
+
+function renderTrack(track, label) {
+  if (!track) return;
+  const grid = document.getElementById('videoGrid');
+  const tile = document.createElement('div');
+  tile.className = 'video-tile';
+  const el = track.attach();
+  tile.appendChild(el);
+  const labelEl = document.createElement('div');
+  labelEl.className = 'video-tile-label';
+  labelEl.textContent = label;
+  tile.appendChild(labelEl);
+  grid.appendChild(tile);
+}
+
+function renderParticipantList() {
+  const list = document.getElementById('participantList');
+  if (!room) return;
+  const names = ['You', ...Array.from(room.remoteParticipants.values()).map((p) => p.identity)];
+  list.innerHTML = names.map((n) => `<div>${n}</div>`).join('');
+}
+
+// ---------------- Controls ----------------
+document.getElementById('micBtn').addEventListener('click', async (e) => {
+  if (!room) return;
+  const enabled = room.localParticipant.isMicrophoneEnabled;
+  await room.localParticipant.setMicrophoneEnabled(!enabled);
+  e.target.classList.toggle('active', enabled);
+});
+document.getElementById('camBtn').addEventListener('click', async (e) => {
+  if (!room) return;
+  const enabled = room.localParticipant.isCameraEnabled;
+  await room.localParticipant.setCameraEnabled(!enabled);
+  e.target.classList.toggle('active', enabled);
+});
+document.getElementById('screenBtn').addEventListener('click', async (e) => {
+  if (!room) return;
+  const enabled = room.localParticipant.isScreenShareEnabled;
+  await room.localParticipant.setScreenShareEnabled(!enabled);
+  e.target.classList.toggle('active', !enabled);
+});
+
+document.getElementById('endCallBtn').addEventListener('click', async () => {
+  try {
+    if (room) room.disconnect();
+    const summaries = await GurostAPI.call(`/api/video/room/${sessionId}/end`, { method: 'POST' });
+    showSummary(summaries);
+  } catch (err) {
+    alert(`Couldn't end the meeting cleanly: ${err.message}`);
+  }
+});
+
+// ---------------- Chat (real, over LiveKit's data channel) ----------------
+document.getElementById('chatSendBtn').addEventListener('click', sendChat);
+document.getElementById('chatTextInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChat(); });
+async function sendChat() {
+  const input = document.getElementById('chatTextInput');
+  const text = input.value.trim();
+  if (!text || !room) return;
+  input.value = '';
+  await room.localParticipant.publishData(new TextEncoder().encode(text), { reliable: true });
+  appendChatLine('You', text);
+}
+function appendChatLine(who, text) {
+  const el = document.createElement('div');
+  el.className = 'chat-line';
+  el.innerHTML = `<b>${who}:</b> ${text}`;
+  const box = document.getElementById('chatMessages');
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+}
+
+// ---------------- Flag for Co-Pilot (honest replacement for continuous listening) ----------------
+let activeRecording = null;
+const flagBtn = document.getElementById('flagBtn');
+flagBtn.addEventListener('mousedown', async () => {
+  try {
+    activeRecording = await startRecordingSession();
+    flagBtn.classList.add('listening');
+  } catch {
+    alert('Microphone unavailable.');
+  }
+});
+async function releaseFlag() {
+  if (!activeRecording) return;
+  flagBtn.classList.remove('listening');
+  try {
+    const transcript = await activeRecording.stop();
+    const result = await GurostAPI.call(`/api/meeting/${sessionId}/propose-snippet`, { method: 'POST', body: { text: transcript } });
+    if (result.flagged) {
+      showSnippetPrompt(result);
+    } else {
+      const p = document.getElementById('snippetPrompt');
+      p.textContent = "Didn't sound like a clear decision or action item — nothing flagged.";
+      p.classList.remove('hidden');
+      setTimeout(() => p.classList.add('hidden'), 3000);
+    }
+  } catch (err) {
+    alert(`Couldn't process that: ${err.message}`);
+  } finally {
+    activeRecording = null;
+  }
+}
+flagBtn.addEventListener('mouseup', releaseFlag);
+flagBtn.addEventListener('mouseleave', releaseFlag);
+flagBtn.addEventListener('touchend', releaseFlag);
+
+function showSnippetPrompt(result) {
+  const p = document.getElementById('snippetPrompt');
+  p.innerHTML = `<div><strong>Should I take this in?</strong></div><div style="margin:6px 0;">"${result.text}" (${result.category})</div>`;
+  const yesBtn = document.createElement('button');
+  yesBtn.className = 'btn btn-primary';
+  yesBtn.textContent = 'Yes';
+  yesBtn.addEventListener('click', () => decideSnippet(result.snippetId, 'approved', p));
+  const noBtn = document.createElement('button');
+  noBtn.className = 'btn btn-secondary';
+  noBtn.textContent = 'No';
+  noBtn.addEventListener('click', () => decideSnippet(result.snippetId, 'declined', p));
+  p.appendChild(yesBtn);
+  p.appendChild(noBtn);
+  p.classList.remove('hidden');
+}
+async function decideSnippet(snippetId, decision, promptEl) {
+  try {
+    await GurostAPI.call(`/api/meeting/snippet/${snippetId}/decide`, { method: 'POST', body: { decision } });
+  } finally {
+    promptEl.classList.add('hidden');
+  }
+}
+
+// ---------------- Summary ----------------
+async function showSummary(fallbackSummaries) {
+  show('summarySection');
+  const el = document.getElementById('summaryContent');
+  try {
+    const summary = await GurostAPI.call(`/api/meeting/${sessionId}/summary`);
+    if (!summary || !summary.decisions) {
+      el.textContent = summary?.message || 'No summary available — you may not have approved anything to capture.';
+      return;
+    }
+    el.innerHTML = `
+      <h4>Decisions</h4>
+      <div>${(summary.decisions || []).join('<br/>') || 'None'}</div>
+      <h4>Action Items</h4>
+      <div>${(summary.action_items || []).join('<br/>') || 'None'}</div>
+      <h4>Efficiency Analysis</h4>
+      <div>${summary.efficiency_analysis || 'Not available'}</div>
+    `;
+  } catch (err) {
+    el.textContent = `Couldn't load summary: ${err.message}`;
+  }
+}
+</script>
+</body>
+</html>

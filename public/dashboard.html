@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gurost Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .pulse-ring {
+            animation: pulse 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(254, 178, 70, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(254, 178, 70, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(254, 178, 70, 0); }
+        }
+    </style>
+<link href="styles.css" rel="stylesheet"/>
+<link href="shared/widget.css" rel="stylesheet"/>
+</head>
+<body class="bg-surface-container-lowest text-on-surface font-body-md min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<nav class="bg-surface-container-lowest/80 backdrop-blur-md text-primary font-body-md docked full-width top-0 sticky border-b border-outline-variant/30 shadow-sm flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto z-50">
+<div class="flex items-center gap-4">
+<img alt="Gurost Logo" class="h-16 md:h-20 w-auto object-contain rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCKX7OEmVO7BAqh5zSnqJsLoGDgdZQ0KjVOl6XXAF23sRfCo5MKU577jkFX_CgnGtSIwLfQJ2w-ZnNRuGYK4HXuKmZeA3zDIidU6XhbLip9YcBTsLAsAqO-7nBrG9DmxgZZpIo0XSC8n8IfJHTDcaX1Y-xS4fDiDUYeaVdPa-9xD_4b9OyqqntrRzHvCursskogPuSa8tjyMIhVCHDId7Zpt_1H1NVLI6OGrSThNorkk4oUXk5Q2ptS_uYx1cxH1ro8CI"/>
+<span class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight hidden md:block">Gur<span class="marble-o">o</span>st</span>
+</div>
+<div class="hidden md:flex gap-8 items-center">
+<a class="text-secondary font-bold border-b-2 border-secondary pb-1" href="index.html">Product</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors hover:bg-surface-container-low transition-all duration-200 px-3 py-2 rounded-lg" href="pricing.html">Pricing</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors hover:bg-surface-container-low transition-all duration-200 px-3 py-2 rounded-lg" href="resources.html">Resources</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors hover:bg-surface-container-low transition-all duration-200 px-3 py-2 rounded-lg" href="templates.html">Templates</a>
+</div>
+<div class="flex items-center gap-4">
+<a class="text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm px-4 py-2 rounded-full hover:bg-surface-container-low transition-all duration-200 hidden md:block" href="signup.html">Log in</a>
+<a class="bg-gradient-to-r from-gold-gradient-start to-gold-gradient-end text-on-primary font-label-sm text-label-sm px-6 py-2 rounded-full hover:shadow-lg transition-all duration-200 scale-95 hover:scale-100 active:opacity-80" href="signup.html">Sign Up</a>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-grow flex flex-col items-center justify-center w-full px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto py-20 gap-16">
+<!-- Hero Section -->
+<section class="flex flex-col items-center text-center gap-12 w-full max-w-3xl">
+<h1 class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg text-primary-container">
+                Hi Alex, what will you build next?
+            </h1>
+<!-- Pulse Button (AI Trigger) -->
+<button class="pulse-ring relative flex flex-col items-center justify-center w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-gold-gradient-start to-gold-gradient-end text-on-primary shadow-2xl hover:scale-105 transition-transform duration-300 group">
+<span class="material-symbols-outlined text-5xl md:text-6xl mb-2" style="font-variation-settings: 'FILL' 1;">mic</span>
+<span class="font-label-sm text-label-sm opacity-90 group-hover:opacity-100">Hold to speak</span>
+</button>
+<!-- Input Area -->
+<div class="w-full relative shadow-sm rounded-full">
+<input class="w-full h-16 md:h-20 px-8 rounded-full border border-outline-variant bg-surface-bright text-on-surface font-body-lg text-body-lg focus:outline-none focus:ring-4 focus:ring-secondary/20 transition-all shadow-inner" id="heroIdeaInput" placeholder="Type your idea here..." type="text"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 p-3 md:p-4 rounded-full bg-primary-container text-on-primary hover:bg-primary transition-colors">
+<span class="material-symbols-outlined">send</span>
+</button>
+</div>
+</section>
+<!-- Build Actions -->
+<section class="flex flex-col items-center gap-8 w-full max-w-4xl">
+<div class="flex flex-col sm:flex-row gap-4 w-full justify-center">
+<a class="flex-1 relative overflow-hidden group flex items-center justify-center gap-2 py-8 px-6 rounded-full text-on-primary font-label-sm text-label-sm shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300" href="builder.html" id="buildWebsiteBtn">
+<div class="absolute inset-0 z-0">
+<img alt="Build Website" class="w-full h-full object-cover opacity-40 group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKZNhX_RhWjCwMd5z5wffIgCa2Bpay_sq5-hDhpcJ5Kadsx9DFgNdARIEd-G9laXx7_uCEcHCjQCil1u38KTnkFp_D625CGDJcMzyo61LvaghS5H3aHQ45uCodutwhJRD9Clv16vzYA9flYhCRUAlQnmNvTGrGAsB_68G6Sx9TBSOmGwIh_qgl3jDgYfrDkJUyo9_XezPViFJajjxwqqwzkYRx8WK6UbPtV_aG_6B3ZZsGt_UrznOsrQ"/>
+<div class="absolute inset-0 bg-gradient-to-r from-gold-gradient-start/80 to-gold-gradient-end/80 mix-blend-multiply"></div>
+</div>
+<span class="material-symbols-outlined relative z-10" style="font-variation-settings: 'FILL' 1;">language</span>
+<span class="relative z-10">Build Website</span>
+</a>
+<a class="flex-1 relative overflow-hidden group flex items-center justify-center gap-2 py-8 px-6 rounded-full text-on-primary font-label-sm text-label-sm shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300" href="app-builder.html" id="buildAppBtn">
+<div class="absolute inset-0 z-0">
+<img alt="Build App" class="w-full h-full object-cover opacity-40 group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJXEm2qqKwF6eSDGz90ROpSlqa5pAg6m1kZGRNRKMghgHN95kkdJdl1LHRDfXuiaCInw9CdWP1zrflQCVc_GQmzmWh4xnv2niG0Z7C3HwVgJheRNgDhsY1i0GDEhLh9pJxW1qmQG9s4os0mzS2x9xCkxhshB327Xq2e_KpnHK7WidjFwcVpUtx0CcEecrxRWqEtr78c_WfdU_QUt6BXto7_1pbH-Sn5W8b3AQ3QCBhx_MYolo5uZN1UQ"/>
+<div class="absolute inset-0 bg-gradient-to-r from-gold-gradient-start/80 to-gold-gradient-end/80 mix-blend-multiply"></div>
+</div>
+<span class="material-symbols-outlined relative z-10" style="font-variation-settings: 'FILL' 1;">app_shortcut</span>
+<span class="relative z-10">Build App</span>
+</a>
+<a class="flex-1 relative overflow-hidden group flex items-center justify-center gap-2 py-8 px-6 rounded-full text-on-primary font-label-sm text-label-sm shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300" href="amend_website.html" id="amendWebsiteBtn">
+<div class="absolute inset-0 z-0">
+<img alt="Amend Website" class="w-full h-full object-cover opacity-40 group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJmtU9WHNJ_LaS3i6g0g5z226HxAKPtm8PxB298--WYCSBmc56nDIL2vd2yuVSOqPr9PUp_XRX-hACEJ5zeHnULbK742_FoQ9t66ghD96a7SUYMx-Ay2eHBhwXt5dl2wI0gSM33U5BTiwx5rkxV9RXDIDuM620Iw5EgJ2TKpognVpPfSrEH-osgy0uZb5oRjDbwMO4bwBQob-b1ygHv2krYr3UXqio5efPJcB8pI2VN1ycS7lou55xmw"/>
+<div class="absolute inset-0 bg-gradient-to-r from-gold-gradient-start/80 to-gold-gradient-end/80 mix-blend-multiply"></div>
+</div>
+<span class="material-symbols-outlined relative z-10" style="font-variation-settings: 'FILL' 1;">edit_square</span>
+<span class="relative z-10">Amend Website</span>
+</a>
+</div>
+<a class="relative overflow-hidden group flex items-center justify-center gap-2 py-4 px-12 rounded-full text-on-primary font-label-sm text-label-sm shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300 w-full sm:w-auto" href="assistant.html">
+<div class="absolute inset-0 z-0">
+<img alt="Business Assistant" class="w-full h-full object-cover opacity-40 group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC80lSTkixNm400q_e2P7M_O5GLxwdDLyIA0zeMzAksLPtyWZ5SvUkhJuMTFkW3vfSo-YM3isiqVSW1iRTCjh3pMHGgbKVeDTgzSPdjUauJwvXmv8it50M4MbgDM2H31CRqRfFLHJE24k6XOvMPreuH9_g0DDXOzz6f917BU_uWyXpSnWKIyOXCckqLPoImaC8uE1Fv4OBB8orbKJPVwKOZjI7b94IfLPFpkCuHTSOPjLQ4rt-8Lv4NuQ"/>
+<div class="absolute inset-0 bg-primary-container/80 mix-blend-multiply"></div>
+</div>
+<span class="material-symbols-outlined relative z-10" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+<span class="relative z-10">Business Assistant</span>
+</a>
+<!-- Real Co-Pilot status indicator — only renders if a genuine active
+     meeting session ID exists (localStorage key set by wherever a real
+     session gets created; nothing here fakes a session or shows a
+     demo state). No dedicated meeting/assistant page exists yet to
+     create that session from — this is real, working infrastructure
+     ready for whenever that page ships, not a mockup. -->
+<div id="copilotIndicatorWrap" class="w-full flex justify-center mt-2" style="display:none;"></div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest text-on-surface-variant font-body-md full-width border-t border-outline-variant/50 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-16 flex flex-col md:flex-row justify-between items-center gap-8 w-full mt-auto">
+<div class="font-headline-md text-headline-md font-bold text-on-surface flex items-center gap-2">
+<img alt="Gurost Logo Small" class="h-8 w-auto object-contain rounded-full grayscale opacity-70" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpaVuq_tV7F-U6ZMSf24AIeTZmbMn9ZMYxaO8_w_wYikrDHU4RGfm7EyzYgR-wDuxCZiHvSLOBDGmd9NTVwG3QqZ3f2dSdaeu4DZ0q9uQScjfcuRNB1UtqElk0jYqVyp5Id-3UsbUoSpj6XbYA0ndjwzCV2DuD9t826VO4pLNHhRWywVFnNBTiLkePnVOLTHsJiEDxlrkblgkEadqIxLV2RPp_1AHfOBOtKA2hRqNBUBVXheYc-CS9k9WvO4E18XSt_dM"/>
+            Gurost
+        </div>
+<div class="flex flex-wrap justify-center gap-8">
+<a class="text-on-surface-variant hover:text-secondary hover:underline transition-all opacity-80 hover:opacity-100" href="product.html">Product</a>
+<a class="text-on-surface-variant hover:text-secondary hover:underline transition-all opacity-80 hover:opacity-100" href="legal.html">Legal</a>
+</div>
+<div class="text-sm opacity-70">
+            © 2026 Gurost AI. All rights reserved.
+        </div>
+</footer>
+<script src="shared/api-client.js"></script>
+<script src="shared/pulse-voice.js"></script>
+<script src="shared/widget.js"></script>
+<script src="shared/copilot-indicator.js"></script>
+<script>
+  // Carries whatever's typed in the hero input through to whichever
+  // builder page the user clicks, using the same localStorage handoff
+  // key (gurost_pending_generate) that onboarding.html/templates.html
+  // already use for website-mode — app-builder.html now reads this
+  // same key for app-mode too.
+  function wireHandoff(buttonId, mode) {
+    const btn = document.getElementById(buttonId);
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const idea = document.getElementById('heroIdeaInput').value.trim();
+      if (idea) {
+        localStorage.setItem('gurost_pending_generate', JSON.stringify({ prompt: idea, mode }));
+      }
+      // No preventDefault — the real href navigation still happens
+      // normally; this just makes sure the typed idea travels with it
+      // when there is one.
+    });
+  }
+
+  // Separate from wireHandoff above — Amend Website needs a URL, not a
+  // prompt+mode pair, so it gets its own key rather than overloading
+  // gurost_pending_generate with a shape it doesn't expect.
+  function wireAmendHandoff(buttonId) {
+    const btn = document.getElementById(buttonId);
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const url = document.getElementById('heroIdeaInput').value.trim();
+      if (url) {
+        localStorage.setItem('gurost_pending_amend', JSON.stringify({ url }));
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    wireHandoff('buildAppBtn', 'app');
+    wireHandoff('buildWebsiteBtn', 'website');
+    wireAmendHandoff('amendWebsiteBtn');
+
+    // Real, not a demo — only shows/connects if an actual meeting
+    // session ID is present. Nothing here invents one.
+    const activeSessionId = localStorage.getItem('gurost_active_meeting_session');
+    if (activeSessionId) {
+      const wrap = document.getElementById('copilotIndicatorWrap');
+      wrap.style.display = 'flex';
+      attachCopilotIndicator(wrap, activeSessionId);
+    }
+  });
+</script>
+</body></html>

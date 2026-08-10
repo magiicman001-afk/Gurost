@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gurost - Build Website</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .gold-gradient {
+            background: linear-gradient(135deg, #feb246 0%, #ff8c00 100%);
+        }
+        .pulse-ring {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(1); opacity: 0.5; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+    </style>
+<link href="styles.css" rel="stylesheet"/>
+<link href="shared/widget.css" rel="stylesheet"/>
+</head>
+<body class="bg-surface-bright text-on-surface font-body-md antialiased min-h-screen flex flex-col">
+<!-- TopNavBar (JSON Injected Styles) -->
+<header class="bg-surface/80 dark:bg-on-surface/80 backdrop-blur-md font-body-md text-body-md docked full-width top-0 sticky border-b border-outline-variant/30 shadow-sm flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto z-50">
+<div class="flex items-center gap-4">
+<img alt="Gurost Logo" class="h-8 w-8 object-contain rounded" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQjnkh01EMtQtRq7AIPPkFY2dOq_9tJfcwxKeAQ7fnvwfS_1iZf9wDsm1fsTnKTFKdXxiJTXSa3S3KcTHhd--o1PVz2ek5zyG_YC8QyeqIF0AtoBjVFkHyD9qb8kncgdWUTJjtuZS_eB1UQjMYICpX4ed1EBNYY5V9Jwy6dbbYQl2pbfD0dGBYAjFF7sNx98zQUU6vwGqRiH2C8X5m6-whPbNE6lzGSBfQTvPylY5bSkefyuU_mHg-HKJBGtAdhcIXy3U"/>
+<span class="font-headline-md text-headline-md font-bold text-on-surface dark:text-inverse-on-surface">Gurost</span>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-on-surface-variant hover:text-on-surface transition-colors hover:bg-surface-container-low transition-all duration-200 px-3 py-2 rounded" href="index.html">Product</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors hover:bg-surface-container-low transition-all duration-200 px-3 py-2 rounded" href="pricing.html">Pricing</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors hover:bg-surface-container-low transition-all duration-200 px-3 py-2 rounded" href="resources.html">Resources</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors hover:bg-surface-container-low transition-all duration-200 px-3 py-2 rounded" href="templates.html">Templates</a>
+</nav>
+<div class="flex items-center gap-4">
+<a class="text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm scale-95 duration-100 active:opacity-80" href="signup.html">Log in</a>
+<a class="gold-gradient text-on-primary px-6 py-2 rounded-full font-label-sm text-label-sm shadow-sm hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(26,26,46,0.1)] transition-all duration-200 scale-95 active:opacity-80" href="signup.html">Sign Up</a>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-20 flex flex-col items-center">
+<div class="w-full max-w-3xl text-center mb-12">
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface mb-6">Build Website</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">Describe your vision or select a starting point below to generate a high-performance website instantly.</p>
+</div>
+<!-- Input Area -->
+<div class="w-full max-w-4xl bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant p-2 mb-4 flex flex-col md:flex-row gap-4 items-center focus-within:ring-4 focus-within:ring-secondary/20 transition-shadow duration-200">
+<textarea class="w-full bg-transparent border-none focus:ring-0 resize-none h-24 md:h-16 py-4 px-6 font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50" id="siteDescription" placeholder="A modern business website for a consulting firm..."></textarea>
+<div class="px-2 pb-2 md:pb-0 shrink-0 relative">
+<div class="absolute inset-0 gold-gradient rounded-full pulse-ring pointer-events-none opacity-50" id="generatePulseRing"></div>
+<button class="relative gold-gradient text-on-primary w-full md:w-auto px-8 py-4 rounded-full font-label-sm text-label-sm font-bold shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2" id="generateBtn">
+                    <span id="generateBtnLabel">Generate Website</span>
+                    <span class="material-symbols-outlined" id="generateBtnIcon" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</button>
+</div>
+</div>
+<p class="text-sm text-error hidden mb-8" id="builderError"></p>
+<!-- Templates Grid -->
+<div class="w-full max-w-5xl mb-24">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-8 text-center">Or start with a template</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Card 1 -->
+<button class="group bg-surface-container-lowest p-1 rounded-xl shadow-sm hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(26,26,46,0.1)] transition-all duration-300 text-left border border-outline-variant hover:border-secondary" data-template="A modern business website for a consulting firm, with a homepage, services page, about page, and a contact form.">
+<div class="bg-surface-container-low rounded-lg p-6 h-full flex flex-col items-start gap-4">
+<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center mb-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">storefront</span>
+</div>
+<div>
+<h3 class="font-label-sm text-label-sm text-on-surface mb-1 group-hover:text-secondary transition-colors">Business Website</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Corporate &amp; Consulting</p>
+</div>
+</div>
+</button>
+<!-- Card 2 -->
+<button class="group bg-surface-container-lowest p-1 rounded-xl shadow-sm hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(26,26,46,0.1)] transition-all duration-300 text-left border border-outline-variant hover:border-secondary" data-template="A creative portfolio website for a freelance designer, with a project gallery, an about section, and a contact page.">
+<div class="bg-surface-container-low rounded-lg p-6 h-full flex flex-col items-start gap-4">
+<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center mb-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">perm_media</span>
+</div>
+<div>
+<h3 class="font-label-sm text-label-sm text-on-surface mb-1 group-hover:text-secondary transition-colors">Portfolio Website</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Creative &amp; Freelance</p>
+</div>
+</div>
+</button>
+<!-- Card 3 -->
+<button class="group bg-surface-container-lowest p-1 rounded-xl shadow-sm hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(26,26,46,0.1)] transition-all duration-300 text-left border border-outline-variant hover:border-secondary" data-template="A restaurant website with a menu page, an about/story section, and a reservations contact form.">
+<div class="bg-surface-container-low rounded-lg p-6 h-full flex flex-col items-start gap-4">
+<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center mb-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">restaurant_menu</span>
+</div>
+<div>
+<h3 class="font-label-sm text-label-sm text-on-surface mb-1 group-hover:text-secondary transition-colors">Restaurant Website</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Menus &amp; Reservations</p>
+</div>
+</div>
+</button>
+<!-- Card 4 -->
+<button class="group bg-surface-container-lowest p-1 rounded-xl shadow-sm hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(26,26,46,0.1)] transition-all duration-300 text-left border border-outline-variant hover:border-secondary" data-template="A SaaS product landing page with a hero section, features, pricing tiers, and a signup call to action.">
+<div class="bg-surface-container-low rounded-lg p-6 h-full flex flex-col items-start gap-4">
+<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center mb-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">cloud</span>
+</div>
+<div>
+<h3 class="font-label-sm text-label-sm text-on-surface mb-1 group-hover:text-secondary transition-colors">SaaS Website</h3>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Software &amp; Tech</p>
+</div>
+</div>
+</button>
+</div>
+</div>
+<!-- Variant Selection — shown after Generate returns 4 real design
+     options. The uploaded design had no equivalent step, but the real
+     backend (/api/generate for website mode) always returns 4 variants
+     requiring a POST /api/select before there's any single HTML to
+     preview — this step is structurally required, not decorative. -->
+<div class="w-full max-w-5xl mb-12" id="variantSection" style="display:none;">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-6 text-center">Choose a direction</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter" id="variantGrid"></div>
+</div>
+
+<!-- Live Preview Area -->
+<div class="w-full max-w-5xl bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden flex flex-col">
+<!-- Browser Header -->
+<div class="bg-surface-container-low px-4 py-3 border-b border-outline-variant flex items-center gap-2">
+<div class="flex gap-1.5">
+<div class="w-3 h-3 rounded-full bg-outline-variant"></div>
+<div class="w-3 h-3 rounded-full bg-outline-variant"></div>
+<div class="w-3 h-3 rounded-full bg-outline-variant"></div>
+</div>
+<div class="ml-4 flex-grow max-w-md bg-surface-container-lowest rounded-md px-3 py-1 text-xs text-on-surface-variant/50 font-body-md border border-outline-variant/50 flex items-center gap-2">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+                    gurost.ai/preview
+                </div>
+<button class="text-secondary text-sm font-semibold hover:underline hidden" id="codeToggleBtn" type="button">
+<span id="codeToggleLabel">Show Code</span>
+</button>
+</div>
+<!-- Browser Content Area -->
+<div class="relative w-full aspect-video bg-surface-container-low overflow-hidden">
+<div class="view-panel active w-full h-full relative" id="previewPanel">
+<iframe class="w-full h-full border-0 bg-white" id="previewFrame" sandbox="allow-scripts" title="Website preview"></iframe>
+<div id="codeBoxOverlay" style="position:absolute; top:0; left:0; width:0; height:0; pointer-events:none;"></div>
+<div id="codeBoxPanel" class="hidden" style="position:fixed; bottom:24px; right:24px; max-width:420px; max-height:320px; overflow:auto; background:#0f172a; color:#fff; border-radius:10px; padding:14px; font-size:12px; font-family:monospace; z-index:1000; box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+<div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+<strong id="codeBoxPanelTitle" style="color:#FF8C00;">Section</strong>
+<button id="codeBoxPanelClose" style="background:none; border:none; color:#fff; cursor:pointer; font-size:14px;">✕</button>
+</div>
+<pre id="codeBoxPanelContent" style="white-space:pre-wrap; margin:0;"></pre>
+</div>
+<div class="absolute inset-0 flex flex-col items-center justify-center text-center p-8 group bg-surface-container-low" id="previewEmptyState">
+<div class="absolute inset-0 bg-gradient-to-br from-surface-container-lowest/50 to-surface-container-high/50"></div>
+<div class="relative z-10 flex flex-col items-center">
+<span class="material-symbols-outlined text-[64px] text-outline-variant mb-4 opacity-50 group-hover:scale-110 transition-transform duration-500" id="previewEmptyIcon">web</span>
+<p class="font-body-lg text-body-lg text-on-surface-variant font-medium" id="previewEmptyText">Your generated preview will appear here.</p>
+</div>
+</div>
+</div>
+<div class="view-panel w-full h-full overflow-auto bg-on-surface" id="codePanel">
+<pre class="p-4 text-xs text-white overflow-auto" id="codeContent" style="font-family: monospace; white-space: pre-wrap;"></pre>
+</div>
+</div>
+</div>
+
+<!-- Pulse control: Pause / talk or text / Restart. Hidden until a
+     website has actually been selected — pausing a build that doesn't
+     exist yet has nothing to pause. -->
+<div class="w-full max-w-5xl mt-6" id="pulseControlWrap" style="display:none;">
+<button class="w-full gold-gradient-btn py-3 rounded-full font-label-sm text-label-sm font-semibold flex items-center justify-center gap-2" id="pulsePauseBtn" type="button">
+<span class="material-symbols-outlined">pause_circle</span>
+<span>Pause &amp; Talk to Pulse</span>
+</button>
+<div class="glass-card rounded-xl p-6 mt-4 flex flex-col gap-4" id="pulseTalkPanel" style="display:none;">
+<p class="font-body-md text-body-md text-on-surface-variant text-center">Build paused. Hold Pulse to talk, or type your correction below.</p>
+<div class="flex items-center justify-center gap-4">
+<button class="pulse-widget" id="pulseMicBtn" style="position:static;" aria-label="Hold to talk to Pulse">
+<span class="material-symbols-outlined">mic</span>
+</button>
+<span class="font-body-md text-body-md text-on-surface-variant" id="pulseMicStatus">Hold to talk</span>
+</div>
+<textarea class="w-full h-20 rounded-xl border border-outline-variant bg-surface-container-lowest p-4 font-body-md text-body-md resize-none focus:outline-none focus:ring-2 focus:ring-secondary/20" id="pulseTextInput" placeholder="Or type your correction here..."></textarea>
+<p class="text-sm text-error hidden" id="pulseError"></p>
+<button class="w-full gold-gradient-btn py-3 rounded-full font-label-sm text-label-sm font-semibold flex items-center justify-center gap-2" id="pulseRestartBtn" type="button">
+<span class="material-symbols-outlined" id="pulseRestartIcon">play_circle</span>
+<span id="pulseRestartLabel">Restart Live Building</span>
+</button>
+</div>
+</div>
+
+</main>
+<!-- Footer (JSON Injected Styles) -->
+<footer class="bg-surface dark:bg-on-surface text-on-surface dark:text-surface-variant font-body-md text-body-md full-width border-t border-outline-variant/50 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-16 flex flex-col md:flex-row justify-between items-center gap-8 mt-auto w-full">
+<div class="flex items-center gap-3">
+<img alt="Gurost Logo" class="h-6 w-6 object-contain rounded grayscale opacity-70" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUuDXLfzxi7DdaUlF79vx-NFQnQd77JYnildxbQdD6xiUqUk1znzLZ67CeZhHsonzm1IhzFkG0imszazmmiPB-jWrVNLYQKwuDWU_TxgWC6WtDoui2gPuwMi6_JbzkSS6gLvhWc7EWxkFynRE7xCILCoqobbffW5GOyXhQpSWW6PW2yvC-byCS3AKCzh6T4MfZ_REeiT1s5Xo0mk7lAdkiBCoWZDu0VCEKWfr7JL0F4O0b6avHXPAj_PJiSeOvtOwX0PE"/>
+<span class="font-headline-md text-headline-md font-bold text-on-surface opacity-80 hover:opacity-100 transition-opacity">Gurost</span>
+</div>
+<nav class="flex flex-wrap justify-center gap-6">
+<a class="text-on-surface-variant hover:text-secondary hover:underline transition-all opacity-80 hover:opacity-100" href="product.html">Product</a>
+<a class="text-on-surface-variant hover:text-secondary hover:underline transition-all opacity-80 hover:opacity-100" href="legal.html">Legal</a>
+</nav>
+<div class="text-sm text-on-surface-variant opacity-80 hover:opacity-100 transition-opacity">
+            © 2026 Gurost AI. All rights reserved.
+        </div>
+</footer>
+
+<script src="shared/api-client.js"></script>
+<script src="shared/pulse-voice.js"></script>
+<script src="shared/widget.js"></script>
+<script src="shared/code-boxes.js"></script>
+<script>
+/**
+ * Website Builder — wired to the real /api/generate + /api/select
+ * endpoints. Website-mode always returns 4 design variants requiring a
+ * selection step before any single HTML exists to preview — that's a
+ * real, unavoidable part of the backend contract (variant-bot.js), not
+ * an extra step invented here. The uploaded design had no UI for it at
+ * all, so it's added below rather than skipped.
+ */
+
+let projectId = null;
+let currentHtml = null;
+
+function setGenerateLoading(active) {
+  const btn = document.getElementById('generateBtn');
+  const label = document.getElementById('generateBtnLabel');
+  const icon = document.getElementById('generateBtnIcon');
+  btn.disabled = active;
+  label.textContent = active ? 'Generating…' : 'Generate Website';
+  icon.textContent = active ? 'autorenew' : 'auto_awesome';
+}
+
+function showError(message) {
+  const el = document.getElementById('builderError');
+  el.textContent = message;
+  el.classList.remove('hidden');
+}
+function hideError() {
+  document.getElementById('builderError').classList.add('hidden');
+}
+
+let codeBoxController = null;
+let lastRenderedHtml = null;
+
+function renderPreview(html) {
+  document.getElementById('previewEmptyState').style.display = 'none';
+  lastRenderedHtml = html;
+  document.getElementById('previewFrame').srcdoc = injectCodeBoxScript(html);
+  document.getElementById('codeContent').textContent = html;
+  document.getElementById('codeToggleBtn').classList.remove('hidden');
+
+  if (!codeBoxController) {
+    codeBoxController = attachCodeBoxOverlay(
+      document.getElementById('previewFrame'),
+      document.getElementById('codeBoxOverlay'),
+      showCodeBoxSnippet
+    );
+    document.getElementById('codeBoxOverlay').addEventListener('gurost-code-box-toggle', (e) => {
+      if (!e.detail.isOpen) document.getElementById('codeBoxPanel').classList.add('hidden');
+    });
+  }
+}
+
+/**
+ * Real snippet extraction — uses the browser's own DOMParser (not a
+ * server round-trip) to parse the SAME source HTML already held in
+ * memory and pull out the exact matching element via the real DOM
+ * path the injected script reported, so what's shown is the genuine
+ * source for that section, not a guess.
+ */
+function showCodeBoxSnippet(section) {
+  if (!lastRenderedHtml) return;
+  const panel = document.getElementById('codeBoxPanel');
+  const titleEl = document.getElementById('codeBoxPanelTitle');
+  const contentEl = document.getElementById('codeBoxPanelContent');
+
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(lastRenderedHtml, 'text/html');
+    let el = doc.body;
+    if (section.domPath) {
+      const steps = section.domPath.split('>');
+      for (const step of steps) {
+        const idx = parseInt(step.match(/\[(\d+)\]/)?.[1] ?? '-1', 10);
+        if (idx < 0 || !el.children[idx]) { el = null; break; }
+        el = el.children[idx];
+      }
+    }
+    if (!el) throw new Error('Could not locate this section in the source.');
+    titleEl.textContent = `<${section.tag}>`;
+    contentEl.textContent = el.outerHTML;
+    panel.classList.remove('hidden');
+  } catch (err) {
+    titleEl.textContent = 'Section';
+    contentEl.textContent = `Couldn't extract this section's code: ${err.message}`;
+    panel.classList.remove('hidden');
+  }
+}
+document.getElementById('codeBoxPanelClose')?.addEventListener('click', () => {
+  document.getElementById('codeBoxPanel').classList.add('hidden');
+  codeBoxController?.closeAll();
+});
+
+function toggleCodeView() {
+  const previewPanel = document.getElementById('previewPanel');
+  const codePanel = document.getElementById('codePanel');
+  const label = document.getElementById('codeToggleLabel');
+  const showingCode = codePanel.classList.contains('active');
+  previewPanel.classList.toggle('active', showingCode);
+  codePanel.classList.toggle('active', !showingCode);
+  label.textContent = showingCode ? 'Show Code' : 'Hide Code';
+}
+
+function renderVariants(variants) {
+  const grid = document.getElementById('variantGrid');
+  grid.innerHTML = variants
+    .map(
+      (v) => `
+      <button class="group bg-surface-container-lowest rounded-xl shadow-sm hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(26,26,46,0.1)] transition-all duration-300 text-left border border-outline-variant hover:border-secondary overflow-hidden flex flex-col" data-variant-id="${v.id}">
+        <div class="aspect-video bg-surface-container-low overflow-hidden pointer-events-none">
+          <iframe class="w-full h-full border-0" srcdoc="${v.html.replace(/"/g, '&quot;')}" sandbox="" tabindex="-1" title="${v.label} preview"></iframe>
+        </div>
+        <div class="p-4">
+          <h3 class="font-label-sm text-label-sm text-on-surface mb-1 group-hover:text-secondary transition-colors">${v.label}</h3>
+          <p class="font-body-md text-body-md text-on-surface-variant text-sm">${v.summary || ''}</p>
+        </div>
+      </button>`
+    )
+    .join('');
+
+  grid.querySelectorAll('[data-variant-id]').forEach((card) => {
+    card.addEventListener('click', () => selectVariant(card.dataset.variantId));
+  });
+
+  document.getElementById('variantSection').style.display = 'block';
+}
+
+async function selectVariant(variantId) {
+  hideError();
+  try {
+    const result = await GurostAPI.call('/api/select', { method: 'POST', body: { projectId, variantId } });
+    currentHtml = result.html;
+    document.getElementById('variantSection').style.display = 'none';
+    renderPreview(currentHtml);
+    document.getElementById('pulseControlWrap').style.display = 'block';
+  } catch (err) {
+    showError(err.message);
+  }
+}
+
+async function generateWebsite(description) {
+  hideError();
+  const trimmed = (description || '').trim();
+  if (!trimmed) {
+    showError('Describe the website you want to build first.');
+    return;
+  }
+  if (!GurostAPI.requireLogin()) return;
+
+  setGenerateLoading(true);
+  document.getElementById('variantSection').style.display = 'none';
+
+  try {
+    const result = await GurostAPI.call('/api/generate', { method: 'POST', body: { prompt: trimmed, mode: 'website' } });
+    projectId = result.projectId;
+    window.history.replaceState({}, '', `builder.html?projectId=${projectId}`);
+    renderVariants(result.variants);
+  } catch (err) {
+    showError(err.message);
+  } finally {
+    setGenerateLoading(false);
+  }
+}
+
+async function loadExistingProject(id) {
+  try {
+    const project = await GurostAPI.call(`/api/project/${id}`);
+    projectId = id;
+    document.getElementById('siteDescription').value = project.prompt || '';
+    if (project.currentHtml) {
+      currentHtml = project.currentHtml;
+      renderPreview(currentHtml);
+      document.getElementById('pulseControlWrap').style.display = 'block';
+    } else if (project.variants && project.variants.length) {
+      renderVariants(project.variants);
+    }
+  } catch (err) {
+    showError(`Couldn't load project: ${err.message}`);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (!GurostAPI.requireLogin()) return;
+
+  const urlProjectId = new URLSearchParams(window.location.search).get('projectId');
+  if (urlProjectId) {
+    loadExistingProject(urlProjectId);
+  } else {
+    // Dashboard handoff — same gurost_pending_generate key App Builder
+    // reads for app-mode; this page reads it for website-mode.
+    const pending = JSON.parse(localStorage.getItem('gurost_pending_generate') || 'null');
+    if (pending && pending.mode === 'website') {
+      document.getElementById('siteDescription').value = pending.prompt || '';
+      localStorage.removeItem('gurost_pending_generate');
+    }
+  }
+
+  document.getElementById('generateBtn').addEventListener('click', () => {
+    generateWebsite(document.getElementById('siteDescription').value);
+  });
+
+  document.getElementById('codeToggleBtn').addEventListener('click', toggleCodeView);
+
+  document.querySelectorAll('[data-template]').forEach((card) => {
+    card.addEventListener('click', () => {
+      const description = card.getAttribute('data-template');
+      document.getElementById('siteDescription').value = description;
+      generateWebsite(description); // templates auto-generate, per spec
+    });
+  });
+});
+
+// ---------------- Pulse: Pause / talk or text / Restart ----------------
+// "Pause" and "Restart" are real UI states here, not extra network
+// round-trips — the backend's /api/pulse action="correct" already
+// handles the full pause->apply->resume cycle in one call (see
+// server.js). Restart is the button that actually SUBMITS whatever was
+// captured while paused.
+
+let pulseVoice = null;
+
+function getPulseVoice() {
+  if (!pulseVoice) {
+    pulseVoice = createPulseVoice({
+      projectId,
+      getUserId: () => localStorage.getItem('gurost_user_id') || 'anon',
+      onCorrectionApplied: (html, summary) => {
+        currentHtml = html;
+        renderPreview(currentHtml);
+        setPulseTalkPanel(false);
+      },
+      onError: (err) => showPulseError(err)
+    });
+  }
+  return pulseVoice;
+}
+
+function showPulseError(message) {
+  const el = document.getElementById('pulseError');
+  el.textContent = message;
+  el.classList.remove('hidden');
+}
+function hidePulseError() {
+  document.getElementById('pulseError').classList.add('hidden');
+}
+
+function setPulseTalkPanel(open) {
+  document.getElementById('pulseTalkPanel').style.display = open ? 'flex' : 'none';
+  document.getElementById('pulsePauseBtn').style.display = open ? 'none' : 'flex';
+  if (!open) document.getElementById('pulseTextInput').value = '';
+}
+
+document.getElementById('pulsePauseBtn')?.addEventListener('click', () => {
+  hidePulseError();
+  setPulseTalkPanel(true);
+});
+
+const micBtn = document.getElementById('pulseMicBtn');
+const micStatus = document.getElementById('pulseMicStatus');
+
+micBtn?.addEventListener('mousedown', async () => {
+  const started = await getPulseVoice().startListening();
+  if (!started) {
+    micStatus.textContent = 'Microphone unavailable — type your correction instead.';
+    return;
+  }
+  micBtn.classList.add('listening');
+  micStatus.textContent = 'Listening… release to send';
+});
+
+function releaseMic() {
+  if (!micBtn.classList.contains('listening')) return;
+  micBtn.classList.remove('listening');
+  micStatus.textContent = 'Processing…';
+  getPulseVoice().stopListeningAndSend();
+}
+micBtn?.addEventListener('mouseup', releaseMic);
+micBtn?.addEventListener('mouseleave', releaseMic);
+micBtn?.addEventListener('touchend', releaseMic);
+
+document.getElementById('pulseRestartBtn')?.addEventListener('click', async () => {
+  hidePulseError();
+  const typedText = document.getElementById('pulseTextInput').value.trim();
+  const btn = document.getElementById('pulseRestartBtn');
+  const label = document.getElementById('pulseRestartLabel');
+  const icon = document.getElementById('pulseRestartIcon');
+
+  if (typedText) {
+    // Typed correction: real REST call, same endpoint the rest of this
+    // codebase already uses for corrections.
+    btn.disabled = true;
+    label.textContent = 'Restarting build…';
+    icon.textContent = 'autorenew';
+    try {
+      const result = await GurostAPI.call('/api/pulse', { method: 'POST', body: { projectId, action: 'correct', instruction: typedText } });
+      currentHtml = result.html;
+      renderPreview(currentHtml);
+      setPulseTalkPanel(false);
+    } catch (err) {
+      showPulseError(err.message);
+    } finally {
+      btn.disabled = false;
+      label.textContent = 'Restart Live Building';
+      icon.textContent = 'play_circle';
+    }
+  } else {
+    // No typed text — a voice correction, if one was captured, is sent
+    // the moment the mic is released (onCorrectionApplied closes the
+    // panel automatically once the response lands). If nothing was
+    // said or typed at all, there's genuinely nothing to restart with.
+    showPulseError('Hold Pulse to talk, or type a correction, before restarting.');
+  }
+});
+</script>
+</body></html>

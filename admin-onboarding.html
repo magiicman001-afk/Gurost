@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gurost Admin — Onboarding</title>
+<style>
+  :root { --bg: #0E0F14; --card: #161821; --border: #2A2E3B; --text: #ECEDF2; --dim: #8B8FA0; --accent: #6EEAD2; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; padding: 32px; max-width: 780px; margin: 0 auto; line-height: 1.6; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .sub { color: var(--dim); font-size: 14px; margin-bottom: 32px; }
+  h2 { font-size: 16px; margin: 32px 0 10px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; margin-bottom: 12px; }
+  code { background: #1D2029; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: var(--accent); }
+  a { color: var(--accent); }
+  .step-num { display: inline-block; width: 22px; height: 22px; background: var(--accent); color: #05130F; border-radius: 50%; text-align: center; font-size: 12px; font-weight: 700; line-height: 22px; margin-right: 8px; }
+  ol { padding-left: 20px; }
+  .note { color: var(--dim); font-size: 13px; margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<h1>Gurost Admin Onboarding</h1>
+<div class="sub">For the Gurost team — this page won't be linked anywhere public, bookmark it.</div>
+
+<h2>1. Access the dashboard</h2>
+<div class="card">
+  <p>Go to <code>/admin.html</code>. You'll need an <code>x-api-key</code> belonging to an account whose email is in <code>ADMIN_EMAILS</code> (server env var, comma-separated). The key is never saved to your browser — you re-enter it each session, on purpose.</p>
+  <p class="note">If you get "Admin access only" — check that your account's email in the <code>api_keys</code> table matches exactly what's in <code>ADMIN_EMAILS</code> (case-insensitive, but must otherwise match).</p>
+</div>
+
+<h2>2. What the dashboard shows you</h2>
+<div class="card">
+  <p><strong>Total Users / Active Users</strong> — total is a count of distinct <code>user_id</code> in <code>api_keys</code>; active is anyone with a build in the last 7 days.</p>
+  <p><strong>Claude Cost (30d)</strong> — aggregate across ALL users, not per-user. "Top Users" below is ranked by credits spent instead, which is genuinely per-user.</p>
+  <p><strong>Revenue (30d)</strong> — pulled live from Stripe's charges API, not estimated.</p>
+  <p><strong>Response Times</strong> and <strong>Cost Spike</strong> — new as of this round; response times come from every request's logged duration, cost spike compares this hour's Claude spend against your trailing 24h average and pushes you a notification if it's more than 3x (adjustable via <code>COST_SPIKE_MULTIPLIER</code>).</p>
+</div>
+
+<h2>3. Managing users</h2>
+<div class="card">
+  <p><strong>Deactivate an account:</strong> <code>POST /api/admin/users/:userId/deactivate</code> (admin-only). This sets <code>revoked = true</code> on their API key row — they're locked out on their very next request, the existing auth check already looks at that flag.</p>
+  <p><strong>Reactivate:</strong> <code>POST /api/admin/users/:userId/reactivate</code>.</p>
+  <p class="note">There's no admin UI button for this yet — it's API-only in this version. Call it with curl or Postman using your admin key until a UI is built.</p>
+</div>
+
+<h2>4. Viewing errors</h2>
+<div class="card">
+  <p>The "Recent Errors" table on the dashboard pulls from <code>audit_log</code> where <code>event_type</code> contains "fail" — auth failures, SSO failures, validation failures. It does NOT currently catch every possible server error (500s from routes that don't call <code>security.auditLog</code>) — that's a real gap, not every error path logs to <code>audit_log</code> yet.</p>
+</div>
+
+<h2>5. What still needs your manual setup</h2>
+<div class="card">
+  <ol>
+    <li><span class="step-num">1</span>Run every SQL migration listed across this repo's file header comments — there's no single migration script, each file documents its own tables.</li>
+    <li><span class="step-num">2</span>Create your Stripe prices (Pro/Unlimited/Ultimate + 3 credit top-ups) and put the price IDs in <code>.env</code>.</li>
+    <li><span class="step-num">3</span>Set <code>ADMIN_EMAILS</code> before you can access this dashboard at all.</li>
+    <li><span class="step-num">4</span>If you want Android builds or SSO, those each have their own external account setup — see the main <code>README.md</code>'s Android Build and Ultimate Tier sections.</li>
+  </ol>
+</div>
+
+<p class="note">This page is intentionally static and unstyled beyond function — it's a checklist for us, not a product surface.</p>
+
+</body>
+</html>

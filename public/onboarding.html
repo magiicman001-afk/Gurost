@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Onboarding — Gurost</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/styles-legacy.css">
+<link rel="stylesheet" href="shared/widget.css">
+<style>
+  .onboard-wrap { max-width: 600px; margin: 0 auto; padding: 56px 24px; }
+  .progress { display: flex; gap: 8px; margin-bottom: 32px; }
+  .progress-seg { flex: 1; height: 4px; border-radius: 2px; background: var(--border); }
+  .progress-seg.done { background: var(--accent); }
+  .step { display: none; }
+  .step.active { display: block; }
+  .skip-link { position: absolute; top: 22px; right: 24px; font-size: 13px; color: var(--text-dim); }
+  .style-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0; }
+  .style-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; cursor: pointer; }
+  .style-card.selected { border-color: var(--accent); background: var(--accent-dim); }
+  .style-swatch { height: 40px; border-radius: 6px; margin-bottom: 10px; }
+  .mic-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--accent); cursor: pointer; margin-top: 8px; }
+  .summary-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; margin: 20px 0; font-size: 14px; }
+</style>
+</head>
+<body style="position: relative;">
+
+<a href="dashboard.html" class="skip-link">Skip for now</a>
+
+<div class="onboard-wrap">
+  <div class="mt-24" style="text-align:center; margin-bottom: 24px;"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCKX7OEmVO7BAqh5zSnqJsLoGDgdZQ0KjVOl6XXAF23sRfCo5MKU577jkFX_CgnGtSIwLfQJ2w-ZnNRuGYK4HXuKmZeA3zDIidU6XhbLip9YcBTsLAsAqO-7nBrG9DmxgZZpIo0XSC8n8IfJHTDcaX1Y-xS4fDiDUYeaVdPa-9xD_4b9OyqqntrRzHvCursskogPuSa8tjyMIhVCHDId7Zpt_1H1NVLI6OGrSThNorkk4oUXk5Q2ptS_uYx1cxH1ro8CI" alt="Gurost" style="width:40px; height:40px; border-radius:50%; object-fit:cover;"/></div>
+  <div class="progress">
+    <div class="progress-seg done" id="seg1"></div>
+    <div class="progress-seg" id="seg2"></div>
+    <div class="progress-seg" id="seg3"></div>
+  </div>
+
+  <div class="step active" id="step1">
+    <h2 style="font-size:24px;">Tell us about your business</h2>
+    <p class="text-dim mt-8">One or two sentences is plenty.</p>
+    <div class="field mt-24">
+      <textarea id="businessDesc" rows="4" placeholder="We make locks and metal castings for the construction industry."></textarea>
+      <div class="mic-btn">Hold Pulse to speak it instead</div>
+    </div>
+    <div class="field">
+      <label>Industry (optional)</label>
+      <select><option>Select an industry</option><option>Manufacturing</option><option>Hospitality</option><option>Professional Services</option><option>Retail</option><option>Other</option></select>
+    </div>
+    <div class="flex-between mt-24">
+      <span></span>
+      <button class="btn btn-primary" onclick="goTo(2)">Continue</button>
+    </div>
+  </div>
+
+  <div class="step" id="step2">
+    <h2 style="font-size:24px;">Pick a style</h2>
+    <p class="text-dim mt-8">Or let Gurost decide based on your business.</p>
+    <div class="style-grid">
+      <div class="style-card" onclick="selectStyle(this)"><div class="style-swatch" style="background:#F4F4F6;"></div>Minimal</div>
+      <div class="style-card" onclick="selectStyle(this)"><div class="style-swatch" style="background:linear-gradient(135deg,#FF3B5C,#1A1A2E);"></div>Bold</div>
+      <div class="style-card" onclick="selectStyle(this)"><div class="style-swatch" style="background:#1E3A5F;"></div>Corporate</div>
+      <div class="style-card" onclick="selectStyle(this)"><div class="style-swatch" style="background:linear-gradient(135deg,#FFB258,#FF3B5C);"></div>Playful</div>
+    </div>
+    <div class="style-card" onclick="selectStyle(this)" style="text-align:center;">Let Gurost decide</div>
+    <div class="flex-between mt-24">
+      <button class="btn btn-outline" onclick="goTo(1)">Back</button>
+      <button class="btn btn-primary" onclick="goTo(3)">Continue</button>
+    </div>
+  </div>
+
+  <div class="step" id="step3">
+    <h2 style="font-size:24px;">Ready to build</h2>
+    <div class="summary-box">
+      <strong>Business:</strong> Locks and metal castings for construction<br>
+      <strong>Style:</strong> Corporate<br>
+      <strong>Industry:</strong> Manufacturing
+    </div>
+    <p class="text-dim">Gurost will generate 4 design directions for you to choose from — this usually takes under a minute.</p>
+    <div class="flex-between mt-24">
+      <button class="btn btn-outline" onclick="goTo(2)">Back</button>
+      <a href="#" class="btn btn-primary" onclick="startBuild(); return false;">Build My First Site</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  function goTo(n) {
+    document.querySelectorAll('.step').forEach((s) => s.classList.remove('active'));
+    document.getElementById('step' + n).classList.add('active');
+    document.getElementById('seg1').classList.toggle('done', n >= 1);
+    document.getElementById('seg2').classList.toggle('done', n >= 2);
+    document.getElementById('seg3').classList.toggle('done', n >= 3);
+  }
+  function selectStyle(el) {
+    document.querySelectorAll('.style-card').forEach((c) => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  function startBuild() {
+    const desc = document.getElementById('businessDesc').value.trim() || 'A small business website.';
+    localStorage.setItem('gurost_pending_generate', JSON.stringify({ prompt: desc, mode: 'website' }));
+    window.location.href = 'builder.html';
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!GurostAPI.requireLogin()) return;
+  });
+</script>
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col"><div class="logo" style="display:flex; align-items:center; gap:8px;"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCKX7OEmVO7BAqh5zSnqJsLoGDgdZQ0KjVOl6XXAF23sRfCo5MKU577jkFX_CgnGtSIwLfQJ2w-ZnNRuGYK4HXuKmZeA3zDIidU6XhbLip9YcBTsLAsAqO-7nBrG9DmxgZZpIo0XSC8n8IfJHTDcaX1Y-xS4fDiDUYeaVdPa-9xD_4b9OyqqntrRzHvCursskogPuSa8tjyMIhVCHDId7Zpt_1H1NVLI6OGrSThNorkk4oUXk5Q2ptS_uYx1cxH1ro8CI" alt="Gurost" style="width:28px; height:28px; border-radius:50%; object-fit:cover;"/>Gurost</div><p class="text-dim mt-8" style="font-size:14px; max-width:260px;">Build with your voice.</p></div>
+      <div class="footer-col"><h4>Product</h4><a href="index.html">Overview</a><a href="pricing.html">Pricing</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="#">Terms</a><a href="#">Privacy</a></div>
+    </div>
+    <div class="footer-bottom">&copy; 2026 Gurost. All rights reserved.</div>
+  </div>
+</footer>
+
+<script src="shared/api-client.js"></script>
+<script src="shared/pulse-voice.js"></script>
+<script src="shared/widget.js"></script>
+</body>
+</html>

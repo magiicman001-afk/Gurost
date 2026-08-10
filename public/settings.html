@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Settings — Gurost</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/styles.css">
+<link rel="stylesheet" href="shared/widget.css">
+<style>
+  .settings-wrap { display: flex; gap: 32px; padding: 40px 0 64px; }
+  .settings-nav { width: 220px; flex-shrink: 0; }
+  .settings-nav a { display: block; padding: 9px 12px; font-size: 14px; color: var(--text-dim); border-left: 2px solid transparent; border-radius: 0 6px 6px 0; margin-bottom: 2px; }
+  .settings-nav a.active { color: var(--text); border-color: var(--accent); background: var(--accent-dim); font-weight: 600; }
+  .settings-panel { flex: 1; display: none; }
+  .settings-panel.active { display: block; }
+  .plan-row { display: flex; justify-content: space-between; align-items: center; }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .integ-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .danger-card { border-color: var(--red); background: #FFF6F7; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="logo">Gur<span>ost</span></a>
+    <div class="nav-links"><a href="dashboard.html">Dashboard</a><a href="templates.html">Templates</a><a href="resources.html">Resources</a></div>
+    <div></div>
+  </div>
+</nav>
+
+<div class="container settings-wrap">
+  <div class="settings-nav">
+    <a href="#" class="settings-item" onclick="showPanel('billing'); return false;">Profile</a>
+    <a href="#" class="settings-item active" onclick="showPanel('billing'); return false;" id="nav-billing">Billing</a>
+    <a href="#" class="settings-item" onclick="showPanel('billing'); return false;">Security</a>
+    <a href="#" class="settings-item" onclick="showPanel('integrations'); return false;" id="nav-integrations">Integrations</a>
+    <a href="#" class="settings-item" onclick="showPanel('danger'); return false;" id="nav-danger">Danger Zone</a>
+  </div>
+
+  <div class="settings-panel active" id="panel-billing">
+    <h2 style="font-size:20px; margin-bottom:16px;">Billing</h2>
+    <div class="card">
+      <div class="plan-row">
+        <div><strong>Current Plan</strong><p class="text-dim mt-8" style="font-size:14px;" id="currentPlanText">Loading…</p></div>
+        <div class="flex gap-12">
+          <button class="btn btn-outline">Manage Billing</button>
+          <a href="pricing.html" class="btn btn-primary">Upgrade to Ultimate</a>
+        </div>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Jul 1, 2026</td><td>£19.99</td><td><span class="badge badge-green">Paid</span></td></tr>
+        <tr><td>Jun 1, 2026</td><td>£19.99</td><td><span class="badge badge-green">Paid</span></td></tr>
+        <tr><td>May 1, 2026</td><td>£19.99</td><td><span class="badge badge-green">Paid</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="settings-panel" id="panel-integrations">
+    <h2 style="font-size:20px; margin-bottom:16px;">Integrations</h2>
+    <div class="card">
+      <div class="integ-row"><span>Vercel</span><span class="flex gap-12"><span class="badge badge-green">Connected</span></span></div>
+      <div class="integ-row"><span>GitHub</span><span class="flex gap-12"><span class="badge badge-green">Connected</span></span></div>
+      <div class="integ-row"><span>Render</span><span class="flex gap-12"><span class="badge badge-gray">Not Connected</span><button class="btn btn-outline" style="padding:5px 12px; font-size:12px;">Connect</button></span></div>
+      <div class="integ-row" style="border-bottom:none;"><span>Google Play</span><span class="flex gap-12"><span class="badge badge-gray">Not Connected</span><button class="btn btn-outline" style="padding:5px 12px; font-size:12px;">Connect</button></span></div>
+    </div>
+  </div>
+
+  <div class="settings-panel" id="panel-danger">
+    <h2 style="font-size:20px; margin-bottom:16px;">Danger Zone</h2>
+    <div class="card danger-card">
+      <strong>Delete Account</strong>
+      <p class="text-dim mt-8" style="font-size:14px;">This permanently deletes your projects and cannot be undone.</p>
+      <button class="btn btn-danger mt-16" onclick="requestAccountDeletion()">Delete Account</button>
+    </div>
+  </div>
+</div>
+
+<script src="shared/api-client.js"></script>
+<script src="shared/pulse-voice.js"></script>
+<script src="shared/widget.js"></script>
+<script>
+  const PLAN_LABELS = {
+    free: 'Free — £0/month',
+    pro: 'Pro — £19.99/month',
+    unlimited: 'Unlimited — £79.99/month',
+    ultimate: 'Ultimate — £99/month'
+  };
+
+  async function loadSettings() {
+    if (!GurostAPI.requireLogin()) return;
+    try {
+      const me = await GurostAPI.call('/api/me');
+      document.getElementById('currentPlanText').textContent = PLAN_LABELS[me.plan] || me.plan;
+    } catch (err) {
+      document.getElementById('currentPlanText').textContent = 'Could not load plan info';
+    }
+  }
+
+  // No self-service "delete my own account" route exists in Gurost's
+  // backend yet — admin can deactivate any account, but there's no
+  // DELETE /api/account endpoint. Honest about that instead of faking
+  // success.
+  function requestAccountDeletion() {
+    alert('Account deletion isn\'t self-service yet — contact support to close your account.');
+  }
+
+  document.addEventListener('DOMContentLoaded', loadSettings);
+
+  function showPanel(name) {
+    document.querySelectorAll('.settings-panel').forEach((p) => p.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    document.querySelectorAll('.settings-item').forEach((a) => a.classList.remove('active'));
+    document.getElementById('nav-' + name).classList.add('active');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin — Gurost</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/styles.css">
+<style>
+  .admin-wrap { max-width: 1100px; margin: 0 auto; padding: 32px 24px 64px; }
+  .admin-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .admin-sub { color: var(--text-dim); font-size: 13px; margin-bottom: 28px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 32px; }
+  .metric-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .metric-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+  .metric-value { font-size: 26px; font-weight: 700; font-family: var(--font-display); }
+  .metric-value.green { color: var(--green); }
+  .metric-value.red { color: var(--red); }
+  .metric-value.amber { color: var(--amber); }
+
+  .section-title { font-size: 15px; font-weight: 600; margin: 32px 0 4px; }
+  .section-note { font-size: 12px; color: var(--text-dim); margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-dim); font-weight: 500; font-size: 11px; text-transform: uppercase; }
+  .tag { font-size: 11px; padding: 2px 7px; border-radius: 4px; }
+  .tag.fail { background: var(--accent-dim); color: var(--red); }
+  .tag.ok { background: #EAF7EE; color: var(--green); }
+  .tag.active { background: #EAF7EE; color: var(--green); }
+  .tag.inactive { background: var(--surface); color: var(--text-dim); border: 1px solid var(--border); }
+  .row-btn { font-size: 12px; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border); background: none; cursor: pointer; }
+  .row-btn:hover { border-color: var(--accent); }
+  .not-built { background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius); padding: 16px; font-size: 13px; color: var(--text-dim); }
+
+  #loginBox { max-width: 380px; margin: 100px auto; text-align: center; }
+  #adminPanel { display: none; }
+  .error { color: var(--red); font-size: 13px; margin-top: 8px; }
+  .health-row { display: flex; gap: 24px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="dashboard.html" class="logo" style="display:flex; align-items:center; gap:8px;"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCKX7OEmVO7BAqh5zSnqJsLoGDgdZQ0KjVOl6XXAF23sRfCo5MKU577jkFX_CgnGtSIwLfQJ2w-ZnNRuGYK4HXuKmZeA3zDIidU6XhbLip9YcBTsLAsAqO-7nBrG9DmxgZZpIo0XSC8n8IfJHTDcaX1Y-xS4fDiDUYeaVdPa-9xD_4b9OyqqntrRzHvCursskogPuSa8tjyMIhVCHDId7Zpt_1H1NVLI6OGrSThNorkk4oUXk5Q2ptS_uYx1cxH1ro8CI" alt="Gurost" style="width:32px; height:32px; border-radius:50%; object-fit:cover;"/>Gurost Admin</a>
+    <div></div>
+    <div class="nav-actions"><a href="dashboard.html" class="btn btn-text">Back to Dashboard</a></div>
+  </div>
+</nav>
+
+<div id="loginBox" class="admin-wrap">
+  <h1>Admin access required</h1>
+  <p class="admin-sub">Log in with an account listed in ADMIN_EMAILS.</p>
+  <a href="signup.html" class="btn btn-primary btn-block">Log in</a>
+  <div id="loginError" class="error"></div>
+</div>
+
+<div id="adminPanel" class="admin-wrap">
+  <div class="admin-header">
+    <h1>Admin</h1>
+    <span class="admin-sub" id="generatedAt"></span>
+  </div>
+
+  <div class="grid" id="metricsGrid"></div>
+
+  <div class="section-title">Companies (Workspaces)</div>
+  <p class="section-note">Real workspace data — no separate "deactivate a company" action exists in the backend, only per-user deactivate/reactivate (below). "View Usage" pulls the real cost/revenue breakdown for that workspace.</p>
+  <table id="companiesTable"><thead><tr><th>Name</th><th>Owner</th><th>Members</th><th>Created</th><th></th></tr></thead><tbody></tbody></table>
+  <div id="companyUsageDetail" style="margin-top:12px;"></div>
+
+  <div class="section-title">Top Users (30d, by credits used)</div>
+  <p class="section-note">There's no route to list every user — this is the real top-10-by-usage data the snapshot actually returns, with real deactivate/reactivate wired to each.</p>
+  <table id="topUsersTable"><thead><tr><th>User ID</th><th>Credits Used</th><th>Status</th><th></th></tr></thead><tbody></tbody></table>
+
+  <div class="section-title">Bots</div>
+  <div class="not-built">Not built as a real feature — bots in this system are stateless and triggered on demand, not individually toggleable database entities. A per-bot "activate/deactivate" list would have to fake status for something that structurally doesn't have one. Same reasoning already applied to the Business Assistant page's bot roster.</div>
+
+  <div class="section-title">Revenue</div>
+  <div class="grid" id="revenueGrid"></div>
+  <p class="section-note">No chart — the real backend only returns a 30-day total, not a day-by-day series, so a trend chart would have to invent data points that don't exist. Shown as the real number instead.</p>
+
+  <div class="section-title">System Health</div>
+  <div class="health-row" id="healthRow"></div>
+
+  <div class="section-title">Recent Errors</div>
+  <table id="errorsTable"><thead><tr><th>Event</th><th>User</th><th>Path</th><th>Detail</th><th>When</th></tr></thead><tbody></tbody></table>
+
+  <div class="section-title">Recent Activity</div>
+  <table id="activityTable"><thead><tr><th>Event</th><th>User</th><th>Path</th><th>When</th></tr></thead><tbody></tbody></table>
+
+  <div class="section-title">Developers</div>
+  <div class="flex gap-12" style="margin-bottom:12px;">
+    <input id="devName" placeholder="Name" style="flex:1;">
+    <input id="devEmail" placeholder="Email" style="flex:1;">
+    <button class="btn btn-primary" id="addDevBtn" style="width:auto; padding:0 16px;">Add</button>
+  </div>
+  <table id="developersTable"><thead><tr><th>Name</th><th>Email</th><th>Status</th><th></th></tr></thead><tbody></tbody></table>
+  <p class="error hidden" id="devError"></p>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="logo" style="display:flex; align-items:center; gap:8px;"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCKX7OEmVO7BAqh5zSnqJsLoGDgdZQ0KjVOl6XXAF23sRfCo5MKU577jkFX_CgnGtSIwLfQJ2w-ZnNRuGYK4HXuKmZeA3zDIidU6XhbLip9YcBTsLAsAqO-7nBrG9DmxgZZpIo0XSC8n8IfJHTDcaX1Y-xS4fDiDUYeaVdPa-9xD_4b9OyqqntrRzHvCursskogPuSa8tjyMIhVCHDId7Zpt_1H1NVLI6OGrSThNorkk4oUXk5Q2ptS_uYx1cxH1ro8CI" alt="Gurost" style="width:28px; height:28px; border-radius:50%; object-fit:cover;"/>Gurost</div>
+        <p class="text-dim mt-8" style="font-size:14px; max-width:260px;">Build with your voice.</p>
+      </div>
+      <div class="footer-col"><h4>Product</h4><a href="index.html">Overview</a><a href="pricing.html">Pricing</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="#">Terms</a><a href="#">Privacy</a></div>
+    </div>
+    <div class="footer-bottom">&copy; 2026 Gurost. All rights reserved.</div>
+  </div>
+</footer>
+
+<script src="shared/api-client.js"></script>
+<script>
+/**
+ * Real admin dashboard — every route and field name below was checked
+ * directly against server.js and admin-dashboard.js before writing
+ * this, not assumed from the spec that requested this page (which
+ * listed several routes — /api/admin/tenants, /api/admin/bots,
+ * /api/admin/stats, /api/admin/revenue as a separate endpoint — that
+ * don't exist in the real backend). No floating widget on this page,
+ * deliberately: this is an internal operator tool, and "draft an
+ * email" / "sketch a diagram" commands don't apply to an admin
+ * context the way they do on customer-facing pages.
+ */
+
+async function init() {
+  if (!GurostAPI.isLoggedIn()) {
+    document.getElementById('loginBox').style.display = 'block';
+    return;
+  }
+  try {
+    const data = await GurostAPI.call('/api/admin/snapshot');
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    render(data);
+    loadCompanies();
+    loadDevelopers();
+  } catch (err) {
+    document.getElementById('loginBox').style.display = 'block';
+    document.getElementById('loginError').textContent = err.status === 403 ? "Your account isn't an admin." : err.message;
+  }
+}
+
+function metricCard(label, value, colorClass) {
+  return `<div class="metric-card"><div class="metric-label">${label}</div><div class="metric-value ${colorClass || ''}">${value}</div></div>`;
+}
+
+function render(data) {
+  document.getElementById('generatedAt').textContent = `Updated ${new Date(data.generatedAt).toLocaleString()}`;
+
+  const claudeCost = data.claudeUsage30d.estimatedCostUSD;
+  const revenue = data.revenue30d.totalGBP;
+  const errorCount = data.recentErrors.length;
+
+  document.getElementById('metricsGrid').innerHTML = [
+    metricCard('Total Users', data.totalUsers),
+    metricCard('Active Users (7d)', data.activeUsers7d, data.activeUsers7d > 0 ? 'green' : 'amber'),
+    metricCard('Workspaces', data.workspaces?.totalWorkspaces ?? '—'),
+    metricCard('Claude Cost (30d, est.)', claudeCost !== null ? `$${claudeCost}` : '—'),
+    metricCard('Revenue (30d)', revenue !== null ? `£${revenue.toFixed(2)}` : '—', 'green'),
+    metricCard('Recent Errors', errorCount, errorCount === 0 ? 'green' : 'red')
+  ].join('');
+
+  document.getElementById('topUsersTable').querySelector('tbody').innerHTML = data.topUsers30d
+    .map((u) => `
+      <tr id="userRow-${u.userId}">
+        <td>${u.userId}</td>
+        <td>${u.creditsUsed}</td>
+        <td><span class="tag active" id="userStatus-${u.userId}">active</span></td>
+        <td>
+          <button class="row-btn" onclick="deactivateUser('${u.userId}')">Deactivate</button>
+          <button class="row-btn" onclick="reactivateUser('${u.userId}')">Reactivate</button>
+        </td>
+      </tr>`)
+    .join('') || '<tr><td colspan="4">No usage yet</td></tr>';
+
+  document.getElementById('errorsTable').querySelector('tbody').innerHTML = data.recentErrors
+    .map((e) => `<tr><td><span class="tag fail">${e.event_type}</span></td><td>${e.user_id || '—'}</td><td>${e.path || '—'}</td><td>${e.detail || '—'}</td><td>${new Date(e.created_at).toLocaleString()}</td></tr>`)
+    .join('') || '<tr><td colspan="5">No errors logged</td></tr>';
+
+  document.getElementById('activityTable').querySelector('tbody').innerHTML = data.recentActivity
+    .map((a) => `<tr><td><span class="tag ok">${a.event_type}</span></td><td>${a.user_id || '—'}</td><td>${a.path || '—'}</td><td>${new Date(a.created_at).toLocaleString()}</td></tr>`)
+    .join('') || '<tr><td colspan="4">No activity yet</td></tr>';
+
+  document.getElementById('revenueGrid').innerHTML = [
+    metricCard('Total (30d)', revenue !== null ? `£${revenue.toFixed(2)}` : '—', 'green'),
+    metricCard('Charges (30d)', data.revenue30d.chargeCount),
+    metricCard('Credits Used (30d)', data.creditsUsed30d)
+  ].join('');
+
+  const rt = data.responseTimes24h;
+  document.getElementById('healthRow').innerHTML = [
+    metricCard('Requests (24h)', rt.count),
+    metricCard('Avg Response', `${rt.avgMs}ms`, rt.avgMs < 1000 ? 'green' : 'amber'),
+    metricCard('P95 Response', `${rt.p95Ms}ms`, rt.p95Ms < 3000 ? 'green' : 'amber'),
+    data.costSpike?.isSpike ? metricCard('Cost Spike', 'Detected', 'red') : metricCard('Cost Spike', 'None', 'green')
+  ].join('');
+}
+
+async function loadCompanies() {
+  try {
+    const workspaces = await GurostAPI.call('/api/admin/workspaces');
+    document.getElementById('companiesTable').querySelector('tbody').innerHTML = workspaces
+      .map((w) => `
+        <tr>
+          <td>${w.name || '(unnamed)'}</td>
+          <td>${w.owner_id}</td>
+          <td>${w.memberCount}</td>
+          <td>${new Date(w.created_at).toLocaleDateString()}</td>
+          <td><button class="row-btn" onclick="viewCompanyUsage('${w.id}', '${(w.name || w.id).replace(/'/g, "\\'")}')">View Usage</button></td>
+        </tr>`)
+      .join('') || '<tr><td colspan="5">No workspaces yet</td></tr>';
+  } catch (err) {
+    document.getElementById('companiesTable').querySelector('tbody').innerHTML = `<tr><td colspan="5">Couldn't load: ${err.message}</td></tr>`;
+  }
+}
+
+async function viewCompanyUsage(workspaceId, name) {
+  const el = document.getElementById('companyUsageDetail');
+  el.innerHTML = '<p class="section-note">Loading...</p>';
+  try {
+    const usage = await GurostAPI.call(`/api/admin/company/${workspaceId}/usage`);
+    el.innerHTML = `
+      <div class="card">
+        <strong>${name}</strong> — ${usage.month}
+        <div class="grid" style="margin-top:10px;">
+          ${metricCard('Bots', usage.botCount)}
+          ${metricCard('Revenue', `£${usage.revenueGBP}`, 'green')}
+          ${metricCard('Cost', `£${usage.totalCostGBP}`)}
+          ${metricCard('Profit', `£${usage.profitGBP}`, usage.profitGBP >= 0 ? 'green' : 'red')}
+        </div>
+      </div>`;
+  } catch (err) {
+    el.innerHTML = `<p class="error">Couldn't load usage: ${err.message}</p>`;
+  }
+}
+
+async function deactivateUser(userId) {
+  try {
+    await GurostAPI.call(`/api/admin/users/${userId}/deactivate`, { method: 'POST' });
+    document.getElementById(`userStatus-${userId}`).textContent = 'inactive';
+    document.getElementById(`userStatus-${userId}`).className = 'tag inactive';
+  } catch (err) {
+    alert(`Couldn't deactivate: ${err.message}`);
+  }
+}
+async function reactivateUser(userId) {
+  try {
+    await GurostAPI.call(`/api/admin/users/${userId}/reactivate`, { method: 'POST' });
+    document.getElementById(`userStatus-${userId}`).textContent = 'active';
+    document.getElementById(`userStatus-${userId}`).className = 'tag active';
+  } catch (err) {
+    alert(`Couldn't reactivate: ${err.message}`);
+  }
+}
+
+async function loadDevelopers() {
+  try {
+    const devs = await GurostAPI.call('/api/admin/developers');
+    renderDevelopers(devs);
+  } catch (err) {
+    document.getElementById('developersTable').querySelector('tbody').innerHTML = `<tr><td colspan="4">Couldn't load: ${err.message}</td></tr>`;
+  }
+}
+function renderDevelopers(devs) {
+  document.getElementById('developersTable').querySelector('tbody').innerHTML = devs
+    .map((d) => `
+      <tr>
+        <td>${d.name}</td>
+        <td>${d.email}</td>
+        <td><span class="tag ${d.active ? 'active' : 'inactive'}">${d.active ? 'active' : 'inactive'}</span></td>
+        <td><button class="row-btn" onclick="toggleDeveloper('${d.id}', ${!d.active})">${d.active ? 'Deactivate' : 'Reactivate'}</button></td>
+      </tr>`)
+    .join('') || '<tr><td colspan="4">No developers added yet</td></tr>';
+}
+async function toggleDeveloper(id, newActive) {
+  try {
+    await GurostAPI.call(`/api/admin/developers/${id}`, { method: 'PUT', body: { active: newActive } });
+    loadDevelopers();
+  } catch (err) {
+    alert(`Couldn't update: ${err.message}`);
+  }
+}
+document.getElementById('addDevBtn').addEventListener('click', async () => {
+  const name = document.getElementById('devName').value.trim();
+  const email = document.getElementById('devEmail').value.trim();
+  const errEl = document.getElementById('devError');
+  errEl.classList.add('hidden');
+  if (!name || !email) { errEl.textContent = 'Name and email required.'; errEl.classList.remove('hidden'); return; }
+  try {
+    await GurostAPI.call('/api/admin/developers', { method: 'POST', body: { name, email } });
+    document.getElementById('devName').value = '';
+    document.getElementById('devEmail').value = '';
+    loadDevelopers();
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.classList.remove('hidden');
+  }
+});
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

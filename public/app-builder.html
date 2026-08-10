@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gurost - App Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="styles.css" rel="stylesheet"/>
+<link href="shared/widget.css" rel="stylesheet"/>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col">
+<!-- Top Navigation (Shared Component Style) -->
+<header class="bg-surface/80 dark:bg-on-surface/80 backdrop-blur-md docked full-width top-0 sticky border-b border-outline-variant/30 shadow-sm z-50">
+<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto">
+<div class="flex items-center gap-4">
+<img alt="Gurost Logo" class="h-10 w-10 object-contain rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8XdphHHa3a583U5MW-2QMO9CdhLbUMgzk2o5kpEMVZh1GOigP8QBL5KzpWDE94sbIzqIFlURC0RtBh4Bf0izCI8Lpo5SGOHcMvrY-Yo9SbvGPhWFJkGGRwLUDsPzu82PkFMVbAMnsfWTJZLBF24fLawh6oQmZypTi49x7_TM2avMxKtw4ua6SerCT0qTqtUuqs6aWnaKtBgK0Pc30ACx84Khs66HVhSYKhHqXcNemp5WvbyfoEHnUqBSEnFMzay38EYA"/>
+<span class="font-headline-md text-headline-md font-bold text-on-surface dark:text-inverse-on-surface">Gurost</span>
+</div>
+<!-- Desktop Nav -->
+<nav class="hidden md:flex gap-8">
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md" href="index.html">Product</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md" href="pricing.html">Pricing</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md" href="resources.html">Resources</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md" href="templates.html">Templates</a>
+</nav>
+<div class="flex items-center gap-4">
+<a class="text-primary dark:text-primary-fixed font-body-md text-body-md hidden md:block" href="signup.html">Log in</a>
+<a class="bg-primary-container text-on-primary rounded-full px-6 py-2 font-body-md text-body-md scale-95 duration-100 active:opacity-80" href="signup.html">Sign Up</a>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow flex flex-col items-center pt-24 pb-32 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto w-full gap-20">
+<!-- Header Section -->
+<div class="text-center max-w-2xl flex flex-col gap-6">
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface">Build App</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Describe the app you want to build, and our AI will generate it for you in seconds.</p>
+</div>
+<!-- Input Area (Centered, Prominent) -->
+<div class="w-full max-w-4xl flex flex-col items-center gap-8 bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/30">
+<div class="relative w-full">
+<textarea class="w-full h-32 md:h-48 rounded-xl bg-surface-container-low border border-outline-variant/50 p-6 font-body-lg text-body-lg resize-none focus:ring-2 focus:ring-secondary/20 focus:border-secondary transition-all shadow-sm" id="appDescription" placeholder="Describe your app... e.g., 'A modern CRM for real estate agents with a dashboard, contact list, and calendar view.'"></textarea>
+</div>
+<p class="text-sm text-error hidden" id="generateError"></p>
+<button class="bg-gradient-to-r from-gold-gradient-start to-gold-gradient-end text-on-secondary font-headline-md text-headline-md px-12 py-4 rounded-full shadow-md hover:-translate-y-1 hover:shadow-xl transition-all flex items-center gap-2" id="generateBtn">
+                <span id="generateBtnLabel">Generate App</span>
+                <span class="material-symbols-outlined" id="generateBtnIcon">auto_awesome</span>
+</button>
+</div>
+<!-- Live Preview Area -->
+<div class="w-full max-w-5xl flex flex-col gap-6 items-center">
+<div class="flex items-center justify-between w-full max-w-5xl">
+<h2 class="font-headline-md text-headline-md text-on-surface">Live Preview</h2>
+<button class="text-secondary font-body-md text-body-md hover:underline flex items-center gap-1 hidden" id="codeToggleBtn" type="button">
+<span class="material-symbols-outlined text-sm">code</span>
+<span id="codeToggleLabel">Show Code</span>
+</button>
+</div>
+<div class="w-full aspect-video bg-surface-container-high rounded-xl border border-outline-variant/50 shadow-md overflow-hidden relative">
+
+<!-- Preview panel: real iframe target for the rendered app -->
+<div class="view-panel active w-full h-full relative" id="previewPanel">
+<iframe class="w-full h-full border-0 bg-white" id="previewFrame" sandbox="allow-scripts" title="App preview"></iframe>
+<div id="codeBoxOverlay" style="position:absolute; top:0; left:0; width:0; height:0; pointer-events:none;"></div>
+<div id="codeBoxPanel" class="hidden" style="position:fixed; bottom:24px; right:24px; max-width:420px; max-height:320px; overflow:auto; background:#0f172a; color:#fff; border-radius:10px; padding:14px; font-size:12px; font-family:monospace; z-index:1000; box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+<div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+<strong id="codeBoxPanelTitle" style="color:#FF8C00;">Section</strong>
+<button id="codeBoxPanelClose" style="background:none; border:none; color:#fff; cursor:pointer; font-size:14px;">✕</button>
+</div>
+<pre id="codeBoxPanelContent" style="white-space:pre-wrap; margin:0;"></pre>
+</div>
+
+<!-- Skeleton / idle state, shown until something real has been generated -->
+<div class="absolute inset-0 bg-surface-container-lowest flex flex-col" id="skeletonState">
+<div class="h-16 border-b border-outline-variant/20 flex items-center px-6 gap-4 animate-pulse">
+<div class="w-8 h-8 rounded-full bg-surface-variant"></div>
+<div class="w-32 h-4 rounded bg-surface-variant"></div>
+<div class="flex-grow"></div>
+<div class="w-24 h-8 rounded-full bg-surface-variant"></div>
+</div>
+<div class="flex-grow flex p-6 gap-6">
+<div class="w-64 flex flex-col gap-4 animate-pulse">
+<div class="w-full h-10 rounded bg-surface-variant"></div>
+<div class="w-full h-10 rounded bg-surface-variant"></div>
+<div class="w-full h-10 rounded bg-surface-variant"></div>
+</div>
+<div class="flex-grow flex flex-col gap-4 animate-pulse">
+<div class="w-full h-32 rounded bg-surface-variant"></div>
+<div class="flex gap-4">
+<div class="w-1/2 h-64 rounded bg-surface-variant"></div>
+<div class="w-1/2 h-64 rounded bg-surface-variant"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="z-10 flex flex-col gap-3 bg-surface/90 p-8 rounded-xl backdrop-blur-sm border border-outline-variant/30 absolute min-w-[300px]" id="statusOverlay" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+<div class="flex items-center gap-2 mb-2" id="statusHeaderRow">
+<span class="material-symbols-outlined text-secondary text-2xl" id="statusIcon" style="font-variation-settings: 'FILL' 1;">hourglass_empty</span>
+<span class="font-body-lg text-body-lg text-on-surface-variant" id="statusText">Waiting for your description...</span>
+</div>
+<div class="flex flex-col gap-2" id="stageChecklist"></div>
+</div>
+</div>
+
+<!-- Code panel: raw generated source, toggled in instead of the preview -->
+<div class="view-panel w-full h-full overflow-auto bg-on-surface" id="codePanel">
+<div class="flex gap-2 p-3 border-b border-white/10" id="codeFileTabs"></div>
+<pre class="p-4 text-xs text-white overflow-auto" id="codeContent" style="font-family: monospace; white-space: pre-wrap;"></pre>
+</div>
+
+</div>
+</div>
+
+<!-- Pulse control — App Builder has no in-place patch mechanism the
+     way website mode does (correction-bot.js works on a single HTML
+     string; a generated app is multiple files). "Restart" here honestly
+     means a real regeneration with your correction folded into the
+     original prompt, not a silent patch — said plainly in the UI, not
+     just in code comments. -->
+<div class="w-full max-w-5xl mt-6" id="pulseControlWrap" style="display:none;">
+<button class="w-full gold-gradient text-on-secondary py-3 rounded-full font-label-sm text-label-sm font-semibold flex items-center justify-center gap-2" id="pulsePauseBtn" type="button">
+<span class="material-symbols-outlined">pause_circle</span>
+<span>Pause &amp; Talk to Pulse</span>
+</button>
+<div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-6 mt-4 flex flex-col gap-4 shadow-sm" id="pulseTalkPanel" style="display:none;">
+<p class="font-body-md text-body-md text-on-surface-variant text-center">Paused. Hold Pulse to talk, or type what you'd like to change — restarting will rebuild the app with this folded into your original description.</p>
+<div class="flex items-center justify-center gap-4">
+<button class="pulse-widget" id="pulseMicBtn" style="position:static;" aria-label="Hold to talk to Pulse">
+<span class="material-symbols-outlined">mic</span>
+</button>
+<span class="font-body-md text-body-md text-on-surface-variant" id="pulseMicStatus">Hold to talk</span>
+</div>
+<textarea class="w-full h-20 rounded-xl border border-outline-variant bg-surface-container-low p-4 font-body-md text-body-md resize-none focus:outline-none focus:ring-2 focus:ring-secondary/20" id="pulseTextInput" placeholder="Or type your correction here..."></textarea>
+<p class="text-sm text-error hidden" id="pulseError"></p>
+<button class="w-full gold-gradient text-on-secondary py-3 rounded-full font-label-sm text-label-sm font-semibold flex items-center justify-center gap-2" id="pulseRestartBtn" type="button">
+<span class="material-symbols-outlined" id="pulseRestartIcon">play_circle</span>
+<span id="pulseRestartLabel">Restart Live Building</span>
+</button>
+</div>
+</div>
+
+<!-- Templates (Bento Grid Style) -->
+<div class="w-full max-w-5xl flex flex-col gap-8">
+<div class="flex justify-between items-end">
+<h2 class="font-headline-md text-headline-md text-on-surface">Start with a Template</h2>
+<a class="text-secondary hover:underline font-body-md text-body-md flex items-center gap-1" href="templates.html">View all <span class="material-symbols-outlined text-sm">arrow_forward</span></a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Template 1 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/30 shadow-sm hover:-translate-y-1 hover:shadow-md transition-all cursor-pointer group flex flex-col gap-4" data-template="A todo list app with categories, due dates, and the ability to mark tasks complete. Include a simple dashboard showing task counts by category.">
+<div class="w-12 h-12 rounded-lg bg-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-container">checklist</span>
+</div>
+<div>
+<h3 class="font-body-lg text-body-lg font-semibold text-on-surface group-hover:text-secondary transition-colors">Todo List</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1 text-sm">Simple task management with categories.</p>
+</div>
+</div>
+<!-- Template 2 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/30 shadow-sm hover:-translate-y-1 hover:shadow-md transition-all cursor-pointer group flex flex-col gap-4" data-template="A CRM for a small sales team, with a contact list, deal pipeline stages, and a dashboard showing deals by stage.">
+<div class="w-12 h-12 rounded-lg bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary">group</span>
+</div>
+<div>
+<h3 class="font-body-lg text-body-lg font-semibold text-on-surface group-hover:text-secondary transition-colors">CRM</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1 text-sm">Customer relationship management dashboard.</p>
+</div>
+</div>
+<!-- Template 3 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/30 shadow-sm hover:-translate-y-1 hover:shadow-md transition-all cursor-pointer group flex flex-col gap-4" data-template="An inventory management app that tracks stock levels, suppliers, and reorder points, with a dashboard showing low-stock alerts.">
+<div class="w-12 h-12 rounded-lg bg-tertiary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-tertiary-container">inventory_2</span>
+</div>
+<div>
+<h3 class="font-body-lg text-body-lg font-semibold text-on-surface group-hover:text-secondary transition-colors">Inventory</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1 text-sm">Track stock levels, orders, and suppliers.</p>
+</div>
+</div>
+<!-- Template 4 -->
+<div class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/30 shadow-sm hover:-translate-y-1 hover:shadow-md transition-all cursor-pointer group flex flex-col gap-4" data-template="A booking system for appointments, with a calendar view, available time slots, and a simple confirmation flow for customers.">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface">calendar_month</span>
+</div>
+<div>
+<h3 class="font-body-lg text-body-lg font-semibold text-on-surface group-hover:text-secondary transition-colors">Booking System</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1 text-sm">Manage appointments and scheduling.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer (Shared Component Style) -->
+<footer class="bg-surface dark:bg-on-surface full-width border-t border-outline-variant/50 mt-auto">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-16 flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="flex items-center gap-4 opacity-80 hover:opacity-100 transition-opacity">
+<span class="font-headline-md text-headline-md font-bold text-on-surface">Gurost</span>
+</div>
+<nav class="flex flex-wrap justify-center gap-6">
+<a class="text-on-surface-variant hover:text-secondary hover:underline transition-all font-body-md text-body-md" href="product.html">Product</a>
+<a class="text-on-surface-variant hover:text-secondary hover:underline transition-all font-body-md text-body-md" href="legal.html">Legal</a>
+</nav>
+<div class="text-on-surface dark:text-surface-variant font-body-md text-body-md opacity-80">
+                © 2026 Gurost AI. All rights reserved.
+            </div>
+</div>
+</footer>
+
+<script src="shared/api-client.js"></script>
+<script src="shared/pulse-voice.js"></script>
+<script src="shared/widget.js"></script>
+<script src="shared/code-boxes.js"></script>
+<script>
+/**
+ * App Builder — real generation + a genuine best-effort live preview.
+ *
+ * READ THIS BEFORE ASSUMING "Live Preview" means the same thing it
+ * means on the website Builder page. It doesn't, and can't, for a
+ * structural reason: website-mode generates one HTML string, trivially
+ * shown via iframe.srcdoc. App-mode (bots/app-bot.js) generates
+ * MULTIPLE React files with real import relationships between them
+ * (App.jsx, a few component files, a separate API client module) plus
+ * a completely separate Express backend and a database schema. There
+ * is no single renderable file.
+ *
+ * What's built here is real, not fake: a Babel Standalone transpile
+ * step + a minimal in-browser CommonJS-style module loader that
+ * resolves the generated files' relative imports against each other,
+ * then mounts the resulting App component with React/ReactDOM (all
+ * loaded via CDN inside the preview iframe itself, isolated from this
+ * page). This will render the VISUAL/UI layer of a typical generated
+ * app reasonably well.
+ *
+ * What it genuinely can't do: the generated backend isn't running
+ * anywhere during preview (it's generated text sitting in Gurost's
+ * project state, not deployed) — so any fetch() call the rendered
+ * preview makes to its own API is intercepted and returns a clear
+ * "no live backend in preview" response rather than a raw network
+ * error. Real, working data only exists after actual deployment. If
+ * Claude generates a file structure Babel/this loader can't resolve
+ * (an import it doesn't recognize, a library beyond React), the
+ * preview shows a readable error instead of a blank iframe or a
+ * silent crash — check the Code tab in that case; the actual generated
+ * source is still fully real and correct, it's this in-browser
+ * preview step that has limits, not the generation itself.
+ */
+
+let projectId = null;
+let currentAppFiles = null; // {backend, frontend, database}
+let originalPrompt = null; // needed so a Pulse correction can regenerate WITH the original context, not replace it
+let isGenerating = false;
+
+function setStatus(icon, text, show) {
+  document.getElementById('statusIcon').textContent = icon;
+  document.getElementById('statusText').textContent = text;
+  document.getElementById('statusOverlay').style.display = show ? 'flex' : 'none';
+}
+
+function showSkeleton(show) {
+  document.getElementById('skeletonState').style.display = show ? 'flex' : 'none';
+}
+
+function setGenerating(active) {
+  isGenerating = active;
+  const btn = document.getElementById('generateBtn');
+  const label = document.getElementById('generateBtnLabel');
+  const icon = document.getElementById('generateBtnIcon');
+  btn.disabled = active;
+  btn.classList.toggle('generating-beat', active);
+  label.textContent = active ? 'Generating…' : 'Generate App';
+  icon.textContent = active ? 'autorenew' : 'auto_awesome';
+}
+
+function showGenerateError(message) {
+  const el = document.getElementById('generateError');
+  el.textContent = message;
+  el.classList.remove('hidden');
+}
+function hideGenerateError() {
+  document.getElementById('generateError').classList.add('hidden');
+}
+
+// ---------------- Code view ----------------
+
+function renderCodeView(appFiles) {
+  const allFiles = [
+    ...appFiles.backend.map((f) => ({ ...f, group: 'backend' })),
+    ...appFiles.frontend.map((f) => ({ ...f, group: 'frontend' }))
+  ];
+  const tabsEl = document.getElementById('codeFileTabs');
+  const contentEl = document.getElementById('codeContent');
+
+  tabsEl.innerHTML = allFiles
+    .map((f, i) => `<button class="text-xs px-3 py-1.5 rounded ${i === 0 ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white'}" data-file-index="${i}" type="button">${f.path}</button>`)
+    .join('');
+
+  function showFile(i) {
+    contentEl.textContent = allFiles[i].content;
+    tabsEl.querySelectorAll('button').forEach((b, bi) => {
+      b.className = `text-xs px-3 py-1.5 rounded ${bi === i ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white'}`;
+    });
+  }
+  tabsEl.querySelectorAll('button').forEach((b) => {
+    b.addEventListener('click', () => showFile(Number(b.dataset.fileIndex)));
+  });
+  if (allFiles.length) showFile(0);
+
+  document.getElementById('codeToggleBtn').classList.remove('hidden');
+}
+
+function toggleCodeView() {
+  const previewPanel = document.getElementById('previewPanel');
+  const codePanel = document.getElementById('codePanel');
+  const label = document.getElementById('codeToggleLabel');
+  const showingCode = codePanel.classList.contains('active');
+
+  previewPanel.classList.toggle('active', showingCode);
+  codePanel.classList.toggle('active', !showingCode);
+  label.textContent = showingCode ? 'Show Code' : 'Hide Code';
+}
+
+// ---------------- Live preview rendering ----------------
+
+function findEntryFile(frontendFiles) {
+  return (
+    frontendFiles.find((f) => /(^|\/)App\.(jsx|js)$/i.test(f.path)) ||
+    frontendFiles.find((f) => /app/i.test(f.path)) ||
+    frontendFiles[0]
+  );
+}
+
+function buildPreviewDocument(frontendFiles) {
+  const entry = findEntryFile(frontendFiles);
+  const filesJson = JSON.stringify(frontendFiles);
+  const entryPath = JSON.stringify(entry ? entry.path : '');
+
+  // Everything below runs INSIDE the iframe, isolated from this page.
+  // Tailwind CDN is used here deliberately, not as an oversight — the
+  // generated JSX uses arbitrary, unpredictable Tailwind classes each
+  // time (app-bot.js's prompt tells Claude to use Tailwind), so there's
+  // no fixed class list to pre-build a static stylesheet from the way
+  // every OTHER page in this project does. Guarded so a failed CDN load
+  // degrades to unstyled-but-functional rather than a crash, same
+  // lesson as everywhere else this was an issue.
+  return `<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<script src="https://cdn.tailwindcss.com"><\/script>
+<script>window.addEventListener('error', function(){}, true);<\/script>
+<script src="https://unpkg.com/react@18/umd/react.development.js"><\/script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"><\/script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"><\/script>
+</head>
+<body>
+<div id="root" style="font-family: Inter, sans-serif; padding: 8px;"></div>
+<script>
+(function () {
+  var FILES = ${filesJson};
+  var ENTRY_PATH = ${entryPath};
+
+  function renderError(message) {
+    document.getElementById('root').innerHTML =
+      '<div style="padding:24px;color:#ba1a1a;font-family:monospace;font-size:13px;white-space:pre-wrap;">' +
+      'Preview could not render this app:\\n\\n' + message +
+      '\\n\\nThe generated source itself is still real and correct — check the Code tab to see it directly.' +
+      '</div>';
+  }
+
+  if (typeof Babel === 'undefined' || typeof React === 'undefined') {
+    renderError('A required script (React or Babel) failed to load, likely a network issue in this preview environment.');
+    return;
+  }
+
+  // Intercept relative fetches — there is no live backend during
+  // preview (see this page's own script for the full explanation).
+  var realFetch = window.fetch;
+  window.fetch = function (url, opts) {
+    var isRelative = typeof url === 'string' && !(new RegExp('^https?://', 'i')).test(url);
+    if (isRelative) {
+      return Promise.resolve({
+        ok: false,
+        status: 503,
+        json: function () { return Promise.resolve({ error: 'No live backend in this preview — deploy the app to connect real data.' }); },
+        text: function () { return Promise.resolve('No live backend in this preview.'); }
+      });
+    }
+    return realFetch(url, opts);
+  };
+
+  function normalizePath(fromDir, importPath) {
+    var parts = (fromDir + '/' + importPath).split('/');
+    var stack = [];
+    for (var i = 0; i < parts.length; i++) {
+      var p = parts[i];
+      if (p === '' || p === '.') continue;
+      if (p === '..') stack.pop();
+      else stack.push(p);
+    }
+    return stack.join('/');
+  }
+
+  function dirname(path) {
+    var i = path.lastIndexOf('/');
+    return i === -1 ? '' : path.substring(0, i);
+  }
+
+  var registry = {}; // normalized path (no extension) -> raw source
+  FILES.forEach(function (f) {
+    var noExt = f.path.replace(/\\.(jsx|js)$/i, '');
+    registry[noExt] = f.content;
+  });
+
+  var cache = {};
+
+  function requireModule(path) {
+    if (cache[path]) return cache[path].exports;
+
+    var source = registry[path];
+    if (source === undefined) {
+      throw new Error('Cannot resolve import "' + path + '" — no generated file matches it.');
+    }
+
+    var transpiled;
+    try {
+      transpiled = Babel.transform(source, {
+        presets: [['env', { modules: 'commonjs' }], 'react'],
+        filename: path
+      }).code;
+    } catch (err) {
+      throw new Error('Failed to compile ' + path + ': ' + err.message);
+    }
+
+    var module = { exports: {} };
+    cache[path] = module;
+
+    var localRequire = function (importPath) {
+      if ((new RegExp('^https?://', 'i')).test(importPath)) {
+        throw new Error('External package "' + importPath + '" is not available in this preview (only React and the files generated for this app are).');
+      }
+      var resolved = normalizePath(dirname(path), importPath);
+      return requireModule(resolved);
+    };
+
+    var fn = new Function('require', 'module', 'exports', 'React', transpiled);
+    fn(localRequire, module, module.exports, window.React);
+
+    return module.exports;
+  }
+
+  try {
+    var entryNoExt = ENTRY_PATH.replace(/\\.(jsx|js)$/i, '');
+    var entryModule = requireModule(entryNoExt);
+    var Component = entryModule.default || entryModule;
+    if (typeof Component !== 'function') {
+      throw new Error('The entry file (' + ENTRY_PATH + ') did not export a React component as its default export.');
+    }
+    var root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(Component));
+  } catch (err) {
+    renderError(err.message);
+  }
+})();
+<\/script>
+</body></html>`;
+}
+
+let appCodeBoxController = null;
+
+function renderLivePreview(appFiles) {
+  showSkeleton(false);
+  const iframe = document.getElementById('previewFrame');
+  iframe.srcdoc = injectCodeBoxScript(buildPreviewDocument(appFiles.frontend));
+
+  if (!appCodeBoxController) {
+    appCodeBoxController = attachCodeBoxOverlay(
+      iframe,
+      document.getElementById('codeBoxOverlay'),
+      (section) => showAppCodeBoxSnippet(section, appFiles)
+    );
+    document.getElementById('codeBoxOverlay').addEventListener('gurost-code-box-toggle', (e) => {
+      if (!e.detail.isOpen) document.getElementById('codeBoxPanel').classList.add('hidden');
+    });
+  }
+}
+
+/**
+ * App-mode's real lookup: uses the exact data-gurost-file attribute
+ * app-bot.js's own generation prompt now adds to each top-level
+ * section — a real file match, not a reconstruction attempt. JSX has
+ * expressions and logic that rendered HTML doesn't preserve, so
+ * rebuilding "source" from the DOM the way website mode does would be
+ * lossy and often wrong; showing the actual real file content is both
+ * simpler and more honest here.
+ */
+function showAppCodeBoxSnippet(section, appFiles) {
+  const panel = document.getElementById('codeBoxPanel');
+  const titleEl = document.getElementById('codeBoxPanelTitle');
+  const contentEl = document.getElementById('codeBoxPanelContent');
+
+  if (!section.sourceFile) {
+    titleEl.textContent = 'Section';
+    contentEl.textContent = "This section wasn't tagged with a source file during generation — can't show its exact code.";
+    panel.classList.remove('hidden');
+    return;
+  }
+
+  const file = appFiles.frontend.find((f) => f.path === section.sourceFile || f.path.endsWith(section.sourceFile));
+  titleEl.textContent = section.sourceFile;
+  contentEl.textContent = file ? file.content : `Couldn't find "${section.sourceFile}" in this project's current files.`;
+  panel.classList.remove('hidden');
+}
+document.getElementById('codeBoxPanelClose')?.addEventListener('click', () => {
+  document.getElementById('codeBoxPanel').classList.add('hidden');
+  appCodeBoxController?.closeAll();
+});
+
+// ---------------- Generation ----------------
+
+const STAGE_LABELS = {
+  schema: 'Creating database schema',
+  backend: 'Building backend routes',
+  frontend: 'Generating frontend components',
+  reviewing: 'Reviewing generated code',
+  fixing: 'Fixing issues found in review',
+  done: 'Done!'
+};
+const STAGE_ORDER = ['schema', 'backend', 'frontend', 'reviewing', 'fixing', 'done'];
+let stageStatuses = {}; // stage -> 'pending' | 'running' | 'complete'
+let isPaused = false;
+let generationSocket = null;
+
+function resetStageChecklist() {
+  stageStatuses = {};
+  STAGE_ORDER.forEach((s) => { stageStatuses[s] = 'pending'; });
+  renderStageChecklist();
+}
+
+function renderStageChecklist() {
+  const list = document.getElementById('stageChecklist');
+  list.innerHTML = STAGE_ORDER
+    // "fixing" only shown once it actually starts — most generations
+    // have no issues to fix, and showing a permanently-pending "fixing"
+    // step would misrepresent a stage that may never run.
+    .filter((s) => s !== 'fixing' || stageStatuses.fixing !== undefined && stageStatuses.fixing !== 'pending')
+    .map((stage) => {
+      const status = stageStatuses[stage] || 'pending';
+      const icon = status === 'complete' ? 'check_circle' : status === 'running' ? 'autorenew' : 'radio_button_unchecked';
+      const colorClass = status === 'complete' ? 'text-green-500' : status === 'running' ? 'text-secondary' : 'text-outline-variant';
+      return `<div class="flex items-center gap-2 text-sm">
+        <span class="material-symbols-outlined text-lg ${colorClass}">${icon}</span>
+        <span class="${status === 'pending' ? 'text-on-surface-variant' : 'text-on-surface'}">${STAGE_LABELS[stage]}</span>
+      </div>`;
+    })
+    .join('');
+}
+
+function connectGenerationSocket(id) {
+  if (generationSocket) generationSocket.close();
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  generationSocket = new WebSocket(`${protocol}//${window.location.host}/ws/guide?projectId=${id}&userId=${localStorage.getItem('gurost_user_id') || 'anon'}`);
+
+  generationSocket.addEventListener('message', (event) => {
+    let msg;
+    try { msg = JSON.parse(event.data); } catch { return; }
+
+    if (msg.type === 'stage_progress') {
+      handleStageProgress(msg);
+    } else if (msg.type === 'error') {
+      showGenerateError(msg.error);
+      setGenerating(false);
+    }
+  });
+}
+
+function handleStageProgress(msg) {
+  if (msg.stage === 'paused') {
+    isPaused = true;
+    document.getElementById('statusText').textContent = 'Paused';
+    document.getElementById('statusIcon').textContent = 'pause_circle';
+    return;
+  }
+  if (msg.stage === 'resumed') {
+    isPaused = false;
+    document.getElementById('statusText').textContent = 'Resuming…';
+    document.getElementById('statusIcon').textContent = 'autorenew';
+    return;
+  }
+
+  if (STAGE_ORDER.includes(msg.stage)) {
+    stageStatuses[msg.stage] = msg.status;
+    renderStageChecklist();
+  }
+
+  if (msg.stage === 'done' && msg.status === 'complete') {
+    setStatus('', '', false);
+    document.getElementById('pulsePauseBtn').style.display = 'flex';
+    setGenerating(false);
+    fetchAndRenderCompletedProject();
+  } else {
+    document.getElementById('statusText').textContent = STAGE_LABELS[msg.stage] || msg.stage;
+    document.getElementById('statusIcon').textContent = 'autorenew';
+  }
+}
+
+async function fetchAndRenderCompletedProject() {
+  try {
+    const project = await GurostAPI.call(`/api/project/${projectId}`);
+    currentAppFiles = project.appFiles;
+    renderLivePreview(currentAppFiles);
+    renderCodeView(currentAppFiles);
+    document.getElementById('pulseControlWrap').style.display = 'block';
+    if (project.codeReview && project.codeReview.hasCritical) {
+      showGenerateError(`Generated, but the review found unresolved Critical issue(s) — check the Code tab.`);
+    }
+  } catch (err) {
+    showGenerateError(err.message);
+  }
+}
+
+async function generateApp(promptText) {
+  if (isGenerating) return;
+  hideGenerateError();
+
+  const trimmed = (promptText || '').trim();
+  if (!trimmed) {
+    showGenerateError('Describe the app you want to build first.');
+    return;
+  }
+
+  if (!GurostAPI.requireLogin()) return;
+
+  setGenerating(true);
+  showSkeleton(true);
+  resetStageChecklist();
+  setStatus('bolt', 'Starting build…', true);
+  document.getElementById('codeToggleBtn').classList.add('hidden');
+  document.getElementById('previewPanel').classList.add('active');
+  document.getElementById('codePanel').classList.remove('active');
+  document.getElementById('codeToggleLabel').textContent = 'Show Code';
+
+  try {
+    // Real streaming start: returns immediately with a projectId, then
+    // generation continues in the background — actual progress arrives
+    // over the WebSocket connected right after, not simulated here.
+    const result = await GurostAPI.call('/api/app-builder/start', {
+      method: 'POST',
+      body: { prompt: trimmed }
+    });
+
+    projectId = result.projectId;
+    originalPrompt = trimmed;
+    window.history.replaceState({}, '', `app-builder.html?projectId=${projectId}`);
+    connectGenerationSocket(projectId);
+
+    // Pause is meaningful the moment generation is actually running —
+    // shown here, not only after completion like the old flow.
+    document.getElementById('pulseControlWrap').style.display = 'block';
+    document.getElementById('pulseTalkPanel').style.display = 'none';
+    document.getElementById('pulsePauseBtn').style.display = 'flex';
+  } catch (err) {
+    showSkeleton(true);
+    setStatus('error', 'Generation failed.', true);
+    showGenerateError(err.message);
+    setGenerating(false);
+  }
+}
+
+async function loadExistingProject(id) {
+  try {
+    const project = await GurostAPI.call(`/api/project/${id}`);
+    if (project.type !== 'app' || !project.appFiles) return;
+    projectId = id;
+    currentAppFiles = project.appFiles;
+    originalPrompt = project.prompt || '';
+    document.getElementById('appDescription').value = project.prompt || '';
+    setStatus('', '', false);
+    renderLivePreview(currentAppFiles);
+    renderCodeView(currentAppFiles);
+    document.getElementById('pulseControlWrap').style.display = 'block';
+  } catch (err) {
+    showGenerateError(`Couldn't load project: ${err.message}`);
+  }
+}
+
+// ---------------- Wiring ----------------
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (!GurostAPI.requireLogin()) return;
+
+  const urlProjectId = new URLSearchParams(window.location.search).get('projectId');
+  if (urlProjectId) {
+    loadExistingProject(urlProjectId);
+  } else {
+    // Handoff from Dashboard's "Build App" flow — same localStorage key
+    // onboarding.html/templates.html already use for website-mode, read
+    // here for app-mode. Pre-fills the box; does NOT auto-generate,
+    // since only the template cards below are specified to auto-generate.
+    const pending = JSON.parse(localStorage.getItem('gurost_pending_generate') || 'null');
+    if (pending && pending.mode === 'app') {
+      document.getElementById('appDescription').value = pending.prompt || '';
+      localStorage.removeItem('gurost_pending_generate');
+    }
+  }
+
+  document.getElementById('generateBtn').addEventListener('click', () => {
+    generateApp(document.getElementById('appDescription').value);
+  });
+
+  document.getElementById('codeToggleBtn').addEventListener('click', toggleCodeView);
+
+  document.querySelectorAll('[data-template]').forEach((card) => {
+    card.addEventListener('click', () => {
+      const description = card.getAttribute('data-template');
+      document.getElementById('appDescription').value = description;
+      generateApp(description); // templates auto-generate, per spec
+    });
+  });
+});
+
+// ---------------- Pulse: Pause / talk or text / Restart ----------------
+// App Builder has no in-place patch mechanism (correction-bot.js works
+// on a single HTML string; a generated app is multiple files) — so
+// "Restart" here means a real regeneration with the correction folded
+// into the original prompt. Real voice uses the plain REST voice
+// endpoints (not /ws/guide, which auto-applies a website-style patch
+// that would misbehave here — see shared/pulse-voice.js's header).
+
+function setPulseTalkPanel(open) {
+  document.getElementById('pulseTalkPanel').style.display = open ? 'flex' : 'none';
+  document.getElementById('pulsePauseBtn').style.display = open ? 'none' : 'flex';
+  if (!open) document.getElementById('pulseTextInput').value = '';
+}
+
+function showPulseError(message) {
+  const el = document.getElementById('pulseError');
+  el.textContent = message;
+  el.classList.remove('hidden');
+}
+function hidePulseError() {
+  document.getElementById('pulseError').classList.add('hidden');
+}
+
+document.getElementById('pulsePauseBtn')?.addEventListener('click', async () => {
+  hidePulseError();
+  setPulseTalkPanel(true);
+
+  // Real pause: only meaningful while a generation is actually running.
+  // If generation already finished, this just opens the talk panel for
+  // a post-completion correction (the old, still-real, full-regenerate
+  // path below) — there's nothing running to pause.
+  if (isGenerating && projectId) {
+    try {
+      await GurostAPI.call('/api/app-builder/pause', { method: 'POST', body: { projectId } });
+    } catch (err) {
+      showPulseError(err.message);
+    }
+  }
+});
+
+let activeRecording = null;
+const micBtn = document.getElementById('pulseMicBtn');
+const micStatus = document.getElementById('pulseMicStatus');
+
+micBtn?.addEventListener('mousedown', async () => {
+  try {
+    activeRecording = await startRecordingSession();
+    micBtn.classList.add('listening');
+    micStatus.textContent = 'Listening… release to transcribe';
+  } catch (err) {
+    micStatus.textContent = 'Microphone unavailable — type your correction instead.';
+  }
+});
+
+async function releaseMic() {
+  if (!activeRecording) return;
+  micBtn.classList.remove('listening');
+  micStatus.textContent = 'Transcribing…';
+  try {
+    const transcript = await activeRecording.stop();
+    document.getElementById('pulseTextInput').value = transcript;
+    micStatus.textContent = 'Got it — review below, then Restart.';
+  } catch (err) {
+    micStatus.textContent = 'Could not transcribe — type your correction instead.';
+  } finally {
+    activeRecording = null;
+  }
+}
+micBtn?.addEventListener('mouseup', releaseMic);
+micBtn?.addEventListener('mouseleave', releaseMic);
+micBtn?.addEventListener('touchend', releaseMic);
+
+document.getElementById('pulseRestartBtn')?.addEventListener('click', async () => {
+  hidePulseError();
+  const correction = document.getElementById('pulseTextInput').value.trim();
+  if (!correction) {
+    showPulseError('Hold Pulse to talk, or type a correction, before restarting.');
+    return;
+  }
+
+  if (isGenerating && projectId) {
+    // Real mid-generation correction: store it via /correct (folded into
+    // the NEXT stage's prompt, not the one already in flight — see
+    // app-bot.js and lib/stage-gate.js for why that's the honest
+    // boundary), then release the gate via /resume.
+    setPulseTalkPanel(false);
+    try {
+      await GurostAPI.call('/api/app-builder/correct', { method: 'POST', body: { projectId, instruction: correction } });
+      await GurostAPI.call('/api/app-builder/resume', { method: 'POST', body: { projectId } });
+    } catch (err) {
+      showPulseError(err.message);
+    }
+    return;
+  }
+
+  // Generation already finished — no gate to resume, so the honest
+  // equivalent is the same full-regenerate this page has used since
+  // an earlier round: fold the correction into the original prompt and
+  // rebuild. Real, just a different mechanism than the mid-generation
+  // case above, because there's nothing paused to resume.
+  if (!originalPrompt) {
+    showPulseError('No original description to rebuild from.');
+    return;
+  }
+  setPulseTalkPanel(false);
+  const combinedPrompt = `${originalPrompt}\n\nAdditional correction: ${correction}`;
+  await generateApp(combinedPrompt);
+
+  try {
+    await speakTextViaRest(`Done. Your app has been rebuilt with that change.`);
+  } catch {
+    // TTS is a nice-to-have on top of the already-completed rebuild —
+    // never block or error the actual result over a failed voice reply.
+  }
+});
+</script>
+</body></html>

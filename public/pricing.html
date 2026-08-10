@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pricing — Gurost</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/styles-legacy.css">
+<link rel="stylesheet" href="shared/widget.css">
+<style>
+  .price-header { text-align: center; padding: 64px 0 40px; }
+  .price-header h1 { font-size: 38px; margin-bottom: 10px; }
+  .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding-bottom: 56px; }
+  .plan-card { position: relative; }
+  .plan-card.featured { border-color: var(--accent); transform: scale(1.02); }
+  .plan-price { font-size: 34px; font-family: var(--font-display); margin: 12px 0 4px; }
+  .plan-price span { font-size: 14px; color: var(--text-dim); font-family: var(--font-body); font-weight: 400; }
+  .plan-features { list-style: none; margin: 20px 0 24px; }
+  .plan-features li { font-size: 14px; padding: 6px 0; color: var(--text-dim); display: flex; gap: 8px; }
+  .plan-features li::before { content: '✓'; color: var(--accent); font-weight: 700; }
+  .compare { padding: 40px 0 64px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  th { color: var(--text-dim); font-weight: 500; font-size: 13px; }
+  .faq-item { border-bottom: 1px solid var(--border); padding: 16px 0; }
+  .faq-q { font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; }
+  .faq-a { color: var(--text-dim); font-size: 14px; margin-top: 8px; display: none; }
+  .faq-item.open .faq-a { display: block; }
+  @media (max-width: 860px) { .plans { grid-template-columns: 1fr; } .plan-card.featured { transform: none; } }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="logo" style="display:flex; align-items:center; gap:8px;"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCKX7OEmVO7BAqh5zSnqJsLoGDgdZQ0KjVOl6XXAF23sRfCo5MKU577jkFX_CgnGtSIwLfQJ2w-ZnNRuGYK4HXuKmZeA3zDIidU6XhbLip9YcBTsLAsAqO-7nBrG9DmxgZZpIo0XSC8n8IfJHTDcaX1Y-xS4fDiDUYeaVdPa-9xD_4b9OyqqntrRzHvCursskogPuSa8tjyMIhVCHDId7Zpt_1H1NVLI6OGrSThNorkk4oUXk5Q2ptS_uYx1cxH1ro8CI" alt="Gurost" style="width:32px; height:32px; border-radius:50%; object-fit:cover;"/>Gurost</a>
+    <div class="nav-links">
+      <a href="index.html">Product</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="resources.html">Resources</a>
+      <a href="templates.html">Templates</a>
+    </div>
+    <div class="nav-actions">
+      <a href="signup.html" class="btn btn-text">Log in</a>
+      <a href="signup.html" class="btn btn-primary">Sign Up</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="price-header">
+    <h1>Simple, honest pricing</h1>
+    <p class="text-dim">Start free. Upgrade when you outgrow it.</p>
+  </div>
+
+  <div class="plans">
+    <div class="card plan-card">
+      <h3 style="font-size:18px;">Free</h3>
+      <div class="plan-price">£0<span>/month</span></div>
+      <ul class="plan-features">
+        <li>1 project</li>
+        <li>3 builds/month</li>
+        <li>Community support</li>
+        <li>Gurost branding included</li>
+      </ul>
+      <a href="signup.html" class="btn btn-outline btn-block">Get Started</a>
+    </div>
+
+    <div class="card plan-card featured">
+      <span class="badge badge-accent">Most Popular</span>
+      <h3 style="font-size:18px; margin-top:10px;">Pro</h3>
+      <div class="plan-price">£19.99<span>/month</span></div>
+      <ul class="plan-features">
+        <li>10 projects</li>
+        <li>50 builds/month</li>
+        <li>Custom domains</li>
+        <li>Remove Gurost branding</li>
+        <li>Priority support</li>
+      </ul>
+      <a href="#" onclick="startCheckout('pro'); return false;" class="btn btn-primary btn-block">Start Pro</a>
+    </div>
+
+    <div class="card plan-card">
+      <h3 style="font-size:18px;">Ultimate</h3>
+      <div class="plan-price">£99<span>/month</span></div>
+      <ul class="plan-features">
+        <li>Unlimited projects</li>
+        <li>Unlimited builds</li>
+        <li>20 team seats + SSO</li>
+        <li>Swarm execution, industry context</li>
+        <li>Everything in Pro</li>
+      </ul>
+      <a href="#" onclick="startCheckout('ultimate'); return false;" class="btn btn-outline btn-block">Start Ultimate</a>
+    </div>
+  </div>
+
+  <div class="compare">
+    <h2 style="font-size:22px; margin-bottom:16px;">Compare plans</h2>
+    <table>
+      <thead><tr><th></th><th>Free</th><th>Pro</th><th>Ultimate</th></tr></thead>
+      <tbody>
+        <tr><td>Projects</td><td>1</td><td>10</td><td>Unlimited</td></tr>
+        <tr><td>Team seats</td><td>1</td><td>1</td><td>20</td></tr>
+        <tr><td>Custom domain</td><td>—</td><td>✓</td><td>✓</td></tr>
+        <tr><td>Remove branding</td><td>—</td><td>✓</td><td>✓</td></tr>
+        <tr><td>SSO</td><td>—</td><td>—</td><td>✓</td></tr>
+        <tr><td>Android build & Play upload</td><td>—</td><td>—</td><td>✓</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="compare" style="padding-top:0;">
+    <h2 style="font-size:22px; margin-bottom:8px;">Questions</h2>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Can I change plans later? <span>+</span></div>
+      <div class="faq-a">Yes, upgrade or downgrade any time from Settings — changes apply to your next billing cycle.</div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">What happens if I run out of builds? <span>+</span></div>
+      <div class="faq-a">You can top up credits (£5 for 50, £9 for 100, £20 for 250) or upgrade your plan.</div>
+    </div>
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">Is there a contract? <span>+</span></div>
+      <div class="faq-a">No — all plans are month to month, cancel any time.</div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col"><div class="logo" style="display:flex; align-items:center; gap:8px;"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCKX7OEmVO7BAqh5zSnqJsLoGDgdZQ0KjVOl6XXAF23sRfCo5MKU577jkFX_CgnGtSIwLfQJ2w-ZnNRuGYK4HXuKmZeA3zDIidU6XhbLip9YcBTsLAsAqO-7nBrG9DmxgZZpIo0XSC8n8IfJHTDcaX1Y-xS4fDiDUYeaVdPa-9xD_4b9OyqqntrRzHvCursskogPuSa8tjyMIhVCHDId7Zpt_1H1NVLI6OGrSThNorkk4oUXk5Q2ptS_uYx1cxH1ro8CI" alt="Gurost" style="width:28px; height:28px; border-radius:50%; object-fit:cover;"/>Gurost</div><p class="text-dim mt-8" style="font-size:14px; max-width:260px;">Build with your voice.</p></div>
+      <div class="footer-col"><h4>Product</h4><a href="index.html">Overview</a><a href="pricing.html">Pricing</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="#">Terms</a><a href="#">Privacy</a></div>
+    </div>
+    <div class="footer-bottom">&copy; 2026 Gurost. All rights reserved.</div>
+  </div>
+</footer>
+
+<script src="shared/api-client.js"></script>
+<script src="shared/pulse-voice.js"></script>
+<script src="shared/widget.js"></script>
+<script>
+  async function startCheckout(plan) {
+    if (!GurostAPI.isLoggedIn()) {
+      localStorage.setItem('gurost_pending_plan', plan);
+      window.location.href = 'signup.html';
+      return;
+    }
+    try {
+      const me = await GurostAPI.call('/api/me');
+      const result = await GurostAPI.call('/api/billing/checkout', { method: 'POST', body: { plan, email: me.email } });
+      window.location.href = result.checkoutUrl;
+    } catch (err) {
+      alert(`Couldn't start checkout: ${err.message}`);
+    }
+  }
+</script>
+</body>
+</html>

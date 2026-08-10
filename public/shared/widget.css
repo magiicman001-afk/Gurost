@@ -1,0 +1,329 @@
+/**
+ * Gurost Floating Widget — self-contained styles.
+ *
+ * Deliberately NOT using any page's own design tokens (--secondary,
+ * --gold-gradient-start, etc.) — the 5 real target pages are on two
+ * different design systems (settings.html is still the old plain-CSS
+ * one, never rebuilt; the other four are the newer gold/orange one).
+ * A widget that depended on one page's tokens would look right on
+ * some pages and broken on others. Every value here is a literal,
+ * so this file works correctly dropped into any page, unmodified.
+ */
+
+:root {
+  --gw-gold-start: #feb246;
+  --gw-gold-end: #ff8c00;
+  --gw-dark: #1a1a2e;
+  --gw-grey: #9ca3af;
+  --gw-green: #22c55e;
+  --gw-amber: #d97706;
+  --gw-white: #ffffff;
+  --gw-shadow: 0 8px 24px rgba(26, 26, 46, 0.25);
+  --gw-shadow-hover: 0 12px 32px rgba(255, 140, 0, 0.35);
+}
+
+.gw-root {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2147483000; /* real, deliberately high — this must sit above whatever a given page's own z-index stack does, since it's dropped into pages this file doesn't control */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ---------------- Idle / collapsed circle ---------------- */
+
+.gw-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gw-gold-start), var(--gw-gold-end));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--gw-shadow);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  border: none;
+}
+.gw-circle:hover {
+  box-shadow: var(--gw-shadow-hover);
+  transform: scale(1.05);
+}
+.gw-circle svg {
+  width: 24px;
+  height: 24px;
+  stroke: var(--gw-white);
+  fill: none;
+  stroke-width: 2;
+}
+
+/* Real pulsing glow ring on hover, not just a shadow swap */
+.gw-circle::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid var(--gw-gold-end);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.gw-circle:hover::before {
+  opacity: 0.5;
+  animation: gw-glow 1.6s ease-in-out infinite;
+}
+@keyframes gw-glow {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.15); opacity: 0.15; }
+}
+
+.gw-root.gw-hidden { display: none; }
+
+/* ---------------- Expanded panel ---------------- */
+
+.gw-panel {
+  width: 340px;
+  max-width: calc(100vw - 48px);
+  max-height: 520px;
+  background: var(--gw-white);
+  border-radius: 16px;
+  box-shadow: var(--gw-shadow);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(26, 26, 46, 0.08);
+}
+.gw-panel.gw-open {
+  display: flex;
+  animation: gw-expand 0.2s ease-out;
+}
+@keyframes gw-expand {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.gw-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--gw-gold-start), var(--gw-gold-end));
+  color: var(--gw-white);
+  font-size: 14px;
+  font-weight: 700;
+}
+.gw-minimize-btn {
+  background: none;
+  border: none;
+  color: var(--gw-white);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  opacity: 0.9;
+}
+.gw-minimize-btn:hover { opacity: 1; }
+
+.gw-status-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 12px;
+  color: #6b7280;
+  border-bottom: 1px solid rgba(26, 26, 46, 0.06);
+}
+.gw-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gw-grey);
+  transition: background-color 0.2s ease;
+}
+.gw-status-dot.gw-listening,
+.gw-status-dot.gw-processing {
+  animation: gw-status-pulse 1s ease-in-out infinite;
+}
+.gw-status-dot.gw-listening { background: var(--gw-green); }
+.gw-status-dot.gw-processing { background: var(--gw-amber); }
+.gw-status-dot.gw-done { background: var(--gw-green); }
+@keyframes gw-status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.gw-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 120px;
+}
+
+.gw-empty-state {
+  color: #9ca3af;
+  font-size: 13px;
+  text-align: center;
+  margin-top: 24px;
+}
+
+.gw-message {
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.gw-message-user {
+  background: #f3f4f6;
+  color: #1a1a2e;
+  align-self: flex-end;
+  max-width: 85%;
+}
+.gw-message-bot {
+  background: #fff7ed;
+  color: #1a1a2e;
+  border: 1px solid rgba(255, 140, 0, 0.15);
+  white-space: pre-wrap;
+}
+.gw-message-bot.gw-not-connected {
+  background: #f9fafb;
+  border-color: rgba(107, 114, 128, 0.2);
+  color: #4b5563;
+}
+
+.gw-diagram-wrap {
+  background: var(--gw-white);
+  border: 1px solid rgba(26, 26, 46, 0.08);
+  border-radius: 8px;
+  padding: 8px;
+  overflow-x: auto;
+}
+.gw-diagram-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+/* Real thinking animation — three dots, not a spinner, since "the bot
+   is composing a response" reads more naturally as typing dots. */
+.gw-thinking {
+  display: flex;
+  gap: 4px;
+  padding: 4px 0;
+}
+.gw-thinking span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gw-gold-end);
+  animation: gw-thinking-bounce 1.2s ease-in-out infinite;
+}
+.gw-thinking span:nth-child(2) { animation-delay: 0.15s; }
+.gw-thinking span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes gw-thinking-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+.gw-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+.gw-action-btn {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: opacity 0.15s ease;
+}
+.gw-action-btn:hover { opacity: 0.85; }
+.gw-action-approve { background: var(--gw-green); color: var(--gw-white); }
+.gw-action-edit { background: #f3f4f6; color: #1a1a2e; border-color: rgba(26,26,46,0.1); }
+.gw-action-reject { background: #fee2e2; color: #b91c1c; }
+.gw-action-alt { background: linear-gradient(135deg, var(--gw-gold-start), var(--gw-gold-end)); color: var(--gw-white); }
+
+.gw-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(26, 26, 46, 0.08);
+}
+.gw-text-input {
+  flex: 1;
+  border: 1px solid rgba(26, 26, 46, 0.12);
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 13px;
+  outline: none;
+  font-family: inherit;
+}
+.gw-text-input:focus {
+  border-color: var(--gw-gold-end);
+}
+
+.gw-mic-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gw-gold-start), var(--gw-gold-end));
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+}
+.gw-mic-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke: var(--gw-white);
+  fill: none;
+  stroke-width: 2;
+}
+.gw-mic-btn.gw-listening {
+  background: var(--gw-green);
+  animation: gw-mic-pulse 1s ease-in-out infinite;
+}
+@keyframes gw-mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
+  50% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+}
+
+.gw-send-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #1a1a2e;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.gw-send-btn svg { width: 15px; height: 15px; stroke: var(--gw-white); fill: none; stroke-width: 2; }
+.gw-send-btn:disabled { opacity: 0.4; cursor: default; }
+
+@media (prefers-reduced-motion: reduce) {
+  .gw-circle:hover::before,
+  .gw-status-dot.gw-listening,
+  .gw-status-dot.gw-processing,
+  .gw-thinking span,
+  .gw-mic-btn.gw-listening {
+    animation: none;
+  }
+}
+
+/* Mobile — full-width bottom sheet rather than a floating panel that
+   would overflow a small screen */
+@media (max-width: 480px) {
+  .gw-root { bottom: 12px; right: 12px; left: 12px; }
+  .gw-panel { width: 100%; max-width: none; }
+}

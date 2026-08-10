@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Resources — Gurost</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/styles-legacy.css">
+<link rel="stylesheet" href="shared/widget.css">
+<style>
+  .help-header { text-align: center; padding: 64px 0 32px; }
+  .search-big { max-width: 520px; margin: 0 auto; }
+  .search-big input { padding: 14px 16px; font-size: 15px; border-radius: 999px; }
+  .cat-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; padding: 40px 0; }
+  .cat-card { text-align: center; padding: 20px 12px; }
+  .cat-card:hover { border-color: var(--accent); }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding-bottom: 64px; }
+  .article-list div { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--text-dim); }
+  @media (max-width: 900px) { .cat-row { grid-template-columns: repeat(2, 1fr); } .two-col { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="logo" style="display:flex; align-items:center; gap:8px;"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCKX7OEmVO7BAqh5zSnqJsLoGDgdZQ0KjVOl6XXAF23sRfCo5MKU577jkFX_CgnGtSIwLfQJ2w-ZnNRuGYK4HXuKmZeA3zDIidU6XhbLip9YcBTsLAsAqO-7nBrG9DmxgZZpIo0XSC8n8IfJHTDcaX1Y-xS4fDiDUYeaVdPa-9xD_4b9OyqqntrRzHvCursskogPuSa8tjyMIhVCHDId7Zpt_1H1NVLI6OGrSThNorkk4oUXk5Q2ptS_uYx1cxH1ro8CI" alt="Gurost" style="width:32px; height:32px; border-radius:50%; object-fit:cover;"/>Gurost</a>
+    <div class="nav-links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="templates.html">Templates</a>
+      <a href="resources.html" class="active">Resources</a>
+    </div>
+    <div class="nav-actions"><a href="settings.html" class="btn btn-text">Account</a></div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="help-header">
+    <h1 style="font-size:30px;">How can we help?</h1>
+    <div class="search-big mt-24"><input type="search" placeholder="Search articles..."></div>
+  </div>
+
+  <div class="cat-row">
+    <div class="card cat-card"><strong style="font-size:14px;">Getting Started</strong><p class="text-dim" style="font-size:12px;">12 articles</p></div>
+    <div class="card cat-card"><strong style="font-size:14px;">The Builder</strong><p class="text-dim" style="font-size:12px;">18 articles</p></div>
+    <div class="card cat-card"><strong style="font-size:14px;">Deployment</strong><p class="text-dim" style="font-size:12px;">9 articles</p></div>
+    <div class="card cat-card"><strong style="font-size:14px;">Billing</strong><p class="text-dim" style="font-size:12px;">7 articles</p></div>
+    <div class="card cat-card"><strong style="font-size:14px;">Voice & Pulse</strong><p class="text-dim" style="font-size:12px;">6 articles</p></div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <h3 style="font-size:16px; margin-bottom:8px;">Popular articles</h3>
+      <!-- No real article/CMS backend exists yet — shown as plain
+           text, not styled as clickable links, since there's nowhere
+           real for them to go. Real links, once real articles exist. -->
+      <div class="article-list">
+        <div>Getting your first site deployed</div>
+        <div>How Pulse corrections work</div>
+        <div>Connecting a custom domain</div>
+        <div>Understanding your build credits</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:16px;">Still need help?</h3>
+      <p class="text-dim mt-8" style="font-size:14px;">Our team typically replies within a few hours.</p>
+      <a href="mailto:support@gurost.ai" class="btn btn-primary mt-16">Contact Support</a>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col"><div class="logo" style="display:flex; align-items:center; gap:8px;"><img src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCKX7OEmVO7BAqh5zSnqJsLoGDgdZQ0KjVOl6XXAF23sRfCo5MKU577jkFX_CgnGtSIwLfQJ2w-ZnNRuGYK4HXuKmZeA3zDIidU6XhbLip9YcBTsLAsAqO-7nBrG9DmxgZZpIo0XSC8n8IfJHTDcaX1Y-xS4fDiDUYeaVdPa-9xD_4b9OyqqntrRzHvCursskogPuSa8tjyMIhVCHDId7Zpt_1H1NVLI6OGrSThNorkk4oUXk5Q2ptS_uYx1cxH1ro8CI" alt="Gurost" style="width:28px; height:28px; border-radius:50%; object-fit:cover;"/>Gurost</div><p class="text-dim mt-8" style="font-size:14px; max-width:260px;">Build with your voice.</p></div>
+      <div class="footer-col"><h4>Product</h4><a href="index.html">Overview</a><a href="pricing.html">Pricing</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="#">Terms</a><a href="#">Privacy</a></div>
+    </div>
+    <div class="footer-bottom">&copy; 2026 Gurost. All rights reserved.</div>
+  </div>
+</footer>
+
+<script src="shared/api-client.js"></script>
+<script src="shared/pulse-voice.js"></script>
+<script src="shared/widget.js"></script>
+</body>
+</html>

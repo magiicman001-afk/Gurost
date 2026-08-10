@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Product - Gurost</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .pulse-ring {
+            animation: pulse 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(254, 178, 70, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(254, 178, 70, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(254, 178, 70, 0); }
+        }
+    </style>
+<link href="styles.css" rel="stylesheet"/>
+</head>
+<body class="bg-surface-container-lowest text-on-surface font-body-md min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<nav class="bg-surface-container-lowest/80 backdrop-blur-md text-primary font-body-md docked full-width top-0 sticky border-b border-outline-variant/30 shadow-sm flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto z-50">
+<div class="flex items-center gap-4">
+<img alt="Gurost Logo" class="h-16 md:h-20 w-auto object-contain rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCKX7OEmVO7BAqh5zSnqJsLoGDgdZQ0KjVOl6XXAF23sRfCo5MKU577jkFX_CgnGtSIwLfQJ2w-ZnNRuGYK4HXuKmZeA3zDIidU6XhbLip9YcBTsLAsAqO-7nBrG9DmxgZZpIo0XSC8n8IfJHTDcaX1Y-xS4fDiDUYeaVdPa-9xD_4b9OyqqntrRzHvCursskogPuSa8tjyMIhVCHDId7Zpt_1H1NVLI6OGrSThNorkk4oUXk5Q2ptS_uYx1cxH1ro8CI"/>
+<span class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight hidden md:block">Gur<span class="marble-o">o</span>st</span>
+</div>
+<div class="hidden md:flex gap-8 items-center">
+<a class="text-secondary font-bold border-b-2 border-secondary pb-1" href="index.html">Product</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors hover:bg-surface-container-low transition-all duration-200 px-3 py-2 rounded-lg" href="pricing.html">Pricing</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors hover:bg-surface-container-low transition-all duration-200 px-3 py-2 rounded-lg" href="resources.html">Resources</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors hover:bg-surface-container-low transition-all duration-200 px-3 py-2 rounded-lg" href="templates.html">Templates</a>
+</div>
+<div class="flex items-center gap-4">
+<a class="text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm px-4 py-2 rounded-full hover:bg-surface-container-low transition-all duration-200 hidden md:block" href="signup.html">Log in</a>
+<a class="bg-gradient-to-r from-gold-gradient-start to-gold-gradient-end text-on-primary font-label-sm text-label-sm px-6 py-2 rounded-full hover:shadow-lg transition-all duration-200 scale-95 hover:scale-100 active:opacity-80" href="signup.html">Sign Up</a>
+</div>
+</nav>
+<main class="flex-grow flex items-center justify-center w-full px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto py-24">
+<div class="max-w-2xl w-full text-center space-y-6">
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary-container">Product</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">A full overview of what Gurost can build for you is coming soon — the Builder, App Builder, Revamp Engine, Business Assistant, and everything else, explained in one place.</p>
+<p class="font-body-md text-body-md text-on-surface-variant">This is a placeholder page — it hasn't been built out yet. In the meantime, the fastest way to see what Gurost does is to just try it.</p>
+<a class="inline-block bg-gradient-to-r from-gold-gradient-start to-gold-gradient-end text-on-primary font-label-sm text-label-sm px-8 py-4 rounded-full hover:shadow-lg transition-all duration-200" href="dashboard.html">
+Back to Dashboard
+</a>
+</div>
+</main>
+<footer class="bg-surface-container-lowest text-on-surface-variant font-body-md full-width border-t border-outline-variant/50 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-16 flex flex-col md:flex-row justify-between items-center gap-8 w-full mt-auto">
+<div class="font-headline-md text-headline-md font-bold text-on-surface flex items-center gap-2">
+<img alt="Gurost Logo Small" class="h-8 w-auto object-contain rounded-full grayscale opacity-70" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpaVuq_tV7F-U6ZMSf24AIeTZmbMn9ZMYxaO8_w_wYikrDHU4RGfm7EyzYgR-wDuxCZiHvSLOBDGmd9NTVwG3QqZ3f2dSdaeu4DZ0q9uQScjfcuRNB1UtqElk0jYqVyp5Id-3UsbUoSpj6XbYA0ndjwzCV2DuD9t826VO4pLNHhRWywVFnNBTiLkePnVOLTHsJiEDxlrkblgkEadqIxLV2RPp_1AHfOBOtKA2hRqNBUBVXheYc-CS9k9WvO4E18XSt_dM"/>
+            Gurost
+        </div>
+<div class="flex flex-wrap justify-center gap-8">
+<a class="text-on-surface-variant hover:text-secondary hover:underline transition-all opacity-80 hover:opacity-100" href="product.html">Product</a>
+<a class="text-on-surface-variant hover:text-secondary hover:underline transition-all opacity-80 hover:opacity-100" href="legal.html">Legal</a>
+</div>
+<div class="text-sm opacity-70">
+            © 2026 Gurost AI. All rights reserved.
+        </div>
+</footer>
+</body></html>
