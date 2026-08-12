@@ -14,7 +14,7 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
     </style>
-<link href="styles.css" rel="stylesheet"/>
+<link href="shared/styles.css" rel="stylesheet"/>
 </head>
 <body class="bg-background text-on-background min-h-screen flex flex-col font-body-md antialiased selection:bg-secondary-container selection:text-on-secondary-container">
 <!-- Minimal header — the original Stitch export's own comment admitted
@@ -269,8 +269,8 @@ Send Reset Link
 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-  const GUROST_SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL"; // e.g. https://xxxx.supabase.co
-  const GUROST_SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+  const GUROST_SUPABASE_URL = "https://jiadrorezquvthyujykb.supabase.co";
+  const GUROST_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppYWRyb3JlenF1dnRoeXVqeWtiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTI3NzUsImV4cCI6MjA5OTg4ODc3NX0.GWWok3zKSfK3u4Uc3J8MVMhGYiyuZVIi16t6gAppvvs";
 
   let supabaseClient = null;
   function getSupabaseClient() {

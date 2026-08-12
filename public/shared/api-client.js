@@ -1,8 +1,19 @@
 // Gurost — shared API client, included on every wired page.
 // Attaches whichever credential signup.html/login stored (API key or
 // JWT) to every request, and centralizes the base URL.
+//
+// REAL FIX: this used to be `const GurostAPI = (function(){...})();` —
+// a top-level const/let in a plain <script> tag creates a shared
+// script-scope binding other <script> tags on the same page can see
+// as a bare `GurostAPI` reference, but it does NOT become a property
+// of `window`. That broke every real place in this codebase that
+// checked `window.GurostAPI` explicitly (copilot-indicator.js,
+// pulse-voice.js) — those checks silently evaluated to undefined and
+// fell back to sending zero auth headers, forever, with no error
+// thrown. Explicitly assigning to window.GurostAPI fixes both the
+// bare-reference case and the window-property case at once.
 
-const GurostAPI = (function () {
+window.GurostAPI = (function () {
   const API_BASE = window.location.origin;
 
   function authHeaders() {
