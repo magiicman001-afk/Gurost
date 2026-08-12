@@ -2,20 +2,7 @@
 
 Main orchestrator + specialist bots for the Builder and Revamp engines.
 
-## Deploying to Render — the actual, concrete steps
-
-1. **Push this folder to a GitHub repository.** If you don't already have one: create a new repo on github.com, then use GitHub's "Add file → Upload files" button in the browser and drag in everything here — no git command line needed for this part.
-2. **On render.com**, click "New Web Service," connect that repo.
-3. **Build command**: `npm install`. **Start command**: `node server.js`.
-4. **Add a free Postgres database** from Render's dashboard, and put the connection string it gives you into your environment variables as `DATABASE_URL`.
-5. **Add every other real environment variable** from `.env.example` in Render's dashboard — at minimum `JWT_SECRET` (any random string) and `OMNIROUTE_API_KEY` (the server refuses to start without it — every Claude call routes through OmniRoute, not directly to Anthropic). Add `SUPABASE_URL`/`SUPABASE_SERVICE_KEY` too if you're using Supabase rather than Render's own Postgres directly for the app's tables.
-6. **Deploy.** Render builds and starts the app, and gives you a real URL like `gurost.onrender.com`.
-7. **Create the real database tables** — this codebase's SQL schema is documented across the header comments of the files that need them (`user-auth.js`, `lib/billing.js`, `lib/reminders.js`, and others each have their own `CREATE TABLE` statements) — there's no single consolidated schema file yet, run each one against your real database.
-8. **Seed the test account**: from Render's dashboard, open a shell for the service and run `node scripts/seed-test-account.js` — this calls the real signup function, the same one the actual signup page uses.
-
-Two honest things about Render's free tier before you commit to it: the free web service falls asleep after 15 minutes of no traffic and takes 30–60 seconds to wake back up on the next request — not a bug if the first load feels stuck. And the free Postgres is real but time-limited, not permanent — fine for testing, not for launching on long-term without upgrading.
-
-## Quick Start (running locally instead)
+## Quick Start — read this before step 5 confuses you
 
 ```bash
 npm install
@@ -766,17 +753,6 @@ Real, opt-in capture of prompt/completion pairs at `lib/claude-client.js`'s `cal
 **A real, wasteful mistake caught before shipping**: an early draft of the export function fetched `healer_learning` to join against captured generations, then never actually used it in the matching logic — that table is keyed by `file_path` (code bugs), not `user_id`, and isn't meaningfully joinable to a per-user generation at all. Removed the dead fetch rather than leave code that looked like it was doing something it wasn't.
 
 **Honest partial coverage, documented rather than implied complete**: `context.feature` (which bot/surface a generation came from) isn't populated by any existing caller yet — exported data will have a null feature label until individual bots are updated to pass one. Same tradeoff already accepted for this file's existing usage-cost attribution, now true for this too.
-
-## GUROST_READY_FOR_RENDER.zip (this round)
-
-**A real assembly mistake caught before shipping**: the copy command used to gather backend files only matched `*.js`, which silently excluded `README.md` from the package entirely — caught by checking the file actually existed in the assembled folder rather than assuming a copy command worked because it didn't error.
-
-**Two real stale/misplaced files found while checking for others like it**:
-- A duplicate `admin.html` was sitting at the project root, dated **July 18** — from the very first days of this build, six weeks and a complete rebuild behind the real, current one. Same class of bug as a stray duplicate `assistant-bot.js` found and removed during an earlier round. Removed from the canonical output entirely, not just excluded from this zip.
-- `admin-onboarding.html` is real and still live, but served through a genuinely different mechanism — an explicit, `auth.requireAdmin`-gated `res.sendFile()` route in `server.js`, not the public `express.static(public/)` path every other page uses. It has to stay at the project root, not move into `public/`, or that route breaks and the file becomes either unreachable or, worse, gets served publicly with no gate at all depending on how the static middleware is configured.
-- Found and removed a genuinely dead route while checking this: `server.js` had a leftover, unguarded `app.get("/admin.html", ...)` from before `express.static` existed — fully redundant with the real one now correctly served from `public/`, and confusing dead weight pointing at a file that no longer needs a special route.
-
-**Two documentation files were deliberately left out of this zip**, not forgotten: `GUROST_COMPLETE_GUIDE.md` and `TESTING.md`, both dated July 24, both citing numbers (60 backend files, 81 routes, 12 pages) the real current codebase has long since outgrown (94 files, 125+ routes, 30 pages). Shipping stale reference docs that describe an earlier, smaller version of this project would mislead more than help.
 
 ## Known limitations — read before you rely on this
 
