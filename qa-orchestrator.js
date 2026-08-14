@@ -59,28 +59,30 @@ function summarize(clickReport, visualReport) {
 async function runFullQA(baseUrl, { updateVisualBaseline = false } = {}) {
   const { chromium } = require("playwright");
 
-  const [clickReport, visualReport] = await Promise.all([
-    bot1.runClickAudit(baseUrl),
-    // Real, separate browser for bot 2, kept independent from bot 1's
-    // on purpose, so one bot's real failure (a crash, a hung page)
-    // can't take the other down with it. Reuses bot1's real login
-    // logic rather than a second, duplicated copy of the same flow.
-    (async () => {
-      const browser = await chromium.launch();
+  // Real, deliberately SEQUENTIAL — not the two-at-once version this
+  // started as. Running both bots simultaneously means two full
+  // Chromium browsers open in memory at the same time, which is
+  // genuinely too heavy for a small hosting plan and caused a real,
+  // silent out-of-memory crash and restart during testing. One bot
+  // fully finishes and closes its browser before the next one opens
+  // its own — slower wall-clock time, but real, honest memory safety
+  // on modest hosting rather than a crash mid-run.
+  const clickReport = await bot1.runClickAudit(baseUrl);
+
+  const visualReport = await (async () => {
+    const browser = await chromium.launch();
+    try {
+      let storageState = null;
       try {
-        let storageState = null;
-        try {
-          storageState = await bot1.login(baseUrl, browser);
-        } catch (err) {
-          console.warn("[qa-bot2] Login failed, continuing without it:", err.message);
-        }
-        const result = await bot2.runVisualCheck(baseUrl, VISUAL_CHECK_PAGES, { storageState, updateBaseline: updateVisualBaseline });
-        return result;
-      } finally {
-        await browser.close();
+        storageState = await bot1.login(baseUrl, browser);
+      } catch (err) {
+        console.warn("[qa-bot2] Login failed, continuing without it:", err.message);
       }
-    })(),
-  ]);
+      return await bot2.runVisualCheck(baseUrl, VISUAL_CHECK_PAGES, { storageState, updateBaseline: updateVisualBaseline });
+    } finally {
+      await browser.close();
+    }
+  })();
 
   return {
     generatedAt: new Date().toISOString(),
@@ -88,6 +90,7 @@ async function runFullQA(baseUrl, { updateVisualBaseline = false } = {}) {
     clickAndLinkReport: clickReport,
     visualCheckReport: visualReport,
   };
+
 }
 
 module.exports = { runFullQA };
