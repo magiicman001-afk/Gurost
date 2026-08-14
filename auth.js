@@ -123,10 +123,16 @@ async function requireAuth(req, res, next) {
 // Pass a lookup function (projectId) -> project | null, e.g. server.js's
 // existing in-memory PROJECTS.get. Requires requireAuth to have run first.
 function requireProjectOwnership(lookupProject) {
-  return (req, res, next) => {
+  // lookupProject can return a project directly OR a Promise that
+  // resolves to one — `await` on a non-Promise value just resolves
+  // immediately, so this one function correctly supports both a
+  // plain synchronous in-memory lookup and a real async one (e.g.
+  // one that falls back to a database fetch when nothing's in
+  // memory) without needing two separate versions of this middleware.
+  return async (req, res, next) => {
     const projectId = req.body.projectId || req.params.id;
     if (!projectId) return next(); // routes that create a new project have nothing to own yet
-    const project = lookupProject(projectId);
+    const project = await lookupProject(projectId);
     if (!project) return res.status(404).json({ error: "Project not found." });
     if (project.userId && project.userId !== req.user.id) {
       return res.status(403).json({ error: "You don't have access to this project." });

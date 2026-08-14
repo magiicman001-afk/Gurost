@@ -140,8 +140,8 @@ async function enhanceWithImages(html, businessContext) {
  * different response shape — base64 (`data[0].b64_json`), not a URL
  * like the old DALL-E response. Built against that.
  *
- * Deliberately a direct OpenAI call, not routed through OmniRoute —
- * OmniRoute (lib/omniroute-client.js) was only ever established in
+ * Deliberately a direct OpenAI call, not routed through OpenRouter —
+ * OpenRouter (lib/openrouter-client.js) was only ever established in
  * this codebase for chat completions; there's no evidence it proxies
  * image generation, and guessing it does rather than checking would
  * be the same mistake already caught and corrected elsewhere in this

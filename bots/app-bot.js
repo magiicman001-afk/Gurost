@@ -27,7 +27,8 @@ Infer entities from the business description. Keep the schema minimal — only w
 const BACKEND_SYSTEM = `You are a backend engineer. Given a business description and a database schema, output ONLY JSON:
 {"files": [{"path": "...", "content": "..."}], "summary": "one sentence"}
 Framework: FastAPI (Python) or Express (Node) — infer the better fit from the schema/business, default Express.
-Generate only the endpoints the frontend will realistically need (CRUD on the core entities). Include basic input validation. No auth scaffolding unless the business obviously requires it (e.g. user accounts).`;
+Generate only the endpoints the frontend will realistically need (CRUD on the core entities). Include basic input validation. No auth scaffolding unless the business obviously requires it (e.g. user accounts).
+If using Express: always listen on process.env.PORT, falling back to 3000 if it isn't set (e.g. app.listen(process.env.PORT || 3000)). This is a hard requirement, not a style preference — the sandbox preview step needs a predictable port to expose, and a hardcoded or different port will make preview unreliable.`;
 
 const FRONTEND_SYSTEM = `You are a React frontend engineer. Given a business description and a list of backend API endpoints, output ONLY JSON:
 {"files": [{"path": "...", "content": "..."}], "summary": "one sentence"}

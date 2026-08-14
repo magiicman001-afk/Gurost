@@ -99,4 +99,100 @@ async function runSandboxTest(files, { timeoutMs = 20000 } = {}) {
   }
 }
 
-module.exports = { runSandboxTest };
+module.exports = { runSandboxTest, startLivePreview, stopPreview };
+
+/**
+ * Live Preview — the real, missing piece runSandboxTest never provided:
+ * a live URL a user can actually open and click around in, not just a
+ * pass/fail crash check. Deliberately a separate function rather than
+ * a mode flag on runSandboxTest, since the two have genuinely
+ * different lifecycles — runSandboxTest always kills its sandbox when
+ * done; this one deliberately keeps it alive so there's something to
+ * preview.
+ *
+ * Real E2B API surface this was built against (checked directly
+ * against e2b.dev's own docs before writing this, not assumed —
+ * sandbox.js's own header note above says to verify, so this does):
+ *   sandbox.getHost(port) -> string hostname, used as https://${host}
+ *   sandbox.sandboxId -> string, the real ID for reconnecting later
+ *   Sandbox.connect(sandboxId) -> reconnects to a running sandbox
+ *   Sandbox.create({ timeoutMs }) -> sandbox auto-expires after this,
+ *     so a preview that's never explicitly stopped still cleans
+ *     itself up rather than running forever on your E2B usage.
+ *
+ * Port handling: the PORT env var is set explicitly when starting the
+ * server, matching the port exposed via getHost — this doesn't rely
+ * purely on the generated code following the app-bot.js system prompt
+ * convention (process.env.PORT || 3000), even though that convention
+ * was added specifically to support this feature. Belt and braces:
+ * if the AI's code hardcodes a different port despite the prompt,
+ * this still sets PORT correctly for it to pick up.
+ */
+async function startLivePreview(files, { port = 3000, previewTimeoutMs = 10 * 60 * 1000 } = {}) {
+  const runtime = detectRuntime(files);
+  if (runtime !== "node") {
+    return { started: false, reason: `Live preview in this version only covers Node/Express backends — detected runtime: ${runtime}.` };
+  }
+  if (!process.env.E2B_API_KEY) {
+    return { started: false, reason: "E2B_API_KEY not configured — live preview unavailable, not failed." };
+  }
+
+  const sandbox = await Sandbox.create({ apiKey: process.env.E2B_API_KEY, timeoutMs: previewTimeoutMs });
+
+  try {
+    for (const file of files) {
+      await sandbox.files.write(file.path, file.content);
+    }
+
+    const install = await sandbox.commands.run("npm install", { timeoutMs: 120000 });
+    if (install.exitCode !== 0) {
+      await sandbox.kill();
+      return { started: false, reason: `npm install failed:\n${install.stderr?.slice(0, 1500)}` };
+    }
+
+    const entry = guessEntryFile(files);
+    // Same background-start-then-check-the-log pattern as
+    // runSandboxTest, for the same real reason: a server doesn't
+    // exit 0 on success, it keeps running.
+    const run = await sandbox.commands.run(
+      `(PORT=${port} node ${entry} > /tmp/gurost_preview.log 2>&1 &) ; sleep 4 ; cat /tmp/gurost_preview.log`,
+      { timeoutMs: 20000 }
+    );
+
+    if (CRASH_SIGNS.test(run.stdout || "")) {
+      await sandbox.kill();
+      return { started: false, reason: `Server crashed on startup:\n${(run.stdout || "").slice(0, 2000)}` };
+    }
+
+    return {
+      started: true,
+      previewUrl: `https://${sandbox.getHost(port)}`,
+      sandboxId: sandbox.sandboxId,
+      expiresInMs: previewTimeoutMs,
+    };
+  } catch (err) {
+    await sandbox.kill().catch(() => {});
+    return { started: false, reason: err.message };
+  }
+  // Deliberately no `finally { sandbox.kill() }` here, unlike
+  // runSandboxTest — the whole point of this function is to leave a
+  // successful sandbox running so there's something real to preview.
+  // It cleans up via its own timeoutMs if nobody explicitly stops it.
+}
+
+/**
+ * Real, explicit stop for a running preview — for when a user is
+ * done looking and closes the preview, rather than waiting out the
+ * full previewTimeoutMs unnecessarily.
+ */
+async function stopPreview(sandboxId) {
+  try {
+    const sandbox = await Sandbox.connect(sandboxId, { apiKey: process.env.E2B_API_KEY });
+    await sandbox.kill();
+    return { stopped: true };
+  } catch (err) {
+    // Genuinely fine if this fails because it already expired on its
+    // own timeoutMs — not treated as a real error in that case.
+    return { stopped: false, reason: err.message };
+  }
+}
