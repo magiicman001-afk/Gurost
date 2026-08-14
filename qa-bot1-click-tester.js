@@ -64,7 +64,7 @@ async function login(baseUrl, browser) {
  * and stops at a real page-count cap so a link cycle or a very large
  * site can't turn this into a runaway job.
  */
-async function crawlSite(browser, storageState, baseUrl, seedPaths, maxPages = 60) {
+async function crawlSite(browser, storageState, baseUrl, seedPaths, maxPages = 12) {
   const context = storageState ? await browser.newContext({ storageState }) : await browser.newContext();
   const page = await context.newPage();
   const origin = new URL(baseUrl).origin;
@@ -199,7 +199,12 @@ async function testPage(browser, storageState, baseUrl, path) {
   return result;
 }
 
-async function runClickAudit(baseUrl, seedPaths = ["/index.html", "/dashboard.html"], maxPages = 60) {
+// Real, deliberately small default — was 60, cut down after a real
+// out-of-memory crash on Render's free tier mid-run. Covers the pages
+// that actually matter (the ones from the printed QA checklist) with
+// real room to spare, rather than wandering into every marketing/legal
+// page on the site and running out of memory before finishing.
+async function runClickAudit(baseUrl, seedPaths = ["/index.html", "/dashboard.html"], maxPages = 12) {
   const browser = await chromium.launch();
   try {
     let storageState = null;
