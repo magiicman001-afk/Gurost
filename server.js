@@ -304,6 +304,22 @@ app.post("/api/auth/reset-password", security.rejectUnknownFields(["token", "new
   }
 });
 
+// Real, narrow exception for ONE route only — /api/dev/qa-audit is meant
+// to be visited directly by typing/clicking a URL, which browsers send
+// with no custom headers at all, so the normal x-api-key/Authorization
+// flow below can never work for it. This does NOT add a new, separate
+// verification path: it just copies a token from ?token=... into the
+// real Authorization header, then lets auth.requireAuth do the exact
+// same real check it already does for every other route. Scoped to
+// this one path only — every other /api route is completely
+// unaffected, and gets zero new way to authenticate.
+app.use("/api/dev/qa-audit", (req, res, next) => {
+  if (req.query.token && !req.headers["authorization"]) {
+    req.headers["authorization"] = `Bearer ${req.query.token}`;
+  }
+  next();
+});
+
 // Everything under /api requires auth from here down (the Stripe webhook
 // above is registered earlier and terminates the request itself, so it
 // never reaches this middleware).
