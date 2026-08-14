@@ -1,17 +1,19 @@
 /**
  * Smart Router — multi-model orchestration, now entirely on top of
- * OmniRoute (lib/omniroute-client.js) as the single AI gateway.
+ * OpenRouter (lib/openrouter-client.js) as the single AI gateway.
+ *
+ * REPLACES OmniRoute here too, same real reason as claude-client.js:
+ * OmniRoute needed self-hosting that was never set up, and every
+ * deploy silently failed trying to reach "localhost" on Render.
  *
  * REAL SIMPLIFICATION worth knowing about, not just a refactor detail:
- * before OmniRoute, this file made four separate hardcoded fetch calls,
- * each to a different vendor's own API (Anthropic, Google, DeepSeek,
- * OpenAI), each needing its OWN API key in Gurost's .env. Now there's
- * one call shape and one gateway. Gemini/DeepSeek/GPT-5.6 provider
- * credentials are no longer configured in GUROST's .env at all — they
- * live in OmniRoute's OWN dashboard/config instead (OmniRoute manages
- * its upstream provider keys itself; that's the whole point of it
- * being a gateway). GEMINI_API_KEY/DEEPSEEK_API_KEY/OPENAI_API_KEY are
- * no longer read anywhere in this file.
+ * before a single gateway existed, this file made four separate
+ * hardcoded fetch calls, each to a different vendor's own API
+ * (Anthropic, Google, DeepSeek, OpenAI), each needing its OWN API key
+ * in Gurost's .env. Now there's one call shape and one gateway.
+ * Gemini/DeepSeek/GPT-5.6 provider access comes through OpenRouter's
+ * own account/billing instead — GEMINI_API_KEY/DEEPSEEK_API_KEY/
+ * OPENAI_API_KEY are no longer read anywhere in this file.
  *
  * CORRECTION, load-bearing, not a footnote: Fable 5 is not a separate
  * third-party model alongside Gemini/DeepSeek/GPT-5.6 — it's Anthropic's
@@ -24,25 +26,27 @@
  * launched publicly July 9 2026 — verified, not assumed) is included
  * as a real fourth option for its stated coding strength.
  *
- * Model name caveat: the strings below (gemini-2.5-flash, deepseek-chat,
- * gpt-5.6-terra) are each provider's own canonical model ID, passed
- * through to OmniRoute's `model` field as-is — the expected behavior
- * for a gateway like this, but not verified against a live OmniRoute
- * instance from here. Check `GET {OMNIROUTE_BASE_URL}/models` if one
- * of these stops resolving.
+ * Model slug confidence, stated honestly rather than uniformly
+ * asserted: "google/gemini-2.5-flash" and "deepseek/deepseek-chat-v3.1"
+ * were both directly confirmed against a real, current OpenRouter
+ * model listing before writing this. GPT-5.6's exact OpenRouter slug
+ * was NOT found with the same confidence — "gpt-5.6-terra" below is
+ * carried over from the pre-gateway code, not freshly verified. Check
+ * `GET {OPENROUTER_BASE_URL}/models` if that specific path stops
+ * resolving; the Claude and Gemini paths are on firmer ground.
  */
 
 const { callClaude, CLAUDE_MODEL, CLAUDE_MODEL_FAST } = require("./lib/claude-client");
-const { callOmniRoute } = require("./lib/omniroute-client");
+const { callOpenRouter } = require("./lib/openrouter-client");
 
 const PROVIDER_MODELS = {
-  gemini: process.env.OMNIROUTE_GEMINI_MODEL || "gemini-2.5-flash",
-  deepseek: process.env.OMNIROUTE_DEEPSEEK_MODEL || "deepseek-chat",
-  "gpt-5.6": process.env.GPT56_MODEL || "gpt-5.6-terra" // Terra: balanced cost/capability. "gpt-5.6-sol" for the flagship.
+  gemini: process.env.OPENROUTER_GEMINI_MODEL || "google/gemini-2.5-flash",
+  deepseek: process.env.OPENROUTER_DEEPSEEK_MODEL || "deepseek/deepseek-chat-v3.1",
+  "gpt-5.6": process.env.GPT56_MODEL || "gpt-5.6-terra" // Unverified OpenRouter slug — see header note above.
 };
 
-async function callViaOmniRoute(providerKey, system, taskText, maxTokens) {
-  const { text } = await callOmniRoute({
+async function callViaOpenRouter(providerKey, system, taskText, maxTokens) {
+  const { text } = await callOpenRouter({
     model: PROVIDER_MODELS[providerKey],
     system,
     messages: [{ role: "user", content: taskText }],
@@ -87,8 +91,8 @@ async function classify(taskText) {
  * return raw text with no such constraint — that asymmetry is real,
  * not an oversight, and worth knowing before wiring a caller that
  * assumes uniform behavior across providers. All four paths now share
- * the same underlying transport (OmniRoute); this asymmetry is about
- * Gurost's own JSON contract on the Claude path, not about OmniRoute.
+ * the same underlying transport (OpenRouter); this asymmetry is about
+ * Gurost's own JSON contract on the Claude path, not about OpenRouter.
  */
 async function route(taskText, { system, maxTokens = 2000, preferProvider } = {}) {
   const classification = await classify(taskText);
@@ -101,7 +105,7 @@ async function route(taskText, { system, maxTokens = 2000, preferProvider } = {}
     case "gemini":
     case "deepseek":
     case "gpt-5.6":
-      text = await callViaOmniRoute(provider, effectiveSystem, taskText, maxTokens);
+      text = await callViaOpenRouter(provider, effectiveSystem, taskText, maxTokens);
       break;
     case "claude":
     default: {

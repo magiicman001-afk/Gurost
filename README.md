@@ -1,5 +1,32 @@
 # Gurost Orchestrator
 
+## Two real internal QA tools — replaces the earlier dev-audit.js
+
+**Bot 1** (`qa-bot1-click-tester.js`) — real auto-discovery, not a hardcoded page list: starts from real entry points, crawls every same-origin link it finds (capped at 60 pages so a link cycle can't cause a runaway job), and on each page discovers and tests every real button and link itself, rather than being told what to look for. "Did it go to the right place" is genuinely checkable only for real `<a href>` links, where the declared destination is compared against where it actually landed — buttons that fire JavaScript instead of navigating don't have a declared "correct" outcome to check against.
+
+**A real safety denylist, confirmed against every actual button in this codebase before writing it, not guessed**: Delete Account, Deactivate/Reactivate, Send Reset Link, and everything payment-related are never clicked, full stop. Generate/Audit/Restart Live Building are clicked and tested — they trigger real, billed AI calls now that OpenRouter works, so every one is explicitly flagged in the report as costing real money per run, not silently included. One known, conservative trade-off worth knowing: the denylist's broad `send` match also skips the real chat Send button on assistant.html, along with the reset-password one it was meant for — a deliberate "when unsure, skip" choice for a first build, not an oversight, but worth revisiting if that page needs its own coverage later.
+
+**Bot 2** (`qa-bot2-visual-checker.js`) — real full-page screenshots, real pixel-diffing via `pixelmatch`, baselines stored in a new Supabase Storage bucket (`qa-baselines`, private, RLS on with no policies added — meaning only the backend's own service-role key can ever touch it) rather than Render's local disk, which resets on every deploy and would silently lose every baseline the moment new code ships. First run on any page has nothing to compare against — it captures a baseline and says so plainly. Approving an intentional design change as the new baseline is a real, separate, manual action (`?updateBaseline=true` on the audit URL) — never automatic, or a real regression on day one would quietly become tomorrow's accepted normal.
+
+**Combined report** (`qa-orchestrator.js`) — runs both bots in parallel, independent browsers so one crashing can't take the other down, merges into one JSON: a short summary up top (broken elements, skipped-for-safety count, what cost money this run, visual regressions, new baselines), full raw data from both bots underneath.
+
+**Real, honest testing done before shipping**: the denylist classifier was tested against every real destructive/safe button text in this app, not just inspected. The visual diff math was tested against known, controlled image data (identical images, fully different images, a size mismatch, and an exact 5% partial diff) using a mocked stand-in for pixelmatch, since this sandbox has no network access to install the real package — testing the control flow and math this file actually owns, not the library itself. The report-merging logic was tested against realistic mock data covering every branch (a skipped button, a cost-flagged button, a console error, a wrong-destination link, a failed page load, a visual regression, and a new baseline) before being trusted.
+
+**Same access as before**: `GET /api/dev/qa-audit`, admin-only, visited in your own logged-in browser once code is deployed and `ADMIN_EMAILS` includes your email.
+
+
+
+## ⚠️ The real cause of every stuck "Generating" — read this first
+
+Confirmed directly from live Render logs, not guessed: every single deploy since this codebase started routing all AI calls through one gateway has printed `AI gateway: OmniRoute at http://localhost:20128/v1` on startup — including the most recent one. That's not a real address anything was ever listening on. OmniRoute turned out to be a real, but self-hosted, project (17,000+ GitHub stars) — meant to run as its own separate program that this backend would be pointed at. It was never actually set up anywhere, so every AI-calling feature (Generate Website, Generate App, Audit) has been silently failing since the switch to a single gateway.
+
+**Replaced with OpenRouter** — real, hosted (nothing to install or keep running), same OpenAI-compatible request shape, so the fix is contained: `lib/omniroute-client.js` → `lib/openrouter-client.js`, updated model slugs (`anthropic/claude-sonnet-4.5`, not the old bare `claude-sonnet-4-5`), and `OPENROUTER_API_KEY` replacing `OMNIROUTE_API_KEY`. Also worth knowing: Socket.dev blocked the OmniRoute npm package in May 2026 over potential malware — patched afterward, no malware ultimately confirmed, but not a risk worth taking on a server holding Gurost's own real credentials when an already-hosted alternative does the same job.
+
+**Real, honest gap**: `smart-router.js`'s Gemini and DeepSeek slugs were confirmed against a live OpenRouter model listing. Its GPT-5.6 slug was not — carried over from the pre-gateway code unverified. Check `GET {OPENROUTER_BASE_URL}/models` if that specific path doesn't resolve; the Claude and Gemini paths are on solid ground.
+
+**What you need to do**: get a real API key from openrouter.ai, set `OPENROUTER_API_KEY` in Render (replacing `OMNIROUTE_API_KEY`, which can be removed), and this should be genuinely unblocked.
+
+
 Main orchestrator + specialist bots for the Builder and Revamp engines.
 
 ## Quick Start — read this before step 5 confuses you
@@ -753,6 +780,44 @@ Real, opt-in capture of prompt/completion pairs at `lib/claude-client.js`'s `cal
 **A real, wasteful mistake caught before shipping**: an early draft of the export function fetched `healer_learning` to join against captured generations, then never actually used it in the matching logic — that table is keyed by `file_path` (code bugs), not `user_id`, and isn't meaningfully joinable to a per-user generation at all. Removed the dead fetch rather than leave code that looked like it was doing something it wasn't.
 
 **Honest partial coverage, documented rather than implied complete**: `context.feature` (which bot/surface a generation came from) isn't populated by any existing caller yet — exported data will have a null feature label until individual bots are updated to pass one. Same tradeoff already accepted for this file's existing usage-cost attribution, now true for this too.
+
+## Production Readiness Checklist — Priority 6 (this round)
+
+**Corrected the suggested foundation before building anything on it.** `business-autopilot.js` was named as the base for this, but reading its real content first showed it's about running an ongoing business — weekly reviews, social drafts, follow-ups — not about auditing a generated project's own code. Different problem. `self-healing.js` was checked too, for the same reason (Gurost's own platform health, not a user's project). Built `production-readiness.js` on the actually-relevant real foundations instead: this round's own `security-scanner.js`, `aislop-check.js`, and `sandbox.js`, aggregated rather than duplicated, plus genuinely new pattern checks for authentication, error handling, and logging presence — none of which existed anywhere in this codebase before now.
+
+**Tested the new pattern-detection logic directly** against realistic code samples and real edge cases before wiring it into a route — including the one that actually matters most here: a file with zero async operations correctly returns a null ratio instead of a divide-by-zero crash on the error-handling check.
+
+**Honest, stated scope**: every check here detects *presence* of a pattern, not *correctness*. Finding `bcrypt` imported means the project has started building real auth — it doesn't confirm every password path actually uses it correctly. The checklist says so directly in its own output, not just in this doc.
+
+**Guided fixes reuse the existing safety net, not a new one**: applying a guided fix immediately triggers the same real checkpoint (`backup.autoBackupIfDue`) and persistence (`project-state.js`) every other generation route already uses — a bad guided fix is a real, one-click rollback away, not an unreviewable overwrite.
+
+## AI Slop Detection (this round)
+
+**Integrated `aislop`** (github.com/scanaislop/aislop — real, MIT-licensed, 349 stars, checked before recommending it) into the real generation pipeline, at all three real review/fix call sites. It runs alongside review-bot.js's existing semantic review, not instead of it — the two catch genuinely different things. review-bot reasons about the code; aislop pattern-matches deterministically (no LLM in its scan path) for things like narrative comments, swallowed exceptions, dead code, and hallucinated imports.
+
+**A real correction happened mid-build, worth recording honestly**: first said aislop only detects, doesn't fix. That was wrong — further research showed `aislop fix` genuinely auto-fixes mechanical issues directly (unused imports, dead code, formatting), no LLM needed. Corrected before building anything on the wrong assumption. The integration reflects the real, two-stage design: aislop's own real auto-fix runs first (free, deterministic), and only what's left afterward gets converted into review-bot's exact issue shape and handed to the *existing* fix-bot.js pipeline — reusing Gurost's own established way of calling Claude for fixes, rather than wiring in aislop's separate `--claude` agent-handoff flag, which is built for an interactive terminal session, not a server route.
+
+**Honest, stated limitation**: the exact current npm version number couldn't be verified from this environment (npmjs.com blocked the automated check), so this calls `npx aislop@latest` rather than a pinned dependency — slightly slower per call, but doesn't risk locking to a guessed version number that might not exist. Worth pinning a real version once confirmed against npmjs.com directly.
+
+## Live Sandbox Preview (this round)
+
+**Found much more already built than expected before writing anything.** `sandbox.js` already had a real, working E2B integration — creates a real sandbox, writes generated files, runs `npm install`, starts the server, and checks a log tail for crash signatures (servers don't exit 0 on success, so this checks output instead of an exit code). Already wired into three real call sites in the generate/rebuild flow, not sitting unused. Checked this by tracing actual `require`/call sites before assuming anything needed building — same discipline as the checkpoint system discovery in an earlier round.
+
+**What was genuinely missing**: a live URL. The existing code tested for a crash, then killed the sandbox immediately either way — nothing for a user to actually open and click around in, which was specifically what was asked for. Added `startLivePreview()` — same setup, but keeps the sandbox alive on success and returns a real, working preview URL via E2B's `getHost()`, plus `stopPreview()` for closing it early rather than waiting out its timeout unnecessarily. Both routes verified against E2B's own current docs before writing the code, not written from memory — `getHost()`, `sandboxId`, and `Sandbox.connect()` for reconnecting by ID were all confirmed against multiple official doc pages first.
+
+**A real prerequisite was missing and got fixed first**: nothing in the generation prompt told the AI what port to use, so a live preview couldn't reliably know what to expose. Added an explicit, required convention to `app-bot.js`'s system prompt (`process.env.PORT`, falling back to 3000) — and the preview code also sets `PORT` explicitly when starting the server, as a second layer, in case generated code doesn't follow the prompt exactly.
+
+**Honest scope, stated plainly, not glossed over**: this covers Node/Express backends only, same as the original crash-testing code already did. A generated React frontend isn't covered — running that live belongs in the browser via WebContainers, a genuinely different, client-side technology, not something this Node-side sandbox can do. That's real, separate future work, not a small addition to this one.
+
+## Security Scanning + a real, live fix (this round)
+
+**A real, live vulnerability was found and closed before anything else was built.** Checked the actual current state of Gurost's own five tables (`api_keys`, `password_resets`, `assistant_briefings`, `guide_decisions`, `credit_balances`) — all five had Row Level Security disabled, including `api_keys` with real user accounts and real password hashes already in it. This is the exact vulnerability class behind CVE-2025-48757 (170+ apps exposed, one breach alone hit 18,697 users) — not a hypothetical risk, a live one. Verified first that the backend only ever touches these tables via the privileged `service_role` key (which bypasses RLS regardless), confirming it was genuinely safe to enable RLS immediately, even before any policies existed — nothing legitimate uses the anon/authenticated path for these tables. Fixed, and confirmed fixed by re-querying the real table state afterward, not by trusting the migration's success message.
+
+**`security-scanner.js` is built specifically to avoid the exact failure that made Lovable's own post-CVE scanner insufficient.** Their fix checked whether RLS was switched on — not whether the policy attached to it actually restricted anything. A table with RLS enabled and a single `USING (true)` policy passed their scan while remaining fully readable by anyone. This scanner checks the deeper thing: it reads the real policy conditions from `pg_policies` and flags conditions that are empty or reduce to `true` after removing whitespace — the exact documented anti-pattern — rather than treating "a policy row exists" as a pass.
+
+**A real bug was caught by testing the secret-detection patterns, not by trusting them**: the first version of the OpenAI key pattern only matched the old key format and silently failed to catch the current `sk-proj-...` format, since a hyphen inside the key body broke the regex. Found this by testing a real, current-format example key against it — not by reading the pattern and assuming it was right — and fixed it before it shipped.
+
+**Honest about what this can't do**: it checks for the specific, documented anti-pattern that caused a real breach — an empty or trivially-true policy condition. It cannot verify that a policy's actual logic is correct (a policy checking the wrong column name would still look "real" to this scanner). That's a real, stated limit, not glossed over.
 
 ## Known limitations — read before you rely on this
 

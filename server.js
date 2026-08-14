@@ -53,7 +53,10 @@ const assistantBot = require("./bots/assistant-bot");
 const integrator = require("./bots/integrator-bot");
 const reviewBot = require("./bots/review-bot");
 const fixBot = require("./bots/fix-bot");
-const { runSandboxTest } = require("./sandbox");
+const { runSandboxTest, startLivePreview, stopPreview } = require("./sandbox");
+const { runAislopCheck } = require("./aislop-check");
+const productionReadiness = require("./production-readiness");
+const qaOrchestrator = require("./qa-orchestrator"); // TEMPORARY — see qa-orchestrator.js's header. Delete this line and the three qa-bot*.js files when QA testing is done.
 const { buildAndroidBundle } = require("./lib/android-build");
 const { uploadToPlayStore } = require("./lib/google-play");
 const scheduler = require("./lib/scheduler");
@@ -66,7 +69,7 @@ const botOrchestrator = require("./bot-orchestrator");
 const imageBot = require("./image-bot");
 const router = require("./router");
 const smartRouter = require("./smart-router");
-const { OMNIROUTE_BASE_URL } = require("./lib/omniroute-client");
+const { OPENROUTER_BASE_URL } = require("./lib/openrouter-client");
 const nanobotSwarm = require("./nanobot-swarm");
 const systemHealer = require("./system-healer");
 const selfHealing = require("./self-healing");
@@ -83,6 +86,8 @@ const researchBot = require("./bots/research-bot");
 const approvalWorkflow = require("./approval-workflow");
 const businessAutopilot = require("./business-autopilot");
 const trainingData = require("./training-data");
+const securityScanner = require("./security-scanner");
+const projectState = require("./project-state");
 const weekAheadBriefing = require("./week-ahead-briefing");
 const whatsappClient = require("./lib/whatsapp-client");
 const whatsappBot = require("./bots/whatsapp-bot");
@@ -317,7 +322,23 @@ app.use("/api", userLimiter);
 
 // Ownership check for any /api route carrying a projectId — no-ops when
 // the route doesn't have one (e.g. /api/generate creating a fresh project).
-app.use("/api", auth.requireProjectOwnership((id) => PROJECTS.get(id)));
+// The lookup itself now falls back to the database when a project isn't
+// in memory (server restart, see project-state.js), and re-populates
+// PROJECTS on a successful hydrate so every downstream route handler's
+// own synchronous getProject() call also finds it for the rest of this
+// server's uptime — this one fix covers every route behind this
+// middleware, not just one.
+app.use(
+  "/api",
+  auth.requireProjectOwnership(async (id) => {
+    let project = PROJECTS.get(id);
+    if (!project) {
+      project = await projectState.hydrateProjectIfMissing(id);
+      if (project) PROJECTS.set(id, project);
+    }
+    return project;
+  })
+);
 
 function newProject(prompt, userId) {
   return {
@@ -350,6 +371,43 @@ function getProject(projectId, res) {
     return null;
   }
   return project;
+}
+
+/**
+ * Runs review-bot's real semantic review AND aislop's real
+ * deterministic pattern check, merges their findings into review-bot's
+ * exact return shape, and adopts aislop's own real auto-fixed file
+ * content as the new baseline (its fix stage is mechanical and safe —
+ * no LLM, no cost, just runs) before either set of findings gets
+ * handed to fixBot. One shared function rather than repeating this
+ * merge at all three real call sites in the generate/rebuild flow.
+ */
+async function reviewWithAislop(files) {
+  const [review, aislop] = await Promise.all([reviewBot.reviewFiles(files), runAislopCheck(files)]);
+
+  if (aislop.skipped) return review; // real, honest fallback — aislop unavailable shouldn't block generation, review-bot's own result still stands on its own
+
+  const mergedFiles = aislop.files; // aislop's own auto-fixed content — safe to adopt, its fix stage is deterministic
+  const aislopByPath = Object.fromEntries(aislop.results.map((r) => [r.path, r]));
+
+  const mergedResults = review.results.map((r) => ({
+    ...r,
+    issues: [...r.issues, ...(aislopByPath[r.path]?.issues || [])],
+  }));
+
+  const allIssues = mergedResults.flatMap((r) => r.issues.map((issue) => ({ ...issue, file: r.path })));
+  const hasCritical = allIssues.some((i) => i.severity === "Critical");
+  const hasHigh = allIssues.some((i) => i.severity === "High");
+
+  return {
+    results: mergedResults,
+    failures: review.failures,
+    allIssues,
+    hasCritical,
+    hasHigh,
+    overallPass: !hasCritical && !hasHigh,
+    files: mergedFiles, // real, honest addition to the normal reviewFiles() shape — callers that want aislop's auto-fixed content can use this; callers that don't reference it lose nothing, same shape otherwise
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -395,9 +453,10 @@ app.post(
         // issues survive a fix attempt, that's surfaced to the user
         // rather than retried indefinitely against the same code.
         const backendCount = project.appFiles.backend.length;
-        const allFiles = [...project.appFiles.backend, ...project.appFiles.frontend];
+        let allFiles = [...project.appFiles.backend, ...project.appFiles.frontend];
 
-        const initialReview = await reviewBot.reviewFiles(allFiles);
+        const initialReview = await reviewWithAislop(allFiles);
+        if (initialReview.files) allFiles = initialReview.files; // aislop's real, safe, mechanical auto-fixes adopted before anything else runs
         let finalReview = initialReview;
         let fixLog = [];
 
@@ -463,6 +522,7 @@ app.post(
         transition(project, "DONE");
         await auth.recordBuildEvent(req.user.id);
         backup.autoBackupIfDue(project, req.user.id, projectId).catch((err) => console.warn("[backup] Auto-checkpoint failed:", err.message));
+        projectState.persistProjectState(projectId, req.user.id, project).catch((err) => console.warn("[project-state] Persist failed:", err.message));
         return res.json({
           projectId,
           type: "app",
@@ -550,8 +610,9 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
     // happening, not just the three generation stages.
     broadcastProjectUpdate(projectId, { type: "stage_progress", stage: "reviewing", status: "running" });
     const backendCount = project.appFiles.backend.length;
-    const allFiles = [...project.appFiles.backend, ...project.appFiles.frontend];
-    const initialReview = await reviewBot.reviewFiles(allFiles);
+    let allFiles = [...project.appFiles.backend, ...project.appFiles.frontend];
+    const initialReview = await reviewWithAislop(allFiles);
+    if (initialReview.files) allFiles = initialReview.files;
     let finalReview = initialReview;
 
     if (initialReview.hasCritical || initialReview.hasHigh) {
@@ -856,6 +917,7 @@ app.post(
       transition(project, "DONE");
       await auth.recordBuildEvent(req.user.id);
       backup.autoBackupIfDue(project, req.user.id, projectId).catch((err) => console.warn("[backup] Auto-checkpoint failed:", err.message));
+      projectState.persistProjectState(projectId, req.user.id, project).catch((err) => console.warn("[project-state] Persist failed:", err.message));
       res.json({ projectId, html: project.currentHtml, summary: result.summary, state: project.state });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -1022,9 +1084,10 @@ app.post("/api/deploy/one-click", security.rejectUnknownFields(["projectId"]), a
       if (!project.appFiles) return res.status(400).json({ error: "Nothing to deploy yet." });
 
       const backendCount = project.appFiles.backend.length;
-      const allFiles = [...project.appFiles.backend, ...project.appFiles.frontend];
+      let allFiles = [...project.appFiles.backend, ...project.appFiles.frontend];
 
-      const initialReview = await reviewBot.reviewFiles(allFiles);
+      const initialReview = await reviewWithAislop(allFiles);
+      if (initialReview.files) allFiles = initialReview.files;
       let finalReview = initialReview;
       let fixLog = [];
 
@@ -2086,8 +2149,8 @@ app.post("/api/route", security.rejectUnknownFields(["text"]), async (req, res) 
 // only classifies which internal bot to use. This one also picks WHICH
 // AI PROVIDER handles the task (Claude, Gemini, DeepSeek, or GPT-5.6),
 // gated to paid plans since it can incur cost regardless of which
-// provider gets picked. All four now route through OmniRoute
-// (lib/omniroute-client.js) as a single gateway — see that file for
+// provider gets picked. All four now route through OpenRouter
+// (lib/openrouter-client.js) as a single gateway — see that file for
 // what changed and why.
 app.post(
   "/api/smart-route",
@@ -2551,6 +2614,122 @@ app.post("/api/training-data/export", auth.requireAdmin, security.rejectUnknownF
 });
 
 // ---------------------------------------------------------------------------
+// SECURITY SCANNING — real, admin-only. Checks whether RLS policies
+// actually restrict access, not just whether they exist — see
+// security-scanner.js's header for why that distinction is the whole
+// point of this file, not a nice-to-have detail.
+// ---------------------------------------------------------------------------
+
+app.get("/api/security/scan-database", auth.requireAdmin, async (req, res) => {
+  try {
+    res.json(await securityScanner.scanDatabaseSecurity());
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/security/scan-project-code", auth.requireAdmin, security.rejectUnknownFields(["files"]), async (req, res) => {
+  if (!Array.isArray(req.body.files)) return res.status(400).json({ error: "'files' must be an array of {path, content}." });
+  try {
+    res.json(securityScanner.scanCodeForSecrets(req.body.files));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// LIVE SANDBOX PREVIEW — a real, running URL for a generated app, not
+// just a pass/fail crash check. protected by the same real ownership
+// middleware every other /api/*projectId* route already goes through
+// (see requireProjectOwnership above) — no separate auth logic needed
+// here.
+// ---------------------------------------------------------------------------
+
+app.post("/api/preview/start", security.rejectUnknownFields(["projectId"]), async (req, res) => {
+  const project = getProject(req.body.projectId, res);
+  if (!project) return;
+  if (!project.appFiles?.backend) {
+    return res.status(400).json({ error: "This project doesn't have a generated backend to preview yet." });
+  }
+  try {
+    res.json(await startLivePreview(project.appFiles.backend));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/preview/stop", security.rejectUnknownFields(["sandboxId"]), async (req, res) => {
+  if (!req.body.sandboxId) return res.status(400).json({ error: "sandboxId is required." });
+  try {
+    res.json(await stopPreview(req.body.sandboxId));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// PRODUCTION READINESS — real checklist aggregating existing checks
+// (security, aislop, sandbox) plus new pattern checks (auth, error
+// handling, logging). See production-readiness.js's header for why
+// this isn't built on business-autopilot.js despite that being the
+// original suggestion.
+// ---------------------------------------------------------------------------
+
+app.get("/api/readiness/:id", async (req, res) => {
+  const project = getProject(req.params.id, res);
+  if (!project) return;
+  try {
+    res.json(await productionReadiness.runReadinessCheck(project));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/readiness/guided-fix", security.rejectUnknownFields(["projectId", "category"]), async (req, res) => {
+  const project = getProject(req.body.projectId, res);
+  if (!project) return;
+  try {
+    const result = await productionReadiness.generateMissingPiece(project, req.body.category);
+    // Real, same pattern as every generation/fix route above: apply
+    // the change, then checkpoint it immediately, so a guided fix
+    // that turns out wrong is a real, one-click rollback away, not a
+    // silent, unreviewable overwrite.
+    project.appFiles.backend = result.files;
+    backup.autoBackupIfDue(project, req.user.id, req.body.projectId).catch((err) => console.warn("[backup] Auto-checkpoint failed:", err.message));
+    projectState.persistProjectState(req.body.projectId, req.user.id, project).catch((err) => console.warn("[project-state] Persist failed:", err.message));
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// TEMPORARY QA TOOLS — real, internal, deletable. See each file's
+// header for full scope: qa-bot1-click-tester.js (auto-discovery +
+// click testing, with a real safety denylist), qa-bot2-visual-checker.js
+// (screenshot diffing against baselines in Supabase Storage), and
+// qa-orchestrator.js (runs both, merges into one report). Delete this
+// whole block plus all three files once QA testing is done. Admin-only
+// on purpose — this opens a real browser and clicks/screenshots
+// through many pages, genuinely heavier than a normal request.
+//
+// Supersedes the earlier dev-audit.js, which only tested a fixed,
+// hand-picked list of buttons — these two bots discover the site
+// themselves and add real visual regression checking on top.
+// ---------------------------------------------------------------------------
+
+app.get("/api/dev/qa-audit", auth.requireAdmin, async (req, res) => {
+  try {
+    const baseUrl = req.protocol + "://" + req.get("host");
+    const updateVisualBaseline = req.query.updateBaseline === "true";
+    const report = await qaOrchestrator.runFullQA(baseUrl, { updateVisualBaseline });
+    res.json(report);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // WHATSAPP — authenticated routes (config, conversations, sending).
 // The webhook itself lives earlier in this file, before auth.requireAuth,
 // since Meta can't provide a Gurost session token. This section is
@@ -2778,6 +2957,9 @@ app.post(
 // ---------------------------------------------------------------------------
 
 app.get("/api/project/:id", (req, res) => {
+  // No hydrate-on-miss logic needed here directly — the ownership
+  // middleware above already does it and re-populates PROJECTS before
+  // this handler runs, for every route behind it, not just this one.
   const project = getProject(req.params.id, res);
   if (!project) return;
   res.json(project);
@@ -2805,8 +2987,8 @@ app.get("/api/me", async (req, res) => {
 // Also missing — GET /api/project/:id existed but nothing listed a
 // user's own projects, which the Dashboard needs. Returns a summary
 // per project, not the full object.
-app.get("/api/projects", (req, res) => {
-  const mine = [...PROJECTS.entries()]
+app.get("/api/projects", async (req, res) => {
+  const inMemory = [...PROJECTS.entries()]
     .filter(([, p]) => p.userId === req.user.id)
     .map(([id, p]) => ({
       id,
@@ -2816,8 +2998,29 @@ app.get("/api/projects", (req, res) => {
       deployUrl: p.deployUrl,
       hasCriticalIssues: p.codeReview?.hasCritical || false,
       lastUpdated: p.stateHistory?.[p.stateHistory.length - 1]?.ts || p.buildStartedAt
-    }))
-    .sort((a, b) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
+    }));
+
+  // Real fix for the actual bug: right after a restart, PROJECTS is
+  // empty, so this route used to return nothing even for a user with
+  // genuine history. Merge in whatever's persisted, preferring the
+  // in-memory version of any project that appears in both — it's
+  // being actively worked on this session, so it's always at least
+  // as fresh as what's in the database.
+  const persisted = await projectState.listPersistedProjects(req.user.id);
+  const inMemoryIds = new Set(inMemory.map((p) => p.id));
+  const persistedOnly = persisted
+    .filter((p) => !inMemoryIds.has(p.project_id))
+    .map((p) => ({
+      id: p.project_id,
+      prompt: p.prompt,
+      type: p.type,
+      state: p.state,
+      deployUrl: p.deploy_url,
+      hasCriticalIssues: false, // not persisted — codeReview is intentionally left out of project_state, see its header
+      lastUpdated: new Date(p.updated_at).getTime()
+    }));
+
+  const mine = [...inMemory, ...persistedOnly].sort((a, b) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
   res.json({ projects: mine });
 });
 
@@ -2903,7 +3106,7 @@ const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, () => {
   console.log(`Gurost orchestrator listening on port ${PORT}`);
   console.log(`Guide Bot WebSocket available at ws://localhost:${PORT}/ws/guide`);
-  console.log(`AI gateway: OmniRoute at ${OMNIROUTE_BASE_URL} — every bot's model calls route through here now.`);
+  console.log(`AI gateway: OpenRouter at ${OPENROUTER_BASE_URL} — every bot's model calls route through here now.`);
   scheduler.startScheduler();
   nanobotSwarm.startSwarm({ adminUserId: process.env.SWARM_ADMIN_USER_ID || null });
   reminders.startReminderPolling();
