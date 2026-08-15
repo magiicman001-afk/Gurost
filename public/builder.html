@@ -20,8 +20,19 @@
             0% { transform: scale(1); opacity: 0.5; }
             100% { transform: scale(1.5); opacity: 0; }
         }
+        /* Real, visible proof-of-life while generating — a static
+           label alone left generation looking identical whether it
+           was working or genuinely stuck, since full multi-variant
+           generation can take real, honest minutes. */
+        .gurost-spin {
+            animation: gurost-spin 1.2s linear infinite;
+        }
+        @keyframes gurost-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
-<link href="styles.css" rel="stylesheet"/>
+<link href="shared/styles.css" rel="stylesheet"/>
 <link href="shared/widget.css" rel="stylesheet"/>
 </head>
 <body class="bg-surface-bright text-on-surface font-body-md antialiased min-h-screen flex flex-col">
@@ -140,6 +151,7 @@
 <button class="text-secondary text-sm font-semibold hover:underline hidden" id="codeToggleBtn" type="button">
 <span id="codeToggleLabel">Show Code</span>
 </button>
+<button class="text-secondary text-sm font-semibold hover:underline ml-4" id="versionHistoryBtn" type="button">Version History</button>
 </div>
 <!-- Browser Content Area -->
 <div class="relative w-full aspect-video bg-surface-container-low overflow-hidden">
@@ -209,6 +221,7 @@
 </footer>
 
 <script src="shared/api-client.js"></script>
+<script src="shared/checkpoint-ui.js"></script>
 <script src="shared/pulse-voice.js"></script>
 <script src="shared/widget.js"></script>
 <script src="shared/code-boxes.js"></script>
@@ -223,15 +236,44 @@
  */
 
 let projectId = null;
+
+GurostCheckpoints.init({
+  getProjectId: () => projectId,
+  onRestore: async () => {
+    // The restore route itself doesn't return the restored HTML content
+    // (checked its real response shape before writing this) — fetch the
+    // real, current project state and re-render from that, rather than
+    // guess at what changed.
+    const project = await GurostAPI.call(`/api/project/${projectId}`);
+    if (project.currentHtml) renderPreview(project.currentHtml);
+  },
+});
+document.getElementById('versionHistoryBtn').addEventListener('click', () => GurostCheckpoints.open());
 let currentHtml = null;
+
+let generateTimerInterval = null;
 
 function setGenerateLoading(active) {
   const btn = document.getElementById('generateBtn');
   const label = document.getElementById('generateBtnLabel');
   const icon = document.getElementById('generateBtnIcon');
   btn.disabled = active;
-  label.textContent = active ? 'Generating…' : 'Generate Website';
-  icon.textContent = active ? 'autorenew' : 'auto_awesome';
+
+  if (active) {
+    icon.textContent = 'autorenew';
+    icon.classList.add('gurost-spin');
+    const startedAt = Date.now();
+    label.textContent = 'Generating… 0s';
+    generateTimerInterval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+      label.textContent = `Generating… ${elapsed}s`;
+    }, 1000);
+  } else {
+    clearInterval(generateTimerInterval);
+    icon.classList.remove('gurost-spin');
+    label.textContent = 'Generate Website';
+    icon.textContent = 'auto_awesome';
+  }
 }
 
 function showError(message) {
