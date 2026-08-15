@@ -7,7 +7,13 @@
 const bot1 = require("./qa-bot1-click-tester");
 const bot2 = require("./qa-bot2-visual-checker");
 
-const VISUAL_CHECK_PAGES = ["/index.html", "/signup.html", "/dashboard.html", "/builder.html", "/app-builder.html", "/amend_website.html"];
+// Real, deliberately trimmed to the pages that matter most right now
+// (the "No skin" pages you flagged, plus the landing page as a real
+// baseline for comparison) — cut down after a real out-of-memory
+// crash on Render's free tier. Full-page screenshots and pixel-diffing
+// are genuinely heavy per page; widen this list once the core flow is
+// confirmed stable, not before.
+const VISUAL_CHECK_PAGES = ["/index.html", "/builder.html", "/app-builder.html", "/amend_website.html"];
 
 function summarize(clickReport, visualReport) {
   const summary = {
