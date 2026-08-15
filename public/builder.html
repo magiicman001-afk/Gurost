@@ -237,18 +237,28 @@
 
 let projectId = null;
 
-GurostCheckpoints.init({
-  getProjectId: () => projectId,
-  onRestore: async () => {
-    // The restore route itself doesn't return the restored HTML content
-    // (checked its real response shape before writing this) — fetch the
-    // real, current project state and re-render from that, rather than
-    // guess at what changed.
-    const project = await GurostAPI.call(`/api/project/${projectId}`);
-    if (project.currentHtml) renderPreview(project.currentHtml);
-  },
-});
-document.getElementById('versionHistoryBtn').addEventListener('click', () => GurostCheckpoints.open());
+// Real, defensive wrap — this ran completely unprotected before,
+// meaning any real failure here (checkpoint-ui.js, a missing element,
+// anything) would silently stop every script below it on this page
+// from ever running at all, including the Generate button's own click
+// listener further down. One broken feature should never be able to
+// take down an entirely unrelated one.
+try {
+  GurostCheckpoints.init({
+    getProjectId: () => projectId,
+    onRestore: async () => {
+      // The restore route itself doesn't return the restored HTML content
+      // (checked its real response shape before writing this) — fetch the
+      // real, current project state and re-render from that, rather than
+      // guess at what changed.
+      const project = await GurostAPI.call(`/api/project/${projectId}`);
+      if (project.currentHtml) renderPreview(project.currentHtml);
+    },
+  });
+  document.getElementById('versionHistoryBtn').addEventListener('click', () => GurostCheckpoints.open());
+} catch (err) {
+  console.error('[builder] Version history setup failed, continuing without it:', err.message);
+}
 let currentHtml = null;
 
 let generateTimerInterval = null;
@@ -438,22 +448,34 @@ async function loadExistingProject(id) {
 document.addEventListener('DOMContentLoaded', () => {
   if (!GurostAPI.requireLogin()) return;
 
-  const urlProjectId = new URLSearchParams(window.location.search).get('projectId');
-  if (urlProjectId) {
-    loadExistingProject(urlProjectId);
-  } else {
-    // Dashboard handoff — same gurost_pending_generate key App Builder
-    // reads for app-mode; this page reads it for website-mode.
-    const pending = JSON.parse(localStorage.getItem('gurost_pending_generate') || 'null');
-    if (pending && pending.mode === 'website') {
-      document.getElementById('siteDescription').value = pending.prompt || '';
-      localStorage.removeItem('gurost_pending_generate');
-    }
-  }
-
+  // Real, deliberate ordering — this listener used to be attached
+  // *after* the project-loading/localStorage logic below, meaning a
+  // real failure in that secondary code (e.g. malformed JSON left in
+  // localStorage from an earlier session) would silently prevent this
+  // button from ever working at all. Attaching it first, before
+  // anything that could throw, means Generate Website keeps working
+  // even if the optional logic below it fails.
   document.getElementById('generateBtn').addEventListener('click', () => {
     generateWebsite(document.getElementById('siteDescription').value);
   });
+
+  try {
+    const urlProjectId = new URLSearchParams(window.location.search).get('projectId');
+    if (urlProjectId) {
+      loadExistingProject(urlProjectId);
+    } else {
+      // Dashboard handoff — same gurost_pending_generate key App Builder
+      // reads for app-mode; this page reads it for website-mode.
+      const pending = JSON.parse(localStorage.getItem('gurost_pending_generate') || 'null');
+      if (pending && pending.mode === 'website') {
+        document.getElementById('siteDescription').value = pending.prompt || '';
+        localStorage.removeItem('gurost_pending_generate');
+      }
+    }
+  } catch (err) {
+    console.error('[builder] Project handoff/restore setup failed, continuing without it:', err.message);
+    localStorage.removeItem('gurost_pending_generate'); // clear whatever was malformed so it can't keep failing on every future page load
+  }
 
   document.getElementById('codeToggleBtn').addEventListener('click', toggleCodeView);
 

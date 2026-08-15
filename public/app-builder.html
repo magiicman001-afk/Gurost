@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="styles.css" rel="stylesheet"/>
+<link href="shared/styles.css" rel="stylesheet"/>
 <link href="shared/widget.css" rel="stylesheet"/>
 </head>
 <body class="bg-background text-on-background font-body-md min-h-screen flex flex-col">
@@ -57,6 +57,7 @@
 <span class="material-symbols-outlined text-sm">code</span>
 <span id="codeToggleLabel">Show Code</span>
 </button>
+<button class="text-secondary font-body-md text-body-md hover:underline ml-4" id="versionHistoryBtn" type="button">Version History</button>
 </div>
 <div class="w-full aspect-video bg-surface-container-high rounded-xl border border-outline-variant/50 shadow-md overflow-hidden relative">
 
@@ -208,6 +209,7 @@
 </footer>
 
 <script src="shared/api-client.js"></script>
+<script src="shared/checkpoint-ui.js"></script>
 <script src="shared/pulse-voice.js"></script>
 <script src="shared/widget.js"></script>
 <script src="shared/code-boxes.js"></script>
@@ -247,6 +249,28 @@
  */
 
 let projectId = null;
+
+// Real, defensive wrap — same real reason as builder.html: unprotected
+// top-level code here previously meant any real failure (checkpoint-ui.js,
+// a missing element) could silently stop every script below it on this
+// page from running at all, including the Generate button's own click
+// listener further down.
+try {
+  GurostCheckpoints.init({
+    getProjectId: () => projectId,
+    onRestore: async () => {
+      // This page renders multi-file apps, not single-HTML websites —
+      // renderCodeView() expects {backend, frontend}, which is exactly
+      // what restoreInPlace sets on project.appFiles (checked its real
+      // code before writing this, not assumed to match builder.html).
+      const project = await GurostAPI.call(`/api/project/${projectId}`);
+      if (project.appFiles) renderCodeView(project.appFiles);
+    },
+  });
+  document.getElementById('versionHistoryBtn').addEventListener('click', () => GurostCheckpoints.open());
+} catch (err) {
+  console.error('[app-builder] Version history setup failed, continuing without it:', err.message);
+}
 let currentAppFiles = null; // {backend, frontend, database}
 let originalPrompt = null; // needed so a Pulse correction can regenerate WITH the original context, not replace it
 let isGenerating = false;
@@ -687,24 +711,31 @@ async function loadExistingProject(id) {
 document.addEventListener('DOMContentLoaded', () => {
   if (!GurostAPI.requireLogin()) return;
 
-  const urlProjectId = new URLSearchParams(window.location.search).get('projectId');
-  if (urlProjectId) {
-    loadExistingProject(urlProjectId);
-  } else {
-    // Handoff from Dashboard's "Build App" flow — same localStorage key
-    // onboarding.html/templates.html already use for website-mode, read
-    // here for app-mode. Pre-fills the box; does NOT auto-generate,
-    // since only the template cards below are specified to auto-generate.
-    const pending = JSON.parse(localStorage.getItem('gurost_pending_generate') || 'null');
-    if (pending && pending.mode === 'app') {
-      document.getElementById('appDescription').value = pending.prompt || '';
-      localStorage.removeItem('gurost_pending_generate');
-    }
-  }
-
+  // Real, deliberate ordering — same real reason as builder.html: this
+  // listener now attaches before anything that could throw and block it.
   document.getElementById('generateBtn').addEventListener('click', () => {
     generateApp(document.getElementById('appDescription').value);
   });
+
+  try {
+    const urlProjectId = new URLSearchParams(window.location.search).get('projectId');
+    if (urlProjectId) {
+      loadExistingProject(urlProjectId);
+    } else {
+      // Handoff from Dashboard's "Build App" flow — same localStorage key
+      // onboarding.html/templates.html already use for website-mode, read
+      // here for app-mode. Pre-fills the box; does NOT auto-generate,
+      // since only the template cards below are specified to auto-generate.
+      const pending = JSON.parse(localStorage.getItem('gurost_pending_generate') || 'null');
+      if (pending && pending.mode === 'app') {
+        document.getElementById('appDescription').value = pending.prompt || '';
+        localStorage.removeItem('gurost_pending_generate');
+      }
+    }
+  } catch (err) {
+    console.error('[app-builder] Project handoff/restore setup failed, continuing without it:', err.message);
+    localStorage.removeItem('gurost_pending_generate');
+  }
 
   document.getElementById('codeToggleBtn').addEventListener('click', toggleCodeView);
 

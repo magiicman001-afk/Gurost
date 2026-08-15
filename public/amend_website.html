@@ -26,7 +26,7 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
     </style>
-<link href="styles.css" rel="stylesheet"/>
+<link href="shared/styles.css" rel="stylesheet"/>
 <link href="shared/widget.css" rel="stylesheet"/>
 </head>
 <body class="bg-background text-on-surface font-body-md min-h-screen flex flex-col">
@@ -364,23 +364,32 @@ async function loadExistingProject(id) {
 document.addEventListener('DOMContentLoaded', () => {
   if (!GurostAPI.requireLogin()) return;
 
-  const urlProjectId = new URLSearchParams(window.location.search).get('projectId');
-  if (urlProjectId) {
-    loadExistingProject(urlProjectId);
-  } else {
-    // Handoff from Dashboard's "Amend Website" flow — a dedicated key,
-    // since this page needs a URL, not a prompt+mode pair the way
-    // builder.html/app-builder.html's gurost_pending_generate does.
-    const pending = JSON.parse(localStorage.getItem('gurost_pending_amend') || 'null');
-    if (pending && pending.url) {
-      document.getElementById('siteUrl').value = pending.url;
-      localStorage.removeItem('gurost_pending_amend');
-    }
-  }
-
+  // Real, deliberate ordering — same real reason as builder.html/
+  // app-builder.html: this listener now attaches before anything that
+  // could throw and block it.
   document.getElementById('auditBtn').addEventListener('click', () => {
     runAudit(document.getElementById('siteUrl').value);
   });
+
+  try {
+    const urlProjectId = new URLSearchParams(window.location.search).get('projectId');
+    if (urlProjectId) {
+      loadExistingProject(urlProjectId);
+    } else {
+      // Handoff from Dashboard's "Amend Website" flow — a dedicated key,
+      // since this page needs a URL, not a prompt+mode pair the way
+      // builder.html/app-builder.html's gurost_pending_generate does.
+      const pending = JSON.parse(localStorage.getItem('gurost_pending_amend') || 'null');
+      if (pending && pending.url) {
+        document.getElementById('siteUrl').value = pending.url;
+        localStorage.removeItem('gurost_pending_amend');
+      }
+    }
+  } catch (err) {
+    console.error('[amend_website] Project handoff/restore setup failed, continuing without it:', err.message);
+    localStorage.removeItem('gurost_pending_amend');
+  }
+
   document.getElementById('fixAllBtn').addEventListener('click', runFixAll);
   document.getElementById('codeToggleBtn').addEventListener('click', toggleCodeView);
 
