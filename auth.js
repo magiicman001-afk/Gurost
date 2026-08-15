@@ -144,6 +144,8 @@ function requireProjectOwnership(lookupProject) {
 // Requires requireAuth to have run first. Counts this calendar month's
 // build_events for the user against their plan's limit.
 async function enforcePlanLimit(req, res, next) {
+  if (isAdmin(req.user?.email)) return next();
+
   const plan = req.user.plan || "free";
   const limit = PLAN_LIMITS[plan] ?? PLAN_LIMITS.free;
   if (limit === Infinity) return next();
@@ -181,8 +183,12 @@ async function recordBuildEvent(userId) {
 // credential to actually carry an email (JWT payload or api_keys row).
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
 
+function isAdmin(email) {
+  return !!email && ADMIN_EMAILS.includes(email.toLowerCase());
+}
+
 function requireAdmin(req, res, next) {
-  if (!req.user?.email || !ADMIN_EMAILS.includes(req.user.email.toLowerCase())) {
+  if (!isAdmin(req.user?.email)) {
     return res.status(403).json({ error: "Admin access only." });
   }
   next();
@@ -195,5 +201,6 @@ module.exports = {
   recordBuildEvent,
   hashApiKey,
   requireAdmin,
+  isAdmin,
   PLAN_LIMITS
 };

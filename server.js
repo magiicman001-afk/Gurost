@@ -450,7 +450,7 @@ app.post(
     const { mode } = req.body; // mode: "website" | "app"
     if (!prompt) return res.status(400).json({ error: "Missing 'prompt'." });
 
-    const maxProjects = PLANS[req.user.plan]?.maxProjects ?? 1;
+    const maxProjects = auth.isAdmin(req.user.email) ? Infinity : (PLANS[req.user.plan]?.maxProjects ?? 1);
     const currentProjectCount = [...PROJECTS.values()].filter((p) => p.userId === req.user.id).length;
     if (currentProjectCount >= maxProjects) {
       return res.status(402).json({
@@ -575,6 +575,7 @@ app.post(
         state: project.state
       });
     } catch (err) {
+      console.error(`[generate] mode=${mode} failed for user ${req.user.id}:`, err.message);
       res.status(500).json({ error: err.message });
     }
   }
