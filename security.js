@@ -223,9 +223,11 @@ const VIOLATION_BLOCK_THRESHOLD = Number(process.env.SECURITY_VIOLATION_BLOCK_TH
 const VIOLATION_WINDOW_MINUTES = Number(process.env.SECURITY_VIOLATION_WINDOW_MINUTES) || 60;
 
 async function trackViolation(ip, violationType, detail) {
-  await supabase.from("security_violations").insert({ ip, violation_type: violationType, detail: detail || null }).catch((err) =>
-    console.warn("[security] Failed to log violation:", err.message)
-  );
+  try {
+    await supabase.from("security_violations").insert({ ip, violation_type: violationType, detail: detail || null });
+  } catch (err) {
+    console.warn("[security] Failed to log violation:", err.message);
+  }
 
   const since = new Date(Date.now() - VIOLATION_WINDOW_MINUTES * 60000).toISOString();
   const { count } = await supabase

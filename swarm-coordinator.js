@@ -27,9 +27,11 @@ const segmentGuard = require("./segment-guard");
 const systemHealer = require("./system-healer");
 
 async function logMessage(fromAgent, toAgent, message) {
-  await supabase.from("swarm_messages").insert({ from_agent: fromAgent, to_agent: toAgent, message }).catch((err) =>
-    console.warn("[swarm-coordinator] Failed to log message:", err.message)
-  );
+  try {
+    await supabase.from("swarm_messages").insert({ from_agent: fromAgent, to_agent: toAgent, message });
+  } catch (err) {
+    console.warn("[swarm-coordinator] Failed to log message:", err.message);
+  }
 }
 
 async function runCycle() {
