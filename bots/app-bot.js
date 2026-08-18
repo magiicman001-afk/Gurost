@@ -36,12 +36,22 @@ Build a React app (functional components, hooks) that calls the given endpoints.
 
 On each top-level rendered section within a component (the outermost divs/sections a component returns, not every nested element), add a real data-gurost-file="ComponentFileName.jsx" attribute matching the actual file path that component lives in. This is real, load-bearing metadata — the live preview's Clickable Code Boxes feature reads this attribute directly to map a clicked section back to its real source file, so it needs to be accurate, not decorative. Don't add it to every element, just the top-level structural ones a user would reasonably click on.`;
 
-async function buildApp(prompt, { dbEngine = "postgres" } = {}) {
+async function buildApp(prompt, { dbEngine = "postgres", onSchemaComplete } = {}) {
   const schemaRes = await callClaude({
     system: SCHEMA_SYSTEM,
     messages: [{ role: "user", content: `Business: ${prompt}\nPreferred engine: ${dbEngine}` }],
     maxTokens: 2000
   });
+
+  // Real, optional checkpoint — exists specifically so a caller (the
+  // credit system) can look at the real schema Claude just produced
+  // and decide whether to actually continue into the expensive
+  // backend+frontend generation, or stop here with real, honest cost
+  // protection before the costly part ever runs. Throwing here is the
+  // real, deliberate way to abort — the caller catches it.
+  if (onSchemaComplete) {
+    await onSchemaComplete(schemaRes.parsed.schema);
+  }
 
   const backendRes = await callClaude({
     system: BACKEND_SYSTEM,
