@@ -34,6 +34,10 @@ const rateLimit = require("express-rate-limit");
 const { transition } = require("./lib/state-machine");
 const { deployToVercel, deployApp } = require("./lib/deploy");
 const { createCheckoutSession, createTopUpCheckout, verifyWebhook, getBalance, addCredits, PLANS, TOPUPS, LOW_CREDIT_THRESHOLD, BUSINESS_ASSISTANT, createBusinessAssistantSubscription, updateBotSeatQuantity } = require("./lib/billing");
+const creditSystem = require("./credit-system");
+const complexityDetector = require("./complexity-detector");
+const apiKeyDetector = require("./api-key-detector");
+const apiKeyVault = require("./api-key-vault");
 
 const webBot = require("./bots/web-bot");
 const variantBot = require("./bots/variant-bot");
@@ -462,12 +466,40 @@ app.post(
     const project = newProject(prompt, req.user.id);
     PROJECTS.set(projectId, project);
 
+    // Real credit check — before any real AI cost is spent. Free/Pro/
+    // Unlimited plans have no credit pool (governed by build-count and
+    // website-only checks elsewhere) — checkCanAfford returns allowed
+    // immediately for those, this only actually gates Plus/Max.
+    const estimatedCost = complexityDetector.estimateBaseCost(mode);
+    const affordCheck = await creditSystem.checkCanAfford(req.user.id, req.user.plan, estimatedCost);
+    if (!affordCheck.allowed) {
+      PROJECTS.delete(projectId);
+      return res.status(402).json({ error: affordCheck.reason });
+    }
+
     try {
       transition(project, "PLANNING");
       transition(project, "BUILDING");
 
+      let actualCost = estimatedCost;
+
       if (mode === "app") {
-        const result = await appBot.buildApp(prompt);
+        const result = await appBot.buildApp(prompt, {
+          // Real, mid-flow complexity check — runs after the cheap
+          // schema step, before the expensive backend+frontend calls.
+          // Throwing here aborts the build before that real cost is
+          // spent, not after.
+          onSchemaComplete: async (schemaText) => {
+            const escalatedCost = complexityDetector.detectSchemaComplexity(schemaText, estimatedCost);
+            if (escalatedCost > estimatedCost) {
+              const escalatedCheck = await creditSystem.checkCanAfford(req.user.id, req.user.plan, escalatedCost);
+              if (!escalatedCheck.allowed) {
+                throw new Error(`This app turned out more complex than expected (needs ~${escalatedCost} credits) and you don't have enough remaining this month. Try a simpler description, or top up credits.`);
+              }
+            }
+            actualCost = escalatedCost;
+          }
+        });
         integrator.integrateApp(project, result);
         await botOrchestrator.recordHandoff(projectId, "app-bot", "review-bot", `Generated ${result.backend.files.length + result.frontend.files.length} files, handing off for review.`);
 
@@ -545,6 +577,7 @@ app.post(
 
         transition(project, "DONE");
         await auth.recordBuildEvent(req.user.id);
+        await creditSystem.chargeCredits(req.user.id, req.user.plan, projectId, actualCost, actualCost);
         backup.autoBackupIfDue(project, req.user.id, projectId).catch((err) => console.warn("[backup] Auto-checkpoint failed:", err.message));
         projectState.persistProjectState(projectId, req.user.id, project).catch((err) => console.warn("[project-state] Persist failed:", err.message));
         return res.json({
@@ -566,6 +599,7 @@ app.post(
       integrator.integrateVariants(project, variants);
       // Stays in BUILDING until the user selects a variant.
       await auth.recordBuildEvent(req.user.id);
+      await creditSystem.chargeCredits(req.user.id, req.user.plan, projectId, estimatedCost, estimatedCost);
 
       res.json({
         projectId,
@@ -954,7 +988,7 @@ app.post(
 // BUSINESS ASSISTANT
 // ---------------------------------------------------------------------------
 
-app.post("/api/assistant", security.rejectUnknownFields(["projectId", "task"]), async (req, res) => {
+app.post("/api/assistant", security.rejectUnknownFields(["projectId", "task"]), auth.requireBusinessAssistant, async (req, res) => {
   const { projectId } = req.body;
   const task = security.sanitizeText(req.body.task, 3000);
   const project = getProject(projectId, res);
@@ -982,7 +1016,7 @@ app.post("/api/assistant", security.rejectUnknownFields(["projectId", "task"]), 
 // the assistant to surface an idea at natural pause points — it isn't
 // wired to fire automatically from those routes yet, same as the Guide
 // Bot's interval-vs-event-trigger note in the README.
-app.post("/api/assistant/suggest", security.rejectUnknownFields(["projectId"]), async (req, res) => {
+app.post("/api/assistant/suggest", security.rejectUnknownFields(["projectId"]), auth.requireBusinessAssistant, async (req, res) => {
   const { projectId } = req.body;
   const project = getProject(projectId, res);
   if (!project) return;
@@ -1006,7 +1040,7 @@ app.post("/api/assistant/suggest", security.rejectUnknownFields(["projectId"]), 
 // process stays running (Render standard web service, not serverless) so
 // node-cron's timer fires — see lib/scheduler.js's header comment.
 
-app.post("/api/assistant/schedule", security.rejectUnknownFields(["businessContext"]), async (req, res) => {
+app.post("/api/assistant/schedule", security.rejectUnknownFields(["businessContext"]), auth.requireBusinessAssistant, async (req, res) => {
   const { businessContext } = req.body;
   if (!businessContext || !businessContext.trim()) return res.status(400).json({ error: "Missing 'businessContext'." });
   try {
@@ -1017,7 +1051,7 @@ app.post("/api/assistant/schedule", security.rejectUnknownFields(["businessConte
   }
 });
 
-app.post("/api/assistant/unschedule", security.rejectUnknownFields([]), async (req, res) => {
+app.post("/api/assistant/unschedule", security.rejectUnknownFields([]), auth.requireBusinessAssistant, async (req, res) => {
   try {
     await scheduler.unsubscribe(req.user.id);
     res.json({ subscribed: false });
@@ -1026,7 +1060,7 @@ app.post("/api/assistant/unschedule", security.rejectUnknownFields([]), async (r
   }
 });
 
-app.get("/api/assistant/briefing", async (req, res) => {
+app.get("/api/assistant/briefing", auth.requireBusinessAssistant, async (req, res) => {
   try {
     const briefing = await scheduler.getTodaysBriefing(req.user.id);
     res.json(briefing || { content: null, message: "No briefing yet — generated by the next scheduled nightly run." });
@@ -1099,6 +1133,45 @@ app.post("/api/deploy", security.rejectUnknownFields(["projectId"]), async (req,
 // the point.
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// API KEY COLLECTION — real, before an app-mode project can actually
+// deploy with working third-party integrations. See api-key-detector.js
+// and api-key-vault.js for the real detection/storage logic this wires
+// together; this is deliberately thin, just the real HTTP surface.
+// ---------------------------------------------------------------------------
+
+app.get("/api/project/:id/required-keys", async (req, res) => {
+  const project = getProject(req.params.id, res);
+  if (!project) return;
+  if (!project.appFiles?.backend) return res.json({ required: [] });
+
+  try {
+    const required = apiKeyDetector.detectRequiredKeys(project.appFiles.backend);
+    const provided = await apiKeyVault.getApiKeys(req.params.id).catch(() => ({}));
+    const withStatus = required.map((r) => ({ ...r, provided: !!provided[r.varName] }));
+    res.json({ required: withStatus });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/project/:id/api-keys", security.rejectUnknownFields(["keys"]), async (req, res) => {
+  const project = getProject(req.params.id, res);
+  if (!project) return;
+
+  const { keys } = req.body;
+  if (!keys || typeof keys !== "object" || Array.isArray(keys)) {
+    return res.status(400).json({ error: "'keys' must be a real object of {VAR_NAME: value} pairs." });
+  }
+
+  try {
+    await apiKeyVault.storeApiKeys(req.params.id, keys);
+    res.json({ stored: Object.keys(keys) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post("/api/deploy/one-click", security.rejectUnknownFields(["projectId"]), async (req, res) => {
   const { projectId } = req.body;
   const project = getProject(projectId, res);
@@ -1142,6 +1215,30 @@ app.post("/api/deploy/one-click", security.rejectUnknownFields(["projectId"]), a
         return res.status(409).json({ error: "Blocked: generated backend crashes in the sandbox.", sandboxResult });
       }
       project.sandboxResult = sandboxResult;
+
+      // Real, final gate before deploy - checks whether this generated
+      // app actually needs real third-party keys (Stripe, Twilio,
+      // whatever it genuinely references), and whether the user has
+      // actually provided them yet. Blocks with a clear, specific list
+      // rather than deploying a backend that'll silently fail the
+      // moment it tries to use a key nobody gave it.
+      const required = apiKeyDetector.detectRequiredKeys(project.appFiles.backend);
+      if (required.length > 0) {
+        let provided;
+        try {
+          provided = await apiKeyVault.getApiKeys(projectId);
+        } catch (err) {
+          console.error(`[deploy] Failed to check stored API keys for project ${projectId}:`, err.message);
+          provided = {};
+        }
+        const missing = required.filter((r) => !provided[r.varName]);
+        if (missing.length > 0) {
+          return res.status(428).json({
+            error: "This app needs real API keys before it can deploy.",
+            requiredKeys: missing
+          });
+        }
+      }
 
       transition(project, "DEPLOYING");
       const results = await deployApp(project, projectId);
@@ -2518,7 +2615,7 @@ app.post("/api/knowledge/ingest", auth.requireAdmin, security.rejectUnknownField
 // bots/research-bot.js's header for what was checked and why.
 // ---------------------------------------------------------------------------
 
-app.post("/api/research", security.rejectUnknownFields(["topic"]), async (req, res) => {
+app.post("/api/research", security.rejectUnknownFields(["topic"]), auth.requireBusinessAssistant, async (req, res) => {
   if (!req.body.topic || !req.body.topic.trim()) return res.status(400).json({ error: "Missing 'topic'." });
   try {
     res.json(await researchBot.research(req.body.topic.trim()));
@@ -2754,7 +2851,7 @@ app.post("/api/readiness/guided-fix", security.rejectUnknownFields(["projectId",
 // the webhook above knows whose business context to reply with. This
 // table is real, load-bearing, and was necessary infrastructure this
 // integration surfaced, not something optional.
-app.post("/api/whatsapp/config", security.rejectUnknownFields(["phoneNumberId", "businessContext", "projectId"]), async (req, res) => {
+app.post("/api/whatsapp/config", security.rejectUnknownFields(["phoneNumberId", "businessContext", "projectId"]), auth.requireBusinessAssistant, async (req, res) => {
   if (!req.body.phoneNumberId || !req.body.businessContext) {
     return res.status(400).json({ error: "Missing 'phoneNumberId' or 'businessContext'." });
   }
@@ -2772,7 +2869,7 @@ app.post("/api/whatsapp/config", security.rejectUnknownFields(["phoneNumberId", 
   }
 });
 
-app.get("/api/whatsapp/conversations", async (req, res) => {
+app.get("/api/whatsapp/conversations", auth.requireBusinessAssistant, async (req, res) => {
   try {
     res.json(await whatsappBot.listConversations(req.user.id));
   } catch (err) {
@@ -2780,7 +2877,7 @@ app.get("/api/whatsapp/conversations", async (req, res) => {
   }
 });
 
-app.get("/api/whatsapp/conversations/:phone", async (req, res) => {
+app.get("/api/whatsapp/conversations/:phone", auth.requireBusinessAssistant, async (req, res) => {
   try {
     res.json(await whatsappBot.getConversation(req.user.id, req.params.phone));
   } catch (err) {
@@ -2793,7 +2890,7 @@ app.get("/api/whatsapp/conversations/:phone", async (req, res) => {
 // "Sell This For Me" (that runs on the customer's own Stripe account).
 // This is the real, callable endpoint; wiring a trigger to it is a
 // separate setup step.
-app.post("/api/whatsapp/send-order-confirmation", security.rejectUnknownFields(["customerPhone", "orderDetails"]), async (req, res) => {
+app.post("/api/whatsapp/send-order-confirmation", security.rejectUnknownFields(["customerPhone", "orderDetails"]), auth.requireBusinessAssistant, async (req, res) => {
   if (!req.body.customerPhone || !req.body.orderDetails) {
     return res.status(400).json({ error: "Missing 'customerPhone' or 'orderDetails'." });
   }
