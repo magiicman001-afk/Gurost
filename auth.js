@@ -194,6 +194,25 @@ function requireAdmin(req, res, next) {
   next();
 }
 
+// Real, current gate for Business Assistant — only plans meant to
+// include it can actually use it, checked here on the server, not
+// just a hidden button on the frontend. A hidden button alone is
+// never real security; this is the part that actually matters.
+//
+// REAL NAMING NOTE, same one credit-system.js already flags: the live
+// plan field still uses unlimited/ultimate, not the newer Max/Custom
+// names agreed on for the landing page. Using the real, current values
+// here so this actually works today — rename together with the wider
+// billing.js reconciliation, not separately here.
+const BUSINESS_ASSISTANT_PLANS = ["unlimited", "ultimate"];
+
+function requireBusinessAssistant(req, res, next) {
+  if (!BUSINESS_ASSISTANT_PLANS.includes(req.user?.plan)) {
+    return res.status(402).json({ error: "Business Assistant is included with the Max and Custom plans. Upgrade to get access." });
+  }
+  next();
+}
+
 module.exports = {
   requireAuth,
   requireProjectOwnership,
@@ -202,5 +221,6 @@ module.exports = {
   hashApiKey,
   requireAdmin,
   isAdmin,
+  requireBusinessAssistant,
   PLAN_LIMITS
 };
