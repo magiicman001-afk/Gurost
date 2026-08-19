@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gurost - Templates</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#603100",
+                    "on-tertiary-fixed-variant": "#004d64",
+                    "primary": "#ffd6a6",
+                    "surface-tint": "#ffb95a",
+                    "secondary-fixed": "#ffdcc3",
+                    "on-surface-variant": "#d6c3b0",
+                    "surface-container-high": "#272a2b",
+                    "on-tertiary-container": "#00566f",
+                    "inverse-surface": "#e1e3e4",
+                    "on-primary-container": "#6f4600",
+                    "background": "#111415",
+                    "tertiary-fixed-dim": "#69d3ff",
+                    "primary-fixed": "#ffddb6",
+                    "on-primary": "#462a00",
+                    "surface-glass": "rgba(25, 28, 29, 0.7)",
+                    "on-tertiary-fixed": "#001f2a",
+                    "surface-container-lowest": "#0c0f10",
+                    "inverse-primary": "#845400",
+                    "tertiary": "#b0e5ff",
+                    "secondary": "#ffb77d",
+                    "white": "#ffffff",
+                    "on-secondary-fixed": "#2f1500",
+                    "on-background": "#e1e3e4",
+                    "error-container": "#93000a",
+                    "on-primary-fixed-variant": "#643f00",
+                    "surface": "#111415",
+                    "on-tertiary": "#003546",
+                    "on-error": "#690005",
+                    "error": "#ffb4ab",
+                    "inverse-on-surface": "#2e3132",
+                    "surface-container": "#1d2021",
+                    "surface-variant": "#323536",
+                    "secondary-fixed-dim": "#ffb77d",
+                    "outline-variant": "#524535",
+                    "tertiary-container": "#58cefd",
+                    "outline": "#9f8e7c",
+                    "secondary-container": "#fd8b00",
+                    "border-subtle": "#313638",
+                    "surface-bright": "#373a3b",
+                    "surface-card": "#232729",
+                    "primary-fixed-dim": "#ffb95a",
+                    "on-primary-fixed": "#2a1800",
+                    "primary-container": "#feb246",
+                    "on-secondary": "#4d2600",
+                    "on-secondary-fixed-variant": "#6e3900",
+                    "surface-container-low": "#191c1d",
+                    "on-surface": "#e1e3e4",
+                    "surface-dim": "#111415",
+                    "surface-container-highest": "#323536",
+                    "tertiary-fixed": "#bee9ff",
+                    "on-error-container": "#ffdad6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "section-gap": "80px",
+                    "unit": "8px",
+                    "container-max": "1280px",
+                    "margin-mobile": "16px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Inter"],
+                    "headline-xl": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "body-md": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "headline-xl": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                    "label-sm": ["13px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .filled-icon {
+        font-variation-settings: 'FILL' 1;
+      }
+    </style>
+</head>
+<body class="bg-white text-slate-900 antialiased min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="bg-white/80 font-body-md text-body-md docked full-width top-0 backdrop-blur-md flat no shadows sticky z-50 flex justify-between items-center h-20 px-md md:px-lg max-w-container-max mx-auto w-full px-4 md:px-8">
+<div class="flex items-center gap-4">
+<a class="flex items-center gap-2" href="index.html">
+<img alt="Gurost Logo" class="h-8 w-8 object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEWneeUac7uxPyvosJ6EHqqwePTGdNH4HcocFwLaShvBSzcMVHobfkdvo81GmDEaInoSpwnvfEb66YV_ZTYGysz2ACmBcSrM438uycRAqJEBAvgYU2bzzA3xszKyB9LhzzoarMaE59c2EqaPHH7A-MFhBHmAMacipds8oZ2OnHgr9iMEy8OFdAeQ2JT8BrPhZ3A0ACsuDedQKgn3OeAx8Ca2K-o7BkPoyU7mXYRwR6hnF2MrdvBboOA20qjCGX7gebx4g"/>
+<span class="text-headline-md font-headline-md font-bold text-slate-900">Gurost</span>
+</a>
+</div>
+<nav class="hidden md:flex gap-8 items-center">
+<a class="text-slate-600 hover:text-slate-900 transition-colors hover:opacity-90 duration-200" href="product.html">Product</a>
+<a class="text-slate-600 hover:text-slate-900 transition-colors hover:opacity-90 duration-200" href="index.html#pricing">Pricing</a>
+<a class="text-slate-600 hover:text-slate-900 transition-colors hover:opacity-90 duration-200" href="resources.html">Resources</a>
+<a class="text-slate-900 font-bold border-b-2 border-slate-900 pb-1 hover:opacity-90 transition-all duration-200 Active: scale-95 transition-transform" href="templates.html">Templates</a>
+</nav>
+<div class="hidden md:flex items-center gap-4">
+<button class="px-4 py-2 font-label-sm text-label-sm text-slate-700 border border-slate-200 rounded-full hover:bg-slate-100 transition-colors">Log In</button>
+<button class="px-4 py-2 font-label-sm text-label-sm text-white bg-slate-900 rounded-full font-bold hover:brightness-110 transition-all">Get Started</button>
+</div>
+<button class="md:hidden text-slate-900">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-4 md:px-8 py-section-gap">
+<!-- Header Section -->
+<div class="mb-16">
+<div class="flex items-center gap-4 mb-6">
+<a class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors" href="index.html">
+<span class="material-symbols-outlined">arrow_back</span>
+</a>
+<h1 class="font-headline-xl text-headline-xl md:text-headline-xl text-headline-lg-mobile text-slate-900">🎨 Templates</h1>
+</div>
+<p class="font-body-lg text-body-lg text-slate-600 max-w-2xl">
+                Choose from a growing library of professional templates. Perfectly crafted for specific niches, ready to be customized by our voice-first AI.
+            </p>
+</div>
+<!-- Templates Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Template 1 -->
+<div class="group relative flex flex-col bg-white border border-slate-200 rounded-[32px] overflow-hidden hover:scale-[1.02] transition-transform duration-300">
+<div class="aspect-video w-full bg-slate-50 p-4">
+<div class="w-full h-full bg-cover bg-center rounded-[24px]" data-alt="A clean, modern artisanal bakery website design featuring high-quality photography of rustic bread on wooden tables, warm lighting, soft beige and brown color palette, elegant serif typography, creating a cozy and premium feel." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA5y1EtivoVDc-E9Ww4NtxS3r9WnNGF295FEQkKdpK4THJ9Bj9T7VuwBY0XqS7dSyosVigyqVUSIk8GjYruF9lYMrsC8xcLugD2llOJ-DkNH2g1NgyW98ma5K1esbV2xLEOEtA5F-EHzcITdS56V8PpwRmHwjeRK46KRrPd59wMXJv-JXVclUz2yWmYOL_okx3lxpA4RhtW00wsIkTT7ieCImcRA5iExKBy79tFZCDPYAYI92JubGinvg')"></div>
+</div>
+<div class="p-6 flex-grow flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-lg text-[24px] font-semibold text-slate-900">Baker's Table</h3>
+<span class="px-3 py-1 text-xs font-bold bg-slate-100 text-slate-700 rounded-full">Artisanal</span>
+</div>
+<p class="font-body-md text-body-md text-slate-600 mb-6 flex-grow">
+                        Warm, inviting, and highly visual. Perfect for local bakeries, cafes, and artisanal food creators looking to showcase their craft.
+                    </p>
+<button class="w-full py-3 bg-white text-slate-700 font-label-sm text-label-sm rounded-full border border-slate-200 group-hover:border-slate-400 group-hover:text-slate-900 transition-colors flex items-center justify-center gap-2">
+<span>Preview Template</span>
+<span class="material-symbols-outlined text-[18px]">open_in_new</span>
+</button>
+</div>
+</div>
+<!-- Template 2 -->
+<div class="group relative flex flex-col bg-white border border-slate-200 rounded-[32px] overflow-hidden hover:scale-[1.02] transition-transform duration-300">
+<div class="aspect-video w-full bg-slate-50 p-4">
+<div class="w-full h-full bg-cover bg-center rounded-[24px]" data-alt="A bold, edgy creative studio portfolio website design featuring dark mode aesthetics, large expressive typography, vibrant neon accent colors, asymmetrical grid layouts showcasing design work, high contrast and modern." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAghHEr_bUlyfkn80ZacKXKS4aRui5lCUdUpERtaBK1TvWDqjG8wQyGffZi1vIzD4QyZc_M4JKABup2CJmzD1kX3V0T8dye9vOyqyU6lwc-5sITLV1b6jR8i0zA5obDMvWfkC_mYqXZFHiiaV0y_fwI_ebdxR7cA2ixm3Q8FXnEKk4eNPqrRpc3J-pYp7E1QPX5xkYaR-mRXgQoNO8b_A5Vtoz9oHENTj_a3j88YEAKtl9drzBGUhgM_g')"></div>
+</div>
+<div class="p-6 flex-grow flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-lg text-[24px] font-semibold text-slate-900">Creative Studio</h3>
+<span class="px-3 py-1 text-xs font-bold bg-slate-100 text-slate-700 rounded-full">Portfolio</span>
+</div>
+<p class="font-body-md text-body-md text-slate-600 mb-6 flex-grow">
+                        Bold, asymmetrical layouts designed to make your portfolio pop. Ideal for design agencies, freelancers, and creative professionals.
+                    </p>
+<button class="w-full py-3 bg-white text-slate-700 font-label-sm text-label-sm rounded-full border border-slate-200 group-hover:border-slate-400 group-hover:text-slate-900 transition-colors flex items-center justify-center gap-2">
+<span>Preview Template</span>
+<span class="material-symbols-outlined text-[18px]">open_in_new</span>
+</button>
+</div>
+</div>
+<!-- Template 3 -->
+<div class="group relative flex flex-col bg-white border border-slate-200 rounded-[32px] overflow-hidden hover:scale-[1.02] transition-transform duration-300">
+<div class="aspect-video w-full bg-slate-50 p-4">
+<div class="w-full h-full bg-cover bg-center rounded-[24px]" data-alt="A sleek, professional SaaS landing page design featuring clean geometric layouts, subtle glassmorphism effects, abstract 3D software illustrations, cool blue and purple gradient accents on a dark background, conveying trust and innovation." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDK2BJY_vKEYk0wc4hbao5_FH4hgNy1btbE1WmhrzlstuYYg5FMmODJ2KqQgQOz1Xsb1FW9GoM84GjqgVRhsBD1xfydU_9ru2aMq13F_f7z8SAZaYE3EK-TCD9sVn-8APRZMIy7RRq69XrhvRPklapqvaainO50hXPcTreZMxnPE-D3X6u47y8X0i1GTi_5FpD8x_2qaGN0PC4Xvd7U72LV7AqFaPIc7tOMvRw0uqSIWpKeBoDr1mMyTg')"></div>
+</div>
+<div class="p-6 flex-grow flex flex-col">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-lg text-[24px] font-semibold text-slate-900">SaaS Starter</h3>
+<span class="px-3 py-1 text-xs font-bold bg-slate-100 text-slate-700 rounded-full">Tech</span>
+</div>
+<p class="font-body-md text-body-md text-slate-600 mb-6 flex-grow">
+                        Clean, high-conversion landing pages built for modern software products. Features built-in pricing tables and feature grids.
+                    </p>
+<button class="w-full py-3 bg-white text-slate-700 font-label-sm text-label-sm rounded-full border border-slate-200 group-hover:border-slate-400 group-hover:text-slate-900 transition-colors flex items-center justify-center gap-2">
+<span>Preview Template</span>
+<span class="material-symbols-outlined text-[18px]">open_in_new</span>
+</button>
+</div>
+</div>
+<!-- More templates would go here following the same pattern -->
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-slate-50 font-label-md text-label-md full-width flat no shadows mt-auto border-t border-slate-200">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter py-xl px-md md:px-lg max-w-container-max mx-auto px-4 md:px-8 py-16">
+<div class="col-span-2 md:col-span-1 mb-8 md:mb-0">
+<a class="flex items-center gap-2 mb-4" href="index.html">
+<img alt="Gurost Logo" class="h-8 w-8 object-cover rounded-full grayscale opacity-70" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYautXXlkJlgI4gyG-V0bbSARRr2k9g7Zzxc3qEW6Jhns1VUteiSPqzICnTBWTOTyB3ljEX7DcI_r6HJSwZfPCwervl_H5zbqYl347X5IOa3y4Ubuxwi3ggY_tLsvdGoewd1AQHNq7MO9D1gOWjJ55cGlbpbcQEqO4nf7KQ01NS4bWb3X1kvosF_CgmhwqO806h58zpZTuJcLM0gK68jiw4rm7AFPtS8dqh8GRzgjMSnYYZsV36iv71oTMW6Vsy2FyU0Q"/>
+<span class="text-headline-md font-headline-md font-bold text-slate-900">Gurost</span>
+</a>
+<p class="text-slate-600 font-body-md text-sm mb-4">
+                    Voice-first AI web building for modern professionals.
+                </p>
+</div>
+<div>
+<h4 class="text-slate-900 font-bold mb-4">Company</h4>
+<ul class="space-y-3">
+<li><a class="text-slate-600 hover:text-slate-900 transition-colors" href="about.html">About</a></li>
+<li><a class="text-slate-600 hover:text-slate-900 transition-colors" href="careers.html">Careers</a></li>
+<li><a class="text-slate-600 hover:text-slate-900 transition-colors" href="blog.html">Blog</a></li>
+</ul>
+</div>
+<div>
+<h4 class="text-slate-900 font-bold mb-4">Resources</h4>
+<ul class="space-y-3">
+<li><a class="text-slate-600 hover:text-slate-900 transition-colors" href="docs.html">Docs</a></li>
+<li><a class="text-slate-900 transition-colors" href="templates.html">Templates</a></li>
+<li><a class="text-slate-600 hover:text-slate-900 transition-colors" href="showcase.html">Showcase</a></li>
+</ul>
+</div>
+<div>
+<h4 class="text-slate-900 font-bold mb-4">Support</h4>
+<ul class="space-y-3">
+<li><a class="text-slate-600 hover:text-slate-900 transition-colors" href="help.html">Help Center</a></li>
+<li><a class="text-slate-600 hover:text-slate-900 transition-colors" href="contact.html">Contact</a></li>
+<li><a class="text-slate-600 hover:text-slate-900 transition-colors" href="status.html">Status</a></li>
+</ul>
+</div>
+</div>
+<div class="border-t border-slate-200 py-6 px-4 md:px-8 max-w-container-max mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="text-slate-600 text-sm">© 2024 Gurost AI. All rights reserved.</p>
+<div class="flex gap-4">
+<a class="text-slate-600 hover:text-slate-900 transition-colors text-sm" href="privacy.html">Privacy</a>
+<a class="text-slate-600 hover:text-slate-900 transition-colors text-sm" href="terms.html">Terms</a>
+</div>
+</div>
+</footer>
+</body></html>

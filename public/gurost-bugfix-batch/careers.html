@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Careers - Gurost</title>
+<!-- Fonts and Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#603100",
+                    "on-tertiary-fixed-variant": "#004d64",
+                    "primary": "#ffd6a6",
+                    "surface-tint": "#ffb95a",
+                    "secondary-fixed": "#ffdcc3",
+                    "on-surface-variant": "#d6c3b0",
+                    "surface-container-high": "#272a2b",
+                    "on-tertiary-container": "#00566f",
+                    "inverse-surface": "#e1e3e4",
+                    "on-primary-container": "#6f4600",
+                    "background": "#111415",
+                    "tertiary-fixed-dim": "#69d3ff",
+                    "primary-fixed": "#ffddb6",
+                    "on-primary": "#462a00",
+                    "surface-glass": "rgba(25, 28, 29, 0.7)",
+                    "on-tertiary-fixed": "#001f2a",
+                    "surface-container-lowest": "#0c0f10",
+                    "inverse-primary": "#845400",
+                    "tertiary": "#b0e5ff",
+                    "secondary": "#ffb77d",
+                    "white": "#ffffff",
+                    "on-secondary-fixed": "#2f1500",
+                    "on-background": "#e1e3e4",
+                    "error-container": "#93000a",
+                    "on-primary-fixed-variant": "#643f00",
+                    "surface": "#111415",
+                    "on-tertiary": "#003546",
+                    "on-error": "#690005",
+                    "error": "#ffb4ab",
+                    "inverse-on-surface": "#2e3132",
+                    "surface-container": "#1d2021",
+                    "surface-variant": "#323536",
+                    "secondary-fixed-dim": "#ffb77d",
+                    "outline-variant": "#524535",
+                    "tertiary-container": "#58cefd",
+                    "outline": "#9f8e7c",
+                    "secondary-container": "#fd8b00",
+                    "border-subtle": "#313638",
+                    "surface-bright": "#373a3b",
+                    "surface-card": "#232729",
+                    "primary-fixed-dim": "#ffb95a",
+                    "on-primary-fixed": "#2a1800",
+                    "primary-container": "#feb246",
+                    "on-secondary": "#4d2600",
+                    "on-secondary-fixed-variant": "#6e3900",
+                    "surface-container-low": "#191c1d",
+                    "on-surface": "#e1e3e4",
+                    "surface-dim": "#111415",
+                    "surface-container-highest": "#323536",
+                    "tertiary-fixed": "#bee9ff",
+                    "on-error-container": "#ffdad6"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "section-gap": "80px",
+                    "unit": "8px",
+                    "container-max": "1280px",
+                    "margin-mobile": "16px"
+            },
+            "fontFamily": {
+                    "headline-lg": [
+                            "Inter"
+                    ],
+                    "headline-xl": [
+                            "Inter"
+                    ],
+                    "body-lg": [
+                            "Inter"
+                    ],
+                    "headline-lg-mobile": [
+                            "Inter"
+                    ],
+                    "label-sm": [
+                            "Inter"
+                    ],
+                    "body-md": [
+                            "Inter"
+                    ]
+            },
+            "fontSize": {
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-xl": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "28px",
+                            {
+                                    "lineHeight": "36px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "label-sm": [
+                            "13px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-white text-slate-800 font-body-md antialiased min-h-screen flex flex-col">
+<!-- Top Navigation Header -->
+<header class="bg-white/80 backdrop-blur-md text-slate-900 w-full z-50 sticky top-0 transition-all duration-300">
+<div class="flex justify-between items-center h-20 px-4 md:px-8 max-w-container-max mx-auto">
+<!-- Brand -->
+<div class="flex items-center gap-3">
+<img alt="Gurost Logo" class="h-10 w-10 object-contain rounded-[32px]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXzOueczjz3UoVjJG5NVla-nqk8r76TDb5zbWCnuz9Bgqb7i27sb5oUjZLj_2pmiLAcoMsW0wD5F5zXNkNspmkgbcRzG4B-OvXQWWFDxsQCQPCRb6K3_2RNoGh8Sb6p8YgdxeYvOZ76X8yoRTm74PN3A5J_91Ypqb_31OON4LRspVvTFY7Q0QFTffnzVN2hMKLv-KoIgpNJKVLDy48mWPRW94T5uKDo-xjwsxcDsnJ7TZOjrPD1fdTNPz_t4PcXG1_UtM"/>
+<span class="text-headline-lg font-headline-lg font-bold text-slate-900 hidden sm:block">Gurost</span>
+</div>
+<!-- Back Button Contextual (Since it's a specific page, not a main nav flow) -->
+<a class="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 transition-colors rounded-full px-6 py-2 border border-slate-200 group" href="index.html">
+<span class="material-symbols-outlined text-slate-700 group-hover:-translate-x-1 transition-transform">arrow_back</span>
+<span class="font-label-sm text-label-sm font-semibold text-slate-700">Back to Home</span>
+</a>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-4 md:px-8 py-section-gap flex flex-col items-center">
+<!-- Hero Section -->
+<section class="text-center max-w-3xl mb-16">
+<h1 class="font-headline-xl text-headline-xl md:text-[56px] leading-tight mb-6 text-slate-900 inline-block">👔 Careers</h1>
+<p class="font-body-lg text-body-lg text-slate-600 text-xl">Join us in building the future of AI-powered creation.</p>
+</section>
+<div class="w-full grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Left Column: Why Work With Us & Future Opportunities -->
+<div class="md:col-span-8 flex flex-col gap-8">
+<!-- Why Work With Us Card -->
+<div class="bg-slate-50 border border-slate-200 rounded-[32px] p-8 relative overflow-hidden group">
+<div class="absolute -right-20 -top-20 w-64 h-64 bg-slate-200/50 rounded-full blur-3xl group-hover:bg-slate-200/80 transition-colors duration-500"></div>
+<div class="relative z-10">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-slate-800 text-3xl" data-weight="fill" style="font-variation-settings: 'FILL' 1;">rocket_launch</span>
+<h2 class="font-headline-lg text-headline-lg text-slate-900">Why Work With Us?</h2>
+</div>
+<p class="font-body-md text-body-md text-slate-600 mb-4">
+                            At Gurost, we are pioneering a voice-first AI web builder that feels as fluid as a natural conversation. Our team operates at the intersection of cutting-edge AI technology, elegant design systems, and seamless user experiences.
+                        </p>
+<p class="font-body-md text-body-md text-slate-600">
+                            We value deep focus, innovative problem-solving, and a professional yet highly creative environment. You'll work alongside passionate engineers and designers building a modern, glassmorphic interface that empowers creators worldwide.
+                        </p>
+</div>
+</div>
+<!-- Future Opportunities Bento Grid -->
+<div class="bg-slate-50 border border-slate-200 rounded-[32px] p-8">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-slate-800 text-3xl" data-weight="fill" style="font-variation-settings: 'FILL' 1;">psychology</span>
+<h2 class="font-headline-lg text-headline-lg text-slate-900">Future Opportunities</h2>
+</div>
+<p class="font-body-md text-body-md text-slate-600 mb-6">
+                        While we aren't actively hiring for these roles today, we are always looking to connect with exceptional talent for our future roadmap.
+                    </p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<!-- Role 1 -->
+<div class="bg-white border border-slate-200 rounded-[32px] p-5 hover:border-slate-400 transition-colors group">
+<h3 class="font-label-sm text-label-sm text-slate-500 mb-1 uppercase tracking-wider">Engineering</h3>
+<div class="font-body-lg text-body-lg text-slate-900 font-semibold group-hover:text-slate-700 transition-colors">AI / ML Engineer</div>
+</div>
+<!-- Role 2 -->
+<div class="bg-white border border-slate-200 rounded-[32px] p-5 hover:border-slate-400 transition-colors group">
+<h3 class="font-label-sm text-label-sm text-slate-500 mb-1 uppercase tracking-wider">Engineering</h3>
+<div class="font-body-lg text-body-lg text-slate-900 font-semibold group-hover:text-slate-700 transition-colors">Full-Stack Developer</div>
+</div>
+<!-- Role 3 -->
+<div class="bg-white border border-slate-200 rounded-[32px] p-5 hover:border-slate-400 transition-colors group">
+<h3 class="font-label-sm text-label-sm text-slate-500 mb-1 uppercase tracking-wider">Design</h3>
+<div class="font-body-lg text-body-lg text-slate-900 font-semibold group-hover:text-slate-700 transition-colors">UI / UX Systems Designer</div>
+</div>
+<!-- Role 4 -->
+<div class="bg-white border border-slate-200 rounded-[32px] p-5 hover:border-slate-400 transition-colors group">
+<h3 class="font-label-sm text-label-sm text-slate-500 mb-1 uppercase tracking-wider">Product</h3>
+<div class="font-body-lg text-body-lg text-slate-900 font-semibold group-hover:text-slate-700 transition-colors">Technical Product Manager</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Current Openings & Apply -->
+<div class="md:col-span-4 flex flex-col gap-8">
+<!-- Current Openings Widget -->
+<div class="bg-slate-50 border border-slate-200 rounded-[32px] p-8 flex flex-col items-center justify-center text-center h-[280px]">
+<span class="material-symbols-outlined text-slate-400 text-5xl mb-4">search_off</span>
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-slate-900 mb-2">Current Openings</h3>
+<p class="font-body-md text-body-md text-slate-600">There are currently no open positions.</p>
+</div>
+<!-- Apply Instruction Card -->
+<div class="bg-gradient-to-br from-slate-50 to-white border border-slate-200 rounded-[32px] p-8 relative overflow-hidden group">
+<div class="absolute inset-0 bg-slate-100/50 group-hover:bg-slate-100/80 transition-colors duration-300"></div>
+<div class="relative z-10 flex flex-col items-start">
+<span class="material-symbols-outlined text-slate-800 text-3xl mb-4" data-weight="fill" style="font-variation-settings: 'FILL' 1;">mail</span>
+<h3 class="font-body-lg text-body-lg font-semibold text-slate-900 mb-2">Want to introduce yourself?</h3>
+<p class="font-body-md text-body-md text-slate-600 mb-6 text-sm">
+                            Send your resume and a brief intro about what you're building. We'll keep it on file.
+                        </p>
+<a class="inline-flex items-center justify-center gap-2 w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 text-white font-label-sm text-label-sm font-bold rounded-full transition-all shadow-md" href="mailto:careers@gurost.com">
+                            Email Us
+                            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-slate-50 w-full mt-auto border-t border-slate-200">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter py-16 px-4 md:px-8 max-w-container-max mx-auto">
+<!-- Brand Col -->
+<div class="col-span-2 md:col-span-1 flex flex-col gap-4 mb-8 md:mb-0">
+<span class="text-headline-md font-headline-md font-bold text-slate-900">Gurost</span>
+<p class="font-label-sm text-label-sm text-slate-600">Building the future of AI-powered creation.</p>
+</div>
+<!-- Links -->
+<div class="flex flex-col gap-3">
+<span class="font-label-sm text-label-sm text-slate-900 font-semibold mb-2">Company</span>
+<a class="font-label-sm text-label-sm text-slate-600 hover:text-slate-900 transition-colors" href="about.html">About</a>
+<a class="font-label-sm text-label-sm text-slate-900 font-medium transition-colors" href="careers.html">Careers</a>
+<a class="font-label-sm text-label-sm text-slate-600 hover:text-slate-900 transition-colors" href="blog.html">Blog</a>
+</div>
+<div class="flex flex-col gap-3">
+<span class="font-label-sm text-label-sm text-slate-900 font-semibold mb-2">Resources</span>
+<a class="font-label-sm text-label-sm text-slate-600 hover:text-slate-900 transition-colors" href="docs.html">Docs</a>
+<a class="font-label-sm text-label-sm text-slate-600 hover:text-slate-900 transition-colors" href="templates.html">Templates</a>
+<a class="font-label-sm text-label-sm text-slate-600 hover:text-slate-900 transition-colors" href="showcase.html">Showcase</a>
+</div>
+<div class="flex flex-col gap-3">
+<span class="font-label-sm text-label-sm text-slate-900 font-semibold mb-2">Support</span>
+<a class="font-label-sm text-label-sm text-slate-600 hover:text-slate-900 transition-colors" href="help.html">Help Center</a>
+<a class="font-label-sm text-label-sm text-slate-600 hover:text-slate-900 transition-colors" href="contact.html">Contact</a>
+<a class="font-label-sm text-label-sm text-slate-600 hover:text-slate-900 transition-colors" href="status.html">Status</a>
+</div>
+</div>
+<!-- Bottom Bar -->
+<div class="border-t border-slate-200 py-6 px-4 md:px-8 max-w-container-max mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+<span class="font-label-sm text-label-sm text-slate-500">© 2024 Gurost AI. All rights reserved.</span>
+<div class="flex gap-4">
+<a class="font-label-sm text-label-sm text-slate-500 hover:text-slate-900 transition-colors" href="privacy.html">Privacy Policy</a>
+<a class="font-label-sm text-label-sm text-slate-500 hover:text-slate-900 transition-colors" href="terms.html">Terms of Service</a>
+</div>
+</div>
+</footer>
+</body></html>
