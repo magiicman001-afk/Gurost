@@ -1,151 +1,284 @@
 <!DOCTYPE html>
 
-<html class="scroll-smooth" lang="en"><head>
+<html lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Showcase - Gurost</title>
-<meta content="Gurost AI: The premier AI web builder that turns your voice into high-performance websites." name="description"/>
-<!-- Design System Fonts -->
+<title>Gurost - Showcase</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Inter -->
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="shared/styles.css" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-container": "#603100",
+                        "on-tertiary-fixed-variant": "#004d64",
+                        "primary": "#ff9b26",
+                        "surface-tint": "#ffb95a",
+                        "secondary-fixed": "#ffdcc3",
+                        "on-surface-variant": "#49454f",
+                        "surface-container-high": "#ece6f0",
+                        "on-tertiary-container": "#00566f",
+                        "inverse-surface": "#313033",
+                        "on-primary-container": "#6f4600",
+                        "background": "#ffffff",
+                        "tertiary-fixed-dim": "#69d3ff",
+                        "primary-fixed": "#ffddb6",
+                        "on-primary": "#ffffff",
+                        "surface-glass": "rgba(255, 255, 255, 0.7)",
+                        "on-tertiary-fixed": "#001f2a",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#ffb95a",
+                        "tertiary": "#006783",
+                        "secondary": "#8c4f1c",
+                        "white": "#ffffff",
+                        "on-secondary-fixed": "#2f1500",
+                        "on-background": "#1c1b1f",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed-variant": "#643f00",
+                        "surface": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "error": "#ba1a1a",
+                        "inverse-on-surface": "#f4eff4",
+                        "surface-container": "#f3edf7",
+                        "surface-variant": "#e7e0ec",
+                        "secondary-fixed-dim": "#ffb77d",
+                        "outline-variant": "#cac4d0",
+                        "tertiary-container": "#bcebfa",
+                        "outline": "#79747e",
+                        "secondary-container": "#ffdcbf",
+                        "border-subtle": "#e7e0ec",
+                        "surface-bright": "#fdf8fd",
+                        "surface-card": "#ffffff",
+                        "primary-fixed-dim": "#ffb95a",
+                        "on-primary-fixed": "#2a1800",
+                        "primary-container": "#ffddb6",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed-variant": "#6e3900",
+                        "surface-container-low": "#f7f2f7",
+                        "on-surface": "#1c1b1f",
+                        "surface-dim": "#ded8e1",
+                        "surface-container-highest": "#e6e0e9",
+                        "tertiary-fixed": "#bee9ff",
+                        "on-error-container": "#410002"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "32px",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "section-gap": "80px",
+                        "unit": "8px",
+                        "container-max": "1280px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "label-sm": ["13px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Custom Gradient for Primary Buttons */
+        .bg-primary-gradient {
+            background: linear-gradient(135deg, var(--tw-colors-primary), var(--tw-colors-secondary));
+        }
+        .bg-primary-gradient:hover {
+            filter: brightness(1.1);
+        }
+    </style>
 </head>
-<body class="bg-surface font-body-md text-on-surface">
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col antialiased">
 <!-- TopNavBar -->
-<header class="bg-surface/80 dark:bg-on-surface/80 backdrop-blur-md font-body-md text-body-md docked full-width top-0 sticky border-b border-outline-variant/30 shadow-sm z-50">
-<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto">
-<a class="flex items-center gap-4" href="index.html">
-<div class="w-12 h-12 rounded-full overflow-hidden border-2 border-secondary shadow-sm">
-<img alt="Gurost Logo" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbW7YuoiwPzt2zuDU9cg_DLkBMcqlS_b4i-YI1upyWRkvNCvV1uoVklezt3qRXQdwJh_g1y6XWz4PP6RYy_o-40ci6VsGQ-w8VZXfbk20lXDvuXX1o6ovv7ho1nPm2r-N1K93dywDtxV_IMNrW5zzdVbfBiT4zgRz7SLg7f6Td8G5NXOcNjUDDKEkNasYUXiVfAOHB1oaRVPrLruvfU6gEulVij_QmE0eluvhIyHKY0YyWg0Z3g6dbtPJ_H4jA9C7o2Aw"/>
-</div>
-<span class="font-headline-md text-headline-md font-bold text-on-surface">Gurost</span>
+<header class="bg-surface font-body-md text-body-md docked full-width top-0 bg-surface/80 backdrop-blur-md flat no shadows sticky z-50 border-b border-border-subtle/50">
+<div class="flex justify-between items-center h-20 px-md md:px-lg max-w-container-max mx-auto px-4 lg:px-8">
+<a class="flex items-center gap-2 text-headline-md font-headline-md font-bold text-primary hover:opacity-90 transition-all duration-200" href="index.html">
+<img alt="Gurost" class="h-8 w-8 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsmFZhAZZJqEeVRzSuTPOsOYw2oa8tbShUBRThFxj9Gz6XDN_8DQU0ariE8mR-zQg1W3EJvcqihpHxM_rRfQLi55vAkGoCZs9zP4ebpqH1C8muH_0xphgAhQVYw34_F8hKr6rshQVnUDzNlOCKIpEn1HcntmHxFKH7eIq5aJdZ0DYl4rtGo8-rq4GOdt00ury7cZCEr2eNNUyH-jXajo7hBrplrVwZ4azgXypgxLOSPwjYn8w5E6LK7gh4-HqyeqW8qj8"/>
+<span>Gurost</span>
 </a>
-<nav class="hidden md:flex gap-8 items-center">
-<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="index.html">Product</a>
-<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="pricing.html">Pricing</a>
-<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="resources.html">Resources</a>
-<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="templates.html">Templates</a>
+<nav class="hidden md:flex gap-8">
+<a class="text-on-surface-variant hover:text-primary transition-colors hover:opacity-90 transition-all duration-200" href="product.html">Product</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors hover:opacity-90 transition-all duration-200" href="index.html#pricing">Pricing</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1 hover:opacity-90 transition-all duration-200" href="resources.html">Resources</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors hover:opacity-90 transition-all duration-200" href="templates.html">Templates</a>
 </nav>
-<div class="flex items-center gap-4">
-<a class="hidden sm:block text-on-surface-variant font-medium" href="signup.html">Log in</a>
-<a class="gold-gradient px-6 py-2 rounded-full text-white font-bold lift-hover transition-all" href="signup.html">Sign Up</a>
+<div class="hidden md:flex items-center gap-4">
+<a class="text-on-surface hover:text-primary transition-colors" href="signup.html">Log In</a>
+<a class="bg-primary-gradient text-white px-6 py-2 rounded-full font-label-sm uppercase tracking-wider transition-all" href="signup.html">Get Started</a>
 </div>
+<button class="md:hidden text-on-surface hover:text-primary transition-colors p-2">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
 </div>
 </header>
-<main>
-<section class="pt-32 pb-32 px-margin-mobile md:px-margin-desktop transition-all duration-700 opacity-0 translate-y-10">
-<div class="max-w-3xl mx-auto space-y-6">
-<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary text-center mb-8">Showcase</h1>
-
-<p class="text-body-lg font-body-lg text-on-surface-variant">See what others are building with Gurost. Get inspired by real projects created by our community.</p>
-<h3 class="font-headline-md text-headline-md font-bold mt-4">Featured projects:</h3>
-<ul class="space-y-2 pl-5" style="list-style: disc;">
-<li class="text-on-surface-variant">Amber Hour — A coffee roastery website built with voice</li>
-<li class="text-on-surface-variant">Root &amp; Bloom — A plant subscription service</li>
-<li class="text-on-surface-variant">Northline Studio — An architecture portfolio</li>
-<li class="text-on-surface-variant">Fieldwork Consulting — A professional services site</li>
-<li class="text-on-surface-variant">Bloom Studio — A floral design website</li>
-<li class="text-on-surface-variant">Ironworks Mfg — A manufacturing company site</li>
-</ul>
-<p class="text-on-surface-variant"><strong>Want to be featured?</strong> If you've built something with Gurost, we'd love to showcase it here. Email us at <a class="text-secondary font-medium hover:underline" href="mailto:showcase@gurost.com">showcase@gurost.com</a></p>
-
-<div class="text-center pt-8">
-<a class="gold-gradient inline-block px-10 py-4 rounded-full text-white text-center font-bold text-lg lift-hover shadow-lg" href="index.html">
-    Back to Home
+<!-- Main Content -->
+<main class="flex-grow">
+<!-- Hero Section -->
+<section class="py-section-gap px-4 lg:px-8 max-w-container-max mx-auto text-center">
+<a class="inline-flex items-center gap-2 bg-surface-container hover:bg-surface-variant text-on-surface-variant hover:text-primary transition-colors px-4 py-2 rounded-full mb-8 font-label-sm border border-border-subtle" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="arrow_back">arrow_back</span>
+                Back to Resources
+            </a>
+<h1 class="font-headline-xl text-headline-xl text-on-surface mb-6">🏆 Showcase</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">See what others are building with Gurost. Explore stunning, high-performance websites generated by our AI.</p>
+</section>
+<!-- Showcase Grid -->
+<section class="py-12 px-4 lg:px-8 max-w-container-max mx-auto">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Project 1: Amber Hour -->
+<div class="group flex flex-col gap-4">
+<div class="relative aspect-video rounded-2xl overflow-hidden border border-border-subtle transform transition-transform duration-300 group-hover:scale-[1.02] shadow-sm hover:shadow-md">
+<div class="w-full h-full bg-cover bg-center" data-alt="A sleek, modern e-commerce website interface for a premium coffee brand called Amber Hour. The design features warm, earthy tones like rich espresso brown and soft cream, with high-quality photography of coffee beans and minimalist packaging. The layout is spacious and elegant, showcasing a clean, intuitive navigation and a prominent 'Shop Now' call to action. The overall aesthetic is sophisticated, professional, and highly polished, reflecting a top-tier digital storefront." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBOiSrQ9o8DlBc4pSGyzusGDkmMJ0UUl7fyjE_lM1Ac7RKX97_zXfWOdK7830xksP_PfPsTQzof8tEKzHZ0gxqn87h_CUkHzbn7QAL3eGh340lm9kGX6yXYrbaqvE-ibRF4thUuxnFOS28c2cDjPNIGsoAph2BRjMXr5ZXZ2j3lJABFMjIu3XXEQvgVYhJYJbSPeZpXkz0a4ZWQdleaycQ7MDqjb1XhN6GTsfm8UHfzdCcti1fJznQELQ')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+<a class="text-white hover:text-primary flex items-center gap-2 font-label-sm uppercase tracking-wider" href="#">
+                                View Live Site <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
 </a>
+</div>
+</div>
+<div>
+<h3 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-2">Amber Hour</h3>
+<p class="text-on-surface-variant">E-commerce &amp; Brand Identity</p>
+</div>
+</div>
+<!-- Project 2: Root & Bloom -->
+<div class="group flex flex-col gap-4">
+<div class="relative aspect-video rounded-2xl overflow-hidden border border-border-subtle transform transition-transform duration-300 group-hover:scale-[1.02] shadow-sm hover:shadow-md">
+<div class="w-full h-full bg-cover bg-center" data-alt="A vibrant, airy website design for a boutique plant nursery named Root &amp; Bloom. The interface uses a fresh palette of sage green, soft white, and terracotta. The layout features a prominent hero image of lush indoor plants in a sunlit room, with elegant, organic typography. The UI includes subtle glassmorphism elements and a clean grid showcasing various plant care guides and product listings. The mood is calm, inviting, and nature-inspired." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDo0deftI6pZM7oLiE5q_3FsninfXIgx_crF3aRTUYaJsWA6l5Mw0YGGa_MauvAFCjDea6VA1cf7ut-3ZC71uuroKurgfIP9QU8w_8zQdhXW8wM6y3XLR56Eo7ch2ciQQNhQulSFzn6Pkfv87ZQh_c0ZmH8jYWrq4AUBO2XeRVH-4vBtSfxAqyzOkjfQ7yw2YjSFuUfwP6DhrulkGf-LO9ekxWKNT_8_qtERD4CFVtEMccpy_ci-arLAw')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+<a class="text-white hover:text-primary flex items-center gap-2 font-label-sm uppercase tracking-wider" href="#">
+                                View Live Site <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</a>
+</div>
+</div>
+<div>
+<h3 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-2">Root &amp; Bloom</h3>
+<p class="text-on-surface-variant">Local Business &amp; Booking</p>
+</div>
+</div>
+<!-- Project 3: Northline Studio -->
+<div class="group flex flex-col gap-4">
+<div class="relative aspect-video rounded-2xl overflow-hidden border border-border-subtle transform transition-transform duration-300 group-hover:scale-[1.02] shadow-sm hover:shadow-md">
+<div class="w-full h-full bg-cover bg-center" data-alt="A striking, minimalist portfolio website for an architecture firm called Northline Studio. The design uses a strict monochrome color scheme with stark black backgrounds, crisp white text, and subtle slate grey accents. The layout is asymmetrical and highly structural, featuring large, high-contrast architectural photography of modern, brutalist buildings. The typography is bold and geometric, creating a sense of precision, professionalism, and cutting-edge design." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDU11JyE0eFlvoeFldlBjK1ElyZYDXQJAhB3f9QrObGC7B_aQNjBmB09XWUqK9-rY3wd3wHGa7r7K2aMjUU3up15lhHjBsspsJwPRjxWI1DaJZWvw9EbHM0-BEBUIaCDySVkMo32SUgh8HlRGuh2-gmb191zohomjOhIkDUdTVwkRvPiYsXgoV4x6hnY02A0UjbWfYZKkuCyGrCe-I9RYln9zf1yG2ukfeEfkylqxIYAZp2xkoXjZWF_g')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+<a class="text-white hover:text-primary flex items-center gap-2 font-label-sm uppercase tracking-wider" href="#">
+                                View Live Site <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</a>
+</div>
+</div>
+<div>
+<h3 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-2">Northline Studio</h3>
+<p class="text-on-surface-variant">Creative Portfolio</p>
+</div>
+</div>
+<!-- Project 4: Ironworks Mfg. -->
+<div class="group flex flex-col gap-4">
+<div class="relative aspect-video rounded-2xl overflow-hidden border border-border-subtle transform transition-transform duration-300 group-hover:scale-[1.02] shadow-sm hover:shadow-md">
+<div class="w-full h-full bg-cover bg-center" data-alt="An industrial, robust corporate website for a manufacturing company named Ironworks Mfg. The UI utilizes deep charcoal grey backgrounds with vibrant safety-orange highlights and metallic silver borders. The layout is highly structured and data-heavy, featuring performance metrics dashboards, technical diagrams, and high-resolution images of precision machinery in action. The overall aesthetic is strong, reliable, and technologically advanced, suitable for a B2B industrial enterprise." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAeflVQN0TXXAq2iRLGWqFKjdcMj8JfmVlF3bQwfL3unHN5AtA-j_22C2TIWiuX4SISGOLTMQLtQOnYRH8V3dFi8bc3G20RbocXQpggA6ETTskM1CtJCGj32gS1hmq6uWIivDZYiJd5ATzVAPnJBPC7cKEMn4dxUeirhiNhYncb-PrDvXRuyjHe0I8x9F2cbSRMJWrGsK0RPF6RB4sNMPus_pCkZVr7IdwzqBJqcykwLTbSTGMas8FJFw')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+<a class="text-white hover:text-primary flex items-center gap-2 font-label-sm uppercase tracking-wider" href="#">
+                                View Live Site <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</a>
+</div>
+</div>
+<div>
+<h3 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-2">Ironworks Mfg.</h3>
+<p class="text-on-surface-variant">B2B Corporate</p>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="py-section-gap px-4 lg:px-8 max-w-container-max mx-auto">
+<div class="bg-surface-container-low rounded-2xl p-12 text-center border border-border-subtle relative overflow-hidden shadow-sm">
+<!-- Abstract Background Element -->
+<div class="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+<div class="relative z-10">
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-4">Want to Be Featured?</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl mx-auto mb-8">Built something amazing with Gurost? Submit your project to be featured in our showcase and reach thousands of creators.</p>
+<a class="inline-block bg-primary-gradient text-white px-8 py-3 rounded-full font-label-sm uppercase tracking-wider hover:shadow-lg transition-all" href="contact.html">Submit Your Site</a>
 </div>
 </div>
 </section>
 </main>
-<footer class="bg-surface dark:bg-on-surface border-t border-outline-variant/50">
-<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-20">
-<div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-<!-- Brand -->
-<div class="space-y-6">
-<a class="flex items-center gap-3" href="index.html">
-<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant">
-<img alt="Gurost Logo small" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCA38FQbIh0NYswxsxchSSDrwlmwOvc64yzxLi_0U6fMDFOdrzpAP0sNzwjLxehgtPFdEJpuMEnZyTrvLIvSTJ31GAvus-8--p1kUKnvxFHmDGKg5t6ZNWZKpfujXIxhRLHU4leFzRn__fPmYmq089eMVdWuOJ-czQxdSWRSpenXrHFeFEEpRQooTBHlC5EK1nlFwigejhXoWZwIdbVpQsewwCJr7hrwqDg9HLOfOoDg9RB8YJ5gBqhrCy2rS_fY682IIc"/>
+<!-- Footer -->
+<footer class="bg-surface-container-low full-width flat no shadows border-t border-border-subtle/30 mt-auto">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter py-xl px-md md:px-lg max-w-container-max mx-auto py-16 px-4 lg:px-8">
+<!-- Col 1: Brand -->
+<div class="col-span-2 md:col-span-1 mb-8 md:mb-0">
+<a class="text-headline-md font-headline-md font-bold text-primary flex items-center gap-2 mb-4 hover:text-primary transition-colors" href="#">
+<img alt="Gurost" class="h-6 w-6 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6Xcp-KANB_mFpO6lLiWka1V3lDXIBJD7jqGpC7XwH1qdg5Z5KDy2zAkcK_safGw_Cc3GZum7CRW8TC7IAt_OFutNCi35K8nh3sBLbBhRBHm18cJrhGF2qxw99JmDWmyjCotogkPx_3CBLQ0qog9QJAX4Fico2n1GsHld00fiGZtSe31I5nxpBSGuv_M9WUcw2k9F82_l0ib6NB3Wo9PE6iZAyon84JnxCl98Abtu0cSyt6jeJwjMLRXBFYu2y59IvvRc"/>
+                     Gurost
+                </a>
+<p class="text-label-sm text-on-surface-variant mb-4">Voice-first AI web building.</p>
 </div>
-<span class="font-headline-md text-headline-md font-bold text-on-surface">Gurost</span>
-</a>
-<p class="text-on-surface-variant font-body-md">Building the future of the web through the power of voice and intelligence.</p>
+<!-- Col 2: Company -->
+<div class="flex flex-col gap-3">
+<h4 class="text-on-surface font-label-sm text-label-sm uppercase tracking-wider mb-2">Company</h4>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="about.html">About</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="careers.html">Careers</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="blog.html">Blog</a>
+</div>
+<!-- Col 3: Resources -->
+<div class="flex flex-col gap-3">
+<h4 class="text-on-surface font-label-sm text-label-sm uppercase tracking-wider mb-2">Resources</h4>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="docs.html">Docs</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="templates.html">Templates</a>
+<a class="font-label-md text-label-md text-primary" href="showcase.html">Showcase</a>
+</div>
+<!-- Col 4: Support -->
+<div class="flex flex-col gap-3">
+<h4 class="text-on-surface font-label-sm text-label-sm uppercase tracking-wider mb-2">Support</h4>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="help.html">Help Center</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="contact.html">Contact</a>
+<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="terms.html">Legal</a>
+</div>
+</div>
+<div class="border-t border-border-subtle/30 py-6 px-4 lg:px-8">
+<div class="max-w-container-max mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-label-sm text-on-surface-variant">
+<p>© 2024 Gurost AI. All rights reserved.</p>
 <div class="flex gap-4">
-<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-gold-gradient-start hover:text-white transition-all" href="#" aria-label="Website">
-<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-</a>
-<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-gold-gradient-start hover:text-white transition-all" href="#" aria-label="Message us">
-<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-</a>
-</div>
-</div>
-<!-- Company -->
-<div class="space-y-6">
-<h4 class="font-bold text-on-surface uppercase tracking-wider text-sm">Company</h4>
-<ul class="space-y-4">
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="about.html">About</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="careers.html">Careers</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="blog.html">Blog</a></li>
-</ul>
-</div>
-<!-- Resources -->
-<div class="space-y-6">
-<h4 class="font-bold text-on-surface uppercase tracking-wider text-sm">Resources</h4>
-<ul class="space-y-4">
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="docs.html">Docs</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="templates.html">Templates</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="showcase.html">Showcase</a></li>
-</ul>
-</div>
-<!-- Support -->
-<div class="space-y-6">
-<h4 class="font-bold text-on-surface uppercase tracking-wider text-sm">Support</h4>
-<ul class="space-y-4">
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="help.html">Help Center</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="contact.html">Contact</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="status.html">Status</a></li>
-</ul>
-</div>
-</div>
-<div class="pt-10 border-t border-outline-variant/30 flex flex-col md:flex-row justify-between items-center gap-6">
-<p class="text-on-surface-variant text-sm">© 2026 Gurost AI. All rights reserved.</p>
-<div class="flex gap-8 text-sm">
-<a class="text-on-surface-variant hover:underline" href="privacy.html">Privacy Policy</a>
-<a class="text-on-surface-variant hover:underline" href="terms.html">Terms of Service</a>
+<a class="hover:text-primary transition-colors" href="privacy.html">Privacy</a>
+<a class="hover:text-primary transition-colors" href="terms.html">Terms</a>
 </div>
 </div>
 </div>
 </footer>
-<script>
-        // The Pulse/mic widget that used to live in the hero has been
-        // removed from this page entirely — it'll live on the Business
-        // Assistant page instead. This script previously had a broken
-        // click handler here (referenced getElementById('pulse-trigger')
-        // before any such element existed, which threw on load and
-        // silently killed the scroll-reveal code below it, since an
-        // uncaught error stops the rest of the script block). That
-        // handler is gone now along with the widget — nothing left here
-        // needs it.
-
-        // Simple scroll reveal effect
-        const observerOptions = {
-            threshold: 0.1
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('opacity-100', 'translate-y-0');
-                    entry.target.classList.remove('opacity-0', 'translate-y-10');
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('section').forEach(section => {
-            section.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-10');
-            observer.observe(section);
-        });
-    </script>
+<!-- AI Voice Interface (Sticky FAB) -->
+<div class="fixed bottom-8 right-8 z-50">
+<button class="bg-primary-gradient w-16 h-16 rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform duration-200 group">
+<span class="material-symbols-outlined text-white text-3xl group-hover:scale-110 transition-transform" data-icon="mic" data-weight="fill">mic</span>
+</button>
+</div>
 </body></html>

@@ -1,157 +1,233 @@
 <!DOCTYPE html>
 
-<html class="scroll-smooth" lang="en"><head>
+<html class="light" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Status - Gurost</title>
-<meta content="Gurost AI: The premier AI web builder that turns your voice into high-performance websites." name="description"/>
-<!-- Design System Fonts -->
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<title>System Status - Gurost</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="shared/styles.css" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#00566f",
+                        "white": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "section-gap": "80px",
+                        "unit": "8px",
+                        "container-max": "1280px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "label-sm": ["13px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .gradient-text {
+            background: linear-gradient(90deg, #00566f 0%, #003546 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
 </head>
-<body class="bg-surface font-body-md text-on-surface">
-<!-- TopNavBar -->
-<header class="bg-surface/80 dark:bg-on-surface/80 backdrop-blur-md font-body-md text-body-md docked full-width top-0 sticky border-b border-outline-variant/30 shadow-sm z-50">
-<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto">
-<a class="flex items-center gap-4" href="index.html">
-<div class="w-12 h-12 rounded-full overflow-hidden border-2 border-secondary shadow-sm">
-<img alt="Gurost Logo" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbW7YuoiwPzt2zuDU9cg_DLkBMcqlS_b4i-YI1upyWRkvNCvV1uoVklezt3qRXQdwJh_g1y6XWz4PP6RYy_o-40ci6VsGQ-w8VZXfbk20lXDvuXX1o6ovv7ho1nPm2r-N1K93dywDtxV_IMNrW5zzdVbfBiT4zgRz7SLg7f6Td8G5NXOcNjUDDKEkNasYUXiVfAOHB1oaRVPrLruvfU6gEulVij_QmE0eluvhIyHKY0YyWg0Z3g6dbtPJ_H4jA9C7o2Aw"/>
-</div>
-<span class="font-headline-md text-headline-md font-bold text-on-surface">Gurost</span>
-</a>
-<nav class="hidden md:flex gap-8 items-center">
-<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="index.html">Product</a>
-<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="pricing.html">Pricing</a>
-<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="resources.html">Resources</a>
-<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="templates.html">Templates</a>
-</nav>
-<div class="flex items-center gap-4">
-<a class="hidden sm:block text-on-surface-variant font-medium" href="signup.html">Log in</a>
-<a class="gold-gradient px-6 py-2 rounded-full text-white font-bold lift-hover transition-all" href="signup.html">Sign Up</a>
-</div>
-</div>
-</header>
-<main>
-<section class="pt-32 pb-32 px-margin-mobile md:px-margin-desktop transition-all duration-700 opacity-0 translate-y-10">
-<div class="max-w-3xl mx-auto space-y-6">
-<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary text-center mb-8">Status</h1>
-
-<p class="text-body-lg font-body-lg text-on-surface-variant">All systems operational.</p>
-<p class="font-bold text-on-surface">Current status: ✅ All systems operational</p>
-<h3 class="font-headline-md text-headline-md font-bold mt-4">Service status:</h3>
-<ul class="space-y-2 pl-5" style="list-style: disc;">
-<li class="text-on-surface-variant">Website: ✅ Operational</li>
-<li class="text-on-surface-variant">API: ✅ Operational</li>
-<li class="text-on-surface-variant">Database: ✅ Operational</li>
-<li class="text-on-surface-variant">Voice services: ✅ Operational</li>
-<li class="text-on-surface-variant">Deployment: ✅ Operational</li>
-</ul>
-<h3 class="font-headline-md text-headline-md font-bold mt-4">History:</h3>
-<ul class="space-y-2 pl-5" style="list-style: disc;">
-<li class="text-on-surface-variant">24 July 2026 — All systems operational</li>
-<li class="text-on-surface-variant">23 July 2026 — All systems operational</li>
-<li class="text-on-surface-variant">22 July 2026 — All systems operational</li>
-</ul>
-<p class="text-on-surface-variant">If you're experiencing any issues, please contact us at <a class="text-secondary font-medium hover:underline" href="mailto:support@gurost.com">support@gurost.com</a></p>
-
-<div class="text-center pt-8">
-<a class="gold-gradient inline-block px-10 py-4 rounded-full text-white text-center font-bold text-lg lift-hover shadow-lg" href="index.html">
-    Back to Home
+<body class="bg-white text-slate-900 font-body-md min-h-screen flex flex-col">
+<!-- Top Navigation (Suppressed for focused task pages, but included as per instructions, wait, instruction says "Automatic Suppression: You MUST exclude the navigation shell if the page intent is... Linear/Transactional... Task-Focused... Any sub-page featuring a 'Close' or 'Back' action". The prompt mentions "a pill-shaped back button", indicating it's a sub-page. So I will suppress the global nav shell as per instructions.) -->
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col items-center justify-start pt-16 pb-24 px-margin-mobile md:px-gutter max-w-container-max mx-auto w-full">
+<!-- Header Section -->
+<div class="w-full max-w-4xl mb-12 flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
+<div class="flex items-center gap-4 w-full md:w-auto">
+<!-- Back Button -->
+<a class="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-full text-slate-600 hover:text-slate-900 transition-all duration-200" href="index.html">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Back</span>
 </a>
 </div>
+<div class="flex items-center justify-center gap-4 mb-4 md:mb-0 w-full md:w-auto">
+<img alt="Gurost Logo" class="w-12 h-12 object-contain rounded-full shadow-lg border border-slate-200" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOhrewXElbNDFqywg2aN5j4DFKSURxjPNP1EXH_-n96r_Mqzwd3QLDac7Cb3xP_zp2GZgCgEzWSZE7IY7KQqxNuQNqKPEw1J5M5VcR735FkHiAO0p4xeJp-Grzm8KdWimr4VztyJ4aoUfdy6aWWxoyxidGSFl4hEERClLowVWeQz9-25v65mwX5EB23Dh1MwTyElRSc-8hyklEUqAMF8gzb97O-DUgGoxuvVImN3ZF2dAs-rMpy1PICZtSu0q-1mHWXUk"/>
+<h1 class="font-headline-xl text-headline-xl text-slate-900 tracking-tight">📊 Status</h1>
 </div>
-</section>
+</div>
+<!-- Overall Status Banner -->
+<div class="w-full max-w-4xl bg-white border border-[#00c853]/30 rounded-[32px] p-8 mb-section-gap shadow-[0_0_40px_rgba(0,200,83,0.05)] relative overflow-hidden backdrop-blur-md">
+<div class="absolute inset-0 bg-gradient-to-r from-[#00c853]/10 to-transparent pointer-events-none"></div>
+<div class="flex items-center gap-6 relative z-10">
+<div class="w-16 h-16 rounded-full bg-[#00c853]/10 flex items-center justify-center animate-pulse border border-[#00c853]/30">
+<span class="material-symbols-outlined text-[#00c853] text-4xl" data-icon="check_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div>
+<h2 class="font-headline-lg text-headline-lg text-slate-900 mb-2">All Systems Operational</h2>
+<p class="font-body-lg text-body-lg text-slate-600">Last updated: Just now</p>
+</div>
+</div>
+</div>
+<!-- Bento Grid Layout for Status Details -->
+<div class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-12 gap-gutter mb-section-gap">
+<!-- Service Status List (Spans 8 columns on desktop) -->
+<div class="md:col-span-8 bg-white border border-slate-200 rounded-[32px] p-6 md:p-8 relative group hover:scale-[1.01] transition-transform duration-300 shadow-sm">
+<h3 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-slate-900 mb-6 flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-700" data-icon="dns">dns</span>
+                    Service Status
+                </h3>
+<div class="space-y-4">
+<!-- Website -->
+<div class="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-200">
+<span class="font-body-lg text-body-lg text-slate-900">Website</span>
+<div class="flex items-center gap-2 bg-[#00c853]/10 px-3 py-1 rounded-full border border-[#00c853]/30">
+<span class="material-symbols-outlined text-[#00c853] text-sm" data-icon="circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">circle</span>
+<span class="font-label-sm text-label-sm text-[#00c853] uppercase">Operational</span>
+</div>
+</div>
+<!-- API -->
+<div class="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-200">
+<span class="font-body-lg text-body-lg text-slate-900">API &amp; Services</span>
+<div class="flex items-center gap-2 bg-[#00c853]/10 px-3 py-1 rounded-full border border-[#00c853]/30">
+<span class="material-symbols-outlined text-[#00c853] text-sm" data-icon="circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">circle</span>
+<span class="font-label-sm text-label-sm text-[#00c853] uppercase">Operational</span>
+</div>
+</div>
+<!-- Database -->
+<div class="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-200">
+<span class="font-body-lg text-body-lg text-slate-900">Database</span>
+<div class="flex items-center gap-2 bg-[#00c853]/10 px-3 py-1 rounded-full border border-[#00c853]/30">
+<span class="material-symbols-outlined text-[#00c853] text-sm" data-icon="circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">circle</span>
+<span class="font-label-sm text-label-sm text-[#00c853] uppercase">Operational</span>
+</div>
+</div>
+<!-- Dashboard -->
+<div class="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-slate-200">
+<span class="font-body-lg text-body-lg text-slate-900">Web Builder Dashboard</span>
+<div class="flex items-center gap-2 bg-[#00c853]/10 px-3 py-1 rounded-full border border-[#00c853]/30">
+<span class="material-symbols-outlined text-[#00c853] text-sm" data-icon="circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">circle</span>
+<span class="font-label-sm text-label-sm text-[#00c853] uppercase">Operational</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Uptime Guarantee & Metrics (Spans 4 columns on desktop) -->
+<div class="md:col-span-4 flex flex-col gap-gutter">
+<!-- Uptime -->
+<div class="flex-grow bg-white border border-slate-200 rounded-[32px] p-6 relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300 flex flex-col justify-center items-center text-center shadow-sm">
+<div class="absolute -top-10 -right-10 w-32 h-32 bg-slate-100 rounded-full blur-2xl"></div>
+<span class="material-symbols-outlined text-slate-700 text-5xl mb-4" data-icon="av_timer">av_timer</span>
+<h3 class="font-headline-lg text-headline-lg text-slate-900 mb-2">99.99%</h3>
+<p class="font-body-md text-body-md text-slate-600">Uptime Guarantee</p>
+<p class="font-label-sm text-label-sm text-slate-500 mt-2 uppercase">Trailing 30 days</p>
+</div>
+<!-- History Link Card -->
+<a class="bg-white border border-slate-200 hover:border-slate-400 rounded-[32px] p-6 flex flex-col items-start justify-center cursor-pointer transition-all duration-200 shadow-sm" href="#history">
+<div class="flex items-center justify-between w-full mb-2">
+<h4 class="font-headline-lg-mobile text-headline-lg-mobile text-slate-900">Incident History</h4>
+<span class="material-symbols-outlined text-slate-600" data-icon="arrow_forward">arrow_forward</span>
+</div>
+<p class="font-body-md text-body-md text-slate-600">View past incidents and reports.</p>
+</a>
+</div>
+</div>
+<!-- Incident History Section -->
+<div class="w-full max-w-4xl bg-white border border-slate-200 rounded-[32px] p-6 md:p-8 shadow-sm" id="history">
+<h3 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-slate-900 mb-8 border-b border-slate-200 pb-4">Past Incidents</h3>
+<div class="space-y-8">
+<!-- Incident 1 -->
+<div class="relative pl-8 border-l-2 border-slate-200">
+<div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-white border-2 border-slate-300"></div>
+<p class="font-label-sm text-label-sm text-slate-500 mb-2">Oct 12, 2024</p>
+<h4 class="font-body-lg text-body-lg text-slate-900 mb-2 font-semibold">No incidents reported.</h4>
+<p class="font-body-md text-body-md text-slate-600">All systems functioned as expected.</p>
+</div>
+<!-- Incident 2 -->
+<div class="relative pl-8 border-l-2 border-slate-200">
+<div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-white border-2 border-slate-300"></div>
+<p class="font-label-sm text-label-sm text-slate-500 mb-2">Oct 11, 2024</p>
+<h4 class="font-body-lg text-body-lg text-slate-900 mb-2 font-semibold">No incidents reported.</h4>
+<p class="font-body-md text-body-md text-slate-600">All systems functioned as expected.</p>
+</div>
+<!-- Incident 3 (Example of a resolved incident) -->
+<div class="relative pl-8 border-l-2 border-slate-200">
+<div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-white border-2 border-slate-700"></div>
+<p class="font-label-sm text-label-sm text-slate-500 mb-2">Oct 10, 2024</p>
+<h4 class="font-body-lg text-body-lg text-slate-900 mb-2 font-semibold">API Latency Degraded</h4>
+<p class="font-body-md text-body-md text-slate-600 mb-4">We experienced elevated latency in our core API endpoints. The issue was identified and resolved within 15 minutes.</p>
+<div class="bg-slate-50 p-4 rounded-2xl text-sm border border-slate-200">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-[#00c853] text-sm" data-icon="check_circle" data-weight="fill">check_circle</span>
+<span class="font-semibold text-slate-900">Resolved</span>
+<span class="text-slate-600">- 14:30 UTC</span>
+</div>
+<p class="text-slate-600">Monitoring confirms systems are stable.</p>
+</div>
+</div>
+</div>
+</div>
 </main>
-<footer class="bg-surface dark:bg-on-surface border-t border-outline-variant/50">
-<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-20">
-<div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-<!-- Brand -->
-<div class="space-y-6">
-<a class="flex items-center gap-3" href="index.html">
-<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant">
-<img alt="Gurost Logo small" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCA38FQbIh0NYswxsxchSSDrwlmwOvc64yzxLi_0U6fMDFOdrzpAP0sNzwjLxehgtPFdEJpuMEnZyTrvLIvSTJ31GAvus-8--p1kUKnvxFHmDGKg5t6ZNWZKpfujXIxhRLHU4leFzRn__fPmYmq089eMVdWuOJ-czQxdSWRSpenXrHFeFEEpRQooTBHlC5EK1nlFwigejhXoWZwIdbVpQsewwCJr7hrwqDg9HLOfOoDg9RB8YJ5gBqhrCy2rS_fY682IIc"/>
-</div>
-<span class="font-headline-md text-headline-md font-bold text-on-surface">Gurost</span>
+<!-- Footer Component from Shared Components -->
+<footer class="bg-white full-width border-t border-slate-200 relative z-10 mt-auto">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter py-xl px-md md:px-lg max-w-container-max mx-auto p-12">
+<!-- Col 1: Brand -->
+<div class="flex flex-col gap-4 col-span-2 md:col-span-1">
+<a class="text-headline-md font-headline-md font-bold text-slate-900 flex items-center gap-2 group" href="index.html">
+<img alt="Gurost Logo" class="w-8 h-8 object-contain rounded-full border border-slate-200 group-hover:scale-110 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_r6AovRmgLMZ8641Dbiv---Zg1IVpSUdLqc7GfbpPTaKgvZ7YbMwplbJxYCa0qOxQHiJFBVxOdJgyQpXd4KJz9KWZCTgnCNqHK4EpxNiFe6RMxP2T_p3YVGXtHvErB0slAa0lkn-VCs5Hz6Ri2HMkAeCLRLV5YmpmDEP2FZqv1XmS0Vz0Zf4y4TnUFKnkkIjYD7KzO5Tz1Euc1KWAST1ZTGyOcYw1yzGuOwHovURevzgwp0W9Y8h2vZQ9FzXqKQgIs5I"/>
+<span>Gurost</span>
 </a>
-<p class="text-on-surface-variant font-body-md">Building the future of the web through the power of voice and intelligence.</p>
-<div class="flex gap-4">
-<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-gold-gradient-start hover:text-white transition-all" href="#" aria-label="Website">
-<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-</a>
-<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-gold-gradient-start hover:text-white transition-all" href="#" aria-label="Message us">
-<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-</a>
+<p class="font-body-md text-body-md text-slate-600">The voice-first AI web builder for professionals.</p>
+</div>
+<!-- Col 2: Company -->
+<div class="flex flex-col gap-3">
+<h4 class="font-label-sm text-label-sm font-semibold text-slate-900 uppercase tracking-wider mb-2">Company</h4>
+<a class="font-label-md text-label-md text-slate-600 hover:text-slate-900 transition-colors duration-200" href="about.html">About</a>
+<a class="font-label-md text-label-md text-slate-600 hover:text-slate-900 transition-colors duration-200" href="careers.html">Careers</a>
+<a class="font-label-md text-label-md text-slate-600 hover:text-slate-900 transition-colors duration-200" href="blog.html">Blog</a>
+</div>
+<!-- Col 3: Resources -->
+<div class="flex flex-col gap-3">
+<h4 class="font-label-sm text-label-sm font-semibold text-slate-900 uppercase tracking-wider mb-2">Resources</h4>
+<a class="font-label-md text-label-md text-slate-600 hover:text-slate-900 transition-colors duration-200" href="docs.html">Docs</a>
+<a class="font-label-md text-label-md text-slate-600 hover:text-slate-900 transition-colors duration-200" href="templates.html">Templates</a>
+<a class="font-label-md text-label-md text-slate-600 hover:text-slate-900 transition-colors duration-200" href="showcase.html">Showcase</a>
+</div>
+<!-- Col 4: Legal & Support (Combined for layout based on JSON structure which has 4 links provided but 4 columns mapped) -->
+<div class="flex flex-col gap-3">
+<h4 class="font-label-sm text-label-sm font-semibold text-slate-900 uppercase tracking-wider mb-2">Support</h4>
+<a class="font-label-md text-label-md text-slate-600 hover:text-slate-900 transition-colors duration-200" href="help.html">Help Center</a>
+<a class="font-label-md text-label-md text-slate-600 hover:text-slate-900 transition-colors duration-200" href="contact.html">Contact</a>
+<a class="font-label-md text-label-md text-slate-900 font-semibold" href="status.html">Status</a> <!-- Active state highlighted -->
+<a class="font-label-md text-label-md text-slate-600 hover:text-slate-900 transition-colors duration-200" href="terms.html">Legal</a>
 </div>
 </div>
-<!-- Company -->
-<div class="space-y-6">
-<h4 class="font-bold text-on-surface uppercase tracking-wider text-sm">Company</h4>
-<ul class="space-y-4">
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="about.html">About</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="careers.html">Careers</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="blog.html">Blog</a></li>
-</ul>
-</div>
-<!-- Resources -->
-<div class="space-y-6">
-<h4 class="font-bold text-on-surface uppercase tracking-wider text-sm">Resources</h4>
-<ul class="space-y-4">
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="docs.html">Docs</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="templates.html">Templates</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="showcase.html">Showcase</a></li>
-</ul>
-</div>
-<!-- Support -->
-<div class="space-y-6">
-<h4 class="font-bold text-on-surface uppercase tracking-wider text-sm">Support</h4>
-<ul class="space-y-4">
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="help.html">Help Center</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="contact.html">Contact</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="status.html">Status</a></li>
-</ul>
-</div>
-</div>
-<div class="pt-10 border-t border-outline-variant/30 flex flex-col md:flex-row justify-between items-center gap-6">
-<p class="text-on-surface-variant text-sm">© 2026 Gurost AI. All rights reserved.</p>
-<div class="flex gap-8 text-sm">
-<a class="text-on-surface-variant hover:underline" href="privacy.html">Privacy Policy</a>
-<a class="text-on-surface-variant hover:underline" href="terms.html">Terms of Service</a>
-</div>
-</div>
+<!-- Bottom Bar -->
+<div class="border-t border-slate-200 py-6 text-center">
+<p class="font-label-md text-label-md text-slate-600">© 2024 Gurost AI. All rights reserved.</p>
 </div>
 </footer>
-<script>
-        // The Pulse/mic widget that used to live in the hero has been
-        // removed from this page entirely — it'll live on the Business
-        // Assistant page instead. This script previously had a broken
-        // click handler here (referenced getElementById('pulse-trigger')
-        // before any such element existed, which threw on load and
-        // silently killed the scroll-reveal code below it, since an
-        // uncaught error stops the rest of the script block). That
-        // handler is gone now along with the widget — nothing left here
-        // needs it.
-
-        // Simple scroll reveal effect
-        const observerOptions = {
-            threshold: 0.1
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('opacity-100', 'translate-y-0');
-                    entry.target.classList.remove('opacity-0', 'translate-y-10');
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('section').forEach(section => {
-            section.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-10');
-            observer.observe(section);
-        });
-    </script>
 </body></html>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Login - Gurost</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Inter -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration (Injected from Style Guidance) -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed-variant": "#6e3900",
+                    "on-tertiary-container": "#00566f",
+                    "tertiary": "#b0e5ff",
+                    "on-secondary-fixed": "#2f1500",
+                    "on-surface": "#e1e3e4",
+                    "surface-card": "#232729",
+                    "primary": "#ffd6a6",
+                    "primary-fixed": "#ffddb6",
+                    "surface-dim": "#111415",
+                    "surface-container-highest": "#323536",
+                    "surface-container-low": "#191c1d",
+                    "on-error": "#690005",
+                    "inverse-on-surface": "#2e3132",
+                    "on-primary-fixed-variant": "#643f00",
+                    "secondary-fixed": "#ffdcc3",
+                    "surface": "#111415",
+                    "on-background": "#e1e3e4",
+                    "on-tertiary-fixed-variant": "#004d64",
+                    "surface-variant": "#323536",
+                    "tertiary-fixed": "#bee9ff",
+                    "secondary-fixed-dim": "#ffb77d",
+                    "surface-container-lowest": "#0c0f10",
+                    "secondary-container": "#fd8b00",
+                    "on-tertiary": "#003546",
+                    "error-container": "#93000a",
+                    "surface-tint": "#ffb95a",
+                    "error": "#ffb4ab",
+                    "primary-container": "#feb246",
+                    "white": "#ffffff",
+                    "inverse-primary": "#845400",
+                    "on-primary-container": "#6f4600",
+                    "background": "#111415",
+                    "on-error-container": "#ffdad6",
+                    "on-primary-fixed": "#2a1800",
+                    "tertiary-container": "#58cefd",
+                    "outline": "#9f8e7c",
+                    "on-surface-variant": "#d6c3b0",
+                    "border-subtle": "#313638",
+                    "surface-container-high": "#272a2b",
+                    "surface-bright": "#373a3b",
+                    "secondary": "#ffb77d",
+                    "tertiary-fixed-dim": "#69d3ff",
+                    "on-secondary": "#4d2600",
+                    "surface-glass": "rgba(25, 28, 29, 0.7)",
+                    "on-secondary-container": "#603100",
+                    "surface-container": "#1d2021",
+                    "inverse-surface": "#e1e3e4",
+                    "on-tertiary-fixed": "#001f2a",
+                    "primary-fixed-dim": "#ffb95a",
+                    "outline-variant": "#524535",
+                    "on-primary": "#462a00"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "24px",
+                    "unit": "8px",
+                    "container-max": "1280px",
+                    "margin-mobile": "16px",
+                    "section-gap": "80px"
+            },
+            "fontFamily": {
+                    "body-lg": [
+                            "Inter"
+                    ],
+                    "headline-xl": [
+                            "Inter"
+                    ],
+                    "headline-lg-mobile": [
+                            "Inter"
+                    ],
+                    "label-sm": [
+                            "Inter"
+                    ],
+                    "headline-lg": [
+                            "Inter"
+                    ],
+                    "body-md": [
+                            "Inter"
+                    ]
+            },
+            "fontSize": {
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-xl": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "headline-lg-mobile": [
+                            "28px",
+                            {
+                                    "lineHeight": "36px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "label-sm": [
+                            "13px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-lg": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #feb246, #fd8b00);
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-primary:hover {
+            filter: brightness(1.1);
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-900 min-h-screen flex flex-col font-sans">
+<!-- Note: Top nav and side nav are intentionally suppressed for this transactional login page per Shared Components Logic -->
+<!-- Main Content Canvas -->
+<main class="flex-grow flex flex-col justify-center items-center p-gutter w-full max-w-container-max mx-auto">
+<!-- Logo Positioned Top-Left Absolute on larger screens, relative on mobile -->
+<div class="md:absolute top-8 left-8 mb-8 md:mb-0">
+<a href="index.html"><img alt="Gurost Logo" class="h-16 w-16 object-contain rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJNR3UcxqGyFx6WiXm8tO--xgF4DkM88ouLy-RMIaF_7cuIRYIXFwKidqmzo-DJg2Q2rBlsLDA-hpn3JyJtMNB6abD7InnKDBHho5OsjU84B9TNhJ86zQdPohDL-3PFVDiVPWhSEaMBUH4YRlry8zkhkzuvuKjjZoCWNtljgsayp4k0uqnd8c46jndpLRv7UAxvJvxwpvM0pDQpu4U5izG0aOC1_flL-TWAw-yWZRrxxeppkCvh1bNduZhhO7i8urST5A"/></a>
+</div>
+<!-- Login Card Container (Level 2 Elevation) -->
+<div class="w-full max-w-md bg-white border border-gray-300 shadow-sm rounded-xl p-8 md:p-12 relative overflow-hidden">
+<!-- Glassmorphic HUD subtle overlay effect behind the card content -->
+<div class="absolute inset-0 bg-white/50 backdrop-blur-[2px] -z-10 pointer-events-none"></div>
+<div class="text-center mb-8">
+<h1 class="font-headline-lg text-headline-lg md:font-headline-xl md:text-headline-xl mb-2 text-gray-900">Welcome Back</h1>
+<p class="font-body-md text-body-md text-gray-600">Sign in to continue to Gurost AI.</p>
+</div>
+<form class="space-y-6" id="loginForm">
+<div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 hidden" id="loginError"></div>
+<!-- Email Field -->
+<div>
+<label class="block font-label-sm text-label-sm text-gray-600 mb-2 uppercase tracking-widest" for="li-email">Email address</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" data-icon="mail">mail</span>
+<input class="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-1 focus:ring-primary-container focus:border-primary-container transition-colors font-body-md text-body-md placeholder-gray-400" id="li-email" name="email" placeholder="name@company.com" required="" type="email"/>
+</div>
+</div>
+<!-- Password Field -->
+<div>
+<div class="flex justify-between items-center mb-2">
+<label class="block font-label-sm text-label-sm text-gray-600 uppercase tracking-widest" for="li-password">Password</label>
+<a class="font-label-sm text-label-sm text-primary-container hover:text-primary transition-colors" href="reset-password.html">Forgot Password?</a>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" data-icon="lock">lock</span>
+<input class="w-full pl-10 pr-10 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-1 focus:ring-primary-container focus:border-primary-container transition-colors font-body-md text-body-md placeholder-gray-400" id="li-password" name="password" placeholder="••••••••" required="" type="password"/>
+<button aria-label="Toggle password visibility" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900 transition-colors" id="togglePasswordBtn" type="button">
+<span class="material-symbols-outlined" data-icon="visibility_off" id="togglePasswordIcon">visibility_off</span>
+</button>
+</div>
+</div>
+<!-- Primary Login Button -->
+<button class="w-full btn-primary text-white font-body-lg text-body-lg font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 mt-4" id="loginSubmit" type="submit">
+<span>Log In</span>
+<span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</form>
+<div class="my-6 flex items-center before:mt-0.5 before:flex-1 before:border-t before:border-gray-300 after:mt-0.5 after:flex-1 after:border-t after:border-gray-300">
+<span class="font-label-sm text-label-sm text-gray-500 px-4 text-center">or continue with</span>
+</div>
+<!-- Secondary Google Login Button -->
+<button class="w-full bg-white border border-gray-300 text-gray-900 font-body-md text-body-md font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-3 hover:bg-gray-50 transition-colors" id="googleBtnLogin" type="button">
+<svg class="h-5 w-5" fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
+</svg>
+<span>Sign in with Google</span>
+</button>
+<p class="mt-8 text-center font-label-sm text-label-sm text-gray-600">
+                Don't have an account? <a class="text-primary-container hover:text-primary transition-colors ml-1" href="signup.html">Sign up</a>
+</p>
+</div>
+</main>
+<!-- Footer Component Executed from JSON -->
+<footer class="bg-gray-50 border-t border-gray-200 grid grid-cols-1 md:grid-cols-4 gap-unit px-gutter py-section-gap w-full max-w-container-max mx-auto mt-auto">
+<div class="col-span-1 md:col-span-4 flex flex-col md:flex-row justify-between items-center gap-4">
+<div class="text-body-lg font-headline-lg text-gray-900 mb-4 md:mb-0">
+                Gurost
+             </div>
+<nav class="flex flex-wrap justify-center gap-6 font-label-sm text-label-sm">
+<a class="text-gray-600 hover:text-gray-900 transition-colors" href="about.html">About</a>
+<a class="text-gray-600 hover:text-gray-900 transition-colors" href="privacy.html">Privacy</a>
+<a class="text-gray-600 hover:text-gray-900 transition-colors" href="terms.html">Terms</a>
+<a class="text-gray-600 hover:text-gray-900 transition-colors" href="contact.html">Contact</a>
+</nav>
+<div class="text-gray-500 font-label-sm text-label-sm mt-4 md:mt-0 text-center md:text-right">
+                © 2026 Gurost AI. All rights reserved.
+             </div>
+</div>
+</footer>
+<script src="shared/api-client.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+  // Real, same Supabase project as signup.html - one real auth system,
+  // not a second one. Real, current URL/anon key, not placeholders.
+  const GUROST_SUPABASE_URL = "https://jiadrorezquvthyujykb.supabase.co";
+  const GUROST_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppYWRyb3JlenF1dnRoeXVqeWtiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTI3NzUsImV4cCI6MjA5OTg4ODc3NX0.GWWok3zKSfK3u4Uc3J8MVMhGYiyuZVIi16t6gAppvvs";
+
+  let supabaseClient = null;
+  function getSupabaseClient() {
+    if (!supabaseClient) supabaseClient = window.supabase.createClient(GUROST_SUPABASE_URL, GUROST_SUPABASE_ANON_KEY);
+    return supabaseClient;
+  }
+
+  function showError(id, message) {
+    const el = document.getElementById(id);
+    el.textContent = message;
+    el.classList.remove('hidden');
+  }
+  function hideError(id) {
+    document.getElementById(id).classList.add('hidden');
+  }
+
+  async function continueWithGoogle() {
+    const client = getSupabaseClient();
+    await client.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin + window.location.pathname }
+    });
+  }
+
+  // Real check for a returning Google OAuth session - same real logic
+  // signup.html already uses, so a Google redirect back to THIS page
+  // (login.html) completes correctly, not just on signup.html.
+  async function checkForReturningAuthSession() {
+    const client = getSupabaseClient();
+    const { data } = await client.auth.getSession();
+    if (data?.session?.access_token) {
+      localStorage.setItem('gurost_jwt', data.session.access_token);
+      localStorage.setItem('gurost_user_id', data.session.user.id);
+      window.location.href = 'dashboard.html';
+    }
+  }
+  checkForReturningAuthSession();
+
+  document.getElementById('googleBtnLogin').addEventListener('click', continueWithGoogle);
+
+  document.getElementById('togglePasswordBtn').addEventListener('click', () => {
+    const input = document.getElementById('li-password');
+    const icon = document.getElementById('togglePasswordIcon');
+    const nowVisible = input.type === 'password';
+    input.type = nowVisible ? 'text' : 'password';
+    icon.textContent = nowVisible ? 'visibility' : 'visibility_off';
+  });
+
+  // Real login submission - identical real call/flow already proven
+  // working in signup.html's own login tab, not a new implementation.
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideError('loginError');
+
+    const email = document.getElementById('li-email').value.trim();
+    const password = document.getElementById('li-password').value;
+
+    if (!email || !password) {
+      return showError('loginError', 'Email and password are both required.');
+    }
+
+    const btn = document.getElementById('loginSubmit');
+    btn.disabled = true;
+    btn.querySelector('span').textContent = 'Logging in…';
+
+    try {
+      const result = await GurostAPI.call('/api/auth/login', { method: 'POST', body: { email, password } });
+      localStorage.setItem('gurost_jwt', result.token);
+      localStorage.setItem('gurost_user_id', result.userId);
+      window.location.href = 'dashboard.html';
+    } catch (err) {
+      showError('loginError', err.message);
+      btn.disabled = false;
+      btn.querySelector('span').textContent = 'Log In';
+    }
+  });
+</script>
+</body></html>

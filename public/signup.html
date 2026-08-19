@@ -52,7 +52,7 @@
 <button class="flex-1 pb-4 font-headline-md text-headline-md text-secondary font-bold border-b-2 border-secondary transition-colors relative z-10" id="btn-signup" onclick="switchTab('signup')">
                     Sign Up
                 </button>
-<button class="flex-1 pb-4 font-headline-md text-headline-md text-on-surface-variant hover:text-on-surface transition-colors relative z-10" id="btn-login" onclick="switchTab('login')">
+<button class="flex-1 pb-4 font-headline-md text-headline-md text-on-surface-variant hover:text-on-surface transition-colors relative z-10" id="btn-login" onclick="window.location.href='login.html'">
                     Log In
                 </button>
 </div>
@@ -101,9 +101,14 @@
 <svg class="w-5 h-5" viewbox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path></svg>
                     Continue with Google
                 </button>
+<button class="mt-3 w-full h-[60px] bg-surface-container-lowest border border-outline-variant/50 text-on-surface font-label-sm text-label-sm rounded-full flex items-center justify-center gap-3 hover:bg-surface-container-low transition-colors shadow-sm hover:shadow active:scale-95 duration-200" id="magicLinkBtnSignup" type="button">
+<span class="material-symbols-outlined text-lg">mail</span>
+                    Email me a sign-in link
+                </button>
+<p class="mt-3 text-center text-xs text-on-surface-variant hidden" id="magicLinkStatusSignup"></p>
 <p class="mt-8 text-center font-body-md text-body-md text-on-surface-variant">
                     Already have an account? 
-                    <button class="text-secondary font-semibold hover:underline" onclick="switchTab('login')">Log in</button>
+                    <button class="text-secondary font-semibold hover:underline" onclick="window.location.href='login.html'">Log in</button>
 </p>
 <p class="mt-6 text-center text-xs text-on-surface-variant/70">
                     By creating an account, you agree to our 
@@ -166,6 +171,11 @@ Send Reset Link
 <svg class="w-5 h-5" viewbox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path></svg>
                     Continue with Google
                 </button>
+<button class="mt-3 w-full h-[60px] bg-surface-container-lowest border border-outline-variant/50 text-on-surface font-label-sm text-label-sm rounded-full flex items-center justify-center gap-3 hover:bg-surface-container-low transition-colors shadow-sm hover:shadow active:scale-95 duration-200" id="magicLinkBtnLogin" type="button">
+<span class="material-symbols-outlined text-lg">mail</span>
+                    Email me a sign-in link
+                </button>
+<p class="mt-3 text-center text-xs text-on-surface-variant hidden" id="magicLinkStatusLogin"></p>
 <p class="mt-8 text-center font-body-md text-body-md text-on-surface-variant" id="loginSwitchLine">
                     Don't have an account? 
                     <button class="text-secondary font-semibold hover:underline" onclick="switchTab('signup')">Sign Up</button>
@@ -293,10 +303,12 @@ Send Reset Link
     // page load) in the "check for a returning OAuth session" block below.
   }
 
-  // On page load: if we just landed back here after a Google redirect,
-  // Supabase's client SDK will have a session waiting. Hand its JWT to
-  // Gurost the same way a normal email/password login does.
-  async function checkForReturningOAuthSession() {
+  // On page load: if we just landed back here after a Google redirect
+  // OR after clicking a real magic link in email, Supabase's client
+  // SDK will have a session waiting either way — getSession() doesn't
+  // care which method created it. Hand its JWT to Gurost the same way
+  // a normal email/password login does.
+  async function checkForReturningAuthSession() {
     const client = getSupabaseClient();
     if (!client) return;
     const { data } = await client.auth.getSession();
@@ -307,9 +319,42 @@ Send Reset Link
     }
   }
 
+  // Magic link — real, passwordless sign-in. Reuses the same
+  // Supabase client already set up for Google, so there's one real
+  // client instance, not two. Unlike Google OAuth, Supabase's email
+  // magic-link auth is enabled by default (no separate provider
+  // toggle needed) — so this one should genuinely work as soon as the
+  // real URL/key above are filled in, no extra external setup.
+  async function sendMagicLink(emailInputId, statusId) {
+    const client = getSupabaseClient();
+    const statusEl = document.getElementById(statusId);
+    if (!client) {
+      statusEl.textContent = "Not configured yet — see the comment above this script block.";
+      statusEl.classList.remove('hidden');
+      return;
+    }
+    const email = document.getElementById(emailInputId).value.trim();
+    if (!email) {
+      statusEl.textContent = "Enter your email above first.";
+      statusEl.classList.remove('hidden');
+      return;
+    }
+    statusEl.textContent = "Sending...";
+    statusEl.classList.remove('hidden');
+    const { error } = await client.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin + window.location.pathname }
+    });
+    statusEl.textContent = error
+      ? `Couldn't send link: ${error.message}`
+      : `Check ${email} for a real sign-in link — it expires after a while, so use it soon.`;
+  }
+
   document.getElementById('googleBtnSignup').addEventListener('click', continueWithGoogle);
   document.getElementById('googleBtnLogin').addEventListener('click', continueWithGoogle);
-  document.addEventListener('DOMContentLoaded', checkForReturningOAuthSession);
+  document.getElementById('magicLinkBtnSignup').addEventListener('click', () => sendMagicLink('su-email', 'magicLinkStatusSignup'));
+  document.getElementById('magicLinkBtnLogin').addEventListener('click', () => sendMagicLink('li-email', 'magicLinkStatusLogin'));
+  document.addEventListener('DOMContentLoaded', checkForReturningAuthSession);
 </script>
 
 <script>
@@ -401,6 +446,7 @@ Send Reset Link
     document.getElementById('loginForm').classList.toggle('hidden', visible);
     document.getElementById('loginDivider').classList.toggle('hidden', visible);
     document.getElementById('googleBtnLogin').classList.toggle('hidden', visible);
+    document.getElementById('magicLinkBtnLogin').classList.toggle('hidden', visible);
     document.getElementById('loginSwitchLine').classList.toggle('hidden', visible);
     document.getElementById('forgotPasswordPanel').classList.toggle('hidden', !visible);
     hideError('forgotError');

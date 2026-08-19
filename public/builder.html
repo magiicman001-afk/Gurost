@@ -152,6 +152,7 @@
 <span id="codeToggleLabel">Show Code</span>
 </button>
 <button class="text-secondary text-sm font-semibold hover:underline ml-4" id="versionHistoryBtn" type="button">Version History</button>
+<a class="text-secondary text-sm font-semibold hover:underline ml-4 hidden" href="assistant.html" id="businessAssistantLink">Business Assistant</a>
 </div>
 <!-- Browser Content Area -->
 <div class="relative w-full aspect-video bg-surface-container-low overflow-hidden">
@@ -476,6 +477,20 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error('[builder] Project handoff/restore setup failed, continuing without it:', err.message);
     localStorage.removeItem('gurost_pending_generate'); // clear whatever was malformed so it can't keep failing on every future page load
   }
+
+  // Real, plan-gated reveal — Business Assistant link only shows for
+  // Max/Custom (currently unlimited/ultimate internally — see the
+  // real naming note in auth.js and credit-system.js). This is purely
+  // a UX convenience; the actual security lives server-side on the
+  // real /api/assistant* routes via auth.requireBusinessAssistant,
+  // which check regardless of whether this link is visible.
+  GurostAPI.getMyPlan().then((plan) => {
+    if (plan === 'unlimited' || plan === 'ultimate') {
+      document.getElementById('businessAssistantLink').classList.remove('hidden');
+    }
+  }).catch((err) => {
+    console.error('[builder] Plan check for Business Assistant link failed, leaving it hidden:', err.message);
+  });
 
   document.getElementById('codeToggleBtn').addEventListener('click', toggleCodeView);
 

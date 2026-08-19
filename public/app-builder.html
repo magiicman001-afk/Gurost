@@ -58,6 +58,11 @@
 <span id="codeToggleLabel">Show Code</span>
 </button>
 <button class="text-secondary font-body-md text-body-md hover:underline ml-4" id="versionHistoryBtn" type="button">Version History</button>
+<a class="text-secondary font-body-md text-body-md hover:underline ml-4 hidden" href="assistant.html" id="businessAssistantLink">Business Assistant</a>
+<button class="bg-gradient-to-r from-gold-gradient-start to-gold-gradient-end text-on-secondary px-6 py-2 rounded-full font-label-sm text-label-sm font-semibold flex items-center gap-2 ml-4 hidden" id="deployBtn" type="button">
+<span class="material-symbols-outlined text-[18px]">rocket_launch</span>
+<span id="deployBtnLabel">Deploy</span>
+</button>
 </div>
 <div class="w-full aspect-video bg-surface-container-high rounded-xl border border-outline-variant/50 shadow-md overflow-hidden relative">
 
@@ -331,6 +336,7 @@ function renderCodeView(appFiles) {
   if (allFiles.length) showFile(0);
 
   document.getElementById('codeToggleBtn').classList.remove('hidden');
+  document.getElementById('deployBtn').classList.remove('hidden');
 }
 
 function toggleCodeView() {
@@ -377,6 +383,19 @@ function buildPreviewDocument(frontendFiles) {
 </head>
 <body>
 <div id="root" style="font-family: Inter, sans-serif; padding: 8px;"></div>
+<!-- Real API Key Collection Modal - hidden by default -->
+<div class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" id="apiKeyModal">
+<div class="bg-white rounded-2xl p-8 max-w-md w-full max-h-[80vh] overflow-y-auto">
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-2">Real API Keys Needed</h2>
+<p class="font-body-md text-on-surface-variant text-sm mb-6">Your app uses these real services — add your own keys so it actually works once deployed.</p>
+<div id="apiKeyFields"></div>
+<p class="hidden text-red-600 text-sm mb-4" id="apiKeyModalError"></p>
+<div class="flex gap-3 mt-6">
+<button class="flex-1 border border-outline-variant rounded-full py-2 font-label-sm text-label-sm" id="apiKeyModalCancel" type="button">Cancel</button>
+<button class="flex-1 bg-gradient-to-r from-gold-gradient-start to-gold-gradient-end text-on-secondary rounded-full py-2 font-label-sm text-label-sm font-semibold" id="apiKeyModalSubmit" type="button">Save &amp; Deploy</button>
+</div>
+</div>
+</div>
 <script>
 (function () {
   var FILES = ${filesJson};
@@ -737,6 +756,17 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.removeItem('gurost_pending_generate');
   }
 
+  // Real, plan-gated reveal — same real logic as builder.html. Purely
+  // a UX convenience; real security lives server-side on the actual
+  // /api/assistant* routes.
+  GurostAPI.getMyPlan().then((plan) => {
+    if (plan === 'unlimited' || plan === 'ultimate') {
+      document.getElementById('businessAssistantLink').classList.remove('hidden');
+    }
+  }).catch((err) => {
+    console.error('[app-builder] Plan check for Business Assistant link failed, leaving it hidden:', err.message);
+  });
+
   document.getElementById('codeToggleBtn').addEventListener('click', toggleCodeView);
 
   document.querySelectorAll('[data-template]').forEach((card) => {
@@ -863,5 +893,97 @@ document.getElementById('pulseRestartBtn')?.addEventListener('click', async () =
     // never block or error the actual result over a failed voice reply.
   }
 });
+
+// Real Deploy flow — checks for real, missing required keys first; if
+// any exist, shows the real modal below rather than failing silently
+// or deploying an app that'll break the moment it tries to use a key
+// nobody gave it.
+document.getElementById('deployBtn').addEventListener('click', () => attemptDeploy());
+
+async function attemptDeploy() {
+  const btn = document.getElementById('deployBtn');
+  const label = document.getElementById('deployBtnLabel');
+  btn.disabled = true;
+  label.textContent = 'Deploying…';
+
+  try {
+    const result = await GurostAPI.call('/api/deploy/one-click', { method: 'POST', body: { projectId } });
+    showDeploySuccess(result);
+  } catch (err) {
+    if (err.data?.requiredKeys && err.data.requiredKeys.length > 0) {
+      showApiKeyModal(err.data.requiredKeys);
+    } else {
+      alert('Deploy failed: ' + err.message);
+    }
+  } finally {
+    btn.disabled = false;
+    label.textContent = 'Deploy';
+  }
+}
+
+function showApiKeyModal(requiredKeys) {
+  const modal = document.getElementById('apiKeyModal');
+  const fieldsContainer = document.getElementById('apiKeyFields');
+  fieldsContainer.innerHTML = '';
+
+  requiredKeys.forEach((key) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'mb-4';
+    const label = key.service ? `${key.service} — ${key.varName}` : key.varName;
+    const helpLink = key.helpUrl ? `<a href="${key.helpUrl}" target="_blank" class="text-secondary text-xs hover:underline ml-2">Get this key</a>` : '';
+    wrapper.innerHTML = `
+      <label class="block font-label-sm text-label-sm text-on-surface-variant mb-1">${label}${helpLink}</label>
+      <input type="password" class="w-full px-4 py-2 border border-outline-variant rounded-lg" data-var-name="${key.varName}" placeholder="Paste your real ${label} here"/>
+    `;
+    fieldsContainer.appendChild(wrapper);
+  });
+
+  modal.classList.remove('hidden');
+}
+
+document.getElementById('apiKeyModalCancel').addEventListener('click', () => {
+  document.getElementById('apiKeyModal').classList.add('hidden');
+});
+
+document.getElementById('apiKeyModalSubmit').addEventListener('click', async () => {
+  const inputs = document.querySelectorAll('#apiKeyFields input[data-var-name]');
+  const keys = {};
+  let allFilled = true;
+  inputs.forEach((input) => {
+    const value = input.value.trim();
+    if (!value) allFilled = false;
+    keys[input.dataset.varName] = value;
+  });
+
+  if (!allFilled) {
+    document.getElementById('apiKeyModalError').textContent = 'Please fill in every real key before continuing.';
+    document.getElementById('apiKeyModalError').classList.remove('hidden');
+    return;
+  }
+
+  const submitBtn = document.getElementById('apiKeyModalSubmit');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Saving…';
+
+  try {
+    await GurostAPI.call(`/api/project/${projectId}/api-keys`, { method: 'POST', body: { keys } });
+    document.getElementById('apiKeyModal').classList.add('hidden');
+    attemptDeploy(); // real, automatic retry now that the real keys are stored
+  } catch (err) {
+    document.getElementById('apiKeyModalError').textContent = 'Failed to save keys: ' + err.message;
+    document.getElementById('apiKeyModalError').classList.remove('hidden');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Save & Deploy';
+  }
+});
+
+function showDeploySuccess(result) {
+  let message = 'Deployed!\n\n';
+  if (result.frontend?.url) message += `Frontend: ${result.frontend.url}\n`;
+  if (result.backend?.url) message += `Backend: ${result.backend.url}\n`;
+  alert(message); // real, deliberately simple for now - a proper results panel is a real, separate follow-up
+}
 </script>
+
 </body></html>

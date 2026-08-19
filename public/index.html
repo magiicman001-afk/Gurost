@@ -3,351 +3,387 @@
 <html class="scroll-smooth" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Gurost - Build with your Voice</title>
-<meta content="Gurost AI: The premier AI web builder that turns your voice into high-performance websites." name="description"/>
-<!-- Design System Fonts -->
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<title>Gurost - Build your entire web presence with your voice.</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="shared/styles.css" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#837566",
+                        "on-secondary-fixed-variant": "#6e3900",
+                        "on-primary": "#ffffff",
+                        "surface-peach": "#fff8f4",
+                        "surface-cream": "#f9ecdf",
+                        "inverse-surface": "#362f29",
+                        "on-tertiary-fixed-variant": "#004d64",
+                        "on-tertiary-fixed": "#001f2a",
+                        "on-secondary-fixed": "#2f1500",
+                        "primary": "#643f00",
+                        "on-primary-container": "#ffd198",
+                        "surface-tint": "#845400",
+                        "background": "#ffffff",
+                        "on-primary-fixed-variant": "#643f00",
+                        "tertiary-fixed": "#bee9ff",
+                        "surface-dim": "#e3d8ce",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error": "#ffffff",
+                        "outline-warm": "#847463",
+                        "on-surface-variant": "#454749",
+                        "primary-fixed-dim": "#fbba65",
+                        "deep-orange": "#fd8b00",
+                        "inverse-primary": "#fbba65",
+                        "surface-variant": "#ece1d7",
+                        "on-primary-fixed": "#2a1800",
+                        "accent-orange": "#feb246",
+                        "tertiary": "#004d64",
+                        "primary-fixed": "#ffddb6",
+                        "secondary-fixed-dim": "#ffb77c",
+                        "surface-container-high": "#f2e6dc",
+                        "surface-container-highest": "#ece1d7",
+                        "on-secondary": "#ffffff",
+                        "outline-variant": "#e5e7eb",
+                        "error": "#ba1a1a",
+                        "inverse-on-surface": "#fbefe5",
+                        "secondary-fixed": "#ffdcc3",
+                        "surface-container-low": "#fef2e7",
+                        "secondary-container": "#fca558",
+                        "on-tertiary-container": "#a2e1ff",
+                        "surface": "#ffffff",
+                        "surface-bright": "#ffffff",
+                        "on-surface": "#1a1c1e",
+                        "on-secondary-container": "#713b00",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#87d0f2",
+                        "error-container": "#ffdad6",
+                        "tertiary-container": "#006684",
+                        "primary-container": "#845400",
+                        "surface-container": "#f9fafb",
+                        "secondary": "#904d00",
+                        "on-background": "#1a1c1e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "12px",
+                        "container-max": "1280px",
+                        "base": "8px",
+                        "lg": "48px",
+                        "xs": "4px",
+                        "xl": "80px",
+                        "gutter": "24px",
+                        "md": "24px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter", "sans-serif"],
+                        "label-sm": ["Inter", "sans-serif"],
+                        "headline-lg-mobile": ["Inter", "sans-serif"],
+                        "label-md": ["Inter", "sans-serif"],
+                        "body-lg": ["Inter", "sans-serif"],
+                        "display-lg": ["Inter", "sans-serif"],
+                        "headline-md": ["Inter", "sans-serif"],
+                        "headline-lg": ["Inter", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+                    },
+                    "boxShadow": {
+                        "ambient": "0px 12px 32px rgba(26, 26, 46, 0.08)"
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #ffffff; color: #1a1c1e; }
+        .gradient-primary { background: linear-gradient(135deg, #feb246 0%, #fd8b00 100%); }
+    </style>
 </head>
-<body class="bg-surface font-body-md text-on-surface">
+<body class="antialiased min-h-screen flex flex-col font-body-md text-body-md">
 <!-- TopNavBar -->
-<header class="bg-surface/80 dark:bg-on-surface/80 backdrop-blur-md font-body-md text-body-md docked full-width top-0 sticky border-b border-outline-variant/30 shadow-sm z-50">
-<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto">
-<a class="flex items-center gap-4" href="index.html">
-<div class="w-12 h-12 rounded-full overflow-hidden border-2 border-secondary shadow-sm">
-<img alt="Gurost Logo" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbW7YuoiwPzt2zuDU9cg_DLkBMcqlS_b4i-YI1upyWRkvNCvV1uoVklezt3qRXQdwJh_g1y6XWz4PP6RYy_o-40ci6VsGQ-w8VZXfbk20lXDvuXX1o6ovv7ho1nPm2r-N1K93dywDtxV_IMNrW5zzdVbfBiT4zgRz7SLg7f6Td8G5NXOcNjUDDKEkNasYUXiVfAOHB1oaRVPrLruvfU6gEulVij_QmE0eluvhIyHKY0YyWg0Z3g6dbtPJ_H4jA9C7o2Aw"/>
+<header class="bg-surface dark:bg-surface text-primary dark:text-primary-fixed-dim font-body-md text-body-md docked full-width top-0 bg-surface/80 backdrop-blur-md flat no shadows sticky z-50">
+<div class="flex justify-between items-center h-20 px-md md:px-lg max-w-container-max mx-auto">
+<div class="flex items-center gap-4">
+<img alt="Gurost Logo" class="h-10 w-10 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzX3kHYtYeAN1bcO_0iM9v_To7mGNGH1bvdviGXNVBiSTh8WP30MiOM8rZWbfSUfkUS17hH6DUT_cN9YRNjaJRaR__wrfZkLqJQAuDXhjvgvqKI_j4xz1VMVusP39V6KkX3pMYXTGkWzzs9oY2e9VAzd1dahgc85xd7Ls27oVCNentz5GMu9Y0KIz5IwEXHtmP1EptvJ07r6lfMxFhD4AnrTSJ1nTle3cOmnfZ09GQj5OrSQGHYTNsh5AOjNe1V7nS-hQ"/>
+<span class="text-headline-md font-headline-md font-bold text-on-surface">Gurost</span>
 </div>
-<span class="font-headline-md text-headline-md font-bold text-on-surface">Gurost</span>
-</a>
-<nav class="hidden md:flex gap-8 items-center">
-<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="index.html">Product</a>
-<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="pricing.html">Pricing</a>
-<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="resources.html">Resources</a>
-<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="templates.html">Templates</a>
+<nav class="hidden md:flex gap-8">
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md hover:opacity-90 transition-all duration-200" href="product.html">Product</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md hover:opacity-90 transition-all duration-200" href="#pricing">Pricing</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md hover:opacity-90 transition-all duration-200" href="resources.html">Resources</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors font-body-md text-body-md hover:opacity-90 transition-all duration-200" href="templates.html">Templates</a>
 </nav>
 <div class="flex items-center gap-4">
-<a class="hidden sm:block text-on-surface-variant font-medium" href="signup.html">Log in</a>
-<a class="gold-gradient px-6 py-2 rounded-full text-white font-bold lift-hover transition-all" href="signup.html">Sign Up</a>
+<a class="hidden md:block text-on-surface font-label-md text-label-md hover:opacity-90 transition-all duration-200" href="signup.html">Log In</a>
+<a class="gradient-primary text-on-primary px-6 py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-all duration-200 shadow-ambient" href="signup.html">Get Started</a>
 </div>
 </div>
 </header>
-<main>
+<main class="flex-grow">
 <!-- Hero Section -->
-<section class="relative overflow-hidden pt-20 pb-32 px-margin-mobile md:px-margin-desktop">
-<div class="max-w-container-max mx-auto grid lg:grid-cols-2 gap-16 items-center">
-<div class="space-y-8">
-<div class="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-mint-green text-secondary font-label-sm text-label-sm">
-<span class="material-symbols-outlined text-sm">auto_awesome</span>
-                        Next-Gen AI Website Builder
-                    </div>
-<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary leading-tight">
-                        Build your entire web presence with your <span class="text-secondary italic">voice.</span>
-</h1>
-<p class="text-body-lg font-body-lg text-on-surface-variant max-w-xl">
-                        Say goodbye to complex editors. Simply describe your vision, and Gurost transforms your words into professional, high-converting websites in seconds.
-                    </p>
-<div class="flex flex-col sm:flex-row gap-4 pt-4">
-<a class="gold-gradient px-10 py-4 rounded-full text-white text-center font-bold text-lg lift-hover shadow-lg" href="signup.html">
-                            Start Building Free
-                        </a>
-<a class="bg-primary-container px-10 py-4 rounded-full text-white text-center font-bold text-lg lift-hover shadow-md" href="templates.html">
-                            Browse Templates
-                        </a></div>
+<section class="py-xl px-margin-mobile md:px-md max-w-container-max mx-auto text-center flex flex-col items-center justify-center pt-16">
+<h1 class="font-display-lg text-display-lg text-on-surface max-w-4xl mb-6">Build your entire web presence with your voice.</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mb-8">Professional websites designed, built, and deployed simply by speaking. No code, no templates, just your vision brought to life instantly.</p>
+<div class="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+<a class="gradient-primary text-on-primary px-8 py-3 rounded-full font-label-md text-label-md hover:opacity-90 transition-all duration-200 shadow-ambient flex items-center justify-center gap-2" href="signup.html">
+                    Start Building Free
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+<a class="border border-outline-variant bg-transparent text-on-surface px-8 py-3 rounded-full font-label-md text-label-md hover:border-on-surface transition-all duration-200 flex items-center justify-center" href="showcase.html">
+                    See Examples
+                </a>
 </div>
-<div class="relative group">
-<div class="absolute -inset-4 bg-gradient-to-tr from-gold-gradient-start to-soft-teal opacity-20 blur-3xl rounded-full"></div>
-<div class="relative rounded-2xl overflow-hidden border border-outline-variant shadow-2xl bg-white p-2">
-<img class="rounded-xl w-full h-auto" data-alt="A sophisticated dashboard interface of a modern AI website builder application. The UI is clean and professional with a white background, featuring a glowing golden 'record' button in the center to signify voice command. The sidebar shows layers, templates, and analytics icons in a minimalist dark navy primary-container color. Sunlight filters softly from the side, creating a high-end corporate creative atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAo8_SUiPeMjA95Tdk9m6o8qcWKEMvCWPZuC2PIrQLrmkfeNLIlaCcMcpEI6CRs9oGlPVKGKzYWY3BHE_mukk0_qvv0ZC61gK5tZEh1TKE-FeqlsAy0-fhfHCd3jdMij81hqNvVVhFyUbGnGvtsINnx9CoeCp6NxiwcUnZpyjzmzekSOsCQJBrMavl7YZQ74qEvC_uh0xeb-yK17Bbrbn-JqS8OSBGEp7pRPSpW-eWRE4xclRltNzeN9g"/>
+<div class="w-full max-w-5xl mx-auto rounded-2xl overflow-hidden shadow-ambient border border-outline-variant mt-8 rounded-3xl">
+<img alt="Gurost workspace" class="w-full h-auto object-cover" src="https://lh3.googleusercontent.com/aida/AP1WRLt9ryu2Mnt3_dcZC9QssTvq49T1Iqg4Zi_Dt101BsmuWUduZPNLcHXz5TAMLcM99n6VRvNQo7YF7vNmi34JNf7taRdlWvRErTonw1j1Sx2AGS6LKlBbNqaKR636_a0ybaTJHwSTHw8qmeWruf5mY7zcKnzGR1h78GNz-IQ2hrVk7F_7_qZHNcui1eU3inGObwTya78wEAreC5I4S0k9MqbKT1Aws9yZfMMsuZYB8uGu4TVTDUvPWJSTIoq_"/>
+</div>
+</section>
+<!-- 3-Step Process -->
+<section class="bg-surface-container py-xl px-margin-mobile md:px-md">
+<div class="max-w-container-max mx-auto">
+<h2 class="font-headline-lg text-headline-lg md:font-headline-lg md:text-headline-lg text-center text-on-surface mb-12">How it Works</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Step 1 -->
+<div class="bg-surface p-8 rounded-xl border border-outline-variant shadow-ambient flex flex-col items-center text-center">
+<div class="h-16 w-16 bg-surface-container-low rounded-full flex items-center justify-center mb-6 border border-outline-variant text-on-surface">
+<span class="material-symbols-outlined" style="font-size: 32px;">mic</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4">1. Speak</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Describe your business, your brand style, and what pages you need. Our AI listens and understands your context.</p>
+</div>
+<!-- Step 2 -->
+<div class="bg-surface p-8 rounded-xl border border-outline-variant shadow-ambient flex flex-col items-center text-center">
+<div class="h-16 w-16 bg-surface-container-low rounded-full flex items-center justify-center mb-6 border border-outline-variant text-on-surface">
+<span class="material-symbols-outlined" style="font-size: 32px;">visibility</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4">2. Preview</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Review a fully functional, highly polished draft. Tweak colors, layouts, and copy by simply asking for changes.</p>
+</div>
+<!-- Step 3 -->
+<div class="bg-surface p-8 rounded-xl border border-outline-variant shadow-ambient flex flex-col items-center text-center">
+<div class="h-16 w-16 bg-surface-container-low rounded-full flex items-center justify-center mb-6 border border-outline-variant text-on-surface">
+<span class="material-symbols-outlined" style="font-size: 32px;">rocket_launch</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4">3. Deploy</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Publish to a custom domain with one click. Fast, secure, and optimized for SEO out of the box.</p>
 </div>
 </div>
 </div>
 </section>
-<!-- 3-Step Process (Bento Grid Style) -->
-<section class="py-24 bg-white px-margin-mobile md:px-margin-desktop">
-<div class="max-w-container-max mx-auto">
-<div class="text-center mb-16 space-y-4">
-<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg">The 3-Step Velocity Path</h2>
-<p class="text-on-surface-variant max-w-2xl mx-auto">Our streamlined engine takes you from concept to conversion faster than any traditional tool.</p>
+<!-- Platform Excellence Section -->
+<section class="py-xl px-margin-mobile md:px-md max-w-container-max mx-auto bg-surface">
+<h2 class="font-headline-lg text-headline-lg text-center text-on-surface mb-16">Platform Excellence</h2>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-20">
+<div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4">Built for Professional Teams</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">Empower your entire organization to create and iterate on web experiences without writing a single line of code. Gurost fits seamlessly into your collaborative workflow, enabling faster iterations and better alignment.</p>
+<a class="text-primary font-label-md text-label-md flex items-center gap-2 hover:opacity-80 transition-opacity" href="#pricing">
+                    Learn about Enterprise features
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
 </div>
-<div class="grid md:grid-cols-3 gap-gutter">
-<!-- Step 1 -->
-<div class="flex flex-col items-center text-center gap-4 px-6 group">
-<div class="w-20 h-20 rounded-full gold-gradient flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-<span class="material-symbols-outlined text-white text-4xl">mic</span>
+<div class="rounded-2xl overflow-hidden shadow-ambient border border-outline-variant rounded-3xl">
+<img alt="Collaborative team" class="w-full h-auto object-cover" src="https://lh3.googleusercontent.com/aida/AP1WRLvok5_S5LrIc9J3_7jrXyi9un6-6wz6BSXI6T9zRjmxVVu-R1-rGKvh2g-812lNjPEXaG0-0WEFP77d4avMHp2eFZzSaH6f77_W-GRH9WeydxOIqhWUl3mwk594j1NFBaYAE5czOHH-chziAmppk2M8N68pbPpeA2uYgBaMESaWd1yt3VFdn5Li8JISbX3wE59amNbzezXEfrfeNp1mTjsRydR92zPK0J6ntV5Ha7HlhaeMHyVn8QJ6b-Q"/>
 </div>
-<h3 class="font-headline-md text-headline-md font-bold">1. Speak</h3>
-<p class="text-on-surface-variant">Simply speak your site structure and style preferences. Our NLP engine understands context and intent.</p>
 </div>
-<!-- Step 2 -->
-<div class="flex flex-col items-center text-center gap-4 px-6 group">
-<div class="w-20 h-20 rounded-full gold-gradient flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-<span class="material-symbols-outlined text-white text-4xl">visibility</span>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center flex-col-reverse lg:flex-row">
+<div class="rounded-2xl overflow-hidden shadow-ambient border border-outline-variant lg:order-1 order-2 rounded-3xl">
+<img alt="Mobile app preview" class="w-full h-auto object-cover" src="https://lh3.googleusercontent.com/aida/AP1WRLujW7wSzvqhC-wn2-REsGW8tgteKW7tbCJuzVQvn4CRyN_0TuLbftq0XcrVQMO7UaGitLh2xfYOjHHLtYEe_o1_YuQ-wqgkwnOHIkcAZWOZe8dJRBogj2g8_XJvVGx5gVgYh1FjRalo3FNK-Ra40mgeDBxzw77_xAx4cKjowGynfcSH-p8eI8zFT458O5sgw6xH6vpB1OIOH-ylbasjBjO82X0r1UFHsmMKAYOUamrUF4eK4_cVcvZyi3k-"/>
 </div>
-<h3 class="font-headline-md text-headline-md font-bold">2. Preview</h3>
-<p class="text-on-surface-variant">Watch in real-time as the AI generates layout, images, and copy. Tweak elements with voice commands instantly.</p>
-</div>
-<!-- Step 3 -->
-<div class="flex flex-col items-center text-center gap-4 px-6 group">
-<div class="w-20 h-20 rounded-full gold-gradient flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
-<span class="material-symbols-outlined text-white text-4xl">rocket_launch</span>
-</div>
-<h3 class="font-headline-md text-headline-md font-bold">3. Deploy</h3>
-<p class="text-on-surface-variant">One-click global deployment with optimized hosting. Your professional presence is live, globally, in seconds.</p>
-</div>
+<div class="lg:order-2 order-1">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4">Flawless on Every Device</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">Every site generated by Gurost is automatically optimized for mobile, ensuring a perfect experience for your users whether they are on a desktop, tablet, or smartphone. High-quality responsive design comes standard.</p>
+<a class="text-primary font-label-md text-label-md flex items-center gap-2 hover:opacity-80 transition-opacity" href="product.html">
+                    See mobile capabilities
+                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
 </div>
 </div>
 </section>
 <!-- Pricing Section -->
-<section class="py-32 px-margin-mobile md:px-margin-desktop bg-surface" id="pricing">
-<div class="max-w-container-max mx-auto">
-<div class="text-center mb-20">
-<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg mb-4">Investment Tiers</h2>
-<p class="text-on-surface-variant">Scalable solutions for individuals and enterprises.</p>
+<section class="py-xl px-margin-mobile md:px-md max-w-container-max mx-auto" id="pricing">
+<h2 class="font-headline-lg text-headline-lg md:font-headline-lg md:text-headline-lg text-center text-on-surface mb-12">Simple, transparent pricing</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<!-- Free Tier -->
+<div class="bg-surface p-8 rounded-xl border border-outline-variant shadow-ambient flex flex-col">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Free</h3>
+<div class="mb-6">
+<span class="font-display-lg text-display-lg text-on-surface">£0</span>
+<span class="font-body-md text-body-md text-on-surface-variant">/mo</span>
 </div>
-<div class="grid lg:grid-cols-3 gap-8">
-<!-- Free -->
-<div class="bg-white rounded-xl p-10 border border-outline-variant shadow-sm flex flex-col">
-<div class="mb-8">
-<h3 class="font-headline-md text-headline-md mb-2">Free</h3>
-<div class="flex items-baseline">
-<span class="text-4xl font-bold">£0</span>
-<span class="text-on-surface-variant ml-2">/month</span>
-</div>
-</div>
-<ul class="space-y-4 mb-10 flex-grow">
-<li class="flex items-center gap-3">
-<span class="material-symbols-outlined text-green-500 text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                                1 build per month
-                            </li>
-<li class="flex items-center gap-3">
-<span class="material-symbols-outlined text-green-500 text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                                5 free credits daily
-                            </li>
-<li class="flex items-center gap-3">
-<span class="material-symbols-outlined text-green-500 text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                                Gurost subdomain
-                            </li>
-<li class="flex items-center gap-3">
-<span class="material-symbols-outlined text-green-500 text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                                Standard hosting
-                            </li>
-<li class="flex items-center gap-3">
-<span class="material-symbols-outlined text-green-500 text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                                Community support
-                            </li>
+<ul class="space-y-4 mb-8 flex-grow">
+<li class="flex items-start gap-2 font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-on-surface text-sm mt-1">check_circle</span>
+                            1 Voice-generated site
+                        </li>
+<li class="flex items-start gap-2 font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-on-surface text-sm mt-1">check_circle</span>
+                            Gurost subdomain
+                        </li>
 </ul>
-<a class="w-full py-4 rounded-full border-2 border-primary-container text-primary-container font-bold hover:bg-primary-container hover:text-white transition-all text-center block" href="signup.html">Get Started</a>
+<a class="w-full text-center border border-outline-variant bg-transparent text-on-surface px-6 py-2 rounded-full font-label-md text-label-md hover:border-on-surface transition-all duration-200" href="signup.html">Get Started</a>
 </div>
-<!-- Pro -->
-<div class="bg-primary-container text-white rounded-xl p-10 shadow-2xl relative scale-105 z-10 flex flex-col overflow-hidden">
-<div class="absolute top-0 right-0 gold-gradient px-6 py-2 rounded-bl-xl font-bold text-xs uppercase tracking-widest">Most Popular</div>
-<div class="mb-8">
-<h3 class="font-headline-md text-headline-md mb-2 text-white">Pro</h3>
-<div class="flex items-baseline">
-<span class="text-4xl font-bold">£19.99</span>
-<span class="text-on-primary-container ml-2">/month</span>
+<!-- Plus Tier -->
+<div class="bg-surface p-8 rounded-xl border border-outline-variant shadow-ambient flex flex-col">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Plus</h3>
+<div class="mb-6">
+<span class="font-display-lg text-display-lg text-on-surface">£14.99</span>
+<span class="font-body-md text-body-md text-on-surface-variant">/mo</span>
 </div>
-</div>
-<ul class="space-y-4 mb-10 flex-grow">
-<li class="flex items-center gap-3">
-<span class="material-symbols-outlined text-gold-gradient-start text-sm" style="font-variation-settings: 'FILL' 1;">stars</span>
-                                10 builds per month
-                            </li>
-<li class="flex items-center gap-3">
-<span class="material-symbols-outlined text-gold-gradient-start text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                                Custom domain support
-                            </li>
-<li class="flex items-center gap-3">
-<span class="material-symbols-outlined text-gold-gradient-start text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                                Remove Gurost branding
-                            </li>
-<li class="flex items-center gap-3">
-<span class="material-symbols-outlined text-gold-gradient-start text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                                Premium support
-                            </li>
-<li class="flex items-center gap-3">
-<span class="material-symbols-outlined text-gold-gradient-start text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                                Business Assistant included
-                            </li>
+<ul class="space-y-4 mb-8 flex-grow">
+<li class="flex items-start gap-2 font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-on-surface text-sm mt-1">check_circle</span>
+                            3 Voice-generated sites
+                        </li>
+<li class="flex items-start gap-2 font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-on-surface text-sm mt-1">check_circle</span>
+                            Custom domains
+                        </li>
 </ul>
-<a class="w-full py-4 rounded-full gold-gradient text-white font-bold shadow-lg lift-hover text-center block" href="signup.html">Go Pro Now</a>
+<a class="w-full text-center border border-outline-variant bg-transparent text-on-surface px-6 py-2 rounded-full font-label-md text-label-md hover:border-on-surface transition-all duration-200" href="signup.html">Get Plus</a>
 </div>
-<!-- Ultimate -->
-<div class="bg-white rounded-xl p-10 border border-outline-variant shadow-sm flex flex-col">
-<div class="mb-8">
-<h3 class="font-headline-md text-headline-md mb-2">Ultimate</h3>
-<div class="flex items-baseline">
-<span class="text-4xl font-bold">£99</span>
-<span class="text-on-surface-variant ml-2">/month</span>
+<!-- Max Tier (Highlighted) -->
+<div class="bg-surface p-8 rounded-xl border border-[#1a1c1e] shadow-ambient flex flex-col relative transform scale-105 z-10">
+<div class="absolute -top-3 left-1/2 -translate-x-1/2 gradient-primary text-on-primary px-3 py-1 rounded-full font-label-sm text-label-sm shadow-sm whitespace-nowrap">
+                        Most Popular
+                    </div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2 mt-2">Max</h3>
+<div class="mb-6">
+<span class="font-display-lg text-display-lg text-on-surface">£34.99</span>
+<span class="font-body-md text-body-md text-on-surface-variant">/mo</span>
 </div>
-</div>
-<ul class="space-y-4 mb-10 flex-grow">
-<li class="flex items-center gap-3">
-<span class="material-symbols-outlined text-green-500 text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                                Unlimited builds
-                            </li>
-<li class="flex items-center gap-3 text-secondary font-bold">
-<span class="material-symbols-outlined text-green-500 text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                                Everything in Pro
-                            </li>
-<li class="flex items-center gap-3">
-<span class="material-symbols-outlined text-green-500 text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                                Whitelabeling
-                            </li>
-<li class="flex items-center gap-3">
-<span class="material-symbols-outlined text-green-500 text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                                20 Team Seats
-                            </li>
-<li class="flex items-center gap-3">
-<span class="material-symbols-outlined text-green-500 text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
-                                20 AI Business Bots
-                            </li>
+<ul class="space-y-4 mb-8 flex-grow">
+<li class="flex items-start gap-2 font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-on-surface text-sm mt-1">check_circle</span>
+                            Unlimited sites
+                        </li>
+<li class="flex items-start gap-2 font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-on-surface text-sm mt-1">check_circle</span>
+                            Custom domains
+                        </li>
+<li class="flex items-start gap-2 font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-on-surface text-sm mt-1">check_circle</span>
+                            Priority support
+                        </li>
 </ul>
-<a class="w-full py-4 rounded-full border-2 border-primary-container text-primary-container font-bold hover:bg-primary-container hover:text-white transition-all text-center block" href="signup.html">Contact Sales</a>
+<a class="w-full text-center gradient-primary text-on-primary px-6 py-2 rounded-full font-label-md text-label-md hover:opacity-90 transition-all duration-200" href="signup.html">Get Max</a>
 </div>
+<!-- Custom Tier -->
+<div class="bg-surface p-8 rounded-xl border border-outline-variant shadow-ambient flex flex-col">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Custom</h3>
+<div class="mb-6">
+<span class="font-display-lg text-display-lg text-on-surface">Let's Talk</span>
+</div>
+<ul class="space-y-4 mb-8 flex-grow">
+<li class="flex items-start gap-2 font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-on-surface text-sm mt-1">check_circle</span>
+                            Dedicated account manager
+                        </li>
+<li class="flex items-start gap-2 font-body-md text-body-md text-on-surface-variant">
+<span class="material-symbols-outlined text-on-surface text-sm mt-1">check_circle</span>
+                            Custom integrations
+                        </li>
+</ul>
+<a class="w-full text-center border border-outline-variant bg-transparent text-on-surface px-6 py-2 rounded-full font-label-md text-label-md hover:border-on-surface transition-all duration-200" href="contact.html">Contact Sales</a>
 </div>
 </div>
 </section>
-<!-- Q&A Section -->
-<section class="py-24 px-margin-mobile md:px-margin-desktop bg-surface-container-low">
+<!-- FAQ Section -->
+<section class="bg-surface-container py-xl px-margin-mobile md:px-md">
 <div class="max-w-3xl mx-auto">
-<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-center mb-12">Common Inquiries</h2>
+<h2 class="font-headline-lg text-headline-lg md:font-headline-lg md:text-headline-lg text-center text-on-surface mb-12">Frequently Asked Questions</h2>
 <div class="space-y-4">
-<!-- Q1 -->
-<details class="bg-white rounded-xl border border-outline-variant p-6 group cursor-pointer transition-all duration-300 open:shadow-md">
-<summary class="flex justify-between items-center font-bold text-lg list-none">
-                            Do I need any technical knowledge to start?
-                            <span class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180">expand_more</span>
-</summary>
-<p class="mt-4 text-on-surface-variant leading-relaxed">
-                            Absolutely not. Gurost is designed for zero-barrier entry. If you can talk about your business, you can build a site. Our AI handles all the code, hosting, and design architecture.
-                        </p>
-</details>
-<!-- Q2 -->
-<details class="bg-white rounded-xl border border-outline-variant p-6 group cursor-pointer transition-all duration-300 open:shadow-md">
-<summary class="flex justify-between items-center font-bold text-lg list-none">
-                            Can I connect my own custom domain?
-                            <span class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180">expand_more</span>
-</summary>
-<p class="mt-4 text-on-surface-variant leading-relaxed">
-                            Yes, starting from the Pro plan, you can connect any custom domain you own. We also provide SSL certificates automatically to ensure your site is secure.
-                        </p>
-</details>
-<!-- Q3 -->
-<details class="bg-white rounded-xl border border-outline-variant p-6 group cursor-pointer transition-all duration-300 open:shadow-md">
-<summary class="flex justify-between items-center font-bold text-lg list-none">
-                            How does the AI Business Assistant work?
-                            <span class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180">expand_more</span>
-</summary>
-<p class="mt-4 text-on-surface-variant leading-relaxed">
-                            The Business Assistant is a custom-trained AI bot specifically for your site. It can handle customer inquiries, book appointments, and provide product information 24/7 based on your site's content.
-                        </p>
-</details>
-<!-- Q4 -->
-<details class="bg-white rounded-xl border border-outline-variant p-6 group cursor-pointer transition-all duration-300 open:shadow-md">
-<summary class="flex justify-between items-center font-bold text-lg list-none">
-                            Is Gurost SEO-friendly?
-                            <span class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180">expand_more</span>
-</summary>
-<p class="mt-4 text-on-surface-variant leading-relaxed">
-                            Gurost generates sites with clean, semantic HTML and lightning-fast loading speeds. The AI also optimizes meta tags, headings, and image alt-text automatically to ensure the best search engine visibility.
-                        </p>
-</details>
+<div class="bg-surface border border-outline-variant rounded-lg overflow-hidden">
+<button class="faq-toggle w-full text-left px-6 py-4 flex justify-between items-center focus:outline-none" data-target="faq-1">
+<span class="font-headline-md text-headline-md text-on-surface text-base">Do I need coding experience?</span>
+<span class="material-symbols-outlined text-on-surface-variant faq-icon">expand_more</span>
+</button>
+<div class="faq-answer px-6 pb-4 pt-0 font-body-md text-body-md text-on-surface-variant" id="faq-1" hidden="">
+                            Not at all. Gurost is entirely voice and text-driven. If you can describe what you want, you can build it.
+                        </div>
+</div>
+<div class="bg-surface border border-outline-variant rounded-lg overflow-hidden">
+<button class="faq-toggle w-full text-left px-6 py-4 flex justify-between items-center focus:outline-none" data-target="faq-2">
+<span class="font-headline-md text-headline-md text-on-surface text-base">Can I export my code later?</span>
+<span class="material-symbols-outlined text-on-surface-variant faq-icon">expand_more</span>
+</button>
+<div class="faq-answer px-6 pb-4 pt-0 font-body-md text-body-md text-on-surface-variant" id="faq-2" hidden="">
+                            Yes. Every site you build includes a real Show Code view, so you can see and copy the actual underlying code behind your project at any time.
+                        </div>
+</div>
+<div class="bg-surface border border-outline-variant rounded-lg overflow-hidden">
+<button class="faq-toggle w-full text-left px-6 py-4 flex justify-between items-center focus:outline-none" data-target="faq-3">
+<span class="font-headline-md text-headline-md text-on-surface text-base">How fast does it generate?</span>
+<span class="material-symbols-outlined text-on-surface-variant faq-icon">expand_more</span>
+</button>
+<div class="faq-answer px-6 pb-4 pt-0 font-body-md text-body-md text-on-surface-variant" id="faq-3" hidden="">
+                            Most builds finish within a few minutes. Gurost is genuinely generating real, working code for you live, not pulling from a template — quality over instant results.
+                        </div>
+</div>
 </div>
 </div>
 </section>
 </main>
 <!-- Footer -->
-<footer class="bg-surface dark:bg-on-surface border-t border-outline-variant/50">
-<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-20">
-<div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-<!-- Brand -->
-<div class="space-y-6">
-<a class="flex items-center gap-3" href="index.html">
-<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant">
-<img alt="Gurost Logo small" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCA38FQbIh0NYswxsxchSSDrwlmwOvc64yzxLi_0U6fMDFOdrzpAP0sNzwjLxehgtPFdEJpuMEnZyTrvLIvSTJ31GAvus-8--p1kUKnvxFHmDGKg5t6ZNWZKpfujXIxhRLHU4leFzRn__fPmYmq089eMVdWuOJ-czQxdSWRSpenXrHFeFEEpRQooTBHlC5EK1nlFwigejhXoWZwIdbVpQsewwCJr7hrwqDg9HLOfOoDg9RB8YJ5gBqhrCy2rS_fY682IIc"/>
+<footer class="bg-surface-container-low dark:bg-surface-container-lowest text-on-surface dark:text-on-surface font-label-md text-label-md full-width bg-surface-container-low flat no shadows">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter py-xl px-md md:px-lg max-w-container-max mx-auto">
+<div>
+<span class="text-headline-md font-headline-md font-bold text-on-surface mb-4 block">Gurost</span>
+<p class="font-body-md text-body-md text-on-surface-variant">© 2026 Gurost AI. All rights reserved.</p>
 </div>
-<span class="font-headline-md text-headline-md font-bold text-on-surface">Gurost</span>
-</a>
-<p class="text-on-surface-variant font-body-md">Building the future of the web through the power of voice and intelligence.</p>
-<div class="flex gap-4">
-<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-gold-gradient-start hover:text-white transition-all" href="#" aria-label="Website">
-<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-</a>
-<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-gold-gradient-start hover:text-white transition-all" href="#" aria-label="Message us">
-<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-</a>
+<div class="flex flex-col gap-2">
+<span class="font-label-md text-label-md text-on-surface font-bold uppercase tracking-wider mb-2">Company</span>
+<a class="text-on-surface-variant hover:text-on-surface hover:text-primary transition-colors" href="about.html">About</a>
+<a class="text-on-surface-variant hover:text-on-surface hover:text-primary transition-colors" href="careers.html">Careers</a>
 </div>
+<div class="flex flex-col gap-2">
+<span class="font-label-md text-label-md text-on-surface font-bold uppercase tracking-wider mb-2">Resources</span>
+<a class="text-on-surface-variant hover:text-on-surface hover:text-primary transition-colors" href="blog.html">Blog</a>
+<a class="text-on-surface-variant hover:text-on-surface hover:text-primary transition-colors" href="docs.html">Documentation</a>
 </div>
-<!-- Company -->
-<div class="space-y-6">
-<h4 class="font-bold text-on-surface uppercase tracking-wider text-sm">Company</h4>
-<ul class="space-y-4">
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="about.html">About</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="careers.html">Careers</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="blog.html">Blog</a></li>
-</ul>
-</div>
-<!-- Resources -->
-<div class="space-y-6">
-<h4 class="font-bold text-on-surface uppercase tracking-wider text-sm">Resources</h4>
-<ul class="space-y-4">
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="docs.html">Docs</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="templates.html">Templates</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="showcase.html">Showcase</a></li>
-</ul>
-</div>
-<!-- Support -->
-<div class="space-y-6">
-<h4 class="font-bold text-on-surface uppercase tracking-wider text-sm">Support</h4>
-<ul class="space-y-4">
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="help.html">Help Center</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="contact.html">Contact</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="status.html">Status</a></li>
-</ul>
-</div>
-</div>
-<div class="pt-10 border-t border-outline-variant/30 flex flex-col md:flex-row justify-between items-center gap-6">
-<p class="text-on-surface-variant text-sm">© 2026 Gurost AI. All rights reserved.</p>
-<div class="flex gap-8 text-sm">
-<a class="text-on-surface-variant hover:underline" href="privacy.html">Privacy Policy</a>
-<a class="text-on-surface-variant hover:underline" href="terms.html">Terms of Service</a>
-</div>
+<div class="flex flex-col gap-2">
+<span class="font-label-md text-label-md text-on-surface font-bold uppercase tracking-wider mb-2">Legal</span>
+<a class="text-on-surface-variant hover:text-on-surface hover:text-primary transition-colors" href="privacy.html">Privacy Policy</a>
+<a class="text-on-surface-variant hover:text-on-surface hover:text-primary transition-colors" href="terms.html">Terms of Service</a>
 </div>
 </div>
 </footer>
 <script>
-        // The Pulse/mic widget that used to live in the hero has been
-        // removed from this page entirely — it'll live on the Business
-        // Assistant page instead. This script previously had a broken
-        // click handler here (referenced getElementById('pulse-trigger')
-        // before any such element existed, which threw on load and
-        // silently killed the scroll-reveal code below it, since an
-        // uncaught error stops the rest of the script block). That
-        // handler is gone now along with the widget — nothing left here
-        // needs it.
+  // Real FAQ accordion — this page had none at all before. Toggles one
+  // answer open/closed per click, rotates the icon as a real visual
+  // cue, and closes any other open answer so only one is expanded at
+  // a time (standard, expected accordion behavior).
+  document.querySelectorAll('.faq-toggle').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const answer = document.getElementById(btn.getAttribute('data-target'));
+      const icon = btn.querySelector('.faq-icon');
+      const isOpen = !answer.hidden;
 
-        // Simple scroll reveal effect
-        const observerOptions = {
-            threshold: 0.1
-        };
+      // Close every other open answer first, so only one stays open.
+      document.querySelectorAll('.faq-answer').forEach((el) => { el.hidden = true; });
+      document.querySelectorAll('.faq-icon').forEach((el) => { el.textContent = 'expand_more'; });
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('opacity-100', 'translate-y-0');
-                    entry.target.classList.remove('opacity-0', 'translate-y-10');
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('section').forEach(section => {
-            section.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-10');
-            observer.observe(section);
-        });
-    </script>
+      if (!isOpen) {
+        answer.hidden = false;
+        icon.textContent = 'expand_less';
+      }
+    });
+  });
+</script>
 </body></html>

@@ -39,6 +39,7 @@
 </div>
 <!-- Hiding nav links as per instructions for focused task-based layout -->
 <div class="hidden md:flex gap-6 items-center">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors hidden" href="assistant.html" id="businessAssistantLink">Business Assistant</a>
 <a class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors px-4 py-2 rounded-full hover:bg-surface-container-low" href="signup.html">Log in</a>
 <a class="font-label-sm text-label-sm gold-gradient-btn px-6 py-2 rounded-full font-semibold shadow-sm" href="signup.html">Sign Up</a>
 </div>
@@ -389,6 +390,17 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error('[amend_website] Project handoff/restore setup failed, continuing without it:', err.message);
     localStorage.removeItem('gurost_pending_amend');
   }
+
+  // Real, plan-gated reveal — same real logic as builder.html and
+  // app-builder.html. Purely a UX convenience; real security lives
+  // server-side on the actual /api/assistant* routes.
+  GurostAPI.getMyPlan().then((plan) => {
+    if (plan === 'unlimited' || plan === 'ultimate') {
+      document.getElementById('businessAssistantLink').classList.remove('hidden');
+    }
+  }).catch((err) => {
+    console.error('[amend_website] Plan check for Business Assistant link failed, leaving it hidden:', err.message);
+  });
 
   document.getElementById('fixAllBtn').addEventListener('click', runFixAll);
   document.getElementById('codeToggleBtn').addEventListener('click', toggleCodeView);

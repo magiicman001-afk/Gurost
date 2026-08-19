@@ -1,173 +1,482 @@
 <!DOCTYPE html>
 
-<html lang="en"><head>
+<html class="dark" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Gurost Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<style>
-        .pulse-ring {
-            animation: pulse 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+<title>Gurost - Main Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-low": "#191c1d",
+                        "primary-container": "#feb246",
+                        "on-primary-fixed-variant": "#643f00",
+                        "surface-container-high": "#272a2b",
+                        "secondary-fixed": "#ffdcc3",
+                        "on-secondary-fixed": "#2f1500",
+                        "secondary": "#ffb77d",
+                        "surface": "#111415",
+                        "outline-variant": "#524535",
+                        "on-tertiary-fixed": "#001f2a",
+                        "tertiary": "#b0e5ff",
+                        "primary": "#ffd6a6",
+                        "surface-dim": "#111415",
+                        "error": "#ffb4ab",
+                        "inverse-primary": "#845400",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#004d64",
+                        "surface-glass": "rgba(25, 28, 29, 0.7)",
+                        "on-secondary-fixed-variant": "#6e3900",
+                        "secondary-container": "#fd8b00",
+                        "surface-bright": "#373a3b",
+                        "tertiary-fixed-dim": "#69d3ff",
+                        "error-container": "#93000a",
+                        "on-secondary-container": "#603100",
+                        "on-primary": "#462a00",
+                        "background": "#111415",
+                        "on-tertiary": "#003546",
+                        "secondary-fixed-dim": "#ffb77d",
+                        "surface-tint": "#ffb95a",
+                        "on-primary-container": "#6f4600",
+                        "on-tertiary-container": "#00566f",
+                        "surface-card": "#232729",
+                        "border-subtle": "#e5e7eb", /* Adjusted for light theme premium feel */
+                        "tertiary-container": "#58cefd",
+                        "on-error": "#690005",
+                        "tertiary-fixed": "#bee9ff",
+                        "on-surface-variant": "#6b7280", /* Adjusted for sophisticated grey */
+                        "white": "#ffffff",
+                        "on-surface": "#111827", /* Darker for better contrast */
+                        "primary-fixed-dim": "#ffb95a",
+                        "primary-fixed": "#ffddb6",
+                        "surface-container-lowest": "#f9fafb", /* Softer light background */
+                        "on-background": "#111827",
+                        "outline": "#9f8e7c",
+                        "on-primary-fixed": "#2a1800",
+                        "surface-variant": "#f3f4f6",
+                        "on-secondary": "#4d2600",
+                        "surface-container-highest": "#e5e7eb",
+                        "surface-container": "#f3f4f6",
+                        "inverse-on-surface": "#f9fafb",
+                        "inverse-surface": "#111827"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.375rem",
+                        "lg": "0.75rem",
+                        "xl": "1rem",
+                        "2xl": "1.25rem",
+                        "full": "9999px"
+                    },
+                    "boxShadow": {
+                        "premium": "0 10px 30px -10px rgba(0, 0, 0, 0.05), 0 4px 10px -4px rgba(0, 0, 0, 0.02)",
+                        "premium-hover": "0 20px 40px -10px rgba(0, 0, 0, 0.08), 0 8px 16px -4px rgba(0, 0, 0, 0.03)",
+                        "inner-soft": "inset 0 2px 10px rgba(0, 0, 0, 0.02)"
+                    },
+                    "spacing": {
+                        "section-gap": "96px",
+                        "container-max": "1280px",
+                        "margin-mobile": "20px",
+                        "unit": "8px",
+                        "gutter": "32px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["Inter", "sans-serif"],
+                        "headline-xl": ["Inter", "sans-serif"],
+                        "label-sm": ["Inter", "sans-serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "headline-lg": ["Inter", "sans-serif"],
+                        "headline-lg-mobile": ["Inter", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-xl": ["56px", { "lineHeight": "64px", "letterSpacing": "-0.03em", "fontWeight": "800" }],
+                        "label-sm": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["36px", { "lineHeight": "44px", "fontWeight": "700", "letterSpacing": "-0.01em" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }]
+                    }
+                }
+            }
         }
-        @keyframes pulse {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(254, 178, 70, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(254, 178, 70, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(254, 178, 70, 0); }
+    </script>
+<style>
+        body {
+            background-color: #ffffff;
+            color: #111827;
+        }
+        .gradient-btn {
+            background: linear-gradient(135deg, #feb246 0%, #fd8b00 100%);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .gradient-btn:hover {
+            filter: brightness(1.05);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(253, 139, 0, 0.3);
+        }
+        .mode-btn {
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+        }
+        .mode-btn:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+        .mode-btn.active {
+            background: linear-gradient(135deg, #feb246 0%, #fd8b00 100%);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 15px -3px rgba(253, 139, 0, 0.2);
+        }
+        .mode-btn.active .material-symbols-outlined {
+            color: white;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
         }
     </style>
-<link href="styles.css" rel="stylesheet"/>
-<link href="shared/widget.css" rel="stylesheet"/>
 </head>
-<body class="bg-surface-container-lowest text-on-surface font-body-md min-h-screen flex flex-col">
-<!-- TopNavBar -->
-<nav class="bg-surface-container-lowest/80 backdrop-blur-md text-primary font-body-md docked full-width top-0 sticky border-b border-outline-variant/30 shadow-sm flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto z-50">
-<div class="flex items-center gap-4">
-<img alt="Gurost Logo" class="h-16 md:h-20 w-auto object-contain rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCKX7OEmVO7BAqh5zSnqJsLoGDgdZQ0KjVOl6XXAF23sRfCo5MKU577jkFX_CgnGtSIwLfQJ2w-ZnNRuGYK4HXuKmZeA3zDIidU6XhbLip9YcBTsLAsAqO-7nBrG9DmxgZZpIo0XSC8n8IfJHTDcaX1Y-xS4fDiDUYeaVdPa-9xD_4b9OyqqntrRzHvCursskogPuSa8tjyMIhVCHDId7Zpt_1H1NVLI6OGrSThNorkk4oUXk5Q2ptS_uYx1cxH1ro8CI"/>
-<span class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight hidden md:block">Gur<span class="marble-o">o</span>st</span>
+<body class="font-body-md antialiased min-h-screen flex flex-col bg-white">
+<!-- Header -->
+<header class="w-full py-4 px-gutter md:px-10 border-b border-gray-100 flex justify-between items-center glass-panel sticky top-0 z-50">
+<a class="flex items-center gap-3 group" href="index.html">
+<img alt="Gurost Logo" class="h-10 w-10 object-contain group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBmN980wUB-k_7OA0Jf1odSeOhYgOfArplDvQSzQpqRMD7RmB_6w1zO1JhRxJNDQ_T1N6cI8TGCqr_97hLhsn4P6qTOIvcX1DK7zbsQoTfxuNDqRBUyUhudZSaqgnS41MPuwt4olexB6aYqITmkxCAEzyxLY_NJvzROqCdl6MTUjHumcEFpcGYKhft6JTCjMbNfUsddaiKTxdLXQDyqn1VBfhpecIOC5PqzeL-Qg1BPtTIXyjG3_kjJLyh0dUNQRM4rU8U"/>
+<span class="font-headline-lg text-[24px] font-bold text-on-surface tracking-tight">Gurost</span>
+</a>
+<div class="flex items-center gap-6">
+<button class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1.5" id="settingsBtn">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+                Settings
+            </button>
+<button class="font-label-sm text-label-sm px-5 py-2.5 rounded-xl border border-gray-200 text-on-surface hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm" id="logoutBtn">
+                Log Out
+            </button>
 </div>
-<div class="hidden md:flex gap-8 items-center">
-<a class="text-secondary font-bold border-b-2 border-secondary pb-1" href="index.html">Product</a>
-<a class="text-on-surface-variant hover:text-on-surface transition-colors hover:bg-surface-container-low transition-all duration-200 px-3 py-2 rounded-lg" href="pricing.html">Pricing</a>
-<a class="text-on-surface-variant hover:text-on-surface transition-colors hover:bg-surface-container-low transition-all duration-200 px-3 py-2 rounded-lg" href="resources.html">Resources</a>
-<a class="text-on-surface-variant hover:text-on-surface transition-colors hover:bg-surface-container-low transition-all duration-200 px-3 py-2 rounded-lg" href="templates.html">Templates</a>
-</div>
-<div class="flex items-center gap-4">
-<a class="text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm px-4 py-2 rounded-full hover:bg-surface-container-low transition-all duration-200 hidden md:block" href="signup.html">Log in</a>
-<a class="bg-gradient-to-r from-gold-gradient-start to-gold-gradient-end text-on-primary font-label-sm text-label-sm px-6 py-2 rounded-full hover:shadow-lg transition-all duration-200 scale-95 hover:scale-100 active:opacity-80" href="signup.html">Sign Up</a>
-</div>
-</nav>
+</header>
 <!-- Main Content -->
-<main class="flex-grow flex flex-col items-center justify-center w-full px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto py-20 gap-16">
+<main class="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter py-16 md:py-24 flex flex-col items-center">
 <!-- Hero Section -->
-<section class="flex flex-col items-center text-center gap-12 w-full max-w-3xl">
-<h1 class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg text-primary-container">
-                Hi Alex, what will you build next?
-            </h1>
-<!-- Pulse Button (AI Trigger) -->
-<button class="pulse-ring relative flex flex-col items-center justify-center w-32 h-32 md:w-40 md:h-40 rounded-full bg-gradient-to-br from-gold-gradient-start to-gold-gradient-end text-on-primary shadow-2xl hover:scale-105 transition-transform duration-300 group">
-<span class="material-symbols-outlined text-5xl md:text-6xl mb-2" style="font-variation-settings: 'FILL' 1;">mic</span>
-<span class="font-label-sm text-label-sm opacity-90 group-hover:opacity-100">Hold to speak</span>
+<section class="w-full max-w-4xl flex flex-col items-center text-center mb-24">
+<h1 class="font-headline-xl text-headline-lg-mobile md:text-headline-xl text-on-surface mb-12">What will you build today?</h1>
+<!-- Pulse Interaction Area -->
+<div class="w-full flex flex-col items-center">
+<!-- Mode Selection -->
+<div class="flex flex-wrap justify-center gap-4 mb-10" id="mode-selector">
+<button class="mode-btn font-label-sm text-label-sm px-6 py-3.5 rounded-full border border-gray-200 text-on-surface flex items-center gap-2 shadow-sm" data-mode="website">
+<span class="material-symbols-outlined text-[18px]">web</span>
+                        Website Builder
+                    </button>
+<button class="mode-btn font-label-sm text-label-sm px-6 py-3.5 rounded-full border border-gray-200 text-on-surface flex items-center gap-2 shadow-sm" data-mode="app">
+<span class="material-symbols-outlined text-[18px]">smartphone</span>
+                        App Builder
+                    </button>
+<button class="mode-btn font-label-sm text-label-sm px-6 py-3.5 rounded-full border border-gray-200 text-on-surface flex items-center gap-2 shadow-sm" data-mode="amend">
+<span class="material-symbols-outlined text-[18px]">edit_document</span>
+                        Amend Website
+                    </button>
+</div>
+<!-- Validation Message -->
+<p class="text-error font-label-sm text-label-sm mb-4 h-5 opacity-0 transition-opacity" id="validation-msg">Please select what you'd like to build first</p>
+<!-- Microphone Button -->
+<button class="w-24 h-24 rounded-full gradient-btn flex items-center justify-center shadow-[0_12px_30px_-10px_rgba(253,139,0,0.4)] mb-10 z-10 relative" id="pulse-mic-trigger">
+<span class="material-symbols-outlined text-white text-[40px]" style="font-variation-settings: 'FILL' 1;">mic</span>
 </button>
-<!-- Input Area -->
-<div class="w-full relative shadow-sm rounded-full">
-<input class="w-full h-16 md:h-20 px-8 rounded-full border border-outline-variant bg-surface-bright text-on-surface font-body-lg text-body-lg focus:outline-none focus:ring-4 focus:ring-secondary/20 transition-all shadow-inner" id="heroIdeaInput" placeholder="Type your idea here..." type="text"/>
-<button class="absolute right-3 top-1/2 -translate-y-1/2 p-3 md:p-4 rounded-full bg-primary-container text-on-primary hover:bg-primary transition-colors">
-<span class="material-symbols-outlined">send</span>
+<!-- Message Input & Action -->
+<div class="w-full max-w-3xl relative -mt-4">
+<textarea class="w-full min-h-[160px] p-8 pr-40 rounded-2xl border border-gray-200 bg-white text-on-surface placeholder:text-gray-400 focus:outline-none focus:border-primary-container focus:ring-4 focus:ring-primary-container/10 font-body-lg text-[18px] shadow-premium shadow-inner-soft resize-y transition-all" id="prompt-input" placeholder="Describe your project, app, or website in detail..."></textarea>
+<button class="absolute right-6 bottom-6 gradient-btn text-white font-label-sm text-label-sm px-8 py-3 rounded-xl flex items-center gap-2 font-semibold" id="deploy-btn">
+                        Deploy
+                        <span class="material-symbols-outlined text-[20px]">rocket_launch</span>
 </button>
+</div>
 </div>
 </section>
-<!-- Build Actions -->
-<section class="flex flex-col items-center gap-8 w-full max-w-4xl">
-<div class="flex flex-col sm:flex-row gap-4 w-full justify-center">
-<a class="flex-1 relative overflow-hidden group flex items-center justify-center gap-2 py-8 px-6 rounded-full text-on-primary font-label-sm text-label-sm shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300" href="builder.html" id="buildWebsiteBtn">
-<div class="absolute inset-0 z-0">
-<img alt="Build Website" class="w-full h-full object-cover opacity-40 group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKZNhX_RhWjCwMd5z5wffIgCa2Bpay_sq5-hDhpcJ5Kadsx9DFgNdARIEd-G9laXx7_uCEcHCjQCil1u38KTnkFp_D625CGDJcMzyo61LvaghS5H3aHQ45uCodutwhJRD9Clv16vzYA9flYhCRUAlQnmNvTGrGAsB_68G6Sx9TBSOmGwIh_qgl3jDgYfrDkJUyo9_XezPViFJajjxwqqwzkYRx8WK6UbPtV_aG_6B3ZZsGt_UrznOsrQ"/>
-<div class="absolute inset-0 bg-gradient-to-r from-gold-gradient-start/80 to-gold-gradient-end/80 mix-blend-multiply"></div>
+<!-- Projects Section -->
+<section class="w-full">
+<div class="flex justify-between items-end mb-8 px-2">
+<h2 class="font-headline-lg text-[28px] md:text-headline-lg text-on-surface">Recent Projects</h2>
+<button class="font-label-sm text-label-sm text-primary-container hover:text-secondary-container transition-colors flex items-center gap-1.5 font-semibold">
+                    View All
+                    <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
 </div>
-<span class="material-symbols-outlined relative z-10" style="font-variation-settings: 'FILL' 1;">language</span>
-<span class="relative z-10">Build Website</span>
-</a>
-<a class="flex-1 relative overflow-hidden group flex items-center justify-center gap-2 py-8 px-6 rounded-full text-on-primary font-label-sm text-label-sm shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300" href="app-builder.html" id="buildAppBtn">
-<div class="absolute inset-0 z-0">
-<img alt="Build App" class="w-full h-full object-cover opacity-40 group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJXEm2qqKwF6eSDGz90ROpSlqa5pAg6m1kZGRNRKMghgHN95kkdJdl1LHRDfXuiaCInw9CdWP1zrflQCVc_GQmzmWh4xnv2niG0Z7C3HwVgJheRNgDhsY1i0GDEhLh9pJxW1qmQG9s4os0mzS2x9xCkxhshB327Xq2e_KpnHK7WidjFwcVpUtx0CcEecrxRWqEtr78c_WfdU_QUt6BXto7_1pbH-Sn5W8b3AQ3QCBhx_MYolo5uZN1UQ"/>
-<div class="absolute inset-0 bg-gradient-to-r from-gold-gradient-start/80 to-gold-gradient-end/80 mix-blend-multiply"></div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Project Card 1 -->
+<div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-premium hover:shadow-premium-hover transition-all duration-300 hover:-translate-y-1 group">
+<div class="h-52 w-full bg-surface-container-lowest relative overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" data-alt="A modern e-commerce dashboard interface displayed on a sleek laptop screen, featuring clean typography, muted data visualization charts, and a light color palette, sitting on a minimalist wooden desk in a bright, professional office environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_D2FjllweGDFW4itqY_v_QXafBiXkX7vbJNJ2vM_HNGedRLTJSHdjB_ANxI-ZvGEjZvHvzQSCvXwvEdB2pAxI4kqtGSshZPD5mcVxpJSAUs7bDULCMFM0trku-ZXmHJWvz8YyTt9uuLwXHnCMseF54Cx3rrXtygJ-j8fcxH73tRzbe_K3ELhWp-oSryuFoomN7ZabjPe47C1xrIMTgcWKOVhaxuL38st2LHDYwa7BYxlxJ3R9bxpVEA"/>
 </div>
-<span class="material-symbols-outlined relative z-10" style="font-variation-settings: 'FILL' 1;">app_shortcut</span>
-<span class="relative z-10">Build App</span>
-</a>
-<a class="flex-1 relative overflow-hidden group flex items-center justify-center gap-2 py-8 px-6 rounded-full text-on-primary font-label-sm text-label-sm shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300" href="amend_website.html" id="amendWebsiteBtn">
-<div class="absolute inset-0 z-0">
-<img alt="Amend Website" class="w-full h-full object-cover opacity-40 group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJmtU9WHNJ_LaS3i6g0g5z226HxAKPtm8PxB298--WYCSBmc56nDIL2vd2yuVSOqPr9PUp_XRX-hACEJ5zeHnULbK742_FoQ9t66ghD96a7SUYMx-Ay2eHBhwXt5dl2wI0gSM33U5BTiwx5rkxV9RXDIDuM620Iw5EgJ2TKpognVpPfSrEH-osgy0uZb5oRjDbwMO4bwBQob-b1ygHv2krYr3UXqio5efPJcB8pI2VN1ycS7lou55xmw"/>
-<div class="absolute inset-0 bg-gradient-to-r from-gold-gradient-start/80 to-gold-gradient-end/80 mix-blend-multiply"></div>
+<div class="p-6 flex flex-col gap-4">
+<div>
+<h3 class="font-headline-lg text-[20px] text-on-surface font-semibold truncate">E-Commerce Redesign</h3>
+<p class="font-body-md text-on-surface-variant text-sm mt-1">Last edited: 2 hours ago</p>
 </div>
-<span class="material-symbols-outlined relative z-10" style="font-variation-settings: 'FILL' 1;">edit_square</span>
-<span class="relative z-10">Amend Website</span>
-</a>
+<button class="mt-2 w-full py-2.5 rounded-xl border border-gray-200 text-on-surface font-label-sm text-label-sm hover:bg-gray-50 hover:border-gray-300 transition-colors flex items-center justify-center gap-2 font-medium">
+<span class="material-symbols-outlined text-[18px]">open_in_new</span>
+                            Open Project
+                        </button>
 </div>
-<a class="relative overflow-hidden group flex items-center justify-center gap-2 py-4 px-12 rounded-full text-on-primary font-label-sm text-label-sm shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all duration-300 w-full sm:w-auto" href="assistant.html">
-<div class="absolute inset-0 z-0">
-<img alt="Business Assistant" class="w-full h-full object-cover opacity-40 group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC80lSTkixNm400q_e2P7M_O5GLxwdDLyIA0zeMzAksLPtyWZ5SvUkhJuMTFkW3vfSo-YM3isiqVSW1iRTCjh3pMHGgbKVeDTgzSPdjUauJwvXmv8it50M4MbgDM2H31CRqRfFLHJE24k6XOvMPreuH9_g0DDXOzz6f917BU_uWyXpSnWKIyOXCckqLPoImaC8uE1Fv4OBB8orbKJPVwKOZjI7b94IfLPFpkCuHTSOPjLQ4rt-8Lv4NuQ"/>
-<div class="absolute inset-0 bg-primary-container/80 mix-blend-multiply"></div>
 </div>
-<span class="material-symbols-outlined relative z-10" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
-<span class="relative z-10">Business Assistant</span>
-</a>
-<!-- Real Co-Pilot status indicator — only renders if a genuine active
-     meeting session ID exists (localStorage key set by wherever a real
-     session gets created; nothing here fakes a session or shows a
-     demo state). No dedicated meeting/assistant page exists yet to
-     create that session from — this is real, working infrastructure
-     ready for whenever that page ships, not a mockup. -->
-<div id="copilotIndicatorWrap" class="w-full flex justify-center mt-2" style="display:none;"></div>
+<!-- Project Card 2 -->
+<div class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-premium hover:shadow-premium-hover transition-all duration-300 hover:-translate-y-1 group">
+<div class="h-52 w-full bg-surface-container-lowest relative overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" data-alt="A sophisticated mobile wellness application interface shown on a smartphone screen, displaying vibrant activity rings and serene gradient backgrounds, held by hands in a well-lit modern cafe setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6lc76zjLmBa_gH6VUd5u9ysceesoNKHrei0y6qk_r1mZUYFVWBl-IDq8OR-YW7aNWvzGHjb7VYcBf4dGP-oxhAD3Z_JCdztDnV1aGYlRRHnFsFCMMOVJQX561_CtDO-p5u-HgiJkckslxNXR05IdobxW5lPRyfzeKnnFK2B7Ao6sUbjTupDNw7L4l60bGdYUHu5ufV6rfJ7gP-XFF6kfysktTifxZAljwqpv7QuGbgReGakpG1G0jhA"/>
+</div>
+<div class="p-6 flex flex-col gap-4">
+<div>
+<h3 class="font-headline-lg text-[20px] text-on-surface font-semibold truncate">Wellness App Prototype</h3>
+<p class="font-body-md text-on-surface-variant text-sm mt-1">Last edited: Yesterday</p>
+</div>
+<button class="mt-2 w-full py-2.5 rounded-xl border border-gray-200 text-on-surface font-label-sm text-label-sm hover:bg-gray-50 hover:border-gray-300 transition-colors flex items-center justify-center gap-2 font-medium">
+<span class="material-symbols-outlined text-[18px]">open_in_new</span>
+                            Open Project
+                        </button>
+</div>
+</div>
+<!-- Project Card 3 (Empty State/New) -->
+<div class="bg-white border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center p-8 hover:border-primary-container/50 hover:bg-primary-container/5 hover:shadow-premium transition-all duration-300 cursor-pointer min-h-[360px] group" id="uploadExistingCard">
+<div class="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-6 text-gray-400 group-hover:bg-primary-container/10 group-hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined text-[32px]">upload_file</span>
+</div>
+<h3 class="font-headline-lg text-[20px] text-on-surface font-semibold text-center mb-2">Upload Your Existing Web Page</h3>
+<p class="font-body-md text-on-surface-variant text-center text-sm">Select a file to amend</p>
+<input accept=".html,.htm,.txt" class="hidden" id="uploadFileInput" type="file"/>
+</div>
+</div>
 </section>
 </main>
-<!-- Footer -->
-<footer class="bg-surface-container-lowest text-on-surface-variant font-body-md full-width border-t border-outline-variant/50 max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-16 flex flex-col md:flex-row justify-between items-center gap-8 w-full mt-auto">
-<div class="font-headline-md text-headline-md font-bold text-on-surface flex items-center gap-2">
-<img alt="Gurost Logo Small" class="h-8 w-auto object-contain rounded-full grayscale opacity-70" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpaVuq_tV7F-U6ZMSf24AIeTZmbMn9ZMYxaO8_w_wYikrDHU4RGfm7EyzYgR-wDuxCZiHvSLOBDGmd9NTVwG3QqZ3f2dSdaeu4DZ0q9uQScjfcuRNB1UtqElk0jYqVyp5Id-3UsbUoSpj6XbYA0ndjwzCV2DuD9t826VO4pLNHhRWywVFnNBTiLkePnVOLTHsJiEDxlrkblgkEadqIxLV2RPp_1AHfOBOtKA2hRqNBUBVXheYc-CS9k9WvO4E18XSt_dM"/>
-            Gurost
-        </div>
-<div class="flex flex-wrap justify-center gap-8">
-<a class="text-on-surface-variant hover:text-secondary hover:underline transition-all opacity-80 hover:opacity-100" href="product.html">Product</a>
-<a class="text-on-surface-variant hover:text-secondary hover:underline transition-all opacity-80 hover:opacity-100" href="legal.html">Legal</a>
+<!-- Footer Component -->
+<footer class="w-full py-16 px-gutter max-w-container-max mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 bg-white border-t border-gray-100 mt-auto">
+<div class="col-span-2 md:col-span-1">
+<span class="font-headline-lg text-[24px] font-bold text-on-surface tracking-tight">Gurost</span>
+<p class="mt-4 font-body-md text-on-surface-variant text-sm">© 2026 Gurost AI. All rights reserved.</p>
 </div>
-<div class="text-sm opacity-70">
-            © 2026 Gurost AI. All rights reserved.
-        </div>
+<div>
+<h4 class="font-label-sm text-label-sm text-primary-container mb-6 uppercase tracking-wider font-semibold">Company</h4>
+<ul class="space-y-4">
+<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary-container transition-colors" href="about.html">About</a></li>
+<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary-container transition-colors" href="careers.html">Careers</a></li>
+<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary-container transition-colors" href="blog.html">Blog</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-label-sm text-label-sm text-primary-container mb-6 uppercase tracking-wider font-semibold">Resources</h4>
+<ul class="space-y-4">
+<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary-container transition-colors" href="docs.html">Docs</a></li>
+<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary-container transition-colors" href="templates.html">Templates</a></li>
+<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary-container transition-colors" href="showcase.html">Showcase</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-label-sm text-label-sm text-primary-container mb-6 uppercase tracking-wider font-semibold">Support</h4>
+<ul class="space-y-4">
+<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary-container transition-colors" href="help.html">Help Center</a></li>
+<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary-container transition-colors" href="contact.html">Contact</a></li>
+<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary-container transition-colors" href="status.html">Status</a></li>
+<li class="pt-6"><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary-container transition-colors text-sm" href="privacy.html">Privacy</a></li>
+<li><a class="font-body-md text-body-md text-on-surface-variant hover:text-primary-container transition-colors text-sm" href="terms.html">Terms</a></li>
+</ul>
+</div>
 </footer>
 <script src="shared/api-client.js"></script>
 <script src="shared/pulse-voice.js"></script>
-<script src="shared/widget.js"></script>
-<script src="shared/copilot-indicator.js"></script>
 <script>
-  // Carries whatever's typed in the hero input through to whichever
-  // builder page the user clicks, using the same localStorage handoff
-  // key (gurost_pending_generate) that onboarding.html/templates.html
-  // already use for website-mode — app-builder.html now reads this
-  // same key for app-mode too.
-  function wireHandoff(buttonId, mode) {
-    const btn = document.getElementById(buttonId);
-    if (!btn) return;
-    btn.addEventListener('click', () => {
-      const idea = document.getElementById('heroIdeaInput').value.trim();
-      if (idea) {
-        localStorage.setItem('gurost_pending_generate', JSON.stringify({ prompt: idea, mode }));
-      }
-      // No preventDefault — the real href navigation still happens
-      // normally; this just makes sure the typed idea travels with it
-      // when there is one.
-    });
-  }
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!GurostAPI.requireLogin()) return;
 
-  // Separate from wireHandoff above — Amend Website needs a URL, not a
-  // prompt+mode pair, so it gets its own key rather than overloading
-  // gurost_pending_generate with a shape it doesn't expect.
-  function wireAmendHandoff(buttonId) {
-    const btn = document.getElementById(buttonId);
-    if (!btn) return;
-    btn.addEventListener('click', () => {
-      const url = document.getElementById('heroIdeaInput').value.trim();
-      if (url) {
-        localStorage.setItem('gurost_pending_amend', JSON.stringify({ url }));
-      }
-    });
-  }
+            const modeBtns = document.querySelectorAll('.mode-btn');
+            const validationMsg = document.getElementById('validation-msg');
+            const micBtn = document.getElementById('pulse-mic-trigger');
+            const promptInput = document.getElementById('prompt-input');
+            const deployBtn = document.getElementById('deploy-btn');
 
-  document.addEventListener('DOMContentLoaded', () => {
-    wireHandoff('buildAppBtn', 'app');
-    wireHandoff('buildWebsiteBtn', 'website');
-    wireAmendHandoff('amendWebsiteBtn');
+            let selectedMode = null;
 
-    // Real, not a demo — only shows/connects if an actual meeting
-    // session ID is present. Nothing here invents one.
-    const activeSessionId = localStorage.getItem('gurost_active_meeting_session');
-    if (activeSessionId) {
-      const wrap = document.getElementById('copilotIndicatorWrap');
-      wrap.style.display = 'flex';
-      attachCopilotIndicator(wrap, activeSessionId);
-    }
-  });
-</script>
+            modeBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    modeBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedMode = btn.dataset.mode;
+                    validationMsg.classList.remove('opacity-100');
+                    validationMsg.classList.add('opacity-0');
+                });
+            });
+
+            const requireMode = () => {
+                if (!selectedMode) {
+                    validationMsg.textContent = "Please select what you'd like to build first";
+                    validationMsg.classList.remove('opacity-0');
+                    validationMsg.classList.add('opacity-100');
+                    return false;
+                }
+                return true;
+            };
+
+            // Real mic — uses the same real startRecordingSession() from
+            // pulse-voice.js's REST path (POST /api/voice/transcribe), not
+            // the deeper WebSocket path that file's own header comment
+            // says is deliberately scoped to only the three building
+            // pages. Press and hold to record, release to transcribe.
+            let recordingSession = null;
+            micBtn.addEventListener('mousedown', async () => {
+                if (!requireMode()) return;
+                try {
+                    recordingSession = await startRecordingSession();
+                    micBtn.classList.add('animate-pulse');
+                } catch (err) {
+                    console.error('[dashboard] Could not start recording:', err.message);
+                    validationMsg.textContent = "Couldn't access your microphone — you can type instead.";
+                    validationMsg.classList.remove('opacity-0');
+                    validationMsg.classList.add('opacity-100');
+                }
+            });
+            micBtn.addEventListener('mouseup', async () => {
+                if (!recordingSession) return;
+                micBtn.classList.remove('animate-pulse');
+                try {
+                    const transcript = await recordingSession.stop();
+                    if (transcript) promptInput.value = transcript;
+                } catch (err) {
+                    console.error('[dashboard] Transcription failed:', err.message);
+                } finally {
+                    recordingSession = null;
+                }
+            });
+
+            promptInput.addEventListener('focus', () => {
+                requireMode();
+            });
+
+            // Real deploy — uses the same real localStorage handoff every
+            // building page already reads on its own load (checked
+            // directly against builder.html/app-builder.html/
+            // amend_website.html's own real code before writing this,
+            // not assumed to match).
+            deployBtn.addEventListener('click', () => {
+                if (!requireMode()) return;
+
+                const text = promptInput.value.trim();
+                if (!text) {
+                    validationMsg.textContent = "Please describe what you want to build.";
+                    validationMsg.classList.remove('opacity-0');
+                    validationMsg.classList.add('opacity-100');
+                    return;
+                }
+
+                if (selectedMode === 'amend') {
+                    localStorage.setItem('gurost_pending_amend', JSON.stringify({ url: text }));
+                    window.location.href = 'amend_website.html';
+                } else {
+                    localStorage.setItem('gurost_pending_generate', JSON.stringify({ mode: selectedMode, prompt: text }));
+                    window.location.href = selectedMode === 'app' ? 'app-builder.html' : 'builder.html';
+                }
+            });
+
+            document.getElementById('settingsBtn').addEventListener('click', () => {
+                window.location.href = 'settings.html';
+            });
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                localStorage.removeItem('gurost_jwt');
+                localStorage.removeItem('gurost_api_key');
+                localStorage.removeItem('gurost_user_id');
+                window.location.href = 'index.html';
+            });
+
+            // Real file upload — opens the real, native OS file picker,
+            // reads the selected file's real content, and drops it into
+            // the main prompt box with clear framing so the AI treats it
+            // as existing file content to work from, not a plain
+            // description. Real, honest limit: this feeds the SAME
+            // Amend Website flow as typing a URL up top — the backend
+            // doesn't yet support amending an uploaded file directly
+            // (that flow is built entirely around auditing a real, live
+            // URL, checked directly before building this) — so this
+            // gives the AI real context to work from, not a live-site
+            // audit against the uploaded file itself.
+            const MAX_FILE_CHARS = 5000;
+            document.getElementById('uploadExistingCard').addEventListener('click', () => {
+                document.getElementById('uploadFileInput').click();
+            });
+            document.getElementById('uploadFileInput').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = () => {
+                    let content = reader.result;
+                    let truncated = false;
+                    if (content.length > MAX_FILE_CHARS) {
+                        content = content.slice(0, MAX_FILE_CHARS);
+                        truncated = true;
+                    }
+                    promptInput.value = `Here is my existing web page (${file.name}${truncated ? ', truncated to the first ' + MAX_FILE_CHARS + ' characters' : ''}) — please review it and use it as the real starting point:\n\n${content}`;
+                    promptInput.focus();
+                };
+                reader.onerror = () => {
+                    validationMsg.textContent = "Couldn't read that file — try a plain .html or .txt file.";
+                    validationMsg.classList.remove('opacity-0');
+                    validationMsg.classList.add('opacity-100');
+                };
+                reader.readAsText(file);
+
+                e.target.value = ''; // real reset so selecting the same file again still fires a real change event
+            });
+
+            loadRealProjects();
+        });
+
+        // Real, dynamic project list — replaces the two hardcoded fake
+        // example cards with the real, current user's actual projects
+        // from GET /api/projects (checked its real response shape
+        // before writing this: {id, prompt, type, state, deployUrl,
+        // hasCriticalIssues, lastUpdated} — no separate "title" field,
+        // the original prompt text IS the real display name).
+        async function loadRealProjects() {
+            const grid = document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-3');
+            if (!grid) return;
+
+            const newProjectCard = grid.lastElementChild; // real "Create New Project" card - keep it, it's not fake data
+            grid.querySelectorAll(':scope > div:not(:last-child)').forEach(el => el.remove()); // clear the two hardcoded fake examples only
+
+            let projects;
+            try {
+                projects = await GurostAPI.call('/api/projects');
+            } catch (err) {
+                console.error('[dashboard] Failed to load real projects:', err.message);
+                return; // real, honest fallback - just the "Create New" card stays, no fake placeholder data shown instead
+            }
+
+            projects.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-premium hover:shadow-premium-hover transition-all duration-300 hover:-translate-y-1 group';
+                const displayName = (p.prompt || 'Untitled project').slice(0, 60);
+                const timeAgo = p.lastUpdated ? new Date(p.lastUpdated).toLocaleDateString() : 'Unknown';
+                const targetPage = p.type === 'app' ? 'app-builder.html' : 'builder.html';
+                card.innerHTML = `
+                    <div class="h-52 w-full bg-surface-container-lowest relative overflow-hidden flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[48px] text-gray-300">${p.type === 'app' ? 'smartphone' : 'web'}</span>
+                    </div>
+                    <div class="p-6 flex flex-col gap-4">
+                        <div>
+                            <h3 class="font-headline-lg text-[20px] text-on-surface font-semibold truncate">${displayName}</h3>
+                            <p class="font-body-md text-on-surface-variant text-sm mt-1">Last edited: ${timeAgo}</p>
+                        </div>
+                        <button class="open-project-btn mt-2 w-full py-2.5 rounded-xl border border-gray-200 text-on-surface font-label-sm text-label-sm hover:bg-gray-50 hover:border-gray-300 transition-colors flex items-center justify-center gap-2 font-medium">
+                            <span class="material-symbols-outlined text-[18px]">open_in_new</span>
+                            Open Project
+                        </button>
+                    </div>
+                `;
+                card.querySelector('.open-project-btn').addEventListener('click', () => {
+                    window.location.href = `${targetPage}?projectId=${p.id}`;
+                });
+                grid.insertBefore(card, newProjectCard);
+            });
+        }
+    </script>
 </body></html>

@@ -1,142 +1,232 @@
 <!DOCTYPE html>
 
-<html class="scroll-smooth" lang="en"><head>
+<html lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Terms of Service - Gurost</title>
-<meta content="Gurost AI: The premier AI web builder that turns your voice into high-performance websites." name="description"/>
-<!-- Design System Fonts -->
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="shared/styles.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-container": "#603100",
+                        "on-tertiary-fixed-variant": "#004d64",
+                        "primary": "#ffd6a6",
+                        "surface-tint": "#ffb95a",
+                        "secondary-fixed": "#ffdcc3",
+                        "on-surface-variant": "#d6c3b0",
+                        "surface-container-high": "#272a2b",
+                        "on-tertiary-container": "#00566f",
+                        "inverse-surface": "#e1e3e4",
+                        "on-primary-container": "#6f4600",
+                        "background": "#111415",
+                        "tertiary-fixed-dim": "#69d3ff",
+                        "primary-fixed": "#ffddb6",
+                        "on-primary": "#462a00",
+                        "surface-glass": "rgba(25, 28, 29, 0.7)",
+                        "on-tertiary-fixed": "#001f2a",
+                        "surface-container-lowest": "#0c0f10",
+                        "inverse-primary": "#845400",
+                        "tertiary": "#b0e5ff",
+                        "secondary": "#ffb77d",
+                        "white": "#ffffff",
+                        "on-secondary-fixed": "#2f1500",
+                        "on-background": "#e1e3e4",
+                        "error-container": "#93000a",
+                        "on-primary-fixed-variant": "#643f00",
+                        "surface": "#111415",
+                        "on-tertiary": "#003546",
+                        "on-error": "#690005",
+                        "error": "#ffb4ab",
+                        "inverse-on-surface": "#2e3132",
+                        "surface-container": "#1d2021",
+                        "surface-variant": "#323536",
+                        "secondary-fixed-dim": "#ffb77d",
+                        "outline-variant": "#524535",
+                        "tertiary-container": "#58cefd",
+                        "outline": "#9f8e7c",
+                        "secondary-container": "#fd8b00",
+                        "border-subtle": "#313638",
+                        "surface-bright": "#373a3b",
+                        "surface-card": "#232729",
+                        "primary-fixed-dim": "#ffb95a",
+                        "on-primary-fixed": "#2a1800",
+                        "primary-container": "#feb246",
+                        "on-secondary": "#4d2600",
+                        "on-secondary-fixed-variant": "#6e3900",
+                        "surface-container-low": "#191c1d",
+                        "on-surface": "#e1e3e4",
+                        "surface-dim": "#111415",
+                        "surface-container-highest": "#323536",
+                        "tertiary-fixed": "#bee9ff",
+                        "on-error-container": "#ffdad6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "section-gap": "80px",
+                        "unit": "8px",
+                        "container-max": "1280px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "label-sm": ["13px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Prose styles for legal text */
+        .prose-legal h2 {
+            font-family: 'Inter', sans-serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: #0f172a;
+            margin-top: 48px;
+            margin-bottom: 16px;
+        }
+        .prose-legal h3 {
+            font-family: 'Inter', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-top: 32px;
+            margin-bottom: 12px;
+        }
+        .prose-legal p {
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            line-height: 28px;
+            color: #334155;
+            margin-bottom: 16px;
+        }
+        .prose-legal ul {
+            list-style-type: disc;
+            padding-left: 24px;
+            color: #334155;
+            margin-bottom: 24px;
+        }
+        .prose-legal li {
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            line-height: 28px;
+            margin-bottom: 8px;
+        }
+        .prose-legal strong {
+            color: #0f172a;
+            font-weight: 600;
+        }
+    </style>
 </head>
-<body class="bg-surface font-body-md text-on-surface">
-<!-- TopNavBar -->
-<header class="bg-surface/80 dark:bg-on-surface/80 backdrop-blur-md font-body-md text-body-md docked full-width top-0 sticky border-b border-outline-variant/30 shadow-sm z-50">
-<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto">
-<a class="flex items-center gap-4" href="index.html">
-<div class="w-12 h-12 rounded-full overflow-hidden border-2 border-secondary shadow-sm">
-<img alt="Gurost Logo" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbW7YuoiwPzt2zuDU9cg_DLkBMcqlS_b4i-YI1upyWRkvNCvV1uoVklezt3qRXQdwJh_g1y6XWz4PP6RYy_o-40ci6VsGQ-w8VZXfbk20lXDvuXX1o6ovv7ho1nPm2r-N1K93dywDtxV_IMNrW5zzdVbfBiT4zgRz7SLg7f6Td8G5NXOcNjUDDKEkNasYUXiVfAOHB1oaRVPrLruvfU6gEulVij_QmE0eluvhIyHKY0YyWg0Z3g6dbtPJ_H4jA9C7o2Aw"/>
-</div>
-<span class="font-headline-md text-headline-md font-bold text-on-surface">Gurost</span>
+<body class="bg-white text-slate-700 font-body-md min-h-screen selection:bg-slate-200 selection:text-slate-900">
+<!-- TopNavBar Suppressed as this is a linear/task-focused document view, prioritizing content canvas -->
+<main class="max-w-4xl mx-auto px-margin-mobile md:px-gutter py-section-gap">
+<!-- Header Section -->
+<header class="mb-section-gap text-center md:text-left flex flex-col items-center md:items-start">
+<a aria-label="Go Back" class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors mb-gutter" href="index.html">
+<span class="material-symbols-outlined text-slate-700" data-icon="arrow_back">arrow_back</span>
 </a>
-<nav class="hidden md:flex gap-8 items-center">
-<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="index.html">Product</a>
-<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="pricing.html">Pricing</a>
-<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="resources.html">Resources</a>
-<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="templates.html">Templates</a>
-</nav>
-<div class="flex items-center gap-4">
-<a class="hidden sm:block text-on-surface-variant font-medium" href="signup.html">Log in</a>
-<a class="gold-gradient px-6 py-2 rounded-full text-white font-bold lift-hover transition-all" href="signup.html">Sign Up</a>
-</div>
-</div>
+<img alt="Gurost Logo" class="w-24 h-24 mb-6 rounded-[32px] border border-slate-200 object-cover shadow-lg shadow-slate-200/50" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC0_BEHskzYd5VNMXJG3g4990r8t3-RGomDcYzTSu9L0GYXcFaYTVAZlfcXDmaw7AQK986KqeUGBPnnxMoaemKpyyK8Q8Ol86SSWN1-SBiGlbYSmnmmaEr-RXQOoYcVRUw833UDaN-Ms4a_bCqZxtbujqp_XCvxf0TOjZAs9BoxjcPgu6_fLq-mmgFR3aZZ0vODjp6A2hGV5jT9wrsO0H3XbEmwR2uoK31CJ8IyE2TdSsBiPDzoyDXdg-7q0ukp_ZT6G4s"/>
+<h1 class="font-headline-xl text-headline-xl text-slate-900 mb-unit tracking-tight">⚖️ Terms of Service</h1>
+<p class="font-body-lg text-body-lg text-slate-500">Last Updated: October 24, 2024</p>
 </header>
-<main>
-<section class="pt-32 pb-32 px-margin-mobile md:px-margin-desktop transition-all duration-700 opacity-0 translate-y-10">
-<div class="max-w-3xl mx-auto space-y-6">
-<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary text-center mb-8">Terms of Service</h1>
-
-<p class="text-body-lg font-body-lg text-on-surface-variant">Coming soon. We're drafting our terms of service to ensure a fair and transparent experience for all users.</p>
-<p class="text-on-surface-variant">In the meantime, if you have any questions about our terms, please contact us at <a class="text-secondary font-medium hover:underline" href="mailto:support@gurost.com">support@gurost.com</a></p>
-
-<div class="text-center pt-8">
-<a class="gold-gradient inline-block px-10 py-4 rounded-full text-white text-center font-bold text-lg lift-hover shadow-lg" href="index.html">
-    Back to Home
-</a>
-</div>
-</div>
-</section>
+<!-- Document Content Canvas -->
+<article class="bg-slate-50 border border-slate-200 rounded-[32px] p-6 md:p-12 shadow-xl shadow-slate-200/50 prose-legal">
+<p>Welcome to Gurost. Please read these Terms of Service ("Terms") carefully. By accessing or using our platform, you agree to be bound by these Terms and all terms incorporated by reference.</p>
+<h2>1. Acceptance of Terms</h2>
+<p>By registering for and/or using the Services in any manner, including but not limited to visiting or browsing the Site, you agree to these Terms of Service and all other operating rules, policies, and procedures that may be published from time to time on the Site by us, each of which is incorporated by reference and each of which may be updated from time to time without notice to you.</p>
+<h2>2. Description of Service</h2>
+<p>Gurost provides an AI-powered web building platform that allows users to create, design, and manage web properties using natural language and intelligent design systems. The Service includes all software, data, text, images, sounds, video, and content made available through the Site or Services.</p>
+<h2>3. User Accounts</h2>
+<p>To use certain features of the Service, you must register for an account. You agree to provide accurate, current, and complete information during the registration process and to update such information to keep it accurate, current, and complete. You are responsible for safeguarding your password and for all activities that occur under your account.</p>
+<ul>
+<li>You must be at least 18 years old to use the Service.</li>
+<li>You must not use the Service for any illegal or unauthorized purpose.</li>
+<li>You must not transmit any worms or viruses or any code of a destructive nature.</li>
+</ul>
+<h2>4. User Content</h2>
+<p>You retain all rights to the text, images, and other content you upload or create using the Service ("User Content"). By posting User Content on or through the Service, you grant us a worldwide, non-exclusive, royalty-free license to use, reproduce, modify, adapt, publish, translate, create derivative works from, distribute, and display such User Content in connection with providing the Service.</p>
+<h2>5. AI Usage and Generated Content</h2>
+<p>The Service utilizes artificial intelligence to assist in web creation. You acknowledge that:</p>
+<ul>
+<li>AI-generated designs, code, and text are provided "as is" and may require human review and modification.</li>
+<li>We do not claim ownership over the specific websites generated for you using our AI tools.</li>
+<li>You are solely responsible for ensuring that the final output complies with all applicable laws and regulations.</li>
+</ul>
+<h2>6. Acceptable Use Policy</h2>
+<p>You agree not to use the Service to collect, upload, transmit, display, or distribute any User Content that:</p>
+<ul>
+<li>Violates any third-party right, including any copyright, trademark, patent, trade secret, moral right, privacy right, right of publicity, or any other intellectual property or proprietary right;</li>
+<li>Is unlawful, harassing, abusive, tortious, threatening, harmful, invasive of another’s privacy, vulgar, defamatory, false, intentionally misleading, trade libelous, pornographic, obscene, patently offensive, or promotes racism, bigotry, hatred, or physical harm of any kind against any group or individual.</li>
+</ul>
+<h2>7. Fees and Payment</h2>
+<p>By signing up for a paid plan, you agree to pay Gurost the monthly or annual subscription fees indicated for that service. Payments will be charged on a pre-pay basis on the day you sign up for a premium upgrade and will cover the use of that service for a monthly or annual subscription period as indicated.</p>
+<h2>8. Intellectual Property Rights</h2>
+<p>The Service and its original content, features, and functionality (excluding User Content) are and will remain the exclusive property of Gurost and its licensors. The Service is protected by copyright, trademark, and other laws of both the United States and foreign countries.</p>
+<h2>9. Termination</h2>
+<p>We may terminate or suspend your account immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms. Upon termination, your right to use the Service will immediately cease.</p>
+<h2>10. Limitation of Liability</h2>
+<p>In no event shall Gurost, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the Service.</p>
+<h2>11. Disclaimer of Warranties</h2>
+<p>Your use of the Service is at your sole risk. The Service is provided on an "AS IS" and "AS AVAILABLE" basis. The Service is provided without warranties of any kind, whether express or implied, including, but not limited to, implied warranties of merchantability, fitness for a particular purpose, non-infringement, or course of performance.</p>
+<h2>12. Governing Law</h2>
+<p>These Terms shall be governed and construed in accordance with the laws of Delaware, United States, without regard to its conflict of law provisions.</p>
+<h2>13. Changes to Terms</h2>
+<p>We reserve the right, at our sole discretion, to modify or replace these Terms at any time. If a revision is material, we will try to provide at least 30 days notice prior to any new terms taking effect. What constitutes a material change will be determined at our sole discretion.</p>
+<h2>14. Privacy Policy</h2>
+<p>Please refer to our Privacy Policy for information on how we collect, use and disclose information from our users. You acknowledge and agree that your use of the Services is subject to our Privacy Policy.</p>
+<h2>15. Dispute Resolution</h2>
+<p>Any dispute arising from or relating to the subject matter of these Terms shall be finally settled in Delaware, in English, in accordance with the Streamlined Arbitration Rules and Procedures of Judicial Arbitration and Mediation Services, Inc. ("JAMS") then in effect.</p>
+<h2>16. Contact Information</h2>
+<p>If you have any questions about these Terms, please contact us at <a class="text-slate-800 hover:text-slate-600 transition-colors underline" href="mailto:legal@gurost.ai">legal@gurost.ai</a>.</p>
+</article>
 </main>
-<footer class="bg-surface dark:bg-on-surface border-t border-outline-variant/50">
-<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-20">
-<div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-<!-- Brand -->
-<div class="space-y-6">
-<a class="flex items-center gap-3" href="index.html">
-<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant">
-<img alt="Gurost Logo small" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCA38FQbIh0NYswxsxchSSDrwlmwOvc64yzxLi_0U6fMDFOdrzpAP0sNzwjLxehgtPFdEJpuMEnZyTrvLIvSTJ31GAvus-8--p1kUKnvxFHmDGKg5t6ZNWZKpfujXIxhRLHU4leFzRn__fPmYmq089eMVdWuOJ-czQxdSWRSpenXrHFeFEEpRQooTBHlC5EK1nlFwigejhXoWZwIdbVpQsewwCJr7hrwqDg9HLOfOoDg9RB8YJ5gBqhrCy2rS_fY682IIc"/>
+<!-- Footer -->
+<footer class="bg-white full-width border-t border-slate-200 grid grid-cols-2 md:grid-cols-4 gap-gutter py-section-gap px-margin-mobile md:px-gutter max-w-container-max mx-auto mt-section-gap">
+<div class="col-span-2 md:col-span-1 flex flex-col items-start gap-4 mb-8 md:mb-0">
+<span class="text-headline-md font-headline-md font-bold text-slate-900">Gurost</span>
+<p class="font-label-sm text-label-sm text-slate-500">© 2024 Gurost AI. All rights reserved.</p>
 </div>
-<span class="font-headline-md text-headline-md font-bold text-on-surface">Gurost</span>
-</a>
-<p class="text-on-surface-variant font-body-md">Building the future of the web through the power of voice and intelligence.</p>
-<div class="flex gap-4">
-<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-gold-gradient-start hover:text-white transition-all" href="#" aria-label="Website">
-<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-</a>
-<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-gold-gradient-start hover:text-white transition-all" href="#" aria-label="Message us">
-<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-</a>
+<div class="flex flex-col gap-3">
+<h4 class="font-label-sm text-label-sm font-bold text-slate-800 uppercase tracking-wider mb-2">Company</h4>
+<a class="font-label-sm text-label-sm text-slate-500 hover:text-slate-800 transition-colors" href="about.html">About</a>
+<a class="font-label-sm text-label-sm text-slate-500 hover:text-slate-800 transition-colors" href="careers.html">Careers</a>
+<a class="font-label-sm text-label-sm text-slate-500 hover:text-slate-800 transition-colors" href="blog.html">Blog</a>
 </div>
+<div class="flex flex-col gap-3">
+<h4 class="font-label-sm text-label-sm font-bold text-slate-800 uppercase tracking-wider mb-2">Resources</h4>
+<a class="font-label-sm text-label-sm text-slate-500 hover:text-slate-800 transition-colors" href="docs.html">Docs</a>
+<a class="font-label-sm text-label-sm text-slate-500 hover:text-slate-800 transition-colors" href="templates.html">Templates</a>
+<a class="font-label-sm text-label-sm text-slate-500 hover:text-slate-800 transition-colors" href="showcase.html">Showcase</a>
 </div>
-<!-- Company -->
-<div class="space-y-6">
-<h4 class="font-bold text-on-surface uppercase tracking-wider text-sm">Company</h4>
-<ul class="space-y-4">
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="about.html">About</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="careers.html">Careers</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="blog.html">Blog</a></li>
-</ul>
-</div>
-<!-- Resources -->
-<div class="space-y-6">
-<h4 class="font-bold text-on-surface uppercase tracking-wider text-sm">Resources</h4>
-<ul class="space-y-4">
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="docs.html">Docs</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="templates.html">Templates</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="showcase.html">Showcase</a></li>
-</ul>
-</div>
-<!-- Support -->
-<div class="space-y-6">
-<h4 class="font-bold text-on-surface uppercase tracking-wider text-sm">Support</h4>
-<ul class="space-y-4">
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="help.html">Help Center</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="contact.html">Contact</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="status.html">Status</a></li>
-</ul>
-</div>
-</div>
-<div class="pt-10 border-t border-outline-variant/30 flex flex-col md:flex-row justify-between items-center gap-6">
-<p class="text-on-surface-variant text-sm">© 2026 Gurost AI. All rights reserved.</p>
-<div class="flex gap-8 text-sm">
-<a class="text-on-surface-variant hover:underline" href="privacy.html">Privacy Policy</a>
-<a class="text-on-surface-variant hover:underline" href="terms.html">Terms of Service</a>
-</div>
-</div>
+<div class="flex flex-col gap-3">
+<h4 class="font-label-sm text-label-sm font-bold text-slate-800 uppercase tracking-wider mb-2">Support &amp; Legal</h4>
+<a class="font-label-sm text-label-sm text-slate-500 hover:text-slate-800 transition-colors" href="help.html">Help Center</a>
+<a class="font-label-sm text-label-sm text-slate-500 hover:text-slate-800 transition-colors" href="contact.html">Contact</a>
+<a class="font-label-sm text-label-sm text-slate-800" href="terms.html">Terms of Service</a>
 </div>
 </footer>
-<script>
-        // The Pulse/mic widget that used to live in the hero has been
-        // removed from this page entirely — it'll live on the Business
-        // Assistant page instead. This script previously had a broken
-        // click handler here (referenced getElementById('pulse-trigger')
-        // before any such element existed, which threw on load and
-        // silently killed the scroll-reveal code below it, since an
-        // uncaught error stops the rest of the script block). That
-        // handler is gone now along with the widget — nothing left here
-        // needs it.
-
-        // Simple scroll reveal effect
-        const observerOptions = {
-            threshold: 0.1
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('opacity-100', 'translate-y-0');
-                    entry.target.classList.remove('opacity-0', 'translate-y-10');
-                }
-            });
-        }, observerOptions);
-
-        document.querySelectorAll('section').forEach(section => {
-            section.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-10');
-            observer.observe(section);
-        });
-    </script>
 </body></html>

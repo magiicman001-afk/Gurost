@@ -1,153 +1,409 @@
 <!DOCTYPE html>
 
-<html class="scroll-smooth" lang="en"><head>
+<html lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Help Center - Gurost</title>
-<meta content="Gurost AI: The premier AI web builder that turns your voice into high-performance websites." name="description"/>
-<!-- Design System Fonts -->
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<title>Gurost - Help Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="shared/styles.css" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                "primary": "#ffd6a6",
+                "surface-container-low": "#f8f9fa",
+                "on-secondary": "#4d2600",
+                "tertiary-fixed": "#bee9ff",
+                "on-primary-fixed-variant": "#643f00",
+                "on-tertiary-fixed": "#001f2a",
+                "inverse-primary": "#845400",
+                "tertiary-container": "#58cefd",
+                "secondary-container": "#fd8b00",
+                "on-surface-variant": "#49454f",
+                "on-tertiary-fixed-variant": "#004d64",
+                "primary-container": "#feb246",
+                "error-container": "#93000a",
+                "surface-card": "#ffffff",
+                "error": "#ffb4ab",
+                "on-primary-container": "#6f4600",
+                "on-surface": "#1c1b1f",
+                "secondary-fixed": "#ffdcc3",
+                "background": "#ffffff",
+                "surface": "#ffffff",
+                "tertiary": "#b0e5ff",
+                "surface-glass": "rgba(255, 255, 255, 0.7)",
+                "outline-variant": "#cac4d0",
+                "on-primary": "#462a00",
+                "inverse-on-surface": "#f4eff4",
+                "on-secondary-container": "#603100",
+                "on-tertiary": "#003546",
+                "surface-tint": "#ffb95a",
+                "on-secondary-fixed-variant": "#6e3900",
+                "surface-container-highest": "#e6e0e9",
+                "outline": "#79747e",
+                "border-subtle": "#e0e0e0",
+                "on-tertiary-container": "#00566f",
+                "surface-variant": "#e7e0ec",
+                "white": "#ffffff",
+                "on-secondary-fixed": "#2f1500",
+                "on-primary-fixed": "#2a1800",
+                "inverse-surface": "#313033",
+                "surface-dim": "#ded8e1",
+                "surface-container-lowest": "#ffffff",
+                "primary-fixed": "#ffddb6",
+                "surface-container": "#f3edf7",
+                "surface-bright": "#fef7ff",
+                "on-error-container": "#ffdad6",
+                "on-background": "#1c1b1f",
+                "secondary-fixed-dim": "#ffb77d",
+                "surface-container-high": "#ece6f0",
+                "tertiary-fixed-dim": "#69d3ff",
+                "primary-fixed-dim": "#ffb95a",
+                "on-error": "#690005",
+                "secondary": "#ffb77d"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "2xl": "1rem",
+                      "3xl": "2rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "gutter": "24px",
+                      "section-gap": "80px",
+                      "unit": "8px",
+                      "container-max": "1280px",
+                      "margin-mobile": "16px"
+              },
+              "fontFamily": {
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "headline-xl": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "headline-lg-mobile": [
+                              "Inter"
+                      ],
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-xl": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "28px",
+                              {
+                                      "lineHeight": "36px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-sm": [
+                              "13px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .accordion-content {
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        .accordion-content.open {
+            max-height: 500px;
+            opacity: 1;
+        }
+        .accordion-icon {
+            transition: transform 0.3s ease;
+        }
+        .open .accordion-icon {
+            transform: rotate(180deg);
+        }
+    </style>
 </head>
-<body class="bg-surface font-body-md text-on-surface">
-<!-- TopNavBar -->
-<header class="bg-surface/80 dark:bg-on-surface/80 backdrop-blur-md font-body-md text-body-md docked full-width top-0 sticky border-b border-outline-variant/30 shadow-sm z-50">
-<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto">
-<a class="flex items-center gap-4" href="index.html">
-<div class="w-12 h-12 rounded-full overflow-hidden border-2 border-secondary shadow-sm">
-<img alt="Gurost Logo" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbW7YuoiwPzt2zuDU9cg_DLkBMcqlS_b4i-YI1upyWRkvNCvV1uoVklezt3qRXQdwJh_g1y6XWz4PP6RYy_o-40ci6VsGQ-w8VZXfbk20lXDvuXX1o6ovv7ho1nPm2r-N1K93dywDtxV_IMNrW5zzdVbfBiT4zgRz7SLg7f6Td8G5NXOcNjUDDKEkNasYUXiVfAOHB1oaRVPrLruvfU6gEulVij_QmE0eluvhIyHKY0YyWg0Z3g6dbtPJ_H4jA9C7o2Aw"/>
-</div>
-<span class="font-headline-md text-headline-md font-bold text-on-surface">Gurost</span>
-</a>
-<nav class="hidden md:flex gap-8 items-center">
-<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="index.html">Product</a>
-<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="pricing.html">Pricing</a>
-<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="resources.html">Resources</a>
-<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="templates.html">Templates</a>
-</nav>
-<div class="flex items-center gap-4">
-<a class="hidden sm:block text-on-surface-variant font-medium" href="signup.html">Log in</a>
-<a class="gold-gradient px-6 py-2 rounded-full text-white font-bold lift-hover transition-all" href="signup.html">Sign Up</a>
-</div>
-</div>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col antialiased">
+<!-- Top Navigation (Suppressed per logic: Task-focused/Help Center) -->
+<header class="hidden">
+<!-- Kept hidden intentionally to prioritize content canvas -->
 </header>
-<main>
-<section class="pt-32 pb-32 px-margin-mobile md:px-margin-desktop transition-all duration-700 opacity-0 translate-y-10">
-<div class="max-w-3xl mx-auto space-y-6">
-<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary text-center mb-8">Help Center</h1>
-
-<p class="text-body-lg font-body-lg text-on-surface-variant">Find answers to common questions and get support.</p>
-<h3 class="font-headline-md text-headline-md font-bold mt-4">Frequently asked questions:</h3>
-<ul class="space-y-2 pl-5" style="list-style: disc;">
-<li class="text-on-surface-variant">How do I get started with Gurost?</li>
-<li class="text-on-surface-variant">How does the Pulse button work?</li>
-<li class="text-on-surface-variant">Can I connect my own domain?</li>
-<li class="text-on-surface-variant">What's the difference between Free, Pro, and Ultimate?</li>
-<li class="text-on-surface-variant">How do credits work?</li>
-<li class="text-on-surface-variant">Can I export my code?</li>
-<li class="text-on-surface-variant">Is hosting included?</li>
-<li class="text-on-surface-variant">How do I cancel my subscription?</li>
-</ul>
-<p class="text-on-surface-variant"><strong>Not finding what you need?</strong> Contact us directly at <a class="text-secondary font-medium hover:underline" href="mailto:support@gurost.com">support@gurost.com</a> and we'll get back to you within 24 hours.</p>
-
-<div class="text-center pt-8">
-<a class="gold-gradient inline-block px-10 py-4 rounded-full text-white text-center font-bold text-lg lift-hover shadow-lg" href="index.html">
-    Back to Home
+<main class="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter py-section-gap">
+<div class="mb-section-gap flex flex-col items-center text-center">
+<a class="inline-flex items-center gap-2 px-6 py-2 rounded-full border border-border-subtle bg-surface-glass backdrop-blur-[20px] text-on-surface-variant hover:text-on-background hover:border-primary transition-all duration-300 mb-8 font-label-sm text-label-sm" href="index.html">
+<span class="material-symbols-outlined text-[18px]" data-icon="arrow_back">arrow_back</span>
+                Back to Gurost
+            </a>
+<img alt="Gurost Logo" class="w-24 h-24 mb-6 rounded-3xl border border-border-subtle shadow-[0_0_40px_rgba(254,178,70,0.15)]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8ipKec4HBIkLa8F1osltEf7hDYP0I0DjluJYNnsVDZIj4DkzN44thub2UedoJNxG_UQTwfN1BWSqPCaIN6jy4nFoMGtrh49tqSiF5kmeSWo1CVKHYDTg9XoA0t9Uy4oByS7kTnGpkQ6jOFVGRiSL33n3vC054PCiUoVGkEqHRi6p_3B8_K5I2P0vyz91i4MAU4pNQHWmLhBAdVcdBePLl6fZzEHoZzl0_eja7aPgsb6m0f8QUsqMRSRbONEHAZhvKkEs"/>
+<h1 class="font-headline-xl text-headline-xl-mobile md:text-headline-xl text-on-background mb-4">
+<span class="bg-clip-text text-transparent bg-gradient-to-r from-[#feb246] to-[#ffb77d]">❓ Help Center</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">
+                Everything you need to know about building, voice interfaces, and managing your Gurost account.
+            </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter max-w-5xl mx-auto">
+<!-- Sidebar Navigation -->
+<div class="md:col-span-4 hidden md:block">
+<div class="sticky top-12 flex flex-col gap-2 p-6 rounded-3xl bg-surface-card border border-border-subtle">
+<h3 class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-2">Categories</h3>
+<a class="px-4 py-3 rounded-lg bg-surface text-primary font-body-md text-body-md border border-border-subtle flex items-center justify-between group" href="#general">
+                        General Questions
+                        <span class="material-symbols-outlined text-[20px] opacity-100 group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
 </a>
+<a class="px-4 py-3 rounded-lg bg-transparent text-on-surface-variant hover:bg-surface/50 font-body-md text-body-md transition-colors flex items-center justify-between group" href="#technical">
+                        Technical Questions
+                        <span class="material-symbols-outlined text-[20px] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" data-icon="chevron_right">chevron_right</span>
+</a>
+<a class="px-4 py-3 rounded-lg bg-transparent text-on-surface-variant hover:bg-surface/50 font-body-md text-body-md transition-colors flex items-center justify-between group" href="#billing">
+                        Billing &amp; Credits
+                        <span class="material-symbols-outlined text-[20px] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" data-icon="chevron_right">chevron_right</span>
+</a>
+<a class="px-4 py-3 rounded-lg bg-transparent text-on-surface-variant hover:bg-surface/50 font-body-md text-body-md transition-colors flex items-center justify-between group" href="#voice">
+                        Voice &amp; Meetings
+                        <span class="material-symbols-outlined text-[20px] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" data-icon="chevron_right">chevron_right</span>
+</a>
+</div>
+</div>
+<!-- FAQ Content -->
+<div class="md:col-span-8 flex flex-col gap-12">
+<!-- Category: General -->
+<section class="scroll-mt-24" id="general">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high border border-border-subtle flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="info">info</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background">General Questions</h2>
+</div>
+<div class="flex flex-col gap-4">
+<div class="accordion-item rounded-3xl bg-surface-card border border-border-subtle overflow-hidden">
+<button class="accordion-header w-full px-6 py-5 text-left flex justify-between items-center bg-transparent focus:outline-none">
+<span class="font-body-lg text-body-lg font-semibold text-on-background">What is Gurost?</span>
+<span class="material-symbols-outlined text-on-surface-variant accordion-icon" data-icon="expand_more">expand_more</span>
+</button>
+<div class="accordion-content px-6 pb-6 bg-surface-card/50">
+<p class="text-on-surface-variant font-body-md text-body-md">
+                                    Gurost is an AI-powered, voice-first web builder designed for modern professionals. It allows you to create, manage, and scale complex web interfaces using conversational commands and an intuitive visual canvas.
+                                </p>
+</div>
+</div>
+<div class="accordion-item rounded-3xl bg-surface-card border border-border-subtle overflow-hidden">
+<button class="accordion-header w-full px-6 py-5 text-left flex justify-between items-center bg-transparent focus:outline-none">
+<span class="font-body-lg text-body-lg font-semibold text-on-background">Who owns the code generated?</span>
+<span class="material-symbols-outlined text-on-surface-variant accordion-icon" data-icon="expand_more">expand_more</span>
+</button>
+<div class="accordion-content px-6 pb-6 bg-surface-card/50">
+<p class="text-on-surface-variant font-body-md text-body-md">
+                                    You retain 100% ownership of all code generated through Gurost. Once exported, you are free to modify, distribute, or commercialize the code without any attribution required.
+                                </p>
+</div>
 </div>
 </div>
 </section>
+<!-- Category: Technical -->
+<section class="scroll-mt-24" id="technical">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high border border-border-subtle flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary" data-icon="code">code</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background">Technical Questions</h2>
+</div>
+<div class="flex flex-col gap-4">
+<div class="accordion-item rounded-3xl bg-surface-card border border-border-subtle overflow-hidden">
+<button class="accordion-header w-full px-6 py-5 text-left flex justify-between items-center bg-transparent focus:outline-none">
+<span class="font-body-lg text-body-lg font-semibold text-on-background">How does the Pulse button work?</span>
+<span class="material-symbols-outlined text-on-surface-variant accordion-icon" data-icon="expand_more">expand_more</span>
+</button>
+<div class="accordion-content px-6 pb-6 bg-surface-card/50">
+<p class="text-on-surface-variant font-body-md text-body-md">
+                                    The Pulse button is your main interaction point for the AI Voice Interface. Tap and hold to speak your commands. The AI analyzes your intent and immediately executes structural or stylistic changes on the canvas.
+                                </p>
+</div>
+</div>
+<div class="accordion-item rounded-3xl bg-surface-card border border-border-subtle overflow-hidden">
+<button class="accordion-header w-full px-6 py-5 text-left flex justify-between items-center bg-transparent focus:outline-none">
+<span class="font-body-lg text-body-lg font-semibold text-on-background">Can I export my code?</span>
+<span class="material-symbols-outlined text-on-surface-variant accordion-icon" data-icon="expand_more">expand_more</span>
+</button>
+<div class="accordion-content px-6 pb-6 bg-surface-card/50">
+<p class="text-on-surface-variant font-body-md text-body-md">
+                                    Yes. Gurost supports one-click export to clean HTML, Tailwind CSS, and React components. You can find the export options in the top right corner of the builder canvas.
+                                </p>
+</div>
+</div>
+</div>
+</section>
+<!-- Category: Billing -->
+<section class="scroll-mt-24" id="billing">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high border border-border-subtle flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" data-icon="credit_card">credit_card</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background">Billing &amp; Credits</h2>
+</div>
+<div class="flex flex-col gap-4">
+<div class="accordion-item rounded-3xl bg-surface-card border border-border-subtle overflow-hidden">
+<button class="accordion-header w-full px-6 py-5 text-left flex justify-between items-center bg-transparent focus:outline-none">
+<span class="font-body-lg text-body-lg font-semibold text-on-background">How does pricing work?</span>
+<span class="material-symbols-outlined text-on-surface-variant accordion-icon" data-icon="expand_more">expand_more</span>
+</button>
+<div class="accordion-content px-6 pb-6 bg-surface-card/50">
+<p class="text-on-surface-variant font-body-md text-body-md">
+                                    Pricing is based on a monthly subscription model that includes a base allocation of AI Voice credits. Additional credits can be purchased on-demand.
+                                </p>
+</div>
+</div>
+</div>
+</section>
+<!-- Category: Voice -->
+<section class="scroll-mt-24" id="voice">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high border border-border-subtle flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-container" data-icon="mic">mic</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background">Voice &amp; Meetings</h2>
+</div>
+<div class="flex flex-col gap-4">
+<div class="accordion-item rounded-3xl bg-surface-card border border-border-subtle overflow-hidden">
+<button class="accordion-header w-full px-6 py-5 text-left flex justify-between items-center bg-transparent focus:outline-none">
+<span class="font-body-lg text-body-lg font-semibold text-on-background">Is voice data stored?</span>
+<span class="material-symbols-outlined text-on-surface-variant accordion-icon" data-icon="expand_more">expand_more</span>
+</button>
+<div class="accordion-content px-6 pb-6 bg-surface-card/50">
+<p class="text-on-surface-variant font-body-md text-body-md">
+                                    Voice data is processed ephemerally to execute commands and is not stored long-term unless you explicitly opt-in for meeting transcription features.
+                                </p>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
 </main>
-<footer class="bg-surface dark:bg-on-surface border-t border-outline-variant/50">
-<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-20">
-<div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-<!-- Brand -->
-<div class="space-y-6">
-<a class="flex items-center gap-3" href="index.html">
-<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant">
-<img alt="Gurost Logo small" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCA38FQbIh0NYswxsxchSSDrwlmwOvc64yzxLi_0U6fMDFOdrzpAP0sNzwjLxehgtPFdEJpuMEnZyTrvLIvSTJ31GAvus-8--p1kUKnvxFHmDGKg5t6ZNWZKpfujXIxhRLHU4leFzRn__fPmYmq089eMVdWuOJ-czQxdSWRSpenXrHFeFEEpRQooTBHlC5EK1nlFwigejhXoWZwIdbVpQsewwCJr7hrwqDg9HLOfOoDg9RB8YJ5gBqhrCy2rS_fY682IIc"/>
+<!-- Footer Component from JSON -->
+<footer class="bg-surface-container-low full-width border-t border-border-subtle">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter py-section-gap px-margin-mobile md:px-gutter max-w-container-max mx-auto">
+<div class="flex flex-col gap-4 col-span-2 md:col-span-1">
+<span class="text-headline-md font-headline-md font-bold text-primary">Gurost</span>
+<p class="text-on-surface-variant font-label-md text-label-md">© 2024 Gurost AI. All rights reserved.</p>
 </div>
-<span class="font-headline-md text-headline-md font-bold text-on-surface">Gurost</span>
-</a>
-<p class="text-on-surface-variant font-body-md">Building the future of the web through the power of voice and intelligence.</p>
-<div class="flex gap-4">
-<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-gold-gradient-start hover:text-white transition-all" href="#" aria-label="Website">
-<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-</a>
-<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-gold-gradient-start hover:text-white transition-all" href="#" aria-label="Message us">
-<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-</a>
+<div class="flex flex-col gap-3">
+<span class="text-on-surface font-label-md text-label-md font-bold mb-2">Company</span>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-label-md text-label-md" href="javascript:void(0)" style="cursor:default;pointer-events:none">Company</a>
 </div>
+<div class="flex flex-col gap-3">
+<span class="text-on-surface font-label-md text-label-md font-bold mb-2">Resources</span>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-label-md text-label-md" href="resources.html">Resources</a>
 </div>
-<!-- Company -->
-<div class="space-y-6">
-<h4 class="font-bold text-on-surface uppercase tracking-wider text-sm">Company</h4>
-<ul class="space-y-4">
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="about.html">About</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="careers.html">Careers</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="blog.html">Blog</a></li>
-</ul>
-</div>
-<!-- Resources -->
-<div class="space-y-6">
-<h4 class="font-bold text-on-surface uppercase tracking-wider text-sm">Resources</h4>
-<ul class="space-y-4">
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="docs.html">Docs</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="templates.html">Templates</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="showcase.html">Showcase</a></li>
-</ul>
-</div>
-<!-- Support -->
-<div class="space-y-6">
-<h4 class="font-bold text-on-surface uppercase tracking-wider text-sm">Support</h4>
-<ul class="space-y-4">
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="help.html">Help Center</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="contact.html">Contact</a></li>
-<li><a class="text-on-surface-variant hover:text-secondary transition-all" href="status.html">Status</a></li>
-</ul>
-</div>
-</div>
-<div class="pt-10 border-t border-outline-variant/30 flex flex-col md:flex-row justify-between items-center gap-6">
-<p class="text-on-surface-variant text-sm">© 2026 Gurost AI. All rights reserved.</p>
-<div class="flex gap-8 text-sm">
-<a class="text-on-surface-variant hover:underline" href="privacy.html">Privacy Policy</a>
-<a class="text-on-surface-variant hover:underline" href="terms.html">Terms of Service</a>
-</div>
+<div class="flex flex-col gap-3">
+<span class="text-on-surface font-label-md text-label-md font-bold mb-2">Support</span>
+<a class="text-primary transition-colors font-label-md text-label-md" href="javascript:void(0)" style="cursor:default;pointer-events:none">Support</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-label-md text-label-md" href="terms.html">Legal</a>
 </div>
 </div>
 </footer>
 <script>
-        // The Pulse/mic widget that used to live in the hero has been
-        // removed from this page entirely — it'll live on the Business
-        // Assistant page instead. This script previously had a broken
-        // click handler here (referenced getElementById('pulse-trigger')
-        // before any such element existed, which threw on load and
-        // silently killed the scroll-reveal code below it, since an
-        // uncaught error stops the rest of the script block). That
-        // handler is gone now along with the widget — nothing left here
-        // needs it.
+        document.addEventListener('DOMContentLoaded', () => {
+            const accordionHeaders = document.querySelectorAll('.accordion-header');
+            
+            accordionHeaders.forEach(header => {
+                header.addEventListener('click', () => {
+                    const item = header.parentElement;
+                    const content = item.querySelector('.accordion-content');
+                    const isOpen = content.classList.contains('open');
+                    
+                    // Close all other accordions
+                    document.querySelectorAll('.accordion-content').forEach(c => {
+                        c.classList.remove('open');
+                        c.parentElement.classList.remove('border-primary');
+                        c.parentElement.classList.add('border-border-subtle');
+                    });
 
-        // Simple scroll reveal effect
-        const observerOptions = {
-            threshold: 0.1
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('opacity-100', 'translate-y-0');
-                    entry.target.classList.remove('opacity-0', 'translate-y-10');
-                }
+                    // Toggle current
+                    if (!isOpen) {
+                        content.classList.add('open');
+                        item.classList.remove('border-border-subtle');
+                        item.classList.add('border-primary');
+                    }
+                });
             });
-        }, observerOptions);
 
-        document.querySelectorAll('section').forEach(section => {
-            section.classList.add('transition-all', 'duration-700', 'opacity-0', 'translate-y-10');
-            observer.observe(section);
+            // Handle sidebar active state based on scroll
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.sticky a');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.clientHeight;
+                    if (scrollY >= (sectionTop - 150)) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('bg-surface', 'text-primary', 'border-border-subtle');
+                    link.classList.add('bg-transparent', 'text-on-surface-variant');
+                    const icon = link.querySelector('.material-symbols-outlined');
+                    icon.classList.remove('opacity-100', 'translate-x-1');
+                    icon.classList.add('opacity-0');
+
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('bg-surface', 'text-primary', 'border', 'border-border-subtle');
+                        link.classList.remove('bg-transparent', 'text-on-surface-variant');
+                        icon.classList.remove('opacity-0');
+                        icon.classList.add('opacity-100', 'translate-x-1');
+                    }
+                });
+            });
         });
     </script>
 </body></html>
