@@ -41,7 +41,7 @@ const { supabase } = require("./lib/db");
 // £79.99/£99 — different amounts, not just different names). Using the
 // REAL, currently-live names here so this actually works today, not a
 // guess at names that don't exist in the running system yet.
-const MONTHLY_INCLUDED_CREDITS = { free: 0, pro: 30, unlimited: 200, ultimate: Infinity };
+const MONTHLY_INCLUDED_CREDITS = { free: 0, pro: 30, unlimited: 150, ultimate: Infinity };
 const NOTIFY_THRESHOLD_PERCENT = 0.8;
 
 function currentPeriodStart() {

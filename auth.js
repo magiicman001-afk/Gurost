@@ -36,7 +36,7 @@ const { supabase } = require("./lib/db");
 const security = require("./security");
 
 const JWT_SECRET = process.env.JWT_SECRET;
-const PLAN_LIMITS = { free: 3, pro: 30, unlimited: Infinity, ultimate: Infinity };
+const PLAN_LIMITS = { free: 3, pro: 30, unlimited: 150, ultimate: Infinity };
 
 function hashApiKey(key) {
   return crypto.createHash("sha256").update(key).digest("hex");
