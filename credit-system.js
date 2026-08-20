@@ -41,7 +41,7 @@ const { supabase } = require("./lib/db");
 // £79.99/£99 — different amounts, not just different names). Using the
 // REAL, currently-live names here so this actually works today, not a
 // guess at names that don't exist in the running system yet.
-const MONTHLY_INCLUDED_CREDITS = { free: 0, pro: 50, unlimited: 200, ultimate: Infinity };
+const MONTHLY_INCLUDED_CREDITS = { free: 0, pro: 30, unlimited: 200, ultimate: Infinity };
 const NOTIFY_THRESHOLD_PERCENT = 0.8;
 
 function currentPeriodStart() {
@@ -127,7 +127,8 @@ async function checkCanAfford(userId, plan, estimatedCost) {
  */
 async function chargeCredits(userId, plan, projectId, actualCost, estimatedCost) {
   const included = MONTHLY_INCLUDED_CREDITS[plan] ?? 0;
-  if (included === 0 || included === Infinity) return; // nothing to charge for free/unlimited-tier accounts
+  if (included === Infinity) return { unlimited: true }; // real, honest summary for Max/Custom - no meaningful "remaining" number to show
+  if (included === 0) return null; // Free plan has no credit pool - real build-count summary is handled separately, not here
 
   const chargeableCost = Math.min(actualCost, estimatedCost);
   if (actualCost > estimatedCost) {
@@ -144,6 +145,19 @@ async function chargeCredits(userId, plan, projectId, actualCost, estimatedCost)
   if (error) console.error("[credit-system] Failed to log credit charge:", error.message);
 
   await checkAndNotifyThreshold(userId, plan);
+
+  // Real, honest summary - queries the real, current totals after this
+  // charge, rather than calculating locally and risking drift from
+  // what's actually stored.
+  const spent = await getMonthlyIncludedSpent(userId);
+  const purchased = await getPurchasedBalance(userId);
+  return {
+    unlimited: false,
+    charged: chargeableCost,
+    includedRemaining: Math.max(included - spent, 0),
+    includedTotal: included,
+    purchasedRemaining: purchased
+  };
 }
 
 /**
