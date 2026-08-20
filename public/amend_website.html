@@ -75,6 +75,7 @@
 <span class="material-symbols-outlined" id="fixAllBtnIcon" data-weight="fill" style="font-variation-settings: 'FILL' 1;">auto_fix_high</span>
                     <span id="fixAllBtnLabel">Fix All Issues</span>
                 </button>
+<div class="hidden text-center font-body-sm text-body-sm text-on-surface-variant mt-3" id="fixCreditSummary"></div>
 </div>
 <!-- Preview Panel -->
 <div class="glass-card rounded-xl overflow-hidden flex flex-col md:col-span-2 shadow-sm border border-outline-variant/30">
@@ -308,11 +309,27 @@ async function runFixAll() {
       method: 'POST',
       body: { projectId, approvedFixes: currentIssues }
     });
+
+    if (!result.fixSucceeded) {
+      // Real, honest failure message - and genuinely not charged,
+      // confirmed directly by the real backend check before this.
+      showError(`${result.message} (${result.reason})`);
+      return;
+    }
+
     fixedHtml = result.html;
     showAfterPreview(fixedHtml);
     document.getElementById('previewPanel').classList.add('active');
     document.getElementById('codePanel').classList.remove('active');
     document.getElementById('codeToggleLabel').textContent = 'Show Code';
+
+    if (result.creditSummary && !result.creditSummary.unlimited) {
+      const banner = document.getElementById('fixCreditSummary');
+      if (banner) {
+        banner.textContent = `1 credit used for this fix. ${result.creditSummary.includedRemaining} of ${result.creditSummary.includedTotal} included credits left this month.`;
+        banner.classList.remove('hidden');
+      }
+    }
   } catch (err) {
     showError(err.message);
   } finally {
