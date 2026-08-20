@@ -3,74 +3,68 @@
 <html lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Sign Up - Gurost</title>
-<!-- Material Symbols -->
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<!-- Google Fonts: Inter -->
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<!-- Tailwind CSS -->
+<title>Gurost - Sign Up</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<!-- Tailwind Configuration (Injected from Style Guidance) -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
       tailwind.config = {
         darkMode: "class",
         theme: {
           extend: {
             "colors": {
-                    "on-secondary-fixed-variant": "#6e3900",
-                    "on-tertiary-container": "#00566f",
-                    "tertiary": "#b0e5ff",
-                    "on-secondary-fixed": "#2f1500",
-                    "on-surface": "#e1e3e4",
-                    "surface-card": "#232729",
-                    "primary": "#ffd6a6",
-                    "primary-fixed": "#ffddb6",
-                    "surface-dim": "#111415",
-                    "surface-container-highest": "#323536",
-                    "surface-container-low": "#191c1d",
-                    "on-error": "#690005",
-                    "inverse-on-surface": "#2e3132",
-                    "on-primary-fixed-variant": "#643f00",
-                    "secondary-fixed": "#ffdcc3",
-                    "surface": "#111415",
-                    "on-background": "#e1e3e4",
-                    "on-tertiary-fixed-variant": "#004d64",
-                    "surface-variant": "#323536",
-                    "tertiary-fixed": "#bee9ff",
-                    "secondary-fixed-dim": "#ffb77d",
-                    "surface-container-lowest": "#0c0f10",
-                    "secondary-container": "#fd8b00",
-                    "on-tertiary": "#003546",
-                    "error-container": "#93000a",
-                    "surface-tint": "#ffb95a",
-                    "error": "#ffb4ab",
-                    "primary-container": "#feb246",
-                    "white": "#ffffff",
-                    "inverse-primary": "#845400",
-                    "on-primary-container": "#6f4600",
-                    "background": "#111415",
-                    "on-error-container": "#ffdad6",
-                    "on-primary-fixed": "#2a1800",
-                    "tertiary-container": "#58cefd",
-                    "outline": "#9f8e7c",
-                    "on-surface-variant": "#d6c3b0",
-                    "border-subtle": "#313638",
-                    "surface-container-high": "#272a2b",
-                    "surface-bright": "#373a3b",
-                    "secondary": "#ffb77d",
-                    "tertiary-fixed-dim": "#69d3ff",
-                    "on-secondary": "#4d2600",
-                    "surface-glass": "rgba(25, 28, 29, 0.7)",
-                    "on-secondary-container": "#603100",
-                    "surface-container": "#1d2021",
-                    "inverse-surface": "#e1e3e4",
-                    "on-tertiary-fixed": "#001f2a",
-                    "primary-fixed-dim": "#ffb95a",
-                    "outline-variant": "#524535",
-                    "on-primary": "#462a00"
+                    "on-error": "#ffffff",
+                    "tertiary-container": "#00b5fc",
+                    "on-background": "#1a1a2e",
+                    "outline-variant": "#ddc1ae",
+                    "secondary": "#845400",
+                    "on-secondary-fixed-variant": "#643f00",
+                    "surface-container-low": "#f5f2ff",
+                    "surface": "#fcf8ff",
+                    "surface-container-high": "#e8e5ff",
+                    "primary": "#904d00",
+                    "error": "#ba1a1a",
+                    "surface-container-lowest": "#ffffff",
+                    "inverse-primary": "#ffb77d",
+                    "secondary-fixed": "#ffddb6",
+                    "surface-soft": "#F8F9FA",
+                    "on-tertiary-fixed": "#001e2e",
+                    "primary-fixed-dim": "#ffb77d",
+                    "surface-container": "#efecff",
+                    "on-tertiary-fixed-variant": "#004c6c",
+                    "on-secondary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "on-secondary-fixed": "#2a1800",
+                    "surface-dim": "#dad7f3",
+                    "inverse-surface": "#2f2e43",
+                    "surface-container-highest": "#e2e0fc",
+                    "tertiary": "#00658f",
+                    "primary-container": "#ff8c00",
+                    "secondary-container": "#feb246",
+                    "tertiary-fixed": "#c7e7ff",
+                    "surface-variant": "#e2e0fc",
+                    "surface-tint": "#904d00",
+                    "on-tertiary": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "surface-bright": "#fcf8ff",
+                    "on-tertiary-container": "#004360",
+                    "on-primary-container": "#623200",
+                    "on-surface-variant": "#564334",
+                    "background": "#fcf8ff",
+                    "secondary-fixed-dim": "#ffb95a",
+                    "inverse-on-surface": "#f2efff",
+                    "tertiary-fixed-dim": "#85cfff",
+                    "accent-gradient": "linear-gradient(135deg, #FF8C00 0%, #FEB246 100%)",
+                    "outline": "#897362",
+                    "on-primary-fixed-variant": "#6e3900",
+                    "on-secondary-container": "#6f4600",
+                    "text-muted": "#6B7280",
+                    "on-primary-fixed": "#2f1500",
+                    "background-pure": "#FFFFFF",
+                    "primary-fixed": "#ffdcc3",
+                    "on-error-container": "#93000a",
+                    "on-surface": "#1a1a2e"
             },
             "borderRadius": {
                     "DEFAULT": "0.25rem",
@@ -80,193 +74,111 @@
             },
             "spacing": {
                     "gutter": "24px",
-                    "unit": "8px",
-                    "container-max": "1280px",
-                    "margin-mobile": "16px",
-                    "section-gap": "80px"
+                    "section-gap": "80px",
+                    "sidebar-width": "280px",
+                    "container-max-width": "1200px",
+                    "base": "8px"
             },
             "fontFamily": {
-                    "body-lg": [
-                            "Inter"
-                    ],
-                    "headline-xl": [
-                            "Inter"
-                    ],
-                    "headline-lg-mobile": [
-                            "Inter"
-                    ],
-                    "label-sm": [
-                            "Inter"
-                    ],
-                    "headline-lg": [
-                            "Inter"
-                    ],
-                    "body-md": [
-                            "Inter"
-                    ]
+                    "display-lg-mobile": ["Montserrat"],
+                    "display-lg": ["Montserrat"],
+                    "label-bold": ["Inter"],
+                    "headline-sm": ["Montserrat"],
+                    "body-lg": ["Inter"],
+                    "headline-md": ["Montserrat"],
+                    "body-md": ["Inter"]
             },
             "fontSize": {
-                    "body-lg": [
-                            "18px",
-                            {
-                                    "lineHeight": "28px",
-                                    "fontWeight": "400"
-                            }
-                    ],
-                    "headline-xl": [
-                            "48px",
-                            {
-                                    "lineHeight": "56px",
-                                    "letterSpacing": "-0.02em",
-                                    "fontWeight": "700"
-                            }
-                    ],
-                    "headline-lg-mobile": [
-                            "28px",
-                            {
-                                    "lineHeight": "36px",
-                                    "fontWeight": "600"
-                            }
-                    ],
-                    "label-sm": [
-                            "13px",
-                            {
-                                    "lineHeight": "16px",
-                                    "letterSpacing": "0.05em",
-                                    "fontWeight": "600"
-                            }
-                    ],
-                    "headline-lg": [
-                            "32px",
-                            {
-                                    "lineHeight": "40px",
-                                    "fontWeight": "600"
-                            }
-                    ],
-                    "body-md": [
-                            "16px",
-                            {
-                                    "lineHeight": "24px",
-                                    "fontWeight": "400"
-                            }
-                    ]
+                    "display-lg-mobile": ["32px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "display-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-bold": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-sm": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "headline-md": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}]
             }
           },
         },
       }
     </script>
-<style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #feb246, #fd8b00);
-            transition: all 0.2s ease-in-out;
-        }
-        .btn-primary:hover {
-            filter: brightness(1.1);
-        }
-    </style>
 </head>
-<body class="bg-white text-gray-900 min-h-screen flex flex-col font-sans">
-<!-- Note: Top nav and side nav are intentionally suppressed for this transactional login page per Shared Components Logic -->
+<body class="bg-surface font-body-md text-on-surface min-h-screen flex flex-col relative overflow-x-hidden">
+<!-- Top Navigation (Transactional - minimal shell) -->
+<header class="w-full px-gutter py-6 flex justify-between items-center absolute top-0 left-0 right-0 z-50">
+<a class="flex items-center" href="index.html">
+<!-- Gurost Icon Only -->
+<svg class="text-primary-container" fill="none" height="40" viewbox="0 0 100 100" width="40" xmlns="http://www.w3.org/2000/svg">
+<path d="M70.5 35.5C70.5 35.5 60 20 40 20C20 20 20 40 20 40C20 40 20 60 40 60C50 60 55 52.5 55 52.5M29.5 64.5C29.5 64.5 40 80 60 80C80 80 80 60 80 60C80 60 80 40 60 40C50 40 45 47.5 45 47.5" stroke="url(#paint0_linear)" stroke-linecap="round" stroke-width="15"></path>
+<defs>
+<lineargradient gradientunits="userSpaceOnUse" id="paint0_linear" x1="20" x2="80" y1="20" y2="80">
+<stop stop-color="#FF8C00"></stop>
+<stop offset="1" stop-color="#FEB246"></stop>
+</lineargradient>
+</defs>
+</svg>
+</a>
+<a class="px-6 py-2 rounded-full border border-outline-variant text-on-surface-variant font-label-bold text-label-bold hover:bg-surface-container-low transition-colors flex items-center gap-2" href="index.html">
+<span class="material-symbols-outlined text-sm">arrow_back</span>
+            Back
+        </a>
+</header>
 <!-- Main Content Canvas -->
-<main class="flex-grow flex flex-col justify-center items-center p-gutter w-full max-w-container-max mx-auto">
-<!-- Logo Positioned Top-Left Absolute on larger screens, relative on mobile -->
-<div class="md:absolute top-8 left-8 mb-8 md:mb-0">
-<a href="index.html"><img alt="Gurost Logo" class="h-16 w-16 object-contain rounded-lg" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJNR3UcxqGyFx6WiXm8tO--xgF4DkM88ouLy-RMIaF_7cuIRYIXFwKidqmzo-DJg2Q2rBlsLDA-hpn3JyJtMNB6abD7InnKDBHho5OsjU84B9TNhJ86zQdPohDL-3PFVDiVPWhSEaMBUH4YRlry8zkhkzuvuKjjZoCWNtljgsayp4k0uqnd8c46jndpLRv7UAxvJvxwpvM0pDQpu4U5izG0aOC1_flL-TWAw-yWZRrxxeppkCvh1bNduZhhO7i8urST5A"/></a>
-</div>
-<!-- Login Card Container (Level 2 Elevation) -->
-<div class="w-full max-w-md bg-white border border-gray-300 shadow-sm rounded-xl p-8 md:p-12 relative overflow-hidden">
-<!-- Glassmorphic HUD subtle overlay effect behind the card content -->
-<div class="absolute inset-0 bg-white/50 backdrop-blur-[2px] -z-10 pointer-events-none"></div>
+<main class="flex-grow flex flex-col items-center justify-center w-full px-gutter pt-32 pb-section-gap max-w-container-max-width mx-auto">
+<div class="w-full max-w-md bg-surface-container-lowest rounded-xl shadow-[0px_10px_30px_rgba(26,26,46,0.08)] overflow-hidden border border-[#E5E7EB] backdrop-blur-[20px] bg-white/90 relative z-10">
+<!-- Sign Up Form -->
+<div class="p-8">
 <div class="text-center mb-8">
-<h1 class="font-headline-lg text-headline-lg md:font-headline-xl md:text-headline-xl mb-2 text-gray-900">Create Your Account</h1>
-<p class="font-body-md text-body-md text-gray-600">Start building with your voice, free.</p>
+<h1 class="font-headline-md text-headline-md text-on-background mb-2">Create an Account</h1>
+<p class="text-text-muted font-body-md text-body-md">Join Gurost today.</p>
 </div>
-<form class="space-y-6" id="signupForm">
-<div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 hidden" id="signupError"></div>
-<!-- Name Field -->
+<div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 mb-4 hidden" id="signupError"></div>
+<form class="space-y-4" id="signupForm">
 <div>
-<label class="block font-label-sm text-label-sm text-gray-600 mb-2 uppercase tracking-widest" for="su-name">Full name</label>
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" data-icon="person">person</span>
-<input class="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-1 focus:ring-primary-container focus:border-primary-container transition-colors font-body-md text-body-md placeholder-gray-400" id="su-name" name="name" placeholder="John Doe" type="text"/>
+<input class="w-full bg-surface-soft border border-transparent rounded-lg px-4 py-3 text-on-surface focus:border-primary-container focus:ring-0 focus:outline-none transition-colors placeholder:text-text-muted" id="su-name" placeholder="Full Name" type="text"/>
 </div>
-</div>
-<!-- Email Field -->
 <div>
-<label class="block font-label-sm text-label-sm text-gray-600 mb-2 uppercase tracking-widest" for="su-email">Email address</label>
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" data-icon="mail">mail</span>
-<input class="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-1 focus:ring-primary-container focus:border-primary-container transition-colors font-body-md text-body-md placeholder-gray-400" id="su-email" name="email" placeholder="name@company.com" required="" type="email"/>
+<input class="w-full bg-surface-soft border border-transparent rounded-lg px-4 py-3 text-on-surface focus:border-primary-container focus:ring-0 focus:outline-none transition-colors placeholder:text-text-muted" id="su-email" placeholder="Email Address" required="" type="email"/>
 </div>
-</div>
-<!-- Password Field -->
 <div>
-<label class="block font-label-sm text-label-sm text-gray-600 mb-2 uppercase tracking-widest" for="su-password">Password</label>
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" data-icon="lock">lock</span>
-<input class="w-full pl-10 pr-10 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-1 focus:ring-primary-container focus:border-primary-container transition-colors font-body-md text-body-md placeholder-gray-400" id="su-password" name="password" placeholder="At least 8 characters" required="" type="password"/>
-<button aria-label="Toggle password visibility" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900 transition-colors" id="toggleSuPasswordBtn" type="button">
-<span class="material-symbols-outlined" data-icon="visibility_off" id="toggleSuPasswordIcon">visibility_off</span>
-</button>
+<input class="w-full bg-surface-soft border border-transparent rounded-lg px-4 py-3 text-on-surface focus:border-primary-container focus:ring-0 focus:outline-none transition-colors placeholder:text-text-muted" id="su-password" placeholder="Password" required="" type="password"/>
 </div>
-</div>
-<!-- Confirm Password Field -->
 <div>
-<label class="block font-label-sm text-label-sm text-gray-600 mb-2 uppercase tracking-widest" for="su-confirm">Confirm password</label>
-<div class="relative">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" data-icon="lock">lock</span>
-<input class="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-1 focus:ring-primary-container focus:border-primary-container transition-colors font-body-md text-body-md placeholder-gray-400" id="su-confirm" name="confirm" placeholder="At least 8 characters" required="" type="password"/>
+<input class="w-full bg-surface-soft border border-transparent rounded-lg px-4 py-3 text-on-surface focus:border-primary-container focus:ring-0 focus:outline-none transition-colors placeholder:text-text-muted" id="su-confirm" placeholder="Confirm Password" required="" type="password"/>
 </div>
-</div>
-<!-- Primary Signup Button -->
-<button class="w-full btn-primary text-white font-body-lg text-body-lg font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 mt-4" id="signupSubmit" type="submit">
-<span>Create Account</span>
-<span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
-</button>
+<button class="w-full rounded-lg py-3 mt-6 font-label-bold text-label-bold text-white shadow-md hover:opacity-90 transition-opacity" id="signupSubmit" style="background: linear-gradient(135deg, #FF8C00 0%, #FEB246 100%);" type="submit">
+                        Create Account
+                    </button>
 </form>
-<div class="my-6 flex items-center before:mt-0.5 before:flex-1 before:border-t before:border-gray-300 after:mt-0.5 after:flex-1 after:border-t after:border-gray-300">
-<span class="font-label-sm text-label-sm text-gray-500 px-4 text-center">or continue with</span>
+<div class="mt-6 flex items-center justify-center gap-4">
+<div class="h-px bg-[#E5E7EB] flex-1"></div>
+<span class="text-text-muted text-sm font-label-bold">OR</span>
+<div class="h-px bg-[#E5E7EB] flex-1"></div>
 </div>
-<!-- Secondary Google Signup Button -->
-<button class="w-full bg-white border border-gray-300 text-gray-900 font-body-md text-body-md font-semibold py-3 px-4 rounded-lg flex items-center justify-center gap-3 hover:bg-gray-50 transition-colors" id="googleBtnSignup" type="button">
-<svg class="h-5 w-5" fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<button class="w-full mt-6 rounded-lg py-3 border border-outline-variant bg-transparent text-on-surface font-label-bold text-label-bold hover:bg-surface-container-low transition-colors flex items-center justify-center gap-3" id="googleBtnSignup" type="button">
+<svg class="w-5 h-5" fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path>
 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
 </svg>
-<span>Sign up with Google</span>
-</button>
-<p class="mt-8 text-center font-label-sm text-label-sm text-gray-600">
-                Already have an account? <a class="text-primary-container hover:text-primary transition-colors ml-1" href="login.html">Log in</a>
+                    Continue with Google
+                </button>
+<p class="mt-6 text-center font-body-md text-sm text-text-muted">
+                Already have an account? <a class="text-primary-container hover:text-primary transition-colors font-label-bold" href="login.html">Log in</a>
 </p>
 </div>
-</main>
-<!-- Footer Component Executed from JSON -->
-<footer class="bg-gray-50 border-t border-gray-200 grid grid-cols-1 md:grid-cols-4 gap-unit px-gutter py-section-gap w-full max-w-container-max mx-auto mt-auto">
-<div class="col-span-1 md:col-span-4 flex flex-col md:flex-row justify-between items-center gap-4">
-<div class="text-body-lg font-headline-lg text-gray-900 mb-4 md:mb-0">
-                Gurost
-             </div>
-<nav class="flex flex-wrap justify-center gap-6 font-label-sm text-label-sm">
-<a class="text-gray-600 hover:text-gray-900 transition-colors" href="about.html">About</a>
-<a class="text-gray-600 hover:text-gray-900 transition-colors" href="privacy.html">Privacy</a>
-<a class="text-gray-600 hover:text-gray-900 transition-colors" href="terms.html">Terms</a>
-<a class="text-gray-600 hover:text-gray-900 transition-colors" href="contact.html">Contact</a>
-</nav>
-<div class="text-gray-500 font-label-sm text-label-sm mt-4 md:mt-0 text-center md:text-right">
-                © 2026 Gurost AI. All rights reserved.
-             </div>
 </div>
+
+<!-- Decorative Background Element (Glassmorphic Accent) -->
+<div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary-container/5 rounded-full blur-[100px] -z-10 pointer-events-none"></div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-8 text-center border-t border-[#E5E7EB] mt-auto relative z-10 bg-surface">
+<p class="font-body-md text-sm text-text-muted">Copyright 2026 Gurost</p>
 </footer>
 <script src="shared/api-client.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-  // Real, same Supabase project as signup.html - one real auth system,
-  // not a second one. Real, current URL/anon key, not placeholders.
   const GUROST_SUPABASE_URL = "https://jiadrorezquvthyujykb.supabase.co";
   const GUROST_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppYWRyb3JlenF1dnRoeXVqeWtiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMTI3NzUsImV4cCI6MjA5OTg4ODc3NX0.GWWok3zKSfK3u4Uc3J8MVMhGYiyuZVIi16t6gAppvvs";
 
@@ -292,40 +204,14 @@
       options: { redirectTo: window.location.origin + window.location.pathname }
     });
   }
-
-  // Real check for a returning Google OAuth session - same real logic
-  // signup.html already uses, so a Google redirect back to THIS page
-  // (login.html) completes correctly, not just on signup.html.
-  async function checkForReturningAuthSession() {
-    const client = getSupabaseClient();
-    const { data } = await client.auth.getSession();
-    if (data?.session?.access_token) {
-      localStorage.setItem('gurost_jwt', data.session.access_token);
-      localStorage.setItem('gurost_user_id', data.session.user.id);
-      window.location.href = 'dashboard.html';
-    }
-  }
-  checkForReturningAuthSession();
-
   document.getElementById('googleBtnSignup').addEventListener('click', continueWithGoogle);
 
-  document.getElementById('toggleSuPasswordBtn').addEventListener('click', () => {
-    const input = document.getElementById('su-password');
-    const icon = document.getElementById('toggleSuPasswordIcon');
-    const nowVisible = input.type === 'password';
-    input.type = nowVisible ? 'text' : 'password';
-    icon.textContent = nowVisible ? 'visibility' : 'visibility_off';
-  });
-
-  // Real login submission - identical real call/flow already proven
-  // working in signup.html's own login tab, not a new implementation.
-  // Real signup submission - identical real call/flow already proven
-  // working in the original signup.html, not a new implementation.
+  // Real signup submission - same real call/flow proven working
+  // elsewhere on this site, not a new implementation.
   document.getElementById('signupForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     hideError('signupError');
 
-    const name = document.getElementById('su-name').value.trim();
     const email = document.getElementById('su-email').value.trim();
     const password = document.getElementById('su-password').value;
     const confirm = document.getElementById('su-confirm').value;
@@ -342,14 +228,12 @@
 
     const btn = document.getElementById('signupSubmit');
     btn.disabled = true;
-    btn.querySelector('span').textContent = 'Creating account…';
+    btn.textContent = 'Creating account…';
 
     try {
-      // The backend's signup contract is currently email + password
-      // only — Full Name is collected here for a better signup
-      // experience but isn't sent anywhere yet, because there's no
-      // field for it in api_keys / user-auth.js's signup() function.
-      // Not silently dropped without saying so.
+      // Real, same honest note as before: Full Name is collected for a
+      // better signup experience but isn't sent anywhere yet - the
+      // backend signup contract is currently email + password only.
       const result = await GurostAPI.call('/api/auth/signup', { method: 'POST', body: { email, password } });
       localStorage.setItem('gurost_api_key', result.apiKey);
       localStorage.setItem('gurost_user_id', result.userId);
@@ -357,7 +241,7 @@
     } catch (err) {
       showError('signupError', err.message);
       btn.disabled = false;
-      btn.querySelector('span').textContent = 'Create Account';
+      btn.textContent = 'Create Account';
     }
   });
 </script>
