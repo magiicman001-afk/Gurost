@@ -70,6 +70,8 @@
 </button>
 </div>
 </div>
+<!-- Real credit usage summary - hidden until a real build actually completes -->
+<div class="hidden text-center font-body-sm text-body-sm text-on-surface-variant mb-6" id="creditSummaryBanner"></div>
 <p class="text-sm text-error hidden mb-8" id="builderError"></p>
 <!-- Templates Grid -->
 <div class="w-full max-w-5xl mb-24">
@@ -296,6 +298,27 @@ function hideError() {
   document.getElementById('builderError').classList.add('hidden');
 }
 
+// Real, honest usage summary - shown after every real build completes.
+// Free plan sends null (no credit pool - handled by the real build-count
+// message elsewhere) and Max/Custom send {unlimited: true}, both real,
+// deliberate cases with no fake number invented for them.
+function showCreditSummary(summary) {
+  const banner = document.getElementById('creditSummaryBanner');
+  if (!summary) {
+    banner.classList.add('hidden');
+    return;
+  }
+  if (summary.unlimited) {
+    banner.textContent = 'Unlimited plan — no build limit this month.';
+  } else {
+    const parts = [`${summary.charged} credit${summary.charged === 1 ? '' : 's'} used this build.`];
+    parts.push(`${summary.includedRemaining} of ${summary.includedTotal} included credits left this month.`);
+    if (summary.purchasedRemaining > 0) parts.push(`${summary.purchasedRemaining} purchased credits remaining.`);
+    banner.textContent = parts.join(' ');
+  }
+  banner.classList.remove('hidden');
+}
+
 let codeBoxController = null;
 let lastRenderedHtml = null;
 
@@ -422,6 +445,7 @@ async function generateWebsite(description) {
     projectId = result.projectId;
     window.history.replaceState({}, '', `builder.html?projectId=${projectId}`);
     renderVariants(result.variants);
+    showCreditSummary(result.creditSummary);
   } catch (err) {
     showError(err.message);
   } finally {
