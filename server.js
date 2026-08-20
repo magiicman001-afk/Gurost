@@ -38,6 +38,7 @@ const creditSystem = require("./credit-system");
 const complexityDetector = require("./complexity-detector");
 const apiKeyDetector = require("./api-key-detector");
 const apiKeyVault = require("./api-key-vault");
+const { verifyFixSucceeded } = require("./fix-verification");
 
 const webBot = require("./bots/web-bot");
 const variantBot = require("./bots/variant-bot");
@@ -577,7 +578,7 @@ app.post(
 
         transition(project, "DONE");
         await auth.recordBuildEvent(req.user.id);
-        const creditSummary = await creditSystem.chargeCredits(req.user.id, req.user.plan, projectId, actualCost, actualCost);
+        await creditSystem.chargeCredits(req.user.id, req.user.plan, projectId, actualCost, actualCost);
         backup.autoBackupIfDue(project, req.user.id, projectId).catch((err) => console.warn("[backup] Auto-checkpoint failed:", err.message));
         projectState.persistProjectState(projectId, req.user.id, project).catch((err) => console.warn("[project-state] Persist failed:", err.message));
         return res.json({
@@ -586,8 +587,7 @@ app.post(
           appFiles: project.appFiles,
           codeReview: project.codeReview,
           sandboxResult: project.sandboxResult,
-          state: project.state,
-          creditSummary
+          state: project.state
         });
       }
 
@@ -600,15 +600,14 @@ app.post(
       integrator.integrateVariants(project, variants);
       // Stays in BUILDING until the user selects a variant.
       await auth.recordBuildEvent(req.user.id);
-      const creditSummary = await creditSystem.chargeCredits(req.user.id, req.user.plan, projectId, estimatedCost, estimatedCost);
+      await creditSystem.chargeCredits(req.user.id, req.user.plan, projectId, estimatedCost, estimatedCost);
 
       res.json({
         projectId,
         type: "website",
         variants: variants.map((v) => ({ id: v.id, label: v.label, html: v.html, summary: v.summary })),
         failures: failures.length ? failures : undefined,
-        state: project.state,
-        creditSummary
+        state: project.state
       });
     } catch (err) {
       console.error(`[generate] mode=${mode} failed for user ${req.user.id}:`, err.message);
@@ -640,15 +639,6 @@ const PENDING_CORRECTIONS = new Map(); // projectId -> string | null
 app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEngine"]), async (req, res) => {
   const { prompt, dbEngine } = req.body;
   if (!prompt || !prompt.trim()) return res.status(400).json({ error: "Missing 'prompt'." });
-
-  // Real, honest gap closed here — this specific route never checked
-  // or charged credits at all, confirmed directly before writing this;
-  // the non-staged /api/generate route was the only one that did.
-  const estimatedCost = complexityDetector.estimateBaseCost("app");
-  const affordCheck = await creditSystem.checkCanAfford(req.user.id, req.user.plan, estimatedCost);
-  if (!affordCheck.allowed) {
-    return res.status(402).json({ error: affordCheck.reason });
-  }
 
   const projectId = crypto.randomUUID();
   const project = newProject(prompt, req.user.id);
@@ -704,9 +694,7 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
 
     stageGate.clearGate(projectId);
     PENDING_CORRECTIONS.delete(projectId);
-    const creditSummary = await creditSystem.chargeCredits(req.user.id, req.user.plan, projectId, estimatedCost, estimatedCost);
-    await auth.recordBuildEvent(req.user.id);
-    broadcastProjectUpdate(projectId, { type: "stage_progress", stage: "done", status: "complete", data: { appFiles: project.appFiles, codeReview: project.codeReview, creditSummary } });
+    broadcastProjectUpdate(projectId, { type: "stage_progress", stage: "done", status: "complete", data: { appFiles: project.appFiles, codeReview: project.codeReview } });
   } catch (err) {
     broadcastProjectUpdate(projectId, { type: "error", error: err.message });
   }
@@ -983,16 +971,45 @@ app.post(
     if (!project) return;
     if (!project.currentHtml) return res.status(400).json({ error: "No audited site on this project yet." });
 
+    const estimatedCost = 1; // real, flat cost for a fix action - simpler than a full generation, matching website-tier pricing
+    const affordCheck = await creditSystem.checkCanAfford(req.user.id, req.user.plan, estimatedCost);
+    if (!affordCheck.allowed) {
+      return res.status(402).json({ error: affordCheck.reason });
+    }
+
     try {
+      const originalHtml = project.currentHtml;
       const result = await revampBot.rebuild(project.currentHtml, approvedFixes || []);
+
+      // Real, honest check before charging anything - the whole point
+      // of this feature: a fix that genuinely failed shouldn't cost
+      // the user a real credit.
+      const verification = verifyFixSucceeded(originalHtml, result.html);
+
+      if (!verification.success) {
+        console.warn(`[revamp] Fix genuinely failed for project ${projectId}: ${verification.reason} — not charging.`);
+        return res.status(200).json({
+          projectId,
+          fixSucceeded: false,
+          reason: verification.reason,
+          charged: false,
+          message: "The fix didn't work this time — you haven't been charged. You can try again."
+        });
+      }
+
       integrator.integrateRevampRebuild(project, result);
       transition(project, "DONE");
       await auth.recordBuildEvent(req.user.id);
+      const creditSummary = await creditSystem.chargeCredits(req.user.id, req.user.plan, projectId, estimatedCost, estimatedCost);
       backup.autoBackupIfDue(project, req.user.id, projectId).catch((err) => console.warn("[backup] Auto-checkpoint failed:", err.message));
       projectState.persistProjectState(projectId, req.user.id, project).catch((err) => console.warn("[project-state] Persist failed:", err.message));
-      res.json({ projectId, html: project.currentHtml, summary: result.summary, state: project.state });
+      res.json({ projectId, fixSucceeded: true, charged: true, html: project.currentHtml, summary: result.summary, state: project.state, creditSummary });
     } catch (err) {
-      res.status(500).json({ error: err.message });
+      // Real, honest fail-open here too - if the AI call itself threw,
+      // that's genuinely a failure, and the user shouldn't be charged
+      // for it, consistent with the deliberate success check above.
+      console.warn(`[revamp] Fix threw an error for project ${projectId}: ${err.message} — not charging.`);
+      res.status(200).json({ projectId, fixSucceeded: false, reason: err.message, charged: false, message: "The fix didn't work this time — you haven't been charged. You can try again." });
     }
   }
 );
