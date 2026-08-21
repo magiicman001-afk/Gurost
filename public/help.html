@@ -1,409 +1,257 @@
 <!DOCTYPE html>
 
-<html lang="en"><head>
+<html class="light" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Gurost - Help Center</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&amp;family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
         tailwind.config = {
-          darkMode: "class",
-          theme: {
-            extend: {
-              "colors": {
-                "primary": "#ffd6a6",
-                "surface-container-low": "#f8f9fa",
-                "on-secondary": "#4d2600",
-                "tertiary-fixed": "#bee9ff",
-                "on-primary-fixed-variant": "#643f00",
-                "on-tertiary-fixed": "#001f2a",
-                "inverse-primary": "#845400",
-                "tertiary-container": "#58cefd",
-                "secondary-container": "#fd8b00",
-                "on-surface-variant": "#49454f",
-                "on-tertiary-fixed-variant": "#004d64",
-                "primary-container": "#feb246",
-                "error-container": "#93000a",
-                "surface-card": "#ffffff",
-                "error": "#ffb4ab",
-                "on-primary-container": "#6f4600",
-                "on-surface": "#1c1b1f",
-                "secondary-fixed": "#ffdcc3",
-                "background": "#ffffff",
-                "surface": "#ffffff",
-                "tertiary": "#b0e5ff",
-                "surface-glass": "rgba(255, 255, 255, 0.7)",
-                "outline-variant": "#cac4d0",
-                "on-primary": "#462a00",
-                "inverse-on-surface": "#f4eff4",
-                "on-secondary-container": "#603100",
-                "on-tertiary": "#003546",
-                "surface-tint": "#ffb95a",
-                "on-secondary-fixed-variant": "#6e3900",
-                "surface-container-highest": "#e6e0e9",
-                "outline": "#79747e",
-                "border-subtle": "#e0e0e0",
-                "on-tertiary-container": "#00566f",
-                "surface-variant": "#e7e0ec",
-                "white": "#ffffff",
-                "on-secondary-fixed": "#2f1500",
-                "on-primary-fixed": "#2a1800",
-                "inverse-surface": "#313033",
-                "surface-dim": "#ded8e1",
-                "surface-container-lowest": "#ffffff",
-                "primary-fixed": "#ffddb6",
-                "surface-container": "#f3edf7",
-                "surface-bright": "#fef7ff",
-                "on-error-container": "#ffdad6",
-                "on-background": "#1c1b1f",
-                "secondary-fixed-dim": "#ffb77d",
-                "surface-container-high": "#ece6f0",
-                "tertiary-fixed-dim": "#69d3ff",
-                "primary-fixed-dim": "#ffb95a",
-                "on-error": "#690005",
-                "secondary": "#ffb77d"
-              },
-              "borderRadius": {
-                      "DEFAULT": "0.25rem",
-                      "lg": "0.5rem",
-                      "xl": "0.75rem",
-                      "2xl": "1rem",
-                      "3xl": "2rem",
-                      "full": "9999px"
-              },
-              "spacing": {
-                      "gutter": "24px",
-                      "section-gap": "80px",
-                      "unit": "8px",
-                      "container-max": "1280px",
-                      "margin-mobile": "16px"
-              },
-              "fontFamily": {
-                      "headline-lg": [
-                              "Inter"
-                      ],
-                      "headline-xl": [
-                              "Inter"
-                      ],
-                      "body-lg": [
-                              "Inter"
-                      ],
-                      "headline-lg-mobile": [
-                              "Inter"
-                      ],
-                      "label-sm": [
-                              "Inter"
-                      ],
-                      "body-md": [
-                              "Inter"
-                      ]
-              },
-              "fontSize": {
-                      "headline-lg": [
-                              "32px",
-                              {
-                                      "lineHeight": "40px",
-                                      "fontWeight": "600"
-                              }
-                      ],
-                      "headline-xl": [
-                              "48px",
-                              {
-                                      "lineHeight": "56px",
-                                      "letterSpacing": "-0.02em",
-                                      "fontWeight": "700"
-                              }
-                      ],
-                      "body-lg": [
-                              "18px",
-                              {
-                                      "lineHeight": "28px",
-                                      "fontWeight": "400"
-                              }
-                      ],
-                      "headline-lg-mobile": [
-                              "28px",
-                              {
-                                      "lineHeight": "36px",
-                                      "fontWeight": "600"
-                              }
-                      ],
-                      "label-sm": [
-                              "13px",
-                              {
-                                      "lineHeight": "16px",
-                                      "letterSpacing": "0.05em",
-                                      "fontWeight": "600"
-                              }
-                      ],
-                      "body-md": [
-                              "16px",
-                              {
-                                      "lineHeight": "24px",
-                                      "fontWeight": "400"
-                              }
-                      ]
-              }
-      },
-          },
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-container": "#00b5fc",
+                        "inverse-surface": "#2f2e43",
+                        "on-primary-fixed-variant": "#6e3900",
+                        "inverse-on-surface": "#f2efff",
+                        "surface-variant": "#e2e0fc",
+                        "surface-container-low": "#f5f2ff",
+                        "outline": "#897362",
+                        "on-primary-container": "#623200",
+                        "accent-gradient": "linear-gradient(135deg, #FF8C00 0%, #FEB246 100%)",
+                        "surface-container-highest": "#e2e0fc",
+                        "tertiary": "#00658f",
+                        "on-surface": "#1a1a2e",
+                        "surface-tint": "#904d00",
+                        "primary": "#904d00",
+                        "inverse-primary": "#ffb77d",
+                        "surface-soft": "#F8F9FA",
+                        "on-secondary-container": "#6f4600",
+                        "primary-fixed": "#ffdcc3",
+                        "on-primary": "#ffffff",
+                        "on-background": "#1a1a2e",
+                        "secondary-fixed": "#ffddb6",
+                        "tertiary-fixed-dim": "#85cfff",
+                        "secondary": "#845400",
+                        "secondary-fixed-dim": "#ffb95a",
+                        "surface-bright": "#fcf8ff",
+                        "background-pure": "#FFFFFF",
+                        "on-tertiary-container": "#004360",
+                        "on-error": "#ffffff",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "outline-variant": "#ddc1ae",
+                        "background": "#fcf8ff",
+                        "on-tertiary-fixed-variant": "#004c6c",
+                        "text-muted": "#6B7280",
+                        "on-surface-variant": "#564334",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e8e5ff",
+                        "surface-dim": "#dad7f3",
+                        "tertiary-fixed": "#c7e7ff",
+                        "on-error-container": "#93000a",
+                        "primary-container": "#ff8c00",
+                        "surface-container": "#efecff",
+                        "primary-fixed-dim": "#ffb77d",
+                        "on-tertiary-fixed": "#001e2e",
+                        "on-primary-fixed": "#2f1500",
+                        "on-secondary-fixed": "#2a1800",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#643f00",
+                        "surface": "#fcf8ff",
+                        "secondary-container": "#feb246"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sidebar-width": "280px",
+                        "container-max-width": "1200px",
+                        "gutter": "24px",
+                        "section-gap": "80px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "display-lg-mobile": ["Montserrat"],
+                        "label-bold": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-sm": ["Montserrat"],
+                        "display-lg": ["Montserrat"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Montserrat"]
+                    },
+                    "fontSize": {
+                        "display-lg-mobile": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "label-bold": ["14px", { "lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-sm": ["24px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-md": ["32px", { "lineHeight": "1.3", "fontWeight": "600" }]
+                    }
+                }
+            }
         }
-      </script>
+    </script>
 <style>
-        .accordion-content {
-            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
-        .accordion-content.open {
-            max-height: 500px;
-            opacity: 1;
+        .gradient-text {
+            background: linear-gradient(135deg, #FF8C00 0%, #FEB246 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        .accordion-icon {
-            transition: transform 0.3s ease;
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #FF8C00 0%, #FEB246 100%);
         }
-        .open .accordion-icon {
-            transform: rotate(180deg);
+        .ambient-shadow {
+            box-shadow: 0px 10px 30px rgba(26, 26, 46, 0.08);
         }
     </style>
 </head>
-<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col antialiased">
-<!-- Top Navigation (Suppressed per logic: Task-focused/Help Center) -->
-<header class="hidden">
-<!-- Kept hidden intentionally to prioritize content canvas -->
+<body class="bg-background-pure text-on-surface font-body-md min-h-screen flex flex-col antialiased">
+<!-- Top Navigation Anchor (Shared Component) -->
+<header class="fixed top-0 w-full z-50 glassmorphism shadow-sm">
+<div class="flex justify-between items-center w-full px-gutter h-16 max-w-container-max-width mx-auto">
+<!-- Brand Logo (Icon Only per style guidance) -->
+<a class="flex items-center justify-center" href="index.html">
+<span class="material-symbols-outlined text-primary-container" style="font-size: 32px; font-variation-settings: 'FILL' 1;">dataset</span>
+</a>
+<!-- Search (Hidden as per JSON, but leaving structure) -->
+<div class="hidden"></div>
+<!-- Trailing Action: Back Button -->
+<button class="px-4 py-2 rounded-full border border-outline-variant text-on-surface-variant font-label-bold text-label-bold hover:bg-surface-soft transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                Back
+            </button>
+</div>
 </header>
-<main class="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter py-section-gap">
-<div class="mb-section-gap flex flex-col items-center text-center">
-<a class="inline-flex items-center gap-2 px-6 py-2 rounded-full border border-border-subtle bg-surface-glass backdrop-blur-[20px] text-on-surface-variant hover:text-on-background hover:border-primary transition-all duration-300 mb-8 font-label-sm text-label-sm" href="index.html">
-<span class="material-symbols-outlined text-[18px]" data-icon="arrow_back">arrow_back</span>
-                Back to Gurost
-            </a>
-<img alt="Gurost Logo" class="w-24 h-24 mb-6 rounded-3xl border border-border-subtle shadow-[0_0_40px_rgba(254,178,70,0.15)]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8ipKec4HBIkLa8F1osltEf7hDYP0I0DjluJYNnsVDZIj4DkzN44thub2UedoJNxG_UQTwfN1BWSqPCaIN6jy4nFoMGtrh49tqSiF5kmeSWo1CVKHYDTg9XoA0t9Uy4oByS7kTnGpkQ6jOFVGRiSL33n3vC054PCiUoVGkEqHRi6p_3B8_K5I2P0vyz91i4MAU4pNQHWmLhBAdVcdBePLl6fZzEHoZzl0_eja7aPgsb6m0f8QUsqMRSRbONEHAZhvKkEs"/>
-<h1 class="font-headline-xl text-headline-xl-mobile md:text-headline-xl text-on-background mb-4">
-<span class="bg-clip-text text-transparent bg-gradient-to-r from-[#feb246] to-[#ffb77d]">❓ Help Center</span>
-</h1>
-<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">
-                Everything you need to know about building, voice interfaces, and managing your Gurost account.
-            </p>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter max-w-5xl mx-auto">
-<!-- Sidebar Navigation -->
-<div class="md:col-span-4 hidden md:block">
-<div class="sticky top-12 flex flex-col gap-2 p-6 rounded-3xl bg-surface-card border border-border-subtle">
-<h3 class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-2">Categories</h3>
-<a class="px-4 py-3 rounded-lg bg-surface text-primary font-body-md text-body-md border border-border-subtle flex items-center justify-between group" href="#general">
-                        General Questions
-                        <span class="material-symbols-outlined text-[20px] opacity-100 group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
-</a>
-<a class="px-4 py-3 rounded-lg bg-transparent text-on-surface-variant hover:bg-surface/50 font-body-md text-body-md transition-colors flex items-center justify-between group" href="#technical">
-                        Technical Questions
-                        <span class="material-symbols-outlined text-[20px] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" data-icon="chevron_right">chevron_right</span>
-</a>
-<a class="px-4 py-3 rounded-lg bg-transparent text-on-surface-variant hover:bg-surface/50 font-body-md text-body-md transition-colors flex items-center justify-between group" href="#billing">
-                        Billing &amp; Credits
-                        <span class="material-symbols-outlined text-[20px] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" data-icon="chevron_right">chevron_right</span>
-</a>
-<a class="px-4 py-3 rounded-lg bg-transparent text-on-surface-variant hover:bg-surface/50 font-body-md text-body-md transition-colors flex items-center justify-between group" href="#voice">
-                        Voice &amp; Meetings
-                        <span class="material-symbols-outlined text-[20px] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" data-icon="chevron_right">chevron_right</span>
-</a>
-</div>
-</div>
-<!-- FAQ Content -->
-<div class="md:col-span-8 flex flex-col gap-12">
-<!-- Category: General -->
-<section class="scroll-mt-24" id="general">
-<div class="flex items-center gap-3 mb-6">
-<div class="w-10 h-10 rounded-lg bg-surface-container-high border border-border-subtle flex items-center justify-center">
-<span class="material-symbols-outlined text-primary" data-icon="info">info</span>
-</div>
-<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background">General Questions</h2>
-</div>
-<div class="flex flex-col gap-4">
-<div class="accordion-item rounded-3xl bg-surface-card border border-border-subtle overflow-hidden">
-<button class="accordion-header w-full px-6 py-5 text-left flex justify-between items-center bg-transparent focus:outline-none">
-<span class="font-body-lg text-body-lg font-semibold text-on-background">What is Gurost?</span>
-<span class="material-symbols-outlined text-on-surface-variant accordion-icon" data-icon="expand_more">expand_more</span>
-</button>
-<div class="accordion-content px-6 pb-6 bg-surface-card/50">
-<p class="text-on-surface-variant font-body-md text-body-md">
-                                    Gurost is an AI-powered, voice-first web builder designed for modern professionals. It allows you to create, manage, and scale complex web interfaces using conversational commands and an intuitive visual canvas.
-                                </p>
-</div>
-</div>
-<div class="accordion-item rounded-3xl bg-surface-card border border-border-subtle overflow-hidden">
-<button class="accordion-header w-full px-6 py-5 text-left flex justify-between items-center bg-transparent focus:outline-none">
-<span class="font-body-lg text-body-lg font-semibold text-on-background">Who owns the code generated?</span>
-<span class="material-symbols-outlined text-on-surface-variant accordion-icon" data-icon="expand_more">expand_more</span>
-</button>
-<div class="accordion-content px-6 pb-6 bg-surface-card/50">
-<p class="text-on-surface-variant font-body-md text-body-md">
-                                    You retain 100% ownership of all code generated through Gurost. Once exported, you are free to modify, distribute, or commercialize the code without any attribution required.
-                                </p>
-</div>
-</div>
+<!-- Main Content Canvas -->
+<main class="flex-grow pt-32 pb-section-gap px-gutter max-w-container-max-width mx-auto w-full flex flex-col items-center text-center">
+<!-- Hero Section -->
+<section class="w-full max-w-3xl mx-auto mb-16 flex flex-col items-center">
+<h1 class="font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface mb-4">Help Center</h1>
+<p class="font-body-lg text-body-lg text-text-muted mb-8 max-w-xl">How can we help you?</p>
+<!-- Global Search -->
+<div class="w-full relative max-w-xl mx-auto">
+<span class="material-symbols-outlined absolute left-4 top-1/2 transform -translate-y-1/2 text-text-muted">search</span>
+<input class="w-full pl-12 pr-4 py-4 rounded-lg bg-surface-soft border border-outline-variant focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all text-on-surface placeholder:text-text-muted ambient-shadow outline-none" placeholder="Search for articles, guides, and FAQs..." type="text"/>
 </div>
 </section>
-<!-- Category: Technical -->
-<section class="scroll-mt-24" id="technical">
-<div class="flex items-center gap-3 mb-6">
-<div class="w-10 h-10 rounded-lg bg-surface-container-high border border-border-subtle flex items-center justify-center">
-<span class="material-symbols-outlined text-tertiary" data-icon="code">code</span>
+<!-- Quick Links (Bento Grid Style) -->
+<section class="w-full max-w-5xl mx-auto mb-section-gap">
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-8">Quick Links</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Card 1 -->
+<a class="bg-background-pure border border-surface-dim rounded-xl p-6 ambient-shadow hover:-translate-y-1 transition-transform flex flex-col items-center text-center group" href="docs.html">
+<div class="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center mb-4 group-hover:bg-primary-container/20 transition-colors">
+<span class="material-symbols-outlined text-primary-container">rocket_launch</span>
 </div>
-<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background">Technical Questions</h2>
+<h3 class="font-label-bold text-label-bold text-on-surface mb-2">Getting Started</h3>
+<p class="font-body-md text-sm text-text-muted">The basics of setting up your Gurost workspace.</p>
+</a>
+<!-- Card 2 -->
+<a class="bg-background-pure border border-surface-dim rounded-xl p-6 ambient-shadow hover:-translate-y-1 transition-transform flex flex-col items-center text-center group" href="docs.html">
+<div class="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center mb-4 group-hover:bg-primary-container/20 transition-colors">
+<span class="material-symbols-outlined text-primary-container">account_balance_wallet</span>
 </div>
-<div class="flex flex-col gap-4">
-<div class="accordion-item rounded-3xl bg-surface-card border border-border-subtle overflow-hidden">
-<button class="accordion-header w-full px-6 py-5 text-left flex justify-between items-center bg-transparent focus:outline-none">
-<span class="font-body-lg text-body-lg font-semibold text-on-background">How does the Pulse button work?</span>
-<span class="material-symbols-outlined text-on-surface-variant accordion-icon" data-icon="expand_more">expand_more</span>
-</button>
-<div class="accordion-content px-6 pb-6 bg-surface-card/50">
-<p class="text-on-surface-variant font-body-md text-body-md">
-                                    The Pulse button is your main interaction point for the AI Voice Interface. Tap and hold to speak your commands. The AI analyzes your intent and immediately executes structural or stylistic changes on the canvas.
-                                </p>
+<h3 class="font-label-bold text-label-bold text-on-surface mb-2">Account &amp; Billing</h3>
+<p class="font-body-md text-sm text-text-muted">Manage subscriptions, invoices, and team seats.</p>
+</a>
+<!-- Card 3 -->
+<a class="bg-background-pure border border-surface-dim rounded-xl p-6 ambient-shadow hover:-translate-y-1 transition-transform flex flex-col items-center text-center group" href="docs.html">
+<div class="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center mb-4 group-hover:bg-primary-container/20 transition-colors">
+<span class="material-symbols-outlined text-primary-container">construction</span>
 </div>
+<h3 class="font-label-bold text-label-bold text-on-surface mb-2">Building &amp; Deploying</h3>
+<p class="font-body-md text-sm text-text-muted">Guides for publishing and scaling your projects.</p>
+</a>
+<!-- Card 4 -->
+<a class="bg-background-pure border border-surface-dim rounded-xl p-6 ambient-shadow hover:-translate-y-1 transition-transform flex flex-col items-center text-center group md:col-span-1 md:col-start-1" href="docs.html">
+<div class="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center mb-4 group-hover:bg-primary-container/20 transition-colors">
+<span class="material-symbols-outlined text-primary-container">build</span>
 </div>
-<div class="accordion-item rounded-3xl bg-surface-card border border-border-subtle overflow-hidden">
-<button class="accordion-header w-full px-6 py-5 text-left flex justify-between items-center bg-transparent focus:outline-none">
-<span class="font-body-lg text-body-lg font-semibold text-on-background">Can I export my code?</span>
-<span class="material-symbols-outlined text-on-surface-variant accordion-icon" data-icon="expand_more">expand_more</span>
-</button>
-<div class="accordion-content px-6 pb-6 bg-surface-card/50">
-<p class="text-on-surface-variant font-body-md text-body-md">
-                                    Yes. Gurost supports one-click export to clean HTML, Tailwind CSS, and React components. You can find the export options in the top right corner of the builder canvas.
-                                </p>
+<h3 class="font-label-bold text-label-bold text-on-surface mb-2">Troubleshooting</h3>
+<p class="font-body-md text-sm text-text-muted">Solutions to common errors and platform issues.</p>
+</a>
+<!-- Card 5 -->
+<a class="bg-background-pure border border-surface-dim rounded-xl p-6 ambient-shadow hover:-translate-y-1 transition-transform flex flex-col items-center text-center group md:col-span-2 md:col-start-2" href="docs.html">
+<div class="w-12 h-12 rounded-full bg-primary-container/10 flex items-center justify-center mb-4 group-hover:bg-primary-container/20 transition-colors">
+<span class="material-symbols-outlined text-primary-container">quiz</span>
 </div>
-</div>
-</div>
-</section>
-<!-- Category: Billing -->
-<section class="scroll-mt-24" id="billing">
-<div class="flex items-center gap-3 mb-6">
-<div class="w-10 h-10 rounded-lg bg-surface-container-high border border-border-subtle flex items-center justify-center">
-<span class="material-symbols-outlined text-secondary" data-icon="credit_card">credit_card</span>
-</div>
-<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background">Billing &amp; Credits</h2>
-</div>
-<div class="flex flex-col gap-4">
-<div class="accordion-item rounded-3xl bg-surface-card border border-border-subtle overflow-hidden">
-<button class="accordion-header w-full px-6 py-5 text-left flex justify-between items-center bg-transparent focus:outline-none">
-<span class="font-body-lg text-body-lg font-semibold text-on-background">How does pricing work?</span>
-<span class="material-symbols-outlined text-on-surface-variant accordion-icon" data-icon="expand_more">expand_more</span>
-</button>
-<div class="accordion-content px-6 pb-6 bg-surface-card/50">
-<p class="text-on-surface-variant font-body-md text-body-md">
-                                    Pricing is based on a monthly subscription model that includes a base allocation of AI Voice credits. Additional credits can be purchased on-demand.
-                                </p>
-</div>
-</div>
+<h3 class="font-label-bold text-label-bold text-on-surface mb-2">FAQs</h3>
+<p class="font-body-md text-sm text-text-muted">Answers to the most frequently asked questions from our community.</p>
+</a>
 </div>
 </section>
-<!-- Category: Voice -->
-<section class="scroll-mt-24" id="voice">
-<div class="flex items-center gap-3 mb-6">
-<div class="w-10 h-10 rounded-lg bg-surface-container-high border border-border-subtle flex items-center justify-center">
-<span class="material-symbols-outlined text-primary-container" data-icon="mic">mic</span>
-</div>
-<h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background">Voice &amp; Meetings</h2>
-</div>
-<div class="flex flex-col gap-4">
-<div class="accordion-item rounded-3xl bg-surface-card border border-border-subtle overflow-hidden">
-<button class="accordion-header w-full px-6 py-5 text-left flex justify-between items-center bg-transparent focus:outline-none">
-<span class="font-body-lg text-body-lg font-semibold text-on-background">Is voice data stored?</span>
-<span class="material-symbols-outlined text-on-surface-variant accordion-icon" data-icon="expand_more">expand_more</span>
-</button>
-<div class="accordion-content px-6 pb-6 bg-surface-card/50">
-<p class="text-on-surface-variant font-body-md text-body-md">
-                                    Voice data is processed ephemerally to execute commands and is not stored long-term unless you explicitly opt-in for meeting transcription features.
-                                </p>
-</div>
-</div>
+<!-- Popular FAQs List -->
+<section class="w-full max-w-3xl mx-auto mb-section-gap flex flex-col items-center">
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-8">Popular FAQs</h2>
+<div class="w-full flex flex-col gap-3">
+<a class="w-full text-center py-4 px-6 bg-background-pure border border-outline-variant rounded-lg hover:border-primary-container hover:shadow-sm transition-all flex items-center justify-center gap-2" href="contact.html">
+<span class="font-label-bold text-label-bold text-on-surface">How do I create an account?</span>
+<span class="material-symbols-outlined text-text-muted text-[16px]">chevron_right</span>
+</a>
+<a class="w-full text-center py-4 px-6 bg-background-pure border border-outline-variant rounded-lg hover:border-primary-container hover:shadow-sm transition-all flex items-center justify-center gap-2" href="contact.html">
+<span class="font-label-bold text-label-bold text-on-surface">How do I build a website?</span>
+<span class="material-symbols-outlined text-text-muted text-[16px]">chevron_right</span>
+</a>
+<a class="w-full text-center py-4 px-6 bg-background-pure border border-outline-variant rounded-lg hover:border-primary-container hover:shadow-sm transition-all flex items-center justify-center gap-2" href="contact.html">
+<span class="font-label-bold text-label-bold text-on-surface">How does the Pulse button work?</span>
+<span class="material-symbols-outlined text-text-muted text-[16px]">chevron_right</span>
+</a>
+<a class="w-full text-center py-4 px-6 bg-background-pure border border-outline-variant rounded-lg hover:border-primary-container hover:shadow-sm transition-all flex items-center justify-center gap-2" href="contact.html">
+<span class="font-label-bold text-label-bold text-on-surface">What is the Business Assistant?</span>
+<span class="material-symbols-outlined text-text-muted text-[16px]">chevron_right</span>
+</a>
+<a class="w-full text-center py-4 px-6 bg-background-pure border border-outline-variant rounded-lg hover:border-primary-container hover:shadow-sm transition-all flex items-center justify-center gap-2" href="contact.html">
+<span class="font-label-bold text-label-bold text-on-surface">How do I cancel my subscription?</span>
+<span class="material-symbols-outlined text-text-muted text-[16px]">chevron_right</span>
+</a>
 </div>
 </section>
+<!-- Support CTA Card -->
+<section class="w-full max-w-2xl mx-auto flex flex-col items-center">
+<div class="w-full bg-surface-container-lowest border border-surface-dim ambient-shadow rounded-xl p-8 flex flex-col items-center text-center">
+<span class="material-symbols-outlined text-primary-container text-[48px] mb-4" style="font-variation-settings: 'FILL' 1;">support_agent</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-2">Still need help?</h2>
+<p class="font-body-md text-text-muted mb-6">Our support team is always ready to help you with any issues.</p>
+<a class="inline-block bg-gradient-primary text-on-primary font-label-bold text-label-bold px-8 py-3 rounded-full hover:opacity-90 transition-opacity mb-4" href="mailto:support@gurost.com">
+                    Contact Support
+                </a>
+<p class="font-body-md text-sm text-text-muted">or email us at <span class="font-label-bold text-on-surface">support@gurost.com</span></p>
 </div>
-</div>
+</section>
 </main>
-<!-- Footer Component from JSON -->
-<footer class="bg-surface-container-low full-width border-t border-border-subtle">
-<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter py-section-gap px-margin-mobile md:px-gutter max-w-container-max mx-auto">
-<div class="flex flex-col gap-4 col-span-2 md:col-span-1">
-<span class="text-headline-md font-headline-md font-bold text-primary">Gurost</span>
-<p class="text-on-surface-variant font-label-md text-label-md">© 2024 Gurost AI. All rights reserved.</p>
+<!-- Footer Anchor (Shared Component) -->
+<footer class="bg-on-background dark:bg-surface-container-lowest full-width bottom flex flex-col items-center justify-center w-full py-section-gap px-gutter text-center mt-auto">
+<div class="text-white font-bold mb-8 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-container" style="font-size: 32px; font-variation-settings: 'FILL' 1;">dataset</span>
 </div>
-<div class="flex flex-col gap-3">
-<span class="text-on-surface font-label-md text-label-md font-bold mb-2">Company</span>
-<a class="text-on-surface-variant hover:text-secondary transition-colors font-label-md text-label-md" href="javascript:void(0)" style="cursor:default;pointer-events:none">Company</a>
-</div>
-<div class="flex flex-col gap-3">
-<span class="text-on-surface font-label-md text-label-md font-bold mb-2">Resources</span>
-<a class="text-on-surface-variant hover:text-secondary transition-colors font-label-md text-label-md" href="resources.html">Resources</a>
-</div>
-<div class="flex flex-col gap-3">
-<span class="text-on-surface font-label-md text-label-md font-bold mb-2">Support</span>
-<a class="text-primary transition-colors font-label-md text-label-md" href="javascript:void(0)" style="cursor:default;pointer-events:none">Support</a>
-<a class="text-on-surface-variant hover:text-secondary transition-colors font-label-md text-label-md" href="terms.html">Legal</a>
-</div>
-</div>
+<nav class="flex flex-wrap justify-center gap-6 mb-8 max-w-3xl">
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="about.html">About</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="careers.html">Careers</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="blog.html">Blog</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="docs.html">Docs</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="templates.html">Templates</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="showcase.html">Showcase</a>
+<a class="font-body-md text-body-md text-primary-container transition-colors" href="help.html">Help Center</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="contact.html">Contact</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="terms.html">Terms</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="privacy.html">Privacy</a>
+</nav>
+<p class="font-body-md text-body-md text-surface-container-lowest dark:text-on-background opacity-60">Copyright 2026</p>
 </footer>
-<script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const accordionHeaders = document.querySelectorAll('.accordion-header');
-            
-            accordionHeaders.forEach(header => {
-                header.addEventListener('click', () => {
-                    const item = header.parentElement;
-                    const content = item.querySelector('.accordion-content');
-                    const isOpen = content.classList.contains('open');
-                    
-                    // Close all other accordions
-                    document.querySelectorAll('.accordion-content').forEach(c => {
-                        c.classList.remove('open');
-                        c.parentElement.classList.remove('border-primary');
-                        c.parentElement.classList.add('border-border-subtle');
-                    });
-
-                    // Toggle current
-                    if (!isOpen) {
-                        content.classList.add('open');
-                        item.classList.remove('border-border-subtle');
-                        item.classList.add('border-primary');
-                    }
-                });
-            });
-
-            // Handle sidebar active state based on scroll
-            const sections = document.querySelectorAll('section');
-            const navLinks = document.querySelectorAll('.sticky a');
-
-            window.addEventListener('scroll', () => {
-                let current = '';
-                sections.forEach(section => {
-                    const sectionTop = section.offsetTop;
-                    const sectionHeight = section.clientHeight;
-                    if (scrollY >= (sectionTop - 150)) {
-                        current = section.getAttribute('id');
-                    }
-                });
-
-                navLinks.forEach(link => {
-                    link.classList.remove('bg-surface', 'text-primary', 'border-border-subtle');
-                    link.classList.add('bg-transparent', 'text-on-surface-variant');
-                    const icon = link.querySelector('.material-symbols-outlined');
-                    icon.classList.remove('opacity-100', 'translate-x-1');
-                    icon.classList.add('opacity-0');
-
-                    if (link.getAttribute('href').includes(current)) {
-                        link.classList.add('bg-surface', 'text-primary', 'border', 'border-border-subtle');
-                        link.classList.remove('bg-transparent', 'text-on-surface-variant');
-                        icon.classList.remove('opacity-0');
-                        icon.classList.add('opacity-100', 'translate-x-1');
-                    }
-                });
-            });
-        });
-    </script>
 </body></html>

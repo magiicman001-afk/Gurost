@@ -3,21 +3,68 @@
 <html lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Gurost - Blog</title>
+<title>Gurost Blog</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
             theme: {
                 extend: {
                     "colors": {
-                        "primary": "#fd8b00",
-                        "primary-container": "#feb246",
-                        "error": "#ef4444",
-                        "border-subtle": "#e2e8f0",
-                        "surface-container-high": "#f1f5f9"
+                        "tertiary-container": "#00b5fc",
+                        "inverse-surface": "#2f2e43",
+                        "on-primary-fixed-variant": "#6e3900",
+                        "inverse-on-surface": "#f2efff",
+                        "surface-variant": "#e2e0fc",
+                        "surface-container-low": "#f5f2ff",
+                        "outline": "#897362",
+                        "on-primary-container": "#623200",
+                        "accent-gradient": "linear-gradient(135deg, #FF8C00 0%, #FEB246 100%)",
+                        "surface-container-highest": "#e2e0fc",
+                        "tertiary": "#00658f",
+                        "on-surface": "#1a1a2e",
+                        "surface-tint": "#904d00",
+                        "primary": "#904d00",
+                        "inverse-primary": "#ffb77d",
+                        "surface-soft": "#F8F9FA",
+                        "on-secondary-container": "#6f4600",
+                        "primary-fixed": "#ffdcc3",
+                        "on-primary": "#ffffff",
+                        "on-background": "#1a1a2e",
+                        "secondary-fixed": "#ffddb6",
+                        "tertiary-fixed-dim": "#85cfff",
+                        "secondary": "#845400",
+                        "secondary-fixed-dim": "#ffb95a",
+                        "surface-bright": "#fcf8ff",
+                        "background-pure": "#FFFFFF",
+                        "on-tertiary-container": "#004360",
+                        "on-error": "#ffffff",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "outline-variant": "#ddc1ae",
+                        "background": "#fcf8ff",
+                        "on-tertiary-fixed-variant": "#004c6c",
+                        "text-muted": "#6B7280",
+                        "on-surface-variant": "#564334",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e8e5ff",
+                        "surface-dim": "#dad7f3",
+                        "tertiary-fixed": "#c7e7ff",
+                        "on-error-container": "#93000a",
+                        "primary-container": "#ff8c00",
+                        "surface-container": "#efecff",
+                        "primary-fixed-dim": "#ffb77d",
+                        "on-tertiary-fixed": "#001e2e",
+                        "on-primary-fixed": "#2f1500",
+                        "on-secondary-fixed": "#2a1800",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#643f00",
+                        "surface": "#fcf8ff",
+                        "secondary-container": "#feb246"
                     },
                     "borderRadius": {
                         "DEFAULT": "0.25rem",
@@ -26,178 +73,324 @@
                         "full": "9999px"
                     },
                     "spacing": {
+                        "sidebar-width": "280px",
+                        "container-max-width": "1200px",
                         "gutter": "24px",
                         "section-gap": "80px",
-                        "unit": "8px",
-                        "container-max": "1280px",
-                        "margin-mobile": "16px"
+                        "base": "8px"
                     },
                     "fontFamily": {
-                        "headline-lg": ["Inter"],
-                        "headline-xl": ["Inter"],
+                        "display-lg-mobile": ["Montserrat"],
+                        "label-bold": ["Inter"],
                         "body-lg": ["Inter"],
-                        "headline-lg-mobile": ["Inter"],
-                        "label-sm": ["Inter"],
-                        "body-md": ["Inter"]
+                        "headline-sm": ["Montserrat"],
+                        "display-lg": ["Montserrat"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Montserrat"]
                     },
                     "fontSize": {
-                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
-                        "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
-                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
-                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
-                        "label-sm": ["13px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
-                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                        "display-lg-mobile": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "label-bold": ["14px", { "lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-sm": ["24px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-md": ["32px", { "lineHeight": "1.3", "fontWeight": "600" }]
                     }
-                },
-            },
+                }
+            }
         }
     </script>
 <style>
-        .glass-hud {
-            background: rgba(255, 255, 255, 0.85);
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
-        .btn-primary {
-            background: linear-gradient(135deg, #feb246 0%, #fd8b00 100%);
-            transition: all 0.2s ease;
+        .text-accent-gradient {
+            background: linear-gradient(135deg, #FF8C00 0%, #FEB246 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        .btn-primary:hover {
-            filter: brightness(1.1);
-            transform: translateY(-1px);
+        .btn-primary-gradient {
+            background: linear-gradient(135deg, #FF8C00 0%, #FEB246 100%);
         }
-        .card-hover:hover {
-            transform: scale(1.02);
-            transition: transform 0.3s ease;
+        .ambient-shadow {
+            box-shadow: 0px 10px 30px rgba(26, 26, 46, 0.08);
         }
     </style>
 </head>
-<body class="bg-white text-slate-800 font-body-md antialiased min-h-screen flex flex-col">
-<!-- Top Navigation (Generated from JSON) -->
-<nav class="fixed docked full-width top-0 w-full z-50 glass-hud h-20">
-<div class="flex justify-between items-center h-20 px-md md:px-lg max-w-container-max mx-auto px-margin-mobile md:px-gutter w-full">
-<div class="flex items-center gap-unit">
-<img alt="Gurost Logo" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDS79sIhcchxePrAgTOnMhSlV9MUmkeso0KfQjouptIUqkXoH-jJ7r8La7XKhTw7xZKHhMorir9tD8xLuET2dtc_dw8vUC6fzJPaiKkkdjL-XjbycN5DZYF7aVFCsK2s-Soc_XKNR3uAWyIqTrLrvVS0PBr2zwhsARoNJKwiL9FwFQrKnPOKyUGeyRzs2O4i-9m94s_z85YdjgkmSTWA_9YxDH16wn8pUccx6rTMlHqwvpLpfGJRX_2VaDiLVtI7HLnC4"/>
-<span class="text-headline-md font-headline-md font-bold text-primary text-headline-lg-mobile md:text-headline-lg font-headline-lg-mobile md:font-headline-lg tracking-tight">Gurost</span>
+<body class="bg-background-pure text-on-surface font-body-md antialiased min-h-screen flex flex-col selection:bg-primary-container selection:text-white">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-background-pure/80 backdrop-blur-md flex justify-between items-center px-gutter h-16 max-w-container-max-width mx-auto left-0 right-0">
+<div class="flex items-center text-primary-container">
+<span class="material-symbols-outlined text-[32px]">layers</span>
 </div>
-<div class="hidden md:flex gap-gutter items-center">
-<a class="text-slate-600 hover:text-primary transition-colors font-body-md text-body-md hover:opacity-90 transition-all duration-200" href="index.html">Product</a>
-<a class="text-slate-600 hover:text-primary transition-colors font-body-md text-body-md hover:opacity-90 transition-all duration-200" href="index.html#pricing">Pricing</a>
-<a aria-current="page" class="text-primary font-bold border-b-2 border-primary pb-1 font-body-md text-body-md hover:opacity-90 transition-all duration-200" href="resources.html">Resources</a>
-<a class="text-slate-600 hover:text-primary transition-colors font-body-md text-body-md hover:opacity-90 transition-all duration-200" href="templates.html">Templates</a>
-</div>
-<div class="flex items-center gap-unit md:gap-gutter">
-<button class="hidden md:block px-4 py-2 text-slate-800 hover:text-primary font-label-sm text-label-sm transition-colors">Log In</button>
-<button class="btn-primary text-white px-6 py-2 rounded-full font-label-sm text-label-sm font-bold shadow-lg">Get Started</button>
-</div>
-</div>
-</nav>
-<!-- Main Content Canvas -->
-<main class="flex-grow pt-32 pb-section-gap px-margin-mobile md:px-gutter max-w-container-max mx-auto w-full">
-<!-- Header Section -->
-<header class="mb-section-gap text-center max-w-3xl mx-auto">
-<h1 class="text-headline-xl font-headline-xl text-slate-900 mb-6">📝 Blog</h1>
-<p class="text-body-lg font-body-lg text-slate-600">Welcome to the Gurost Blog. Discover the latest insights, product updates, and expert tips on building AI-powered web experiences.</p>
+<button class="flex items-center justify-center px-6 py-2 rounded-full border border-outline-variant bg-surface-soft hover:bg-surface-container-low transition-colors font-label-bold text-label-bold text-on-surface">
+            Back
+        </button>
 </header>
-<!-- What You'll Find Here (Bento Grid) -->
-<section class="mb-section-gap">
-<h2 class="text-headline-lg font-headline-lg text-slate-900 mb-8 border-b border-border-subtle pb-4">What You'll Find Here</h2>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
-<!-- Bento Item 1 -->
-<div class="bg-white shadow-sm border border-border-subtle rounded-[32px] p-6 flex flex-col gap-4 card-hover">
-<div class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 mb-2">
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">campaign</span>
+<main class="flex-grow pt-[120px] pb-section-gap flex flex-col items-center">
+<!-- Hero Section -->
+<section class="w-full max-w-3xl px-gutter text-center flex flex-col items-center mb-16">
+<h1 class="font-display-lg text-display-lg text-on-surface mb-6">
+                Welcome to the <span class="text-accent-gradient">Gurost</span> Blog
+            </h1>
+<p class="font-body-lg text-body-lg text-text-muted mb-10 max-w-2xl">
+                Stay updated with the latest news, tips, and tutorials to accelerate your corporate workflow and maximize efficiency.
+            </p>
+<div class="relative w-full max-w-lg mb-12 group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-text-muted group-focus-within:text-primary-container transition-colors">search</span>
+<input class="w-full pl-12 pr-4 py-4 bg-surface-soft border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-center placeholder:text-center" placeholder="Search articles..." type="text"/>
 </div>
-<h3 class="text-body-lg font-headline-lg text-slate-900 font-semibold">Product Updates</h3>
-<p class="text-body-md font-body-md text-slate-600">Stay in the loop with the newest features and improvements to the Gurost platform.</p>
-</div>
-<!-- Bento Item 2 -->
-<div class="bg-white shadow-sm border border-border-subtle rounded-[32px] p-6 flex flex-col gap-4 card-hover">
-<div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-2">
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">lightbulb</span>
-</div>
-<h3 class="text-body-lg font-headline-lg text-slate-900 font-semibold">Expert Tips</h3>
-<p class="text-body-md font-body-md text-slate-600">Learn best practices and advanced techniques for creating stunning, voice-first websites.</p>
-</div>
-<!-- Bento Item 3 -->
-<div class="bg-white shadow-sm border border-border-subtle rounded-[32px] p-6 flex flex-col gap-4 card-hover">
-<div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-2">
-<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">auto_graph</span>
-</div>
-<h3 class="text-body-lg font-headline-lg text-slate-900 font-semibold">Growth Strategies</h3>
-<p class="text-body-md font-body-md text-slate-600">Actionable advice on scaling your business and maximizing your online presence.</p>
-</div>
+<!-- Categories -->
+<div class="flex flex-wrap justify-center gap-3 w-full">
+<button class="px-5 py-2 rounded-full border border-primary-container bg-primary-container/10 text-primary font-label-bold text-label-bold transition-colors">All Posts</button>
+<button class="px-5 py-2 rounded-full border border-outline-variant hover:border-primary-container hover:text-primary transition-colors text-on-surface font-label-bold text-label-bold">Product Updates</button>
+<button class="px-5 py-2 rounded-full border border-outline-variant hover:border-primary-container hover:text-primary transition-colors text-on-surface font-label-bold text-label-bold">Tips &amp; Tricks</button>
+<button class="px-5 py-2 rounded-full border border-outline-variant hover:border-primary-container hover:text-primary transition-colors text-on-surface font-label-bold text-label-bold">Customer Stories</button>
+<button class="px-5 py-2 rounded-full border border-outline-variant hover:border-primary-container hover:text-primary transition-colors text-on-surface font-label-bold text-label-bold">Industry Insights</button>
+<button class="px-5 py-2 rounded-full border border-outline-variant hover:border-primary-container hover:text-primary transition-colors text-on-surface font-label-bold text-label-bold">Tutorials</button>
 </div>
 </section>
-<!-- Coming Soon Section (Editorial Layout) -->
-<section>
-<h2 class="text-headline-lg font-headline-lg text-slate-900 mb-8 border-b border-border-subtle pb-4">Coming Soon</h2>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
-<!-- Article Card 1 -->
-<article class="group cursor-pointer">
-<div class="relative w-full h-64 rounded-[32px] overflow-hidden mb-4 border border-border-subtle bg-slate-100 shadow-sm">
-<div class="absolute inset-0 bg-cover bg-center w-full h-full transition-transform duration-500 group-hover:scale-105 opacity-80 mix-blend-multiply" data-alt="A highly detailed and realistic illustration of a modern workspace with a glowing laptop, surrounded by abstract, floating UI elements indicating rapid business building. High-tech, clean corporate style with a dark mode aesthetic, featuring deep blacks and vibrant orange/gold accents. Cinematic lighting, professional finish." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBJfEBGZR3UId5V7_7Mr0voseiXuFWCOnE4o_cPeSltpYpOHKxM3b_UA5P2z2MCnfCj4xHH2PsEXp7iqSHnKwthH_3mLQtracORZuffOm-pbAVL2bdT3OAMLfa2tZGnZK1TaXkdg-lvmmL-lPyGxEIsBjtC3gdy13rwRkzXj6NQFZ2duHCVokd_5149geRqrD-ULUahkB9Oc5BhlQ4P4b53kqHRWqEdrEAVrhQEK2rlmMxobkBOZ8Q-Lg')"></div>
-<div class="absolute top-4 left-4 bg-white/90 text-primary px-3 py-1 rounded-full font-label-sm text-label-sm uppercase tracking-wider backdrop-blur-md shadow-sm">Upcoming</div>
+<!-- Main Content Area -->
+<div class="w-full max-w-container-max-width px-gutter grid grid-cols-1 lg:grid-cols-12 gap-12">
+<!-- Blog Posts Grid (Left Column) -->
+<div class="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-8 h-fit">
+<!-- Post Card 1 -->
+<article class="bg-surface-container-lowest rounded-lg ambient-shadow border border-outline-variant/30 flex flex-col overflow-hidden hover:-translate-y-1 transition-transform duration-300">
+<div class="w-full h-48 bg-surface-container-low overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A modern office workspace bathed in bright, natural light, featuring a sleek desk setup with multiple monitors displaying data charts. The aesthetic is clean, corporate, and optimistic, utilizing white surfaces with vibrant orange accents to convey energy and productivity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAgRZNnNqy6DWrszSd19Feu6oeu3ADLVArnztZhc_1q23QysJdXei7C9R9aWNCf56O8uLQ3oYIf-pgrzkWD1W62ozlA-JaFbN7tZSH8JHI6j0KkUA4a-Q6EfqNPVyvBZLC33d-NufcxNj83JbBRUuWHmBfmOxaTBFBSmPVyYJrc3vYq3J7RVYyLSr4Mq6t3CxJzxOrooOQ7CoD7aEfSkV9mVewWrSE-r0-pcrkKcqUBAX3Ct_M8E7nEqg"/>
 </div>
-<h3 class="text-headline-lg-mobile font-headline-lg-mobile md:text-body-lg md:font-headline-lg text-slate-900 group-hover:text-primary transition-colors mb-2">How to Build a Business in 10 Minutes with Gurost</h3>
-<p class="text-body-md font-body-md text-slate-600">A step-by-step guide to launching your startup faster than ever using our AI-driven voice builder.</p>
+<div class="p-8 flex flex-col items-center text-center flex-grow">
+<div class="flex items-center gap-2 font-label-bold text-[12px] text-primary-container uppercase tracking-wider mb-3">
+<span>Product Updates</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-3 line-clamp-2">Introducing the New Automation Workflow Engine</h2>
+<p class="font-body-md text-body-md text-text-muted mb-6 line-clamp-3">Discover how our latest update streamlines your daily tasks with intelligent, conditional triggers designed for enterprise scale operations.</p>
+<div class="mt-auto flex flex-col items-center gap-4 w-full">
+<div class="font-body-md text-[14px] text-text-muted flex flex-col items-center">
+<span>Oct 24, 2026</span>
+<span>By Sarah Jenkins</span>
+</div>
+<button class="px-6 py-2 rounded-full border-2 border-primary-container text-primary-container hover:bg-primary-container hover:text-white font-label-bold text-label-bold transition-all w-full max-w-[200px]">Read More</button>
+</div>
+</div>
 </article>
-<!-- Article Card 2 -->
-<article class="group cursor-pointer">
-<div class="relative w-full h-64 rounded-[32px] overflow-hidden mb-4 border border-border-subtle bg-slate-100 shadow-sm">
-<div class="absolute inset-0 bg-cover bg-center w-full h-full transition-transform duration-500 group-hover:scale-105 opacity-80 mix-blend-multiply" data-alt="A sophisticated, futuristic visualization of a voice waveform transforming into web code. Abstract digital art style with glowing blue and gold lines on a dark background. Corporate, polished aesthetic representing artificial intelligence interpreting voice commands. High contrast, sharp details." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCK9ngTFLtGXVjoSu2wpCbnLAGxy-b_ubizevBey8fncPsFs4kDfO1YlOFWzK97E2S6eYN_gt3qoZv0cpMVu7VdRwDg6-N7V3VIhubrCPI2mB_fMgSJ21cAs2IgmjBAx47cexO4iIKgK_xZ6YFPio4tIX7_IahCiZzG29xHi2m7QAAILtSXYTI83M0o0KZkJZLNPk63iX2QXYBDVT0iFNT8GdGFS6myZK6mDwJH0Ds6S3QjV6eSACb5EQ')"></div>
-<div class="absolute top-4 left-4 bg-white/90 text-blue-600 px-3 py-1 rounded-full font-label-sm text-label-sm uppercase tracking-wider backdrop-blur-md shadow-sm">Deep Dive</div>
+<!-- Post Card 2 -->
+<article class="bg-surface-container-lowest rounded-lg ambient-shadow border border-outline-variant/30 flex flex-col overflow-hidden hover:-translate-y-1 transition-transform duration-300">
+<div class="w-full h-48 bg-surface-container-low overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Abstract 3D rendering of interconnected metallic nodes and glowing orange fiber optic lines on a pristine white background. The image represents complex data networking and sophisticated technology in a modern, clean, and high-energy corporate style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLJcSqC6neXLX0dY7JKl8ZRayqM5SVPUzRRGY5sSZywcNd7xyK31W6-Rm6H9J-giR2gorR3slkzVpv3rLCSmoCHI-NmQKLY_2DDZiVb8mvXgMa9c1vbX6Yg9l1EvSWTDu2KpXddIuJ8gKGYLde5BDTbbUq12lqZl-lbxCZ_XiwNmrgiHZCIiFmtC3ott6cQeRgwV9ep5Hf4SVjd9TkNiIUy6u0JwIdCMM7qlWyKFBl47W9yQqYnd2m0A"/>
 </div>
-<h3 class="text-headline-lg-mobile font-headline-lg-mobile md:text-body-lg md:font-headline-lg text-slate-900 group-hover:text-blue-600 transition-colors mb-2">The Future of Voice-First UI Design</h3>
-<p class="text-body-md font-body-md text-slate-600">Exploring the shift from clicking to conversing, and how it impacts modern web aesthetics.</p>
+<div class="p-8 flex flex-col items-center text-center flex-grow">
+<div class="flex items-center gap-2 font-label-bold text-[12px] text-primary-container uppercase tracking-wider mb-3">
+<span>Tips &amp; Tricks</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-3 line-clamp-2">5 Ways to Optimize Your Team's Communication</h2>
+<p class="font-body-md text-body-md text-text-muted mb-6 line-clamp-3">Learn proven strategies to reduce meeting fatigue and ensure critical information flows seamlessly across decentralized departments.</p>
+<div class="mt-auto flex flex-col items-center gap-4 w-full">
+<div class="font-body-md text-[14px] text-text-muted flex flex-col items-center">
+<span>Oct 20, 2026</span>
+<span>By Marcus Lee</span>
+</div>
+<button class="px-6 py-2 rounded-full border-2 border-primary-container text-primary-container hover:bg-primary-container hover:text-white font-label-bold text-label-bold transition-all w-full max-w-[200px]">Read More</button>
+</div>
+</div>
+</article>
+<!-- Post Card 3 -->
+<article class="bg-surface-container-lowest rounded-lg ambient-shadow border border-outline-variant/30 flex flex-col overflow-hidden hover:-translate-y-1 transition-transform duration-300">
+<div class="w-full h-48 bg-surface-container-low overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A diverse group of professionals collaborating around a glass table in a sunlit, contemporary boardroom. They are looking at a tablet together, smiling. The atmosphere is optimistic, collaborative, and highly professional, dominated by whites, light grays, and warm skin tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9GHV590Fqg0oG2r8jWAWtejPbUd73yi16KuBzodP0UXgErQmmuKwuDDgIiVceTQ1MLbge89TYdwUWyDIHoesTx5OMF0T6xocgwzKLaxLwoU2biMTTjegHFJHo_H8gS1cxm8TiYUwNkB15oKOMdovOZd0ZNLSLHLkMbLN83-neMJLFFTocyUosTI3hYWenSsv1AUMxfKHdMhNf9WowQq0IlmE5knJ85zwC1i7LBfWTFU3buuZbo54tFg"/>
+</div>
+<div class="p-8 flex flex-col items-center text-center flex-grow">
+<div class="flex items-center gap-2 font-label-bold text-[12px] text-primary-container uppercase tracking-wider mb-3">
+<span>Customer Stories</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-3 line-clamp-2">How Acme Corp Scaled Operations by 300%</h2>
+<p class="font-body-md text-body-md text-text-muted mb-6 line-clamp-3">Read the in-depth case study on how implementing our core modules allowed Acme Corp to break through their operational bottlenecks.</p>
+<div class="mt-auto flex flex-col items-center gap-4 w-full">
+<div class="font-body-md text-[14px] text-text-muted flex flex-col items-center">
+<span>Oct 15, 2026</span>
+<span>By Emily Chen</span>
+</div>
+<button class="px-6 py-2 rounded-full border-2 border-primary-container text-primary-container hover:bg-primary-container hover:text-white font-label-bold text-label-bold transition-all w-full max-w-[200px]">Read More</button>
+</div>
+</div>
+</article>
+<!-- Post Card 4 -->
+<article class="bg-surface-container-lowest rounded-lg ambient-shadow border border-outline-variant/30 flex flex-col overflow-hidden hover:-translate-y-1 transition-transform duration-300">
+<div class="w-full h-48 bg-surface-container-low overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A minimalist architectural detail of a modern skyscraper facade against a clear blue sky. The geometric lines are sharp and clean. The lighting is bright and high-contrast, symbolizing stability, growth, and corporate reliability in a modern context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCorYq-OwXmt_s181PMOm4CGZPwrxIifhU9LE8gROV-xYCe8eWeW2vZZ6Zl8KdqyHESWW_-pL_VYtGfmqWeaSfN1gVJz65VpgRtUgQZIjJhOf4squFBZQv5GxpoW-OZdzwtXW8KTCh1WngXiVTp-nunu0Fve3l7nspKAcynGmgiJFrSBaNsdz6T2kijl8KpK4Z3zpujzcWuELO7Rj2wx0xf-nrDAfvTgCBflOqAUiOkPpq4DsP_1L6Sg"/>
+</div>
+<div class="p-8 flex flex-col items-center text-center flex-grow">
+<div class="flex items-center gap-2 font-label-bold text-[12px] text-primary-container uppercase tracking-wider mb-3">
+<span>Industry Insights</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-3 line-clamp-2">The Future of Asynchronous Work Environments</h2>
+<p class="font-body-md text-body-md text-text-muted mb-6 line-clamp-3">Explore our latest research report on the shift towards asynchronous methodologies and what it means for global enterprise productivity.</p>
+<div class="mt-auto flex flex-col items-center gap-4 w-full">
+<div class="font-body-md text-[14px] text-text-muted flex flex-col items-center">
+<span>Oct 10, 2026</span>
+<span>By Dr. Robert Vance</span>
+</div>
+<button class="px-6 py-2 rounded-full border-2 border-primary-container text-primary-container hover:bg-primary-container hover:text-white font-label-bold text-label-bold transition-all w-full max-w-[200px]">Read More</button>
+</div>
+</div>
+</article>
+<!-- Post Card 5 -->
+<article class="bg-surface-container-lowest rounded-lg ambient-shadow border border-outline-variant/30 flex flex-col overflow-hidden hover:-translate-y-1 transition-transform duration-300">
+<div class="w-full h-48 bg-surface-container-low overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Close up of hands typing on a modern laptop keyboard with a glowing screen reflecting complex code structures. The environment is sleek and minimalist. The color palette features stark whites and deep navys with bright, energetic golden highlights." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLTUu6GmFwGH-Zgzc5lKaMFkLFttSZYnYt_ZiB_ihfQdNGXNrPcHDt-TiQ1TwXt5AYzKB6FazLEwcCBbdqo5RH007VzOnjYrGbh6XQxGkopUa3b-poiYtZiVGeJ59Dm0wlWhekDNqx_5PDbnuo7xqEEJIIJAFbI7ibDc_7qyD4tfCBe9d8O8VoN9DV6OBACk_xmY_PhkiVr9eYsNJrtUdTXzj_5lFxbAVjY8upVKGeI9Ao9ojcAZq1Lw"/>
+</div>
+<div class="p-8 flex flex-col items-center text-center flex-grow">
+<div class="flex items-center gap-2 font-label-bold text-[12px] text-primary-container uppercase tracking-wider mb-3">
+<span>Tutorials</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-3 line-clamp-2">Mastering Advanced API Integrations</h2>
+<p class="font-body-md text-body-md text-text-muted mb-6 line-clamp-3">A step-by-step guide to connecting third-party services securely and efficiently using our updated developer tools.</p>
+<div class="mt-auto flex flex-col items-center gap-4 w-full">
+<div class="font-body-md text-[14px] text-text-muted flex flex-col items-center">
+<span>Oct 05, 2026</span>
+<span>By Dev Team</span>
+</div>
+<button class="px-6 py-2 rounded-full border-2 border-primary-container text-primary-container hover:bg-primary-container hover:text-white font-label-bold text-label-bold transition-all w-full max-w-[200px]">Read More</button>
+</div>
+</div>
+</article>
+<!-- Post Card 6 -->
+<article class="bg-surface-container-lowest rounded-lg ambient-shadow border border-outline-variant/30 flex flex-col overflow-hidden hover:-translate-y-1 transition-transform duration-300">
+<div class="w-full h-48 bg-surface-container-low overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A stylized, glowing pie chart and bar graph floating above a white tablet device. The charts are rendered in vivid orange and deep navy. The overall style is clean, modern glassmorphism, suggesting data clarity and high-end analytics." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBm5Monf8WJHDpP89ryALumEGhwlOLsPVOJVjsYAJksC4r3-I6UlG67xJwOymfMyzLNJrQ6NdzkO8P5X9jEul1wnT0bl_ZnSpYob33NPN4J0ICHxStfrjKe-5_PXQFeGVoteVe1V37L1lhyql95WbGinwh1aEWEiR0boDUGpTIlNUHu7C8cBbdoNhF5UEh1iEdjtjY483rx8pZYy67zIzqypOuXC5qRLs9bwD7tCcsDBW0eelLNWi7kxA"/>
+</div>
+<div class="p-8 flex flex-col items-center text-center flex-grow">
+<div class="flex items-center gap-2 font-label-bold text-[12px] text-primary-container uppercase tracking-wider mb-3">
+<span>Product Updates</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-3 line-clamp-2">Analytics Dashboard Revamp: What's New</h2>
+<p class="font-body-md text-body-md text-text-muted mb-6 line-clamp-3">We've completely overhauled our reporting interface to provide deeper insights with greater visual clarity and faster load times.</p>
+<div class="mt-auto flex flex-col items-center gap-4 w-full">
+<div class="font-body-md text-[14px] text-text-muted flex flex-col items-center">
+<span>Sep 28, 2026</span>
+<span>By Sarah Jenkins</span>
+</div>
+<button class="px-6 py-2 rounded-full border-2 border-primary-container text-primary-container hover:bg-primary-container hover:text-white font-label-bold text-label-bold transition-all w-full max-w-[200px]">Read More</button>
+</div>
+</div>
+</article>
+<!-- Post Card 7 -->
+<article class="bg-surface-container-lowest rounded-lg ambient-shadow border border-outline-variant/30 flex flex-col overflow-hidden hover:-translate-y-1 transition-transform duration-300">
+<div class="w-full h-48 bg-surface-container-low overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A macro shot of a sleek, modern smartphone resting on a minimalist white desk beside a cup of coffee. The screen shows a sophisticated schedule app. The lighting is warm and bright, conveying morning energy and organized professionalism." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2GGPvDq-ws2U2zbnmtjxMflk2YDtAXAbYpsj6PiC11rl7V94ecAvhKPlI1KOqgiSqFXyPbZl_ka6z7-nCmYAjjNq0DL8ml1i2YxUP81uNIK2bBDsWCRojhU17Emcn3iX4_D2z7zGIGFVJu-9DExZLZ5fHfsbMMEmE9NVUNMtBdQLf6-4mqmirZBLt2mLfj2W_RBfNCy8wUHqnlBf6CuWwMT_zcRscVjr2oov9wAyNcNWs9icvCD7OGA"/>
+</div>
+<div class="p-8 flex flex-col items-center text-center flex-grow">
+<div class="flex items-center gap-2 font-label-bold text-[12px] text-primary-container uppercase tracking-wider mb-3">
+<span>Tips &amp; Tricks</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-3 line-clamp-2">Time Management Strategies for Executives</h2>
+<p class="font-body-md text-body-md text-text-muted mb-6 line-clamp-3">Regain control of your calendar with these high-level strategies for prioritizing deep work over reactive tasks.</p>
+<div class="mt-auto flex flex-col items-center gap-4 w-full">
+<div class="font-body-md text-[14px] text-text-muted flex flex-col items-center">
+<span>Sep 22, 2026</span>
+<span>By Marcus Lee</span>
+</div>
+<button class="px-6 py-2 rounded-full border-2 border-primary-container text-primary-container hover:bg-primary-container hover:text-white font-label-bold text-label-bold transition-all w-full max-w-[200px]">Read More</button>
+</div>
+</div>
+</article>
+<!-- Post Card 8 -->
+<article class="bg-surface-container-lowest rounded-lg ambient-shadow border border-outline-variant/30 flex flex-col overflow-hidden hover:-translate-y-1 transition-transform duration-300">
+<div class="w-full h-48 bg-surface-container-low overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A wide shot of a modern, open-plan office space at golden hour. Soft orange light filters through large windows, casting long shadows across neat, white workstations. The mood is calm, successful, and highly professional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcmrebigNuolrZhNHmjzZSwkgEP47xyjunWEtP88D8XG2z5t4_pq_c_pRToGb_V5bFUD8E4IA-GG2T0OlJNjXB6uXjkbdvlAcz0EwENup3RTNFEQE_vm_qt6JVfVYdjJry7SkcWD7Zc518yrB61Mbv2EhQkjyfrevxc8TdMoCkZy1ptufoJzLMMUKJdJ6ekq3mhaJmPRMH2BXEb6phTCmm9-lQa36mCcnZAzOsylnbG9eNTIVWNTATZw"/>
+</div>
+<div class="p-8 flex flex-col items-center text-center flex-grow">
+<div class="flex items-center gap-2 font-label-bold text-[12px] text-primary-container uppercase tracking-wider mb-3">
+<span>Industry Insights</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-3 line-clamp-2">Navigating the Return to Office Debate</h2>
+<p class="font-body-md text-body-md text-text-muted mb-6 line-clamp-3">An objective analysis of current trends balancing remote flexibility with the need for in-person collaboration spaces.</p>
+<div class="mt-auto flex flex-col items-center gap-4 w-full">
+<div class="font-body-md text-[14px] text-text-muted flex flex-col items-center">
+<span>Sep 15, 2026</span>
+<span>By Dr. Robert Vance</span>
+</div>
+<button class="px-6 py-2 rounded-full border-2 border-primary-container text-primary-container hover:bg-primary-container hover:text-white font-label-bold text-label-bold transition-all w-full max-w-[200px]">Read More</button>
+</div>
+</div>
 </article>
 </div>
-</section>
-<!-- Back Button -->
-<div class="mt-16 flex justify-center">
-<a class="flex items-center gap-2 px-6 py-3 rounded-full border border-border-subtle text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all duration-200" href="index.html">
-<span class="material-symbols-outlined">arrow_back</span>
-<span class="font-label-sm text-label-sm">Back to Home</span>
+<!-- Sidebar (Right Column) -->
+<aside class="lg:col-span-4 flex flex-col gap-8 h-fit lg:sticky lg:top-[100px]">
+<!-- Subscribe Widget -->
+<div class="glass-panel p-8 rounded-lg text-center flex flex-col items-center ambient-shadow relative overflow-hidden group">
+<div class="absolute inset-0 bg-accent-gradient opacity-5 group-hover:opacity-10 transition-opacity"></div>
+<span class="material-symbols-outlined text-[40px] text-primary-container mb-4 relative z-10">mark_email_unread</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2 relative z-10">Subscribe to Newsletter</h3>
+<p class="font-body-md text-[14px] text-text-muted mb-6 relative z-10">Get the latest insights delivered directly to your inbox weekly.</p>
+<form class="w-full flex flex-col gap-3 relative z-10" onsubmit="event.preventDefault()">
+<input class="w-full px-4 py-3 bg-surface-soft border border-outline-variant rounded-lg font-body-md text-body-md text-center focus:outline-none focus:border-primary transition-colors placeholder:text-center" placeholder="Email address" type="email"/>
+<button class="w-full py-3 btn-primary-gradient text-white rounded-lg font-label-bold text-label-bold shadow-md hover:shadow-lg transition-shadow" type="submit">Subscribe Now</button>
+</form>
+</div>
+<!-- Recent Posts -->
+<div class="bg-surface-container-lowest p-8 rounded-lg ambient-shadow border border-outline-variant/30 flex flex-col items-center text-center">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-6 border-b border-outline-variant pb-4 w-full">Recent Posts</h3>
+<div class="flex flex-col gap-6 w-full">
+<a class="group flex flex-col items-center gap-3 w-full" href="blog.html">
+<div class="w-full h-32 rounded-lg bg-surface-container-low overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A detailed view of a glowing smart device screen showing an upload progress bar reaching 100%. The colors are pristine white and energetic gold, symbolizing speed and modern technology." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOvoYyw2SLj6BUHDW54dKhXmz744ANtL0Kfm_ayFUnhqvppAw5YOkijL7hs6L651sNqeeMhZ7AILelRcp4w0Niron5A3qdeJiK1su2iwVwe-7LTDEjSU5kJiZUH6OLxgX0rrVlvE8_cMbkLZrplSdxxQ-mryMh6vwvXGPOHjviJGashTEgaH8SPV5BSuIx8vXr9O2f_ve6AyPB37msl8P-ief1ihnX29QSTePGLadWqedaS2hEIyuHGQ"/>
+</div>
+<div class="flex flex-col items-center">
+<h4 class="font-label-bold text-label-bold text-on-surface group-hover:text-primary-container transition-colors line-clamp-2 text-center">Accelerating Cloud Migrations</h4>
+<span class="font-body-md text-[12px] text-text-muted mt-1">Oct 26, 2026</span>
+</div>
+</a>
+<a class="group flex flex-col items-center gap-3 w-full border-t border-outline-variant/30 pt-6" href="blog.html">
+<div class="w-full h-32 rounded-lg bg-surface-container-low overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A close-up of a confident professional standing with arms crossed in front of a sleek glass wall in a bright, modern corporate office. High contrast, clean aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZr0EtrOfczYMxmG4vEaP4j478__yG2OiWYKqS1dXb-_EtK5oQKk9utNq7AFRqJvlKltieals6FUo3h-NivhaL6fsW4YH54yUp1bljGOHmQg8aIsANRd5kt8chse49exwc-tS7ljQIEtbSolWw2-duw-7EWQqpoVltM6CHWoQ6R4BZycimMx3uJBQWdCSWkAIQEcSTwZTy2hahgZR9tyfXS4af_qLVMCtgV5M5IflUTY9tLUXqX4Wi9Q"/>
+</div>
+<div class="flex flex-col items-center">
+<h4 class="font-label-bold text-label-bold text-on-surface group-hover:text-primary-container transition-colors line-clamp-2 text-center">Building Resilient Leadership Teams</h4>
+<span class="font-body-md text-[12px] text-text-muted mt-1">Oct 25, 2026</span>
+</div>
 </a>
 </div>
+</div>
+<!-- Categories List -->
+<div class="bg-surface-container-lowest p-8 rounded-lg ambient-shadow border border-outline-variant/30 flex flex-col items-center text-center">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-6 border-b border-outline-variant pb-4 w-full">Categories</h3>
+<ul class="flex flex-col gap-3 w-full font-body-md text-body-md">
+<li><a class="text-on-surface-variant hover:text-primary-container transition-colors py-2 block" href="blog.html">Product Updates</a></li>
+<li><a class="text-on-surface-variant hover:text-primary-container transition-colors py-2 block" href="blog.html">Tips &amp; Tricks</a></li>
+<li><a class="text-on-surface-variant hover:text-primary-container transition-colors py-2 block" href="blog.html">Customer Stories</a></li>
+<li><a class="text-on-surface-variant hover:text-primary-container transition-colors py-2 block" href="blog.html">Industry Insights</a></li>
+<li><a class="text-on-surface-variant hover:text-primary-container transition-colors py-2 block" href="blog.html">Tutorials</a></li>
+</ul>
+</div>
+</aside>
+</div>
 </main>
-<!-- Footer (Generated from JSON) -->
-<footer class="bg-slate-50 full-width border-t border-border-subtle">
-<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter py-section-gap px-margin-mobile md:px-gutter max-w-container-max mx-auto w-full">
-<div class="col-span-2 md:col-span-1 flex flex-col gap-4 mb-8 md:mb-0">
-<div class="flex items-center gap-2">
-<img alt="Gurost Logo" class="w-6 h-6 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2qmQ7zUGeBdFf_EOdSf0Chqqcm2rkeaqdbLNodK5xR8y-DY0boBIvkz0zjor9BRU1df5Rm2b4p29_wRnlXnh8cK4HLWIzNoYOlAi2s2mfHG1G8Ze8TfbOrz_20AgN--HAfCzNQzSnsUDdyCN9H9oQ2PC1w708-Zq2rynCJt5DKjzu-qRlxaTzh7_ddBCGWmF0nGuabUcV-SbIv6GNb1DKQ8IMjGm1JSM44CtLhQ-xbIf_heQU3J4Q_Mlga5GcdySuXlo"/>
-<span class="text-headline-md font-headline-md font-bold text-slate-900 text-body-lg">Gurost</span>
+<!-- Footer -->
+<footer class="mt-auto flex flex-col items-center justify-center w-full py-section-gap px-gutter text-center bg-on-background text-surface-container-lowest">
+<div class="text-white font-bold mb-8">
+<span class="material-symbols-outlined text-[32px] mb-2 block mx-auto">layers</span>
+<span class="font-headline-sm tracking-wider">GUROST</span>
 </div>
-<p class="text-body-md font-body-md text-slate-600">Building the future of voice-first web creation.</p>
+<div class="flex flex-wrap justify-center gap-6 mb-12 max-w-2xl font-body-md text-body-md">
+<a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors active:opacity-70" href="about.html">About</a>
+<a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors active:opacity-70" href="careers.html">Careers</a>
+<a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors active:opacity-70" href="blog.html">Blog</a>
+<a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors active:opacity-70" href="docs.html">Docs</a>
+<a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors active:opacity-70" href="templates.html">Templates</a>
+<a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors active:opacity-70" href="showcase.html">Showcase</a>
+<a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors active:opacity-70" href="help.html">Help Center</a>
+<a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors active:opacity-70" href="contact.html">Contact</a>
+<a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors active:opacity-70" href="terms.html">Terms</a>
+<a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors active:opacity-70" href="privacy.html">Privacy</a>
 </div>
-<div class="flex flex-col gap-4">
-<h4 class="font-label-sm text-label-sm text-slate-900 uppercase tracking-wider text-opacity-50">Company</h4>
-<a class="font-label-sm text-label-sm text-slate-600 hover:text-primary transition-colors" href="about.html">About</a>
-<a class="font-label-sm text-label-sm text-slate-600 hover:text-primary transition-colors" href="careers.html">Careers</a>
-<a class="font-label-sm text-label-sm text-primary" href="blog.html">Blog</a>
-</div>
-<div class="flex flex-col gap-4">
-<h4 class="font-label-sm text-label-sm text-slate-900 uppercase tracking-wider text-opacity-50">Resources</h4>
-<a class="font-label-sm text-label-sm text-slate-600 hover:text-primary transition-colors" href="docs.html">Docs</a>
-<a class="font-label-sm text-label-sm text-slate-600 hover:text-primary transition-colors" href="templates.html">Templates</a>
-<a class="font-label-sm text-label-sm text-slate-600 hover:text-primary transition-colors" href="showcase.html">Showcase</a>
-</div>
-<div class="flex flex-col gap-4">
-<h4 class="font-label-sm text-label-sm text-slate-900 uppercase tracking-wider text-opacity-50">Support</h4>
-<a class="font-label-sm text-label-sm text-slate-600 hover:text-primary transition-colors" href="help.html">Help Center</a>
-<a class="font-label-sm text-label-sm text-slate-600 hover:text-primary transition-colors" href="contact.html">Contact</a>
-<a class="font-label-sm text-label-sm text-slate-600 hover:text-primary transition-colors" href="status.html">Status</a>
-</div>
-<div class="col-span-2 md:col-span-4 mt-8 pt-8 border-t border-border-subtle flex flex-col md:flex-row justify-between items-center gap-4">
-<span class="font-label-sm text-label-sm text-slate-500">© 2024 Gurost AI. All rights reserved.</span>
-<div class="flex gap-4">
-<a class="font-label-sm text-label-sm text-slate-500 hover:text-primary transition-colors" href="privacy.html">Privacy</a>
-<a class="font-label-sm text-label-sm text-slate-500 hover:text-primary transition-colors" href="terms.html">Terms</a>
-<a class="font-label-sm text-label-sm text-slate-500 hover:text-primary transition-colors" href="terms.html">Legal</a>
-</div>
-</div>
-</div>
+<div class="font-body-md text-body-md text-surface-variant opacity-60">
+            Copyright 2026
+        </div>
 </footer>
 </body></html>

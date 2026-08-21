@@ -1,151 +1,376 @@
 <!DOCTYPE html>
 
-<html lang="en"><head>
+<html class="light" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Privacy Policy - Gurost</title>
+<title>Privacy Policy - Surii Global Limited</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
         tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "primary": "#0f172a",
-                        "background": "#ffffff",
-                        "surface": "#ffffff",
-                        "surface-container-low": "#f8fafc",
-                        "surface-container-high": "#f1f5f9",
-                        "surface-variant": "#e2e8f0",
-                        "on-surface": "#0f172a",
-                        "on-surface-variant": "#334155",
-                        "border-subtle": "#e2e8f0"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                    },
-                    "spacing": {
-                        "gutter": "24px",
-                        "section-gap": "80px",
-                        "unit": "8px",
-                        "container-max": "1280px",
-                        "margin-mobile": "16px"
-                    },
-                    "fontFamily": {
-                        "headline-lg": ["Inter"],
-                        "headline-xl": ["Inter"],
-                        "body-lg": ["Inter"],
-                        "headline-lg-mobile": ["Inter"],
-                        "label-sm": ["Inter"],
-                        "body-md": ["Inter"]
-                    },
-                    "fontSize": {
-                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
-                        "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
-                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
-                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
-                        "label-sm": ["13px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
-                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
-                    }
-                }
-            }
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "tertiary-container": "#00b5fc",
+                      "inverse-surface": "#2f2e43",
+                      "on-primary-fixed-variant": "#6e3900",
+                      "inverse-on-surface": "#f2efff",
+                      "surface-variant": "#e2e0fc",
+                      "surface-container-low": "#f5f2ff",
+                      "outline": "#897362",
+                      "on-primary-container": "#623200",
+                      "accent-gradient": "linear-gradient(135deg, #FF8C00 0%, #FEB246 100%)",
+                      "surface-container-highest": "#e2e0fc",
+                      "tertiary": "#00658f",
+                      "on-surface": "#1a1a2e",
+                      "surface-tint": "#904d00",
+                      "primary": "#904d00",
+                      "inverse-primary": "#ffb77d",
+                      "surface-soft": "#F8F9FA",
+                      "on-secondary-container": "#6f4600",
+                      "primary-fixed": "#ffdcc3",
+                      "on-primary": "#ffffff",
+                      "on-background": "#1a1a2e",
+                      "secondary-fixed": "#ffddb6",
+                      "tertiary-fixed-dim": "#85cfff",
+                      "secondary": "#845400",
+                      "secondary-fixed-dim": "#ffb95a",
+                      "surface-bright": "#fcf8ff",
+                      "background-pure": "#FFFFFF",
+                      "on-tertiary-container": "#004360",
+                      "on-error": "#ffffff",
+                      "error": "#ba1a1a",
+                      "surface-container-lowest": "#ffffff",
+                      "outline-variant": "#ddc1ae",
+                      "background": "#ffffff",
+                      "on-tertiary-fixed-variant": "#004c6c",
+                      "text-muted": "#6B7280",
+                      "on-surface-variant": "#564334",
+                      "on-secondary": "#ffffff",
+                      "surface-container-high": "#e8e5ff",
+                      "surface-dim": "#dad7f3",
+                      "tertiary-fixed": "#c7e7ff",
+                      "on-error-container": "#93000a",
+                      "primary-container": "#ff8c00",
+                      "surface-container": "#efecff",
+                      "primary-fixed-dim": "#ffb77d",
+                      "on-tertiary-fixed": "#001e2e",
+                      "on-primary-fixed": "#2f1500",
+                      "on-secondary-fixed": "#2a1800",
+                      "on-tertiary": "#ffffff",
+                      "error-container": "#ffdad6",
+                      "on-secondary-fixed-variant": "#643f00",
+                      "surface": "#ffffff",
+                      "secondary-container": "#feb246"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "sidebar-width": "280px",
+                      "container-max-width": "1200px",
+                      "gutter": "24px",
+                      "section-gap": "80px",
+                      "base": "8px"
+              },
+              "fontFamily": {
+                      "display-lg-mobile": [
+                              "Montserrat"
+                      ],
+                      "label-bold": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "headline-sm": [
+                              "Montserrat"
+                      ],
+                      "display-lg": [
+                              "Montserrat"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Montserrat"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-bold": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-sm": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
         }
-    </script>
+      </script>
 <style>
         .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #FF8C00 0%, #FEB246 100%);
+            color: white;
+            text-align: center;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .ambient-shadow {
+            box-shadow: 0px 10px 30px rgba(26, 26, 46, 0.08);
         }
     </style>
 </head>
-<body class="bg-background text-on-surface antialiased">
-<!-- Main Content Canvas -->
-<main class="max-w-container-max mx-auto px-margin-mobile md:px-gutter py-section-gap">
-<!-- Header / Back Button -->
-<header class="flex items-center justify-between mb-16">
-<a class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-high hover:bg-surface-variant transition-colors text-on-surface font-label-sm text-label-sm border border-border-subtle" href="index.html">
-<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
-            Back
-        </a>
-<img alt="Gurost Logo" class="h-10 w-10 object-contain rounded-[32px] border border-border-subtle" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0XaqLGCTTiZ-h_WKgKK3MZBOz7RY0WhU5StgZGgwuHMxOaKJo3q9r6OTaqcsaXAdkgaSrD9QDN30g-Bg4GvDyZaeR3J06cJ-A5K1tZIGUl6QCldlcBJ74kIQJKTHZEYTptPMV7n7x95GEV-lj1pNhGGz9RS3I037sQbiqi1UCppL9hE1rRRsJMnAhy4uQ0Nm-tRW7s5T8AKzHDTokbnHosObLqy--oRJURQGeN1JH0r7K8U0ry-yQfQp3Q4uP5GtQ8oE"/>
+<body class="bg-white text-on-surface min-h-screen flex flex-col font-body-md antialiased selection:bg-primary-container selection:text-white">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 glass-panel border-b border-surface-container-low transition-all duration-300">
+<div class="flex justify-between items-center w-full px-gutter h-16 max-w-container-max-width mx-auto">
+<!-- Brand Logo -->
+<a class="flex items-center justify-center w-10 h-10 transition-colors" href="index.html">
+<img alt="Gurost Logo" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQdcbvYoBol_WS_EJfGtKXQ7Kve2Psj-K9d5WRDpnHpoVqq1uuZuj38AVK3MjTU8JqQvEHhGMk_KwraaxwP1Z6F82tbCJ9-IEObwpJwsLmBwBo96ucFzIZn1VlsPczazI664b8Eu7-8nJMAJrmdO48ga2d2V0XB3sMKlLISfbZnflKJk6Dic15CyAnkp3BFARYD38FKshVaRNFO8LLJvqOlFxK_P4wMBt4fzolK5o5IJUB8cKcp8gf6bjEboEVuO7obH0"/>
+</a>
+<!-- Global Back Button -->
+<a class="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-soft border border-outline-variant hover:border-primary-container hover:text-primary-container transition-all font-label-bold text-label-bold text-on-surface" href="index.html">
+<span class="material-symbols-outlined text-[18px]" data-icon="arrow_back">arrow_back</span>
+                Back
+            </a>
+</div>
 </header>
-<!-- Privacy Policy Content -->
-<article class="max-w-3xl mx-auto">
-<h1 class="font-headline-xl text-headline-xl text-on-surface mb-12 flex items-center gap-4">
-<span class="material-symbols-outlined text-primary text-5xl" data-icon="lock" data-weight="fill" style="font-variation-settings: 'FILL' 1;">lock</span>
-            Privacy Policy
-        </h1>
-<div class="space-y-12 font-body-lg text-body-lg text-on-surface-variant">
-<section class="bg-surface-container-low p-8 rounded-[32px] border border-border-subtle">
-<h2 class="font-headline-lg text-headline-lg text-on-surface mb-6">Introduction</h2>
-<p class="mb-4">Welcome to Gurost AI. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or use our services. Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the site.</p>
-<p>We reserve the right to make changes to this Privacy Policy at any time and for any reason. We will alert you about any changes by updating the "Last Updated" date of this Privacy Policy.</p>
-</section>
-<section>
-<h2 class="font-headline-lg text-headline-lg text-on-surface mb-6 border-b border-border-subtle pb-4">1. Information We Collect</h2>
-<p class="mb-4">We may collect information about you in a variety of ways. The information we may collect on the Site includes:</p>
-<ul class="list-disc list-inside space-y-2 ml-4">
-<li><strong>Personal Data:</strong> Personally identifiable information, such as your name, shipping address, email address, and telephone number.</li>
-<li><strong>Derivative Data:</strong> Information our servers automatically collect when you access the Site, such as your IP address, your browser type, your operating system, your access times, and the pages you have viewed directly before and after accessing the Site.</li>
-<li><strong>Financial Data:</strong> Financial information, such as data related to your payment method (e.g., valid credit card number, card brand, expiration date) that we may collect when you purchase, order, return, exchange, or request information about our services from the Site.</li>
-</ul>
-</section>
-<section>
-<h2 class="font-headline-lg text-headline-lg text-on-surface mb-6 border-b border-border-subtle pb-4">2. Use of Your Information</h2>
-<p class="mb-4">Having accurate information about you permits us to provide you with a smooth, efficient, and customized experience. Specifically, we may use information collected about you via the Site to:</p>
-<ul class="list-disc list-inside space-y-2 ml-4">
-<li>Create and manage your account.</li>
-<li>Process your transactions and send you related information, including confirmations and receipts.</li>
-<li>Deliver targeted advertising, coupons, newsletters, and other information regarding promotions and the Site to you.</li>
-<li>Email you regarding your account or order.</li>
-<li>Fulfill and manage purchases, orders, payments, and other transactions related to the Site.</li>
-</ul>
-</section>
-<section>
-<h2 class="font-headline-lg text-headline-lg text-on-surface mb-6 border-b border-border-subtle pb-4">3. Data Security</h2>
-<p>We use administrative, technical, and physical security measures to help protect your personal information. While we have taken reasonable steps to secure the personal information you provide to us, please be aware that despite our efforts, no security measures are perfect or impenetrable, and no method of data transmission can be guaranteed against any interception or other type of misuse. Any information disclosed online is vulnerable to interception and misuse by unauthorized parties. Therefore, we cannot guarantee complete security if you provide personal information.</p>
-</section>
-<section>
-<h2 class="font-headline-lg text-headline-lg text-on-surface mb-6 border-b border-border-subtle pb-4">4. Your Rights</h2>
-<p class="mb-4">Depending on your location, you may have the following rights regarding your personal information:</p>
-<ul class="list-disc list-inside space-y-2 ml-4">
-<li>The right to access – You have the right to request copies of your personal data.</li>
-<li>The right to rectification – You have the right to request that we correct any information you believe is inaccurate or complete information you believe is incomplete.</li>
-<li>The right to erasure – You have the right to request that we erase your personal data, under certain conditions.</li>
-<li>The right to restrict processing – You have the right to request that we restrict the processing of your personal data, under certain conditions.</li>
-</ul>
-</section>
-<div class="pt-8 border-t border-border-subtle text-center">
-<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Last Updated: October 2024</p>
-</div>
-</div>
-</article>
-</main>
-<!-- Footer Component Generated from JSON -->
-<footer class="bg-surface-container-low border-t border-border-subtle full-width">
-<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter py-xl px-md md:px-lg max-w-container-max mx-auto py-section-gap">
-<div class="col-span-2 md:col-span-1">
-<p class="text-headline-md font-headline-md font-bold text-primary mb-4 flex items-center gap-2">
-<img alt="Gurost Logo" class="h-8 w-8 object-contain rounded-[32px]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3Vb-v96L35cEeeGfbgpILkCgZ0vjdSBqtQDxkiSzVJ3xHWWmwCkf6na1lzUqG94qqeUk_MIrb47N6NwdFHpbLDGltJM92yqYRraY3kACfRMLHgQBi1E7Y7-2Ke6KGuOLtgOssr6JEIoTTjmv712lg4ZoExTiLmwOFNB5Kkx1cQgFjEJRKhuykObqOsI7ycpo0eAW5YSolH0C03jh5P6kysln7-CCG6ttaDhTL8D1Pn1W8lMifH2LvCotKYnzZO3AsBtA"/>
-                Gurost AI
+<!-- Main Content Canvas -->
+<main class="flex-grow pt-32 pb-section-gap px-gutter w-full">
+<div class="max-w-[800px] mx-auto">
+<!-- Header Section -->
+<div class="text-center mb-16">
+<h1 class="font-display-lg text-display-lg md:font-display-lg text-on-background mb-4 bg-clip-text text-transparent bg-gradient-to-r from-on-background to-primary-container">
+                Privacy Policy — Surii Global Limited
+            </h1>
+<p class="font-body-lg text-body-lg text-text-muted">
+                Last updated: 2026
             </p>
-<p class="font-label-md text-label-md text-on-surface-variant mb-4">© 2024 Gurost AI. All rights reserved.</p>
+<div class="w-16 h-1 bg-gradient-to-r from-[#FF8C00] to-[#FEB246] mx-auto mt-8 rounded-full opacity-80"></div>
 </div>
-<div class="flex flex-col gap-2">
-<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="javascript:void(0)" style="cursor:default;pointer-events:none">Company</a>
+<!-- Policy Content -->
+<div class="space-y-12">
+<!-- Section 1 -->
+<div class="bg-white rounded-xl p-8 ambient-shadow border border-surface-container-low relative overflow-hidden group hover:shadow-lg transition-shadow">
+<div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#FF8C00] to-[#FEB246] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<h2 class="font-headline-md text-headline-md text-primary-container mb-6">1. Information We Collect</h2>
+<div class="space-y-6">
+<h3 class="font-headline-sm text-headline-sm text-on-background">Information You Provide</h3>
+<ul class="list-disc pl-5 font-body-md text-on-surface-variant space-y-2">
+<li>Account info</li>
+<li>Payment data</li>
+<li>Content you upload</li>
+<li>Communications</li>
+</ul>
+<h3 class="font-headline-sm text-headline-sm text-on-background">Information Collected Automatically</h3>
+<ul class="list-disc pl-5 font-body-md text-on-surface-variant space-y-2">
+<li>Usage data</li>
+<li>Device data</li>
+<li>Cookies</li>
+</ul>
 </div>
-<div class="flex flex-col gap-2">
-<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="resources.html">Resources</a>
 </div>
-<div class="flex flex-col gap-2">
-<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="javascript:void(0)" style="cursor:default;pointer-events:none">Support</a>
-<a class="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="terms.html">Legal</a>
+<!-- Section 2 -->
+<div class="bg-white rounded-xl p-8 ambient-shadow border border-surface-container-low group hover:shadow-lg transition-shadow relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#FF8C00] to-[#FEB246] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<h2 class="font-headline-md text-headline-md text-primary-container mb-6">2. How We Use Your Information</h2>
+<ul class="list-disc pl-5 font-body-md text-on-surface-variant space-y-2 mb-4">
+<li>Provide Services</li>
+<li>Authenticate users</li>
+<li>Process payments</li>
+<li>Respond to queries</li>
+<li>Monitor security</li>
+<li>Legal compliance</li>
+</ul>
+<p class="font-body-md text-on-surface-variant font-semibold">
+                    We do not use your personal data for model training unless we have your explicit consent.
+                </p>
+</div>
+<!-- Section 3 -->
+<div class="bg-white rounded-xl p-8 ambient-shadow border border-surface-container-low group hover:shadow-lg transition-shadow relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#FF8C00] to-[#FEB246] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<h2 class="font-headline-md text-headline-md text-primary-container mb-6">3. Legal Basis for Processing</h2>
+<p class="font-body-md text-on-surface-variant mb-4">Under UK GDPR, we process your data based on:</p>
+<ul class="list-disc pl-5 font-body-md text-on-surface-variant space-y-2">
+<li>Contractual necessity</li>
+<li>Legitimate interests</li>
+<li>Consent</li>
+<li>Legal obligations</li>
+</ul>
+</div>
+<!-- Section 4 -->
+<div class="bg-white rounded-xl p-8 ambient-shadow border border-surface-container-low group hover:shadow-lg transition-shadow relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#FF8C00] to-[#FEB246] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<h2 class="font-headline-md text-headline-md text-primary-container mb-6">4. Data Sharing</h2>
+<ul class="list-disc pl-5 font-body-md text-on-surface-variant space-y-2">
+<li>Service providers (Vercel, Render, Stripe, Claude, Gemini, DeepSeek)</li>
+<li>Professional advisers</li>
+<li>Authorities</li>
+<li>Business transfers</li>
+</ul>
+</div>
+<!-- Section 5 -->
+<div class="bg-white rounded-xl p-8 ambient-shadow border border-surface-container-low group hover:shadow-lg transition-shadow relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#FF8C00] to-[#FEB246] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<h2 class="font-headline-md text-headline-md text-primary-container mb-6">5. International Data Transfers</h2>
+<p class="font-body-md text-on-surface-variant">
+                    We utilize safeguards like UK IDTA, EU SCCs, and EU-US Data Privacy Framework for international transfers.
+                </p>
+</div>
+<!-- Section 6 -->
+<div class="bg-white rounded-xl p-8 ambient-shadow border border-surface-container-low group hover:shadow-lg transition-shadow relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#FF8C00] to-[#FEB246] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<h2 class="font-headline-md text-headline-md text-primary-container mb-6">6. Data Retention</h2>
+<ul class="list-disc pl-5 font-body-md text-on-surface-variant space-y-2">
+<li>Account info: Until deletion + 30 days</li>
+<li>Payment records: 7 years</li>
+<li>Support: 3 years</li>
+<li>Server logs: 30-90 days</li>
+</ul>
+</div>
+<!-- Section 7 -->
+<div class="bg-white rounded-xl p-8 ambient-shadow border border-surface-container-low group hover:shadow-lg transition-shadow relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#FF8C00] to-[#FEB246] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<h2 class="font-headline-md text-headline-md text-primary-container mb-6">7. Your Rights</h2>
+<p class="font-body-md text-on-surface-variant mb-4">Under UK GDPR, you have the right to:</p>
+<ul class="list-disc pl-5 font-body-md text-on-surface-variant space-y-2 mb-4">
+<li>Access</li>
+<li>Rectification</li>
+<li>Erasure</li>
+<li>Restriction</li>
+<li>Portability</li>
+<li>Objection</li>
+<li>Withdraw consent</li>
+</ul>
+<p class="font-body-md text-on-surface-variant">Contact: <a class="text-primary-container hover:underline" href="mailto:support@gurost.com">support@gurost.com</a></p>
+</div>
+<!-- Section 8 -->
+<div class="bg-white rounded-xl p-8 ambient-shadow border border-surface-container-low group hover:shadow-lg transition-shadow relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#FF8C00] to-[#FEB246] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<h2 class="font-headline-md text-headline-md text-primary-container mb-6">8. Account Deletion</h2>
+<p class="font-body-md text-on-surface-variant">
+                    To delete your account, email <a class="text-primary-container hover:underline" href="mailto:support@gurost.com">support@gurost.com</a>. This will initiate the deletion process across our systems as per our retention policy.
+                </p>
+</div>
+<!-- Section 9 -->
+<div class="bg-white rounded-xl p-8 ambient-shadow border border-surface-container-low group hover:shadow-lg transition-shadow relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#FF8C00] to-[#FEB246] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<h2 class="font-headline-md text-headline-md text-primary-container mb-6">9. Data Security</h2>
+<p class="font-body-md text-on-surface-variant">
+                    We implement encryption, access controls, audit logging, and logical isolation to secure your data.
+                </p>
+</div>
+<!-- Section 10 -->
+<div class="bg-white rounded-xl p-8 ambient-shadow border border-surface-container-low group hover:shadow-lg transition-shadow relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#FF8C00] to-[#FEB246] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<h2 class="font-headline-md text-headline-md text-primary-container mb-6">10. Children</h2>
+<p class="font-body-md text-on-surface-variant">
+                    Our services are not directed to children under 16.
+                </p>
+</div>
+<!-- Section 11 -->
+<div class="bg-white rounded-xl p-8 ambient-shadow border border-surface-container-low group hover:shadow-lg transition-shadow relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#FF8C00] to-[#FEB246] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<h2 class="font-headline-md text-headline-md text-primary-container mb-6">11. Changes to This Policy</h2>
+<p class="font-body-md text-on-surface-variant">
+                    We will notify you of any changes by email or through the Platform.
+                </p>
+</div>
+<!-- Section 12 -->
+<div class="bg-white rounded-xl p-10 ambient-shadow border border-surface-container-low text-center mt-8">
+<div class="w-16 h-16 rounded-full bg-gradient-to-br from-[#FF8C00] to-[#FEB246] flex items-center justify-center mx-auto mb-6 text-white shadow-md shadow-primary-container/20">
+<span class="material-symbols-outlined text-[32px]" data-icon="mail">mail</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-background mb-4">12. Contact Us</h2>
+<div class="font-body-lg text-body-lg text-on-surface-variant mb-6 space-y-2">
+<p>Email: <a class="text-primary-container hover:underline" href="mailto:support@gurost.com">support@gurost.com</a></p>
+<p>Company: Surii Global Limited</p>
+<p>Contact our Data Protection Officer (DPO)</p>
+<p>Information Commissioner's Office (ICO): <a class="text-primary-container hover:underline" href="https://www.ico.org.uk" target="_blank">www.ico.org.uk</a></p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-on-background dark:bg-surface-container-lowest flex flex-col items-center justify-center w-full py-section-gap px-gutter text-center mt-auto">
+<div class="max-w-container-max-width mx-auto flex flex-col items-center">
+<!-- Links -->
+<nav class="flex flex-wrap justify-center gap-x-6 gap-y-4 mb-12">
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="about.html">About</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="careers.html">Careers</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="blog.html">Blog</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="docs.html">Docs</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="templates.html">Templates</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="showcase.html">Showcase</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="help.html">Help Center</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="contact.html">Contact</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="terms.html">Terms</a>
+<a class="font-body-md text-body-md text-primary-container hover:text-primary-container transition-colors" href="privacy.html">Privacy</a>
+</nav>
+<!-- Brand & Copyright -->
+<div class="flex flex-col items-center gap-2">
+<span class="text-white font-bold text-xl tracking-wide">Gurost</span>
+<p class="font-body-md text-body-md text-surface-variant opacity-60">Copyright 2026</p>
 </div>
 </div>
 </footer>

@@ -3,9 +3,9 @@
 <html class="light" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Documentation - Gurost AI</title>
+<title>Gurost Documentation</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
@@ -14,301 +14,253 @@
             theme: {
                 extend: {
                     "colors": {
-                        "primary": "#845400",
-                        "surface-container-low": "#f6f3ef",
-                        "on-secondary": "#ffffff",
-                        "tertiary-fixed": "#bee9ff",
-                        "on-primary-fixed-variant": "#643f00",
-                        "on-tertiary-fixed": "#001f2a",
-                        "inverse-primary": "#ffd6a6",
-                        "tertiary-container": "#b0e5ff",
-                        "secondary-container": "#ffdcc3",
-                        "on-surface-variant": "#524535",
-                        "on-tertiary-fixed-variant": "#004d64",
-                        "primary-container": "#ffddb6",
-                        "error-container": "#ffdad6",
-                        "surface-card": "#ffffff",
-                        "error": "#ba1a1a",
-                        "on-primary-container": "#2a1800",
-                        "on-surface": "#1d1b19",
-                        "secondary-fixed": "#ffdcc3",
-                        "background": "#ffffff",
-                        "surface": "#ffffff",
-                        "tertiary": "#006783",
-                        "surface-glass": "rgba(255, 255, 255, 0.7)",
-                        "outline-variant": "#d6c3b0",
+                        "tertiary-container": "#00b5fc",
+                        "inverse-surface": "#2f2e43",
+                        "on-primary-fixed-variant": "#6e3900",
+                        "inverse-on-surface": "#f2efff",
+                        "surface-variant": "#e2e0fc",
+                        "surface-container-low": "#f5f2ff",
+                        "outline": "#897362",
+                        "on-primary-container": "#623200",
+                        "accent-gradient": "linear-gradient(135deg, #FF8C00 0%, #FEB246 100%)",
+                        "surface-container-highest": "#e2e0fc",
+                        "tertiary": "#00658f",
+                        "on-surface": "#1a1a2e",
+                        "surface-tint": "#904d00",
+                        "primary": "#904d00",
+                        "inverse-primary": "#ffb77d",
+                        "surface-soft": "#F8F9FA",
+                        "on-secondary-container": "#6f4600",
+                        "primary-fixed": "#ffdcc3",
                         "on-primary": "#ffffff",
-                        "inverse-on-surface": "#f4f0ec",
-                        "on-secondary-container": "#2f1500",
-                        "on-tertiary": "#ffffff",
-                        "surface-tint": "#845400",
-                        "on-secondary-fixed-variant": "#6e3900",
-                        "surface-container-highest": "#e5e2de",
-                        "outline": "#857564",
-                        "border-subtle": "#e5e2de",
-                        "on-tertiary-container": "#001f2a",
-                        "surface-variant": "#eee0d1",
-                        "white": "#ffffff",
-                        "on-secondary-fixed": "#2f1500",
-                        "on-primary-fixed": "#2a1800",
-                        "inverse-surface": "#35302a",
-                        "surface-dim": "#dedad6",
-                        "surface-container-lowest": "#ffffff",
-                        "primary-fixed": "#ffddb6",
-                        "surface-container": "#efebe7",
-                        "surface-bright": "#ffffff",
-                        "on-error-container": "#410002",
-                        "on-background": "#1d1b19",
-                        "secondary-fixed-dim": "#ffb77d",
-                        "surface-container-high": "#eae6e2",
-                        "tertiary-fixed-dim": "#69d3ff",
-                        "primary-fixed-dim": "#ffb95a",
+                        "on-background": "#1a1a2e",
+                        "secondary-fixed": "#ffddb6",
+                        "tertiary-fixed-dim": "#85cfff",
+                        "secondary": "#845400",
+                        "secondary-fixed-dim": "#ffb95a",
+                        "surface-bright": "#fcf8ff",
+                        "background-pure": "#FFFFFF",
+                        "on-tertiary-container": "#004360",
                         "on-error": "#ffffff",
-                        "secondary": "#8d4f13"
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "outline-variant": "#ddc1ae",
+                        "background": "#fcf8ff",
+                        "on-tertiary-fixed-variant": "#004c6c",
+                        "text-muted": "#6B7280",
+                        "on-surface-variant": "#564334",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e8e5ff",
+                        "surface-dim": "#dad7f3",
+                        "tertiary-fixed": "#c7e7ff",
+                        "on-error-container": "#93000a",
+                        "primary-container": "#ff8c00",
+                        "surface-container": "#efecff",
+                        "primary-fixed-dim": "#ffb77d",
+                        "on-tertiary-fixed": "#001e2e",
+                        "on-primary-fixed": "#2f1500",
+                        "on-secondary-fixed": "#2a1800",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#643f00",
+                        "surface": "#fcf8ff",
+                        "secondary-container": "#feb246"
                     },
                     "borderRadius": {
                         "DEFAULT": "0.25rem",
                         "lg": "0.5rem",
                         "xl": "0.75rem",
-                        "full": "9999px",
-                        "2xl": "1rem",
-                        "3xl": "2rem"
+                        "full": "9999px"
                     },
                     "spacing": {
+                        "sidebar-width": "280px",
+                        "container-max-width": "1200px",
                         "gutter": "24px",
                         "section-gap": "80px",
-                        "unit": "8px",
-                        "container-max": "1280px",
-                        "margin-mobile": "16px"
+                        "base": "8px"
                     },
                     "fontFamily": {
-                        "headline-lg": ["Inter"],
-                        "headline-xl": ["Inter"],
+                        "display-lg-mobile": ["Montserrat"],
+                        "label-bold": ["Inter"],
                         "body-lg": ["Inter"],
-                        "headline-lg-mobile": ["Inter"],
-                        "label-sm": ["Inter"],
-                        "body-md": ["Inter"]
+                        "headline-sm": ["Montserrat"],
+                        "display-lg": ["Montserrat"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Montserrat"]
                     },
                     "fontSize": {
-                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
-                        "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
-                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
-                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
-                        "label-sm": ["13px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
-                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                        "display-lg-mobile": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "label-bold": ["14px", { "lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-sm": ["24px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-md": ["32px", { "lineHeight": "1.3", "fontWeight": "600" }]
+                    },
+                    "boxShadow": {
+                        'ambient': '0px 10px 30px rgba(26, 26, 46, 0.08)',
                     }
                 }
             }
         }
     </script>
 <style>
-        /* Custom scrollbar for sidebar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #e5e2de; border-radius: 9999px; }
-        ::-webkit-scrollbar-thumb:hover { background: #d6c3b0; }
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+        body { text-align: center; }
+        .gradient-text {
+            background: linear-gradient(135deg, #FF8C00 0%, #FEB246 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-glow {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255,140,0,0.05) 0%, rgba(255,255,255,0) 70%);
+            z-index: -1;
+            pointer-events: none;
         }
     </style>
 </head>
-<body class="bg-background text-on-surface font-body-md min-h-screen flex flex-col">
-<!-- Top Navigation (Suppressed for focused docs view, keeping a minimal header) -->
-<header class="sticky top-0 z-50 glass-panel border-b border-border-subtle h-20 px-md md:px-lg flex items-center justify-between">
-<div class="flex items-center gap-4">
-<a class="flex items-center gap-2 hover:opacity-90 transition-opacity" href="index.html">
-<img alt="Gurost AI Logo" class="h-10 w-10 object-contain rounded-3xl" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhriETEkzqL6_4Jm5PrC3BK38I_wmzqQU0DHBo3Vf4_5JbmIrp4eOkK5ZEJzA3moaLCkJ8uRSSyz6FiQpdTZmbzU49XsISwSGP8JIRV88C0ac9dci-vs6KF9GdT_oL_ayKoJgTIQuGcFc5SLF6wWmlk8nVYuvn0bv6QdYr9KdkEeYXkYkMuaSdha92cLElGQnHB_bl29HhmwGqw3jqaQbRk19A7bHawqAUb1YVsnsg0tJxYqcyqVuouFQjiSyDmpadQGU"/>
-<span class="text-headline-lg font-headline-lg text-primary">Gurost</span>
-</a>
-<span class="text-outline-variant px-2 hidden sm:inline">|</span>
-<span class="text-body-lg font-body-lg text-on-surface-variant hidden sm:inline">Documentation</span>
+<body class="bg-background-pure text-on-surface min-h-screen flex flex-col relative overflow-x-hidden font-body-md">
+<div class="hero-glow"></div>
+<!-- TopNavBar -->
+<header class="bg-white/80 backdrop-blur-md text-primary font-label-bold text-label-bold docked full-width top-0 bg-white flat no shadows flex justify-between items-center w-full px-gutter h-16 max-w-container-max-width mx-auto fixed z-50 transition-transform">
+<div class="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-primary-container to-secondary-container text-white shrink-0">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">flare</span>
 </div>
-<div class="flex items-center gap-4">
-<div class="relative hidden md:block">
-<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-<input class="bg-surface-container border border-border-subtle rounded-full py-2 pl-10 pr-4 text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all w-64 text-on-surface placeholder:text-on-surface-variant" placeholder="Search docs..." type="text"/>
-</div>
-<a class="hidden sm:inline-flex items-center justify-center bg-transparent border border-border-subtle text-on-surface px-4 py-2 rounded-full hover:bg-surface-container-high transition-colors text-label-sm font-label-sm" href="dashboard.html">Dashboard</a>
-</div>
+<div class="hidden"></div>
+<button class="px-4 py-2 rounded-full bg-surface-soft hover:bg-surface-container transition-colors text-on-surface border border-outline-variant/30 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">arrow_back</span>
+            Back
+        </button>
 </header>
-<div class="flex-1 flex w-full max-w-container-max mx-auto px-margin-mobile md:px-gutter pt-8 pb-section-gap relative">
-<!-- Sidebar Navigation -->
-<aside class="hidden md:block w-64 flex-shrink-0 pr-8 sticky top-28 self-start max-h-[calc(100vh-120px)] overflow-y-auto">
-<a class="inline-flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors mb-8 text-label-sm font-label-sm uppercase tracking-wider group" href="index.html">
-<span class="material-symbols-outlined group-hover:-translate-x-1 transition-transform">arrow_back</span>
-                Back to Main
-            </a>
-<nav class="space-y-6">
-<div>
-<h3 class="text-label-sm font-label-sm text-primary mb-3 uppercase tracking-wider">Introduction</h3>
-<ul class="space-y-2">
-<li><a class="block text-body-md font-body-md text-primary font-semibold border-l-2 border-primary pl-4 py-1" href="#getting-started">Getting Started</a></li>
-<li><a class="block text-body-md font-body-md text-on-surface-variant hover:text-on-surface border-l-2 border-transparent hover:border-border-subtle pl-4 py-1 transition-colors" href="#building-features">Building Features</a></li>
-</ul>
+<!-- Main Content Canvas -->
+<main class="flex-grow pt-[120px] pb-section-gap px-gutter max-w-container-max-width mx-auto w-full flex flex-col items-center">
+<!-- Hero Section -->
+<section class="flex flex-col items-center justify-center max-w-3xl mb-section-gap w-full">
+<h1 class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg text-on-background mb-4">
+                Documentation
+            </h1>
+<p class="font-body-lg text-body-lg text-text-muted mb-10">
+                Everything you need to know about Gurost
+            </p>
+<!-- Search Bar -->
+<div class="w-full max-w-2xl relative group">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-text-muted group-focus-within:text-primary transition-colors">search</span>
 </div>
-<div>
-<h3 class="text-label-sm font-label-sm text-primary mb-3 uppercase tracking-wider">Core Capabilities</h3>
-<ul class="space-y-2">
-<li><a class="block text-body-md font-body-md text-on-surface-variant hover:text-on-surface border-l-2 border-transparent hover:border-border-subtle pl-4 py-1 transition-colors" href="#voice-pulse">Voice &amp; Pulse</a></li>
-<li><a class="block text-body-md font-body-md text-on-surface-variant hover:text-on-surface border-l-2 border-transparent hover:border-border-subtle pl-4 py-1 transition-colors" href="#business-assistant">Business Assistant</a></li>
-<li><a class="block text-body-md font-body-md text-on-surface-variant hover:text-on-surface border-l-2 border-transparent hover:border-border-subtle pl-4 py-1 transition-colors" href="#meeting-copilot">Meeting Co-Pilot</a></li>
-</ul>
-</div>
-<div>
-<h3 class="text-label-sm font-label-sm text-primary mb-3 uppercase tracking-wider">Development</h3>
-<ul class="space-y-2">
-<li><a class="block text-body-md font-body-md text-on-surface-variant hover:text-on-surface border-l-2 border-transparent hover:border-border-subtle pl-4 py-1 transition-colors" href="#deployment">Deployment</a></li>
-<li><a class="block text-body-md font-body-md text-on-surface-variant hover:text-on-surface border-l-2 border-transparent hover:border-border-subtle pl-4 py-1 transition-colors" href="#api-reference">API Reference</a></li>
-<li><a class="block text-body-md font-body-md text-on-surface-variant hover:text-on-surface border-l-2 border-transparent hover:border-border-subtle pl-4 py-1 transition-colors" href="#integrations">Integrations</a></li>
-</ul>
-</div>
-<div>
-<h3 class="text-label-sm font-label-sm text-primary mb-3 uppercase tracking-wider">Support</h3>
-<ul class="space-y-2">
-<li><a class="block text-body-md font-body-md text-on-surface-variant hover:text-on-surface border-l-2 border-transparent hover:border-border-subtle pl-4 py-1 transition-colors" href="#troubleshooting">Troubleshooting</a></li>
-<li><a class="block text-body-md font-body-md text-on-surface-variant hover:text-on-surface border-l-2 border-transparent hover:border-border-subtle pl-4 py-1 transition-colors" href="#faq">FAQ</a></li>
-</ul>
-</div>
-</nav>
-</aside>
-<!-- Main Content Area -->
-<main class="flex-1 min-w-0 md:pl-8 lg:pl-16">
-<a class="md:hidden inline-flex items-center justify-center bg-surface-container border border-border-subtle text-on-surface px-4 py-2 rounded-full mb-6 hover:bg-surface-variant transition-colors text-label-sm font-label-sm" href="index.html">
-<span class="material-symbols-outlined text-sm mr-2">arrow_back</span>
-                Back
-            </a>
-<div class="mb-12">
-<div class="inline-flex items-center gap-2 bg-surface-container border border-border-subtle px-3 py-1 rounded-full text-label-sm font-label-sm text-primary mb-4">
-<span class="material-symbols-outlined text-sm">menu_book</span>
-                    v2.4 Documentation
-                </div>
-<h1 class="text-headline-xl font-headline-xl text-on-surface mb-4">📖 Docs</h1>
-<p class="text-body-lg font-body-lg text-on-surface-variant max-w-3xl">Everything you need to build, deploy, and scale voice-first AI applications with Gurost. Follow this guide to integrate intelligent conversational interfaces into your workflow.</p>
-</div>
-<div class="space-y-16">
-<!-- Getting Started -->
-<section class="scroll-mt-28" id="getting-started">
-<h2 class="text-headline-lg font-headline-lg text-on-surface border-b border-border-subtle pb-4 mb-6">Getting Started</h2>
-<div class="bg-surface-card border border-border-subtle rounded-3xl p-6 md:p-8 hover:scale-[1.01] transition-transform duration-300">
-<p class="text-body-md text-on-surface-variant mb-6">Initialize your workspace and configure your first Gurost project in minutes. We recommend starting with the quickstart template.</p>
-<div class="bg-surface-container-lowest border border-border-subtle rounded-lg p-4 font-mono text-sm text-tertiary mb-6 overflow-x-auto">
-<code>npm create gurost-app@latest my-voice-app</code><br/>
-<code>cd my-voice-app</code><br/>
-<code>npm run dev</code>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-<a class="flex items-start gap-4 p-4 rounded-3xl border border-border-subtle bg-surface-container-low hover:border-primary transition-colors group" href="#">
-<div class="bg-surface-variant p-2 rounded-3xl group-hover:bg-primary-container transition-colors">
-<span class="material-symbols-outlined text-primary">key</span>
-</div>
-<div>
-<h4 class="text-body-lg font-body-lg text-on-surface mb-1">Authentication</h4>
-<p class="text-body-md text-on-surface-variant text-sm">Secure your endpoints and manage API keys.</p>
-</div>
-</a>
-<a class="flex items-start gap-4 p-4 rounded-3xl border border-border-subtle bg-surface-container-low hover:border-primary transition-colors group" href="#">
-<div class="bg-surface-variant p-2 rounded-3xl group-hover:bg-primary-container transition-colors">
-<span class="material-symbols-outlined text-primary">architecture</span>
-</div>
-<div>
-<h4 class="text-body-lg font-body-lg text-on-surface mb-1">System Architecture</h4>
-<p class="text-body-md text-on-surface-variant text-sm">Understand the component lifecycle.</p>
-</div>
-</a>
-</div>
+<input class="w-full pl-12 pr-4 py-4 bg-surface-soft border border-outline-variant/30 rounded-xl font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary-container focus:border-transparent transition-all shadow-sm group-hover:shadow-ambient text-center placeholder:text-center placeholder:text-text-muted" placeholder="Search documentation..." type="text"/>
 </div>
 </section>
-<!-- Voice & Pulse (Bento Grid Example) -->
-<section class="scroll-mt-28" id="voice-pulse">
-<h2 class="text-headline-lg font-headline-lg text-on-surface border-b border-border-subtle pb-4 mb-6">Voice &amp; Pulse</h2>
-<p class="text-body-md text-on-surface-variant mb-8">The core of the Gurost experience. Learn how to implement fluid, responsive audio visualizers and voice-activation triggers.</p>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-<div class="col-span-1 md:col-span-2 bg-surface-card border border-border-subtle rounded-3xl p-6 relative overflow-hidden group">
-<div class="absolute inset-0 bg-gradient-to-br from-primary-container/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-<h3 class="text-body-lg font-body-lg font-semibold text-on-surface mb-2 relative z-10">Audio Visualizer Component</h3>
-<p class="text-body-md text-on-surface-variant mb-4 relative z-10">Implementing smooth Bezier curves for real-time feedback.</p>
-<div class="h-32 bg-surface-container-lowest rounded-3xl border border-border-subtle flex items-center justify-center relative z-10 overflow-hidden">
-<!-- Decorative pulse effect -->
-<div class="w-full flex items-center justify-center gap-1 opacity-50">
-<div class="w-1 h-8 bg-primary rounded-full animate-[pulse_1s_ease-in-out_infinite]"></div>
-<div class="w-1 h-16 bg-primary rounded-full animate-[pulse_1.2s_ease-in-out_infinite_0.1s]"></div>
-<div class="w-1 h-12 bg-primary rounded-full animate-[pulse_0.9s_ease-in-out_infinite_0.2s]"></div>
-<div class="w-1 h-20 bg-primary rounded-full animate-[pulse_1.5s_ease-in-out_infinite_0.3s]"></div>
-<div class="w-1 h-10 bg-primary rounded-full animate-[pulse_1.1s_ease-in-out_infinite_0.4s]"></div>
+<!-- Categories Section -->
+<section class="w-full mb-section-gap flex flex-col items-center">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
+<!-- Card 1 -->
+<a class="bg-white border border-outline-variant/20 rounded-xl p-8 flex flex-col items-center justify-center text-center shadow-ambient hover:-translate-y-1 transition-all duration-300 group cursor-pointer relative overflow-hidden" href="help.html">
+<div class="absolute inset-0 bg-gradient-to-b from-transparent to-primary-container/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="w-16 h-16 rounded-full bg-surface-soft flex items-center justify-center mb-4 group-hover:bg-primary-container/10 transition-colors">
+<span class="material-symbols-outlined text-primary-container text-3xl">rocket_launch</span>
 </div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2">Getting Started</h3>
+</a>
+<!-- Card 2 -->
+<a class="bg-white border border-outline-variant/20 rounded-xl p-8 flex flex-col items-center justify-center text-center shadow-ambient hover:-translate-y-1 transition-all duration-300 group cursor-pointer relative overflow-hidden" href="help.html">
+<div class="absolute inset-0 bg-gradient-to-b from-transparent to-primary-container/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="w-16 h-16 rounded-full bg-surface-soft flex items-center justify-center mb-4 group-hover:bg-primary-container/10 transition-colors">
+<span class="material-symbols-outlined text-primary-container text-3xl">web</span>
 </div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2">Building Websites</h3>
+</a>
+<!-- Card 3 -->
+<a class="bg-white border border-outline-variant/20 rounded-xl p-8 flex flex-col items-center justify-center text-center shadow-ambient hover:-translate-y-1 transition-all duration-300 group cursor-pointer relative overflow-hidden" href="help.html">
+<div class="absolute inset-0 bg-gradient-to-b from-transparent to-primary-container/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="w-16 h-16 rounded-full bg-surface-soft flex items-center justify-center mb-4 group-hover:bg-primary-container/10 transition-colors">
+<span class="material-symbols-outlined text-primary-container text-3xl">app_shortcut</span>
 </div>
-<div class="bg-surface-card border border-border-subtle rounded-3xl p-6 flex flex-col justify-between hover:scale-[1.02] transition-transform">
-<div>
-<h3 class="text-body-lg font-body-lg font-semibold text-on-surface mb-2">Voice FAB</h3>
-<p class="text-body-md text-on-surface-variant text-sm mb-4">The primary interaction point. Requires ample padding.</p>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2">Building Apps</h3>
+</a>
+<!-- Card 4 -->
+<a class="bg-white border border-outline-variant/20 rounded-xl p-8 flex flex-col items-center justify-center text-center shadow-ambient hover:-translate-y-1 transition-all duration-300 group cursor-pointer relative overflow-hidden" href="help.html">
+<div class="absolute inset-0 bg-gradient-to-b from-transparent to-primary-container/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="w-16 h-16 rounded-full bg-surface-soft flex items-center justify-center mb-4 group-hover:bg-primary-container/10 transition-colors">
+<span class="material-symbols-outlined text-primary-container text-3xl">smart_toy</span>
 </div>
-<div class="flex justify-center py-4">
-<button class="w-16 h-16 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-lg hover:brightness-110 transition-all">
-<span class="material-symbols-outlined" data-weight="fill" style="font-variation-settings: 'FILL' 1;">mic</span>
-</button>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2">Business Assistant</h3>
+</a>
+<!-- Card 5 -->
+<a class="bg-white border border-outline-variant/20 rounded-xl p-8 flex flex-col items-center justify-center text-center shadow-ambient hover:-translate-y-1 transition-all duration-300 group cursor-pointer relative overflow-hidden" href="help.html">
+<div class="absolute inset-0 bg-gradient-to-b from-transparent to-primary-container/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="w-16 h-16 rounded-full bg-surface-soft flex items-center justify-center mb-4 group-hover:bg-primary-container/10 transition-colors">
+<span class="material-symbols-outlined text-primary-container text-3xl">vital_signs</span>
 </div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2">Pulse Button</h3>
+</a>
+<!-- Card 6 -->
+<a class="bg-white border border-outline-variant/20 rounded-xl p-8 flex flex-col items-center justify-center text-center shadow-ambient hover:-translate-y-1 transition-all duration-300 group cursor-pointer relative overflow-hidden" href="help.html">
+<div class="absolute inset-0 bg-gradient-to-b from-transparent to-primary-container/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="w-16 h-16 rounded-full bg-surface-soft flex items-center justify-center mb-4 group-hover:bg-primary-container/10 transition-colors">
+<span class="material-symbols-outlined text-primary-container text-3xl">cloud_upload</span>
 </div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2">Deployment</h3>
+</a>
+<!-- Card 7 -->
+<a class="bg-white border border-outline-variant/20 rounded-xl p-8 flex flex-col items-center justify-center text-center shadow-ambient hover:-translate-y-1 transition-all duration-300 group cursor-pointer relative overflow-hidden" href="help.html">
+<div class="absolute inset-0 bg-gradient-to-b from-transparent to-primary-container/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="w-16 h-16 rounded-full bg-surface-soft flex items-center justify-center mb-4 group-hover:bg-primary-container/10 transition-colors">
+<span class="material-symbols-outlined text-primary-container text-3xl">payments</span>
 </div>
-</section>
-<!-- API Reference Placeholder -->
-<section class="scroll-mt-28" id="api-reference">
-<h2 class="text-headline-lg font-headline-lg text-on-surface border-b border-border-subtle pb-4 mb-6">API Reference</h2>
-<div class="bg-surface-container-low border border-border-subtle rounded-3xl overflow-hidden">
-<div class="border-b border-border-subtle bg-surface-container px-4 py-3 flex gap-4">
-<span class="text-label-sm font-label-sm text-primary uppercase tracking-wider">Endpoint</span>
-<span class="text-body-md font-mono text-on-surface-variant">/v1/conversations</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2">Pricing &amp; Billing</h3>
+</a>
+<!-- Card 8 -->
+<a class="bg-white border border-outline-variant/20 rounded-xl p-8 flex flex-col items-center justify-center text-center shadow-ambient hover:-translate-y-1 transition-all duration-300 group cursor-pointer relative overflow-hidden" href="help.html">
+<div class="absolute inset-0 bg-gradient-to-b from-transparent to-primary-container/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="w-16 h-16 rounded-full bg-surface-soft flex items-center justify-center mb-4 group-hover:bg-primary-container/10 transition-colors">
+<span class="material-symbols-outlined text-primary-container text-3xl">build</span>
 </div>
-<div class="p-6">
-<div class="flex items-center gap-3 mb-4">
-<span class="bg-secondary-container text-on-secondary-container px-2 py-1 rounded-full text-xs font-bold font-mono">POST</span>
-<h3 class="text-body-lg font-body-lg text-on-surface">Create Session</h3>
-</div>
-<p class="text-body-md text-on-surface-variant mb-6">Initializes a new voice context window. Returns a session token required for websocket streaming.</p>
-<a class="inline-flex items-center justify-center bg-primary text-on-primary font-bold px-6 py-2 rounded-full hover:brightness-110 transition-all text-body-md" href="docs.html">View Full Reference<span class="material-symbols-outlined ml-2 text-sm">arrow_forward</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-2">Troubleshooting</h3>
 </a>
 </div>
+</section>
+<!-- Popular Articles Section -->
+<section class="w-full max-w-4xl flex flex-col items-center">
+<h2 class="font-headline-md text-headline-md text-on-background mb-8">Popular Articles</h2>
+<div class="w-full flex flex-col gap-4">
+<a class="bg-white border border-outline-variant/20 rounded-xl p-6 flex items-center justify-center text-center shadow-sm hover:shadow-ambient hover:border-primary-container/30 transition-all group" href="help.html">
+<span class="font-body-lg text-body-lg text-on-surface group-hover:text-primary-container transition-colors">How to build your first website</span>
+</a>
+<a class="bg-white border border-outline-variant/20 rounded-xl p-6 flex items-center justify-center text-center shadow-sm hover:shadow-ambient hover:border-primary-container/30 transition-all group" href="help.html">
+<span class="font-body-lg text-body-lg text-on-surface group-hover:text-primary-container transition-colors">Using the Pulse button</span>
+</a>
+<a class="bg-white border border-outline-variant/20 rounded-xl p-6 flex items-center justify-center text-center shadow-sm hover:shadow-ambient hover:border-primary-container/30 transition-all group" href="help.html">
+<span class="font-body-lg text-body-lg text-on-surface group-hover:text-primary-container transition-colors">Connecting your domain</span>
+</a>
+<a class="bg-white border border-outline-variant/20 rounded-xl p-6 flex items-center justify-center text-center shadow-sm hover:shadow-ambient hover:border-primary-container/30 transition-all group" href="help.html">
+<span class="font-body-lg text-body-lg text-on-surface group-hover:text-primary-container transition-colors">Understanding credits</span>
+</a>
 </div>
 </section>
-</div>
 </main>
-</div>
 <!-- Footer -->
-<footer class="bg-surface-container-low border-t border-border-subtle mt-auto">
-<div class="grid grid-cols-2 md:grid-cols-4 gap-gutter py-12 px-margin-mobile md:px-lg max-w-container-max mx-auto">
-<div class="col-span-2 md:col-span-1">
-<a class="flex items-center gap-2 mb-4" href="index.html">
-<span class="text-headline-md font-headline-md font-bold text-primary">Gurost AI</span>
-</a>
-<p class="text-body-md text-on-surface-variant mb-6">Professional, voice-first AI interfaces.</p>
-<p class="text-label-sm font-label-sm text-on-surface-variant">© 2024 Gurost AI. All rights reserved.</p>
+<footer class="bg-on-background text-surface-container-lowest font-body-md text-body-md full-width bottom bg-on-background flat flex flex-col items-center justify-center w-full py-section-gap px-gutter text-center mt-auto border-t border-outline/10">
+<div class="text-white font-bold mb-8 text-xl flex items-center justify-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">flare</span>
 </div>
-<div>
-<h4 class="text-label-sm font-label-sm text-on-surface uppercase tracking-wider mb-4">Company</h4>
-<ul class="space-y-3">
-<li><a class="text-body-md text-on-surface-variant hover:text-secondary transition-colors" href="about.html">About</a></li>
-<li><a class="text-body-md text-on-surface-variant hover:text-secondary transition-colors" href="careers.html">Careers</a></li>
-<li><a class="text-body-md text-on-surface-variant hover:text-secondary transition-colors" href="blog.html">Blog</a></li>
+<ul class="flex flex-wrap justify-center gap-6 mb-8 max-w-2xl">
+<li><a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors active:opacity-70" href="about.html">About</a></li>
+<li><a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors active:opacity-70" href="careers.html">Careers</a></li>
+<li><a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors active:opacity-70" href="blog.html">Blog</a></li>
+<li><a class="text-primary-container" href="docs.html">Docs</a></li>
+<li><a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors active:opacity-70" href="templates.html">Templates</a></li>
+<li><a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors active:opacity-70" href="showcase.html">Showcase</a></li>
+<li><a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors active:opacity-70" href="help.html">Help Center</a></li>
+<li><a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors active:opacity-70" href="contact.html">Contact</a></li>
+<li><a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors active:opacity-70" href="terms.html">Terms</a></li>
+<li><a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors active:opacity-70" href="privacy.html">Privacy</a></li>
 </ul>
-</div>
-<div>
-<h4 class="text-label-sm font-label-sm text-on-surface uppercase tracking-wider mb-4">Resources</h4>
-<ul class="space-y-3">
-<li><a class="text-body-md text-primary font-semibold" href="docs.html">Docs</a></li>
-<li><a class="text-body-md text-on-surface-variant hover:text-secondary transition-colors" href="templates.html">Templates</a></li>
-<li><a class="text-body-md text-on-surface-variant hover:text-secondary transition-colors" href="showcase.html">Showcase</a></li>
-</ul>
-</div>
-<div>
-<h4 class="text-label-sm font-label-sm text-on-surface uppercase tracking-wider mb-4">Support</h4>
-<ul class="space-y-3">
-<li><a class="text-body-md text-on-surface-variant hover:text-secondary transition-colors" href="help.html">Help Center</a></li>
-<li><a class="text-body-md text-on-surface-variant hover:text-secondary transition-colors" href="contact.html">Contact</a></li>
-<li><a class="text-body-md text-on-surface-variant hover:text-secondary transition-colors" href="status.html">Status</a></li>
-</ul>
-</div>
-</div>
+<p class="text-surface-variant opacity-60 text-sm">Copyright 2026</p>
 </footer>
 </body></html>

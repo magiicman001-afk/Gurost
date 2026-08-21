@@ -3,546 +3,370 @@
 <html class="light" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Gurost - Amend Website</title>
+<title>Gurost - Revamp Audit</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "error": "#ba1a1a",
+                      "on-error": "#ffffff",
+                      "on-primary-fixed": "#2f1500",
+                      "on-surface": "#1a1a2e",
+                      "on-tertiary": "#ffffff",
+                      "tertiary-fixed-dim": "#85cfff",
+                      "on-tertiary-fixed-variant": "#004c6c",
+                      "secondary-container": "#feb246",
+                      "surface-variant": "#e2e0fc",
+                      "surface-container-lowest": "#ffffff",
+                      "on-surface-variant": "#564334",
+                      "surface-container-high": "#e8e5ff",
+                      "primary-fixed-dim": "#ffb77d",
+                      "tertiary": "#00658f",
+                      "on-background": "#1a1a2e",
+                      "surface-tint": "#904d00",
+                      "inverse-surface": "#2f2e43",
+                      "tertiary-fixed": "#c7e7ff",
+                      "on-primary": "#ffffff",
+                      "on-tertiary-fixed": "#001e2e",
+                      "on-secondary-fixed-variant": "#643f00",
+                      "primary-container": "#ff8c00",
+                      "surface-dim": "#dad7f3",
+                      "on-error-container": "#93000a",
+                      "text-muted": "#6B7280",
+                      "surface-container-highest": "#e2e0fc",
+                      "background-pure": "#FFFFFF",
+                      "inverse-on-surface": "#f2efff",
+                      "inverse-primary": "#ffb77d",
+                      "surface": "#fcf8ff",
+                      "outline-variant": "#ddc1ae",
+                      "on-secondary": "#ffffff",
+                      "on-secondary-container": "#6f4600",
+                      "surface-container-low": "#f5f2ff",
+                      "on-tertiary-container": "#004360",
+                      "on-primary-fixed-variant": "#6e3900",
+                      "surface-container": "#efecff",
+                      "accent-gradient": "linear-gradient(135deg, #FF8C00 0%, #FEB246 100%)",
+                      "background": "#fcf8ff",
+                      "error-container": "#ffdad6",
+                      "secondary": "#845400",
+                      "secondary-fixed-dim": "#ffb95a",
+                      "tertiary-container": "#00b5fc",
+                      "on-secondary-fixed": "#2a1800",
+                      "primary-fixed": "#ffdcc3",
+                      "primary": "#904d00",
+                      "surface-bright": "#fcf8ff",
+                      "secondary-fixed": "#ffddb6",
+                      "outline": "#897362",
+                      "surface-soft": "#F8F9FA",
+                      "on-primary-container": "#623200"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "section-gap": "80px",
+                      "sidebar-width": "280px",
+                      "gutter": "24px",
+                      "container-max-width": "1200px",
+                      "base": "8px"
+              },
+              "fontFamily": {
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "headline-sm": [
+                              "Montserrat"
+                      ],
+                      "headline-md": [
+                              "Montserrat"
+                      ],
+                      "display-lg": [
+                              "Montserrat"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "label-bold": [
+                              "Inter"
+                      ],
+                      "display-lg-mobile": [
+                              "Montserrat"
+                      ]
+              },
+              "fontSize": {
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-sm": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.3",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "1.6",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-bold": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-lg-mobile": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
 <style>
-        .gold-gradient-btn {
-            background: linear-gradient(135deg, #feb246 0%, #ff8c00 100%);
-            color: white;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        .gradient-btn {
+            background-image: linear-gradient(135deg, #FF8C00 0%, #FEB246 100%);
+            color: #ffffff;
+            transition: opacity 0.2s ease-in-out, transform 0.1s ease-in-out;
         }
-        .gold-gradient-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(254, 178, 70, 0.4);
+        .gradient-btn:hover {
+            opacity: 0.9;
         }
-        .glass-card {
+        .gradient-btn:active {
+            transform: scale(0.98);
+        }
+        .pulse-ring {
+            animation: pulse 2s infinite cubic-bezier(0.66, 0, 0, 1);
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 140, 0, 0.4); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(255, 140, 0, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 140, 0, 0); }
+        }
+        .glass-panel {
             background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(200, 197, 205, 0.4);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid #E5E7EB;
         }
     </style>
-<link href="shared/styles.css" rel="stylesheet"/>
-<link href="shared/widget.css" rel="stylesheet"/>
 </head>
-<body class="bg-background text-on-surface font-body-md min-h-screen flex flex-col">
-<!-- TopNavBar (Shared Component style implementation) -->
-<header class="bg-surface/80 dark:bg-on-surface/80 backdrop-blur-md full-width top-0 sticky border-b border-outline-variant/30 shadow-sm z-50">
-<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto">
-<div class="flex items-center gap-4">
-<img alt="Gurost Logo" class="h-10 w-10 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCJWMIHah4wXJtWs-c-9pZRBW7fuWRgAD-PaemDeNLAq-UHbilttnkQB8eL6YZjZHxivY_npzTzWn7CC5F3WuegVwqkwaWlBsnVUd11ry_X19Jmke1CtIG7woBLrGqgqnWhKdXyXuIp4S6AGUyRr-J9FGqR4_XWC03FyMic_rfrkW9dCSjr6GGMVAA7MMhTfhYZZPmmyATI3e022LJEGkIiwsptIOACNQY3ExsGk4ox__vYMHSjkdDBYhrMfnmA5zhVeDc"/>
-<span class="font-headline-md text-headline-md font-bold text-on-surface dark:text-inverse-on-surface">Amend Website</span>
+<body class="bg-background text-on-background min-h-screen flex flex-col md:flex-row font-body-md antialiased selection:bg-primary selection:text-white">
+<!-- SideNavBar (real, matching every other logged-in page tonight) -->
+<aside class="bg-surface-container text-primary font-body-md text-body-md fixed left-0 top-0 h-screen w-sidebar-width border-r border-outline-variant shadow-sm z-40 hidden md:flex flex-col">
+<div class="p-6 flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">auto_fix_high</span>
+<h2 class="text-headline-sm font-headline-sm text-primary">Gurost</h2>
 </div>
-<!-- Hiding nav links as per instructions for focused task-based layout -->
-<div class="hidden md:flex gap-6 items-center">
-<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors hidden" href="assistant.html" id="businessAssistantLink">Business Assistant</a>
-<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface transition-colors px-4 py-2 rounded-full hover:bg-surface-container-low" href="signup.html">Log in</a>
-<a class="font-label-sm text-label-sm gold-gradient-btn px-6 py-2 rounded-full font-semibold shadow-sm" href="signup.html">Sign Up</a>
-</div>
-</div>
-</header>
-<!-- Main Content Area -->
-<main class="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-12 flex flex-col items-center gap-16">
-<!-- Input Section -->
-<section class="w-full max-w-3xl flex flex-col items-center text-center gap-8">
-<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary">Enter URL to Amend</h1>
-<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Paste your existing website URL below to run a comprehensive AI audit and automatically fix performance, SEO, and accessibility issues.</p>
-<div class="w-full relative mt-4 group">
-<span class="material-symbols-outlined absolute left-6 top-1/2 -translate-y-1/2 text-outline text-2xl group-focus-within:text-secondary transition-colors" data-icon="link">link</span>
-<input class="w-full h-[72px] pl-16 pr-[120px] rounded-full border border-outline-variant bg-surface-container-lowest shadow-sm text-lg focus:outline-none focus:ring-4 focus:ring-secondary/20 focus:border-secondary transition-all" id="siteUrl" placeholder="https://yourwebsite.com" type="url"/>
-<button class="absolute right-2 top-2 bottom-2 gold-gradient-btn px-8 rounded-full font-label-sm text-label-sm font-semibold flex items-center gap-2" id="auditBtn">
-<span class="material-symbols-outlined" id="auditBtnIcon" data-weight="fill" style="font-variation-settings: 'FILL' 1;">search</span>
-                    <span id="auditBtnLabel">Audit</span>
-</button>
-</div>
-<p class="text-sm text-error hidden" id="amendError"></p>
-</section>
-<!-- Audit Report & Action Section (Bento Grid Style) -->
-<section class="w-full grid grid-cols-1 md:grid-cols-3 gap-gutter" id="reportSection" style="display:none;">
-<!-- Issues Summary Panel -->
-<div class="glass-card rounded-xl p-8 flex flex-col gap-6 md:col-span-1 shadow-sm hover:-translate-y-1 transition-transform duration-300">
-<div class="flex items-center gap-3 border-b border-outline-variant/30 pb-4">
-<span class="material-symbols-outlined text-error" data-icon="warning" data-weight="fill" style="font-variation-settings: 'FILL' 1;">warning</span>
-<h2 class="font-headline-md text-headline-md text-on-surface" id="issuesHeading">Issues Found</h2>
-</div>
-<ul class="flex flex-col gap-4 font-body-md text-body-md text-on-surface-variant flex-grow" id="issuesList">
-</ul>
-<button class="w-full gold-gradient-btn py-4 rounded-full font-label-sm text-label-sm font-semibold flex justify-center items-center gap-2 mt-auto" id="fixAllBtn">
-<span class="material-symbols-outlined" id="fixAllBtnIcon" data-weight="fill" style="font-variation-settings: 'FILL' 1;">auto_fix_high</span>
-                    <span id="fixAllBtnLabel">Fix All Issues</span>
-                </button>
-<div class="hidden text-center font-body-sm text-body-sm text-on-surface-variant mt-3" id="fixCreditSummary"></div>
-</div>
-<!-- Preview Panel -->
-<div class="glass-card rounded-xl overflow-hidden flex flex-col md:col-span-2 shadow-sm border border-outline-variant/30">
-<div class="bg-surface-container-low px-4 py-3 flex items-center gap-4 border-b border-outline-variant/30">
-<div class="flex gap-2">
-<div class="w-3 h-3 rounded-full bg-error-container border border-error/20"></div>
-<div class="w-3 h-3 rounded-full bg-secondary-container border border-secondary/20"></div>
-<div class="w-3 h-3 rounded-full bg-[#c6c4df] border border-primary/20"></div>
-</div>
-<div class="bg-surface-container-lowest px-4 py-1.5 rounded-md text-sm text-on-surface-variant flex-grow text-center font-mono opacity-70" id="previewLabel">
-                        Before &amp; After Comparison
-                    </div>
-<button class="text-secondary text-sm font-semibold hover:underline hidden" id="codeToggleBtn" type="button">
-<span id="codeToggleLabel">Show Code</span>
-</button>
-</div>
-<div class="relative w-full h-[700px] md:h-[400px] bg-surface-container-lowest overflow-hidden">
-<div class="view-panel active w-full h-full" id="previewPanel">
-<div class="flex flex-col md:flex-row w-full h-full">
-<div class="w-full md:w-1/2 h-1/2 md:h-full flex flex-col relative border-b md:border-b-0 md:border-r border-outline-variant/30">
-<div class="text-xs font-semibold text-on-surface-variant text-center py-1.5 bg-surface-container-low border-b border-outline-variant/20">Before</div>
-<iframe class="w-full flex-grow border-0 bg-white" id="previewFrameBefore" sandbox="allow-scripts" title="Original site preview"></iframe>
-</div>
-<div class="w-full md:w-1/2 h-1/2 md:h-full flex flex-col relative">
-<div class="text-xs font-semibold text-on-surface-variant text-center py-1.5 bg-surface-container-low border-b border-outline-variant/20">After</div>
-<iframe class="w-full flex-grow border-0 bg-white" id="previewFrameAfter" sandbox="allow-scripts" title="Amended site preview"></iframe>
-<div class="absolute inset-0 top-6 flex flex-col items-center justify-center text-on-surface-variant/50 bg-surface-container-lowest text-center px-4" id="afterEmptyState">
-<span class="material-symbols-outlined text-3xl mb-2">auto_fix_high</span>
-<p class="font-body-md text-body-md text-sm">Click "Fix All Issues" to see the amended version here.</p>
-</div>
-</div>
-</div>
-<div class="absolute inset-0 w-full h-full border-2 border-dashed border-outline-variant/50 rounded-lg flex flex-col items-center justify-center text-on-surface-variant/50 bg-surface-container-lowest" id="previewEmptyState">
-<span class="material-symbols-outlined text-4xl mb-2" id="previewEmptyIcon" data-icon="preview">preview</span>
-<p class="font-body-md text-body-md" id="previewEmptyText">Click "Audit" to load preview</p>
-</div>
-</div>
-<div class="view-panel w-full h-full overflow-auto bg-on-surface" id="codePanel">
-<pre class="p-4 text-xs text-white overflow-auto" id="codeContent" style="font-family: monospace; white-space: pre-wrap;"></pre>
-</div>
-</div>
-</div>
-</section>
-
-<!-- Pulse control — Amend Website's flow is Audit then Fix, two
-     discrete completed steps, not a continuous stream. "Restart" here
-     honestly means: your correction is added as an extra fix alongside
-     whatever the audit already found, and the fix step runs again with
-     it included — the same real /api/revamp/rebuild call this page
-     already uses, not a new mechanism. -->
-<section class="w-full max-w-5xl mx-auto mt-6" id="pulseControlWrap" style="display:none;">
-<button class="w-full gold-gradient-btn py-3 rounded-full font-label-sm text-label-sm font-semibold flex items-center justify-center gap-2" id="pulsePauseBtn" type="button">
-<span class="material-symbols-outlined">pause_circle</span>
-<span>Pause &amp; Talk to Pulse</span>
-</button>
-<div class="glass-card rounded-xl p-6 mt-4 flex flex-col gap-4" id="pulseTalkPanel" style="display:none;">
-<p class="font-body-md text-body-md text-on-surface-variant text-center">Paused. Hold Pulse to talk, or type an additional change — restarting will re-run the fix with this included.</p>
-<div class="flex items-center justify-center gap-4">
-<button class="pulse-widget" id="pulseMicBtn" style="position:static;" aria-label="Hold to talk to Pulse">
-<span class="material-symbols-outlined">mic</span>
-</button>
-<span class="font-body-md text-body-md text-on-surface-variant" id="pulseMicStatus">Hold to talk</span>
-</div>
-<textarea class="w-full h-20 rounded-xl border border-outline-variant bg-surface-container-lowest p-4 font-body-md text-body-md resize-none focus:outline-none focus:ring-2 focus:ring-secondary/20" id="pulseTextInput" placeholder="Or type your additional change here..."></textarea>
-<p class="text-sm text-error hidden" id="pulseError"></p>
-<button class="w-full gold-gradient-btn py-3 rounded-full font-label-sm text-label-sm font-semibold flex items-center justify-center gap-2" id="pulseRestartBtn" type="button">
-<span class="material-symbols-outlined" id="pulseRestartIcon">play_circle</span>
-<span id="pulseRestartLabel">Restart Live Building</span>
-</button>
-</div>
-</section>
-
-</main>
-<!-- Footer (Shared Component) -->
-<footer class="bg-surface dark:bg-on-surface full-width border-t border-outline-variant/50 mt-auto">
-<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-16 flex flex-col md:flex-row justify-between items-center gap-8">
-<div class="flex items-center gap-4">
-<img alt="Gurost Logo Footer" class="h-8 w-8 object-contain grayscale opacity-70" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWRf6a_leNKBt5bEFTe9fjTzrVf_QVCd_AVQ3G9VQjdpXjuYw_OTomsoECmxq-zbfviqcZ3SpBbmueYQfRjPrWtNklmJIjuWfRwPSqL6lhtlr0jTcd5A0608yOaWg9dvwnDoPTAn8VDBUuUqb-PNBo7huIzOHUBwNdMgdY5F4sMPD876QZ_SHYQ3rjAQWgyLvSu4N4U079FjnIv5ikKyfiaxmPdvCPTvNqtjPgddWd1fOd_iqVCX8_V9O3w-qBF1ysYvk"/>
-<span class="font-headline-md text-headline-md font-bold text-on-surface">Gurost</span>
-</div>
-<nav class="flex flex-wrap justify-center gap-6 font-body-md text-body-md">
-<a class="text-on-surface-variant hover:text-secondary transition-all hover:underline opacity-80 hover:opacity-100" href="product.html">Product</a>
-<a class="text-on-surface-variant hover:text-secondary transition-all hover:underline opacity-80 hover:opacity-100" href="legal.html">Legal</a>
+<nav class="flex-1 flex flex-col gap-2 px-2 mt-4">
+<a class="flex items-center text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest transition-all rounded-r-lg" href="dashboard.html">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center text-primary font-bold border-l-4 border-primary bg-primary-container/10 px-4 py-3 rounded-r-lg" href="amend_website.html">
+<span class="material-symbols-outlined mr-3" style="font-variation-settings: 'FILL' 1;">edit_document</span>
+                Amend Website
+            </a>
+<a class="flex items-center text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest transition-all rounded-r-lg" href="settings.html">
+<span class="material-symbols-outlined mr-3">settings</span>
+                Settings
+            </a>
+<a class="flex items-center text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest transition-all rounded-r-lg" href="profile.html">
+<span class="material-symbols-outlined mr-3">account_circle</span>
+                Profile
+            </a>
+<a class="flex items-center text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest transition-all rounded-r-lg" href="assistant.html">
+<span class="material-symbols-outlined mr-3">smart_toy</span>
+                Business Assistant
+            </a>
 </nav>
-<div class="font-body-md text-body-md text-on-surface-variant text-sm">
-                © 2026 Gurost AI. All rights reserved.
-            </div>
+</aside>
+<!-- Mobile Top Bar -->
+<header class="md:hidden fixed top-0 w-full z-50 glass-panel shadow-sm flex justify-between items-center px-gutter h-16">
+<span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">auto_fix_high</span>
+<a class="px-4 py-2 bg-surface-soft hover:bg-surface-variant text-on-surface rounded-full font-label-bold text-label-bold transition-colors flex items-center gap-2" href="dashboard.html">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+                Back
+            </a>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow pt-[104px] md:pt-section-gap pb-section-gap px-gutter w-full md:ml-[280px] flex flex-col items-center relative">
+<!-- Persistent Back Button (Desktop) -->
+<div class="absolute top-6 right-6 hidden md:block z-20">
+<a class="px-4 py-2 bg-surface-soft hover:bg-surface-variant text-on-surface rounded-full font-label-bold text-label-bold transition-colors flex items-center gap-2" href="dashboard.html">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+                Back
+            </a>
 </div>
+<!-- Header Section -->
+<header class="text-center w-full max-w-2xl mx-auto mb-12">
+<h1 class="font-display-lg text-display-lg text-on-surface mb-4">Website Audit &amp; Revamp</h1>
+<p class="font-body-lg text-body-lg text-text-muted">Enter your URL to identify issues and instantly apply high-performance design fixes.</p>
+</header>
+<!-- Input Section -->
+<section class="w-full max-w-3xl mx-auto mb-16 glass-panel rounded-xl p-8 shadow-lg">
+<div class="flex flex-col md:flex-row gap-4 items-center justify-center">
+<div class="relative w-full max-w-lg">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">link</span>
+<input class="w-full pl-12 pr-4 py-4 bg-surface-soft border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="https://yourwebsite.com" type="url"/>
+</div>
+<button class="gradient-btn px-8 py-4 rounded-lg font-label-bold text-label-bold w-full md:w-auto shadow-md whitespace-nowrap">
+                    Audit Website
+                </button>
+</div>
+</section>
+<!-- Audit Results (Bento Layout) -->
+<section class="w-full mb-section-gap grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Issues List -->
+<div class="md:col-span-4 glass-panel rounded-xl p-6 shadow-md flex flex-col h-full">
+<div class="text-center mb-6">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Identified Issues</h2>
+</div>
+<div class="space-y-4 flex-grow overflow-y-auto pr-2">
+<!-- Issue Item 1 -->
+<div class="bg-surface-soft rounded-lg p-4 border border-outline-variant flex flex-col items-center text-center">
+<span class="material-symbols-outlined text-error mb-2 text-3xl">contrast</span>
+<h3 class="font-label-bold text-label-bold text-on-surface mb-1">Low Contrast Ratio</h3>
+<p class="font-body-md text-body-md text-text-muted text-sm">Primary buttons fail WCAG AA standards.</p>
+</div>
+<!-- Issue Item 2 -->
+<div class="bg-surface-soft rounded-lg p-4 border border-outline-variant flex flex-col items-center text-center">
+<span class="material-symbols-outlined text-secondary-container mb-2 text-3xl">speed</span>
+<h3 class="font-label-bold text-label-bold text-on-surface mb-1">Heavy Image Assets</h3>
+<p class="font-body-md text-body-md text-text-muted text-sm">3 images over 1MB slowing LCP.</p>
+</div>
+<!-- Issue Item 3 -->
+<div class="bg-surface-soft rounded-lg p-4 border border-outline-variant flex flex-col items-center text-center">
+<span class="material-symbols-outlined text-primary mb-2 text-3xl">width_normal</span>
+<h3 class="font-label-bold text-label-bold text-on-surface mb-1">Responsive Break</h3>
+<p class="font-body-md text-body-md text-text-muted text-sm">Hero section overflows on mobile.</p>
+</div>
+</div>
+<div class="mt-6 pt-6 border-t border-outline-variant text-center">
+<button class="gradient-btn w-full py-3 rounded-lg font-label-bold text-label-bold shadow-md flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">auto_fix_high</span>
+                        Fix All Issues
+                    </button>
+</div>
+</div>
+<!-- Live Preview -->
+<div class="md:col-span-8 glass-panel rounded-xl overflow-hidden shadow-md border border-outline-variant flex flex-col">
+<!-- Browser Chrome -->
+<div class="bg-surface-soft border-b border-outline-variant p-3 flex items-center justify-center gap-2">
+<div class="w-3 h-3 rounded-full bg-error/80"></div>
+<div class="w-3 h-3 rounded-full bg-secondary-container/80"></div>
+<div class="w-3 h-3 rounded-full bg-[#10B981]/80"></div>
+<div class="flex-grow flex justify-center">
+<div class="bg-white rounded px-4 py-1 text-xs text-text-muted font-body-md flex items-center gap-1 shadow-sm border border-outline-variant/50">
+<span class="material-symbols-outlined text-[14px]">lock</span> preview.yoursite.com
+                        </div>
+</div>
+</div>
+<!-- Preview Canvas -->
+<div class="bg-surface flex-grow relative min-h-[400px]">
+<div class="absolute inset-0 bg-cover bg-center opacity-10" data-alt="A subtle, abstract geometric wireframe pattern in light grey on a white background, representing a generic website layout placeholder. Clean, minimal, corporate modern aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDvisQBfGv2gNOAl7ICLqd0QFUDOrUI4OvpDujQQsxJL4eRzOjQ5wtaYul387m0cueFAUt0cw9aaafgdSR0csqwimNe5CkXr4NVa26j__2efD-EDtiBNONe0zA9UG-shgGLuqUdOJvWBd1R72biXvX9uvAE5rgRubljhg2zzVP3Df4zcJEPlxBErtzReZWRhfxIcz9aLSujm4J_ndadYTMjDA5PncTpdqv7nppjZyH0ROJFezTfkdpt5g')"></div>
+<!-- Simulated website content -->
+<div class="absolute inset-0 flex flex-col items-center justify-center p-8 text-center z-10">
+<div class="w-24 h-24 bg-surface-variant rounded-full mb-6 flex items-center justify-center">
+<span class="material-symbols-outlined text-4xl text-on-surface-variant">web</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4">Live Preview Canvas</h3>
+<p class="font-body-md text-body-md text-text-muted max-w-md">Your analyzed website will appear here. Applying fixes will update this view in real-time.</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer Anchor -->
+<footer class="bg-on-background w-full py-section-gap px-gutter text-center mt-auto">
+<p class="font-body-md text-body-md text-surface-container-lowest opacity-80">Copyright 2026</p>
 </footer>
+<!-- Pulse Widget Trigger - same real, distinctive mark as every page -->
+<button aria-label="Open Pulse" class="fixed bottom-6 right-6 z-50 w-16 h-16 shadow-xl flex items-center justify-center text-white transition-transform hover:scale-105 active:scale-95" id="pulseWidgetTrigger" style="background: linear-gradient(135deg, #FF8C00 0%, #FEB246 100%); border-radius: 30% 30% 30% 8%;">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">graphic_eq</span>
+<span class="absolute inset-0 -z-10 animate-ping opacity-30" style="background: linear-gradient(135deg, #FF8C00 0%, #FEB246 100%); border-radius: 30% 30% 30% 8%;"></span>
+</button>
+<div class="hidden fixed bottom-24 right-6 z-50 w-80 bg-white rounded-2xl shadow-2xl border border-outline-variant overflow-hidden" id="pulsePanel">
+<div class="px-5 py-4 flex items-center justify-between" style="background: linear-gradient(135deg, #FF8C00 0%, #FEB246 100%);">
+<span class="text-white font-label-bold text-label-bold">Pulse</span>
+<button aria-label="Close Pulse" class="text-white" id="pulseCloseBtn"><span class="material-symbols-outlined">close</span></button>
+</div>
+<div class="p-5">
+<p class="text-sm text-text-muted mb-4">Tell Pulse what to fix or change — speak or type.</p>
+<div class="flex items-center gap-2 mb-3">
+<button class="w-10 h-10 rounded-full flex items-center justify-center text-white flex-shrink-0" id="pulseMicBtn" style="background: linear-gradient(135deg, #FF8C00 0%, #FEB246 100%);">
+<span class="material-symbols-outlined text-[18px]">mic</span>
+</button>
+<input class="flex-1 bg-surface-soft border border-outline-variant rounded-lg px-3 py-2 text-sm" id="pulseInput" placeholder="Type or hold mic to speak…" type="text"/>
+</div>
+<button class="w-full py-2 rounded-lg text-white text-sm font-label-bold" id="pulseSendBtn" style="background: linear-gradient(135deg, #FF8C00 0%, #FEB246 100%);">Send</button>
+<p class="hidden text-sm text-primary mt-3" id="pulseConfirm"></p>
+</div>
+</div>
 
-<script src="shared/api-client.js"></script>
 <script src="shared/pulse-voice.js"></script>
-<script src="shared/widget.js"></script>
 <script>
-/**
- * Amend Website — wired to the real /api/revamp/audit and
- * /api/revamp/rebuild endpoints. Unlike App Builder, this is
- * website-mode territory: the audited/fixed result is a single HTML
- * document, so the live preview is the straightforward
- * iframe.srcdoc = html case — no multi-file transpile pipeline needed
- * here, that complexity is specific to app-mode's separate React files.
- */
-
-let projectId = null;
-let currentIssues = [];
-let originalHtml = null;
-let fixedHtml = null;
-let latestCodeHtml = null;
-
-function showError(message) {
-  const el = document.getElementById('amendError');
-  el.textContent = message;
-  el.classList.remove('hidden');
-}
-function hideError() {
-  document.getElementById('amendError').classList.add('hidden');
-}
-
-function setAuditLoading(active) {
-  const btn = document.getElementById('auditBtn');
-  const label = document.getElementById('auditBtnLabel');
-  const icon = document.getElementById('auditBtnIcon');
-  btn.disabled = active;
-  label.textContent = active ? 'Auditing…' : 'Audit';
-  icon.textContent = active ? 'autorenew' : 'search';
-}
-
-function setFixLoading(active) {
-  const btn = document.getElementById('fixAllBtn');
-  const label = document.getElementById('fixAllBtnLabel');
-  const icon = document.getElementById('fixAllBtnIcon');
-  btn.disabled = active;
-  label.textContent = active ? 'Fixing…' : 'Fix All Issues';
-  icon.textContent = active ? 'autorenew' : 'auto_fix_high';
-}
-
-const ISSUE_ICONS = {
-  seo: 'search',
-  accessibility: 'accessibility',
-  performance: 'speed',
-  broken_links: 'broken_image'
-};
-
-function renderIssues(issues) {
-  const list = document.getElementById('issuesList');
-  document.getElementById('issuesHeading').textContent = issues.length ? `${issues.length} Issue${issues.length === 1 ? '' : 's'} Found` : 'No Issues Found';
-
-  if (!issues.length) {
-    list.innerHTML = '<li class="text-on-surface-variant">Nice — the audit came back clean.</li>';
-    document.getElementById('fixAllBtn').style.display = 'none';
-    return;
-  }
-
-  document.getElementById('fixAllBtn').style.display = 'flex';
-  list.innerHTML = issues
-    .map((issue) => `
-      <li class="flex items-start gap-3">
-        <span class="material-symbols-outlined text-outline mt-0.5 text-sm">${ISSUE_ICONS[issue.category] || 'info'}</span>
-        <span><strong class="text-on-surface">[${issue.severity}]</strong> ${issue.description}</span>
-      </li>`)
-    .join('');
-}
-
-function showBeforePreview(html) {
-  document.getElementById('previewEmptyState').style.display = 'none';
-  document.getElementById('previewFrameBefore').srcdoc = html;
-  latestCodeHtml = html; // shown in Code view until a fixed version exists
-  document.getElementById('codeContent').textContent = html;
-  document.getElementById('codeToggleBtn').classList.remove('hidden');
-}
-
-function showAfterPreview(html) {
-  document.getElementById('afterEmptyState').style.display = 'none';
-  document.getElementById('previewFrameAfter').srcdoc = html;
-  latestCodeHtml = html; // the fixed version takes over as "the" code once it exists
-  document.getElementById('codeContent').textContent = html;
-}
-
-function toggleCodeView() {
-  const previewPanel = document.getElementById('previewPanel');
-  const codePanel = document.getElementById('codePanel');
-  const label = document.getElementById('codeToggleLabel');
-  const showingCode = codePanel.classList.contains('active');
-  previewPanel.classList.toggle('active', showingCode);
-  codePanel.classList.toggle('active', !showingCode);
-  label.textContent = showingCode ? 'Show Code' : 'Hide Code';
-}
-
-async function runAudit(url) {
-  hideError();
-  const trimmed = (url || '').trim();
-  if (!trimmed) {
-    showError('Enter a website URL first.');
-    return;
-  }
-  if (!GurostAPI.requireLogin()) return;
-
-  setAuditLoading(true);
-  document.getElementById('reportSection').style.display = 'none';
-
-  try {
-    const result = await GurostAPI.call('/api/revamp/audit', { method: 'POST', body: { url: trimmed } });
-    projectId = result.projectId;
-    currentIssues = result.issues || [];
-    window.history.replaceState({}, '', `amend_website.html?projectId=${projectId}`);
-
-    document.getElementById('reportSection').style.display = 'grid';
-    renderIssues(currentIssues);
-
-    // Real original HTML for the "before" preview — the audit response
-    // itself only returns issues/lighthouse data, not the crawled HTML,
-    // so this fetches the full project state to get it.
-    const project = await GurostAPI.call(`/api/project/${projectId}`);
-    originalHtml = project.currentHtml;
-    if (originalHtml) showBeforePreview(originalHtml);
-    document.getElementById('pulseControlWrap').style.display = 'block';
-  } catch (err) {
-    showError(err.message);
-  } finally {
-    setAuditLoading(false);
-  }
-}
-
-async function runFixAll() {
-  if (!projectId) return;
-  hideError();
-  setFixLoading(true);
-
-  try {
-    const result = await GurostAPI.call('/api/revamp/rebuild', {
-      method: 'POST',
-      body: { projectId, approvedFixes: currentIssues }
-    });
-
-    if (!result.fixSucceeded) {
-      // Real, honest failure message - and genuinely not charged,
-      // confirmed directly by the real backend check before this.
-      showError(`${result.message} (${result.reason})`);
-      return;
-    }
-
-    fixedHtml = result.html;
-    showAfterPreview(fixedHtml);
-    document.getElementById('previewPanel').classList.add('active');
-    document.getElementById('codePanel').classList.remove('active');
-    document.getElementById('codeToggleLabel').textContent = 'Show Code';
-
-    if (result.creditSummary && !result.creditSummary.unlimited) {
-      const banner = document.getElementById('fixCreditSummary');
-      if (banner) {
-        banner.textContent = `1 credit used for this fix. ${result.creditSummary.includedRemaining} of ${result.creditSummary.includedTotal} included credits left this month.`;
-        banner.classList.remove('hidden');
-      }
-    }
-  } catch (err) {
-    showError(err.message);
-  } finally {
-    setFixLoading(false);
-  }
-}
-
-async function loadExistingProject(id) {
-  try {
-    const project = await GurostAPI.call(`/api/project/${id}`);
-    projectId = id;
-    document.getElementById('siteUrl').value = project.sourceUrl || '';
-    currentIssues = (project.lastAudit && project.lastAudit.issues) || [];
-    if (currentIssues.length) {
-      document.getElementById('reportSection').style.display = 'grid';
-      renderIssues(currentIssues);
-    }
-
-    if (project.currentHtml) {
-      document.getElementById('previewEmptyState').style.display = 'none';
-
-      // Real backend limitation, not a UI oversight: integrator-bot.js's
-      // integrateRevampRebuild() overwrites project.currentHtml in place
-      // with the fixed HTML — the pre-fix original is never stored
-      // separately server-side. So for a resumed project that's already
-      // been fixed, there genuinely is no "before" version left to show
-      // — only ever true right after a fresh Audit on this same page
-      // load, which is why runAudit() above can show both and this
-      // resume path sometimes can't.
-      if (project.state === 'DONE') {
-        fixedHtml = project.currentHtml;
-        showAfterPreview(fixedHtml);
-        document.getElementById('afterEmptyState').style.display = 'none';
-        const beforeState = document.getElementById('previewFrameBefore').parentElement;
-        beforeState.querySelector('iframe').style.display = 'none';
-        const note = document.createElement('div');
-        note.className = 'absolute inset-0 top-6 flex flex-col items-center justify-center text-on-surface-variant/50 bg-surface-container-lowest text-center px-4';
-        note.innerHTML = '<p class="font-body-md text-body-md text-sm">Original version isn\u2019t available for a resumed project \u2014 it\u2019s only shown right after a fresh Audit.</p>';
-        beforeState.appendChild(note);
-      } else {
-        originalHtml = project.currentHtml;
-        showBeforePreview(originalHtml);
-      }
-    }
-  } catch (err) {
-    showError(`Couldn't load project: ${err.message}`);
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  if (!GurostAPI.requireLogin()) return;
-
-  // Real, deliberate ordering — same real reason as builder.html/
-  // app-builder.html: this listener now attaches before anything that
-  // could throw and block it.
-  document.getElementById('auditBtn').addEventListener('click', () => {
-    runAudit(document.getElementById('siteUrl').value);
+  let pulseRecording = null;
+  document.getElementById('pulseWidgetTrigger').addEventListener('click', () => {
+    document.getElementById('pulsePanel').classList.toggle('hidden');
   });
-
-  try {
-    const urlProjectId = new URLSearchParams(window.location.search).get('projectId');
-    if (urlProjectId) {
-      loadExistingProject(urlProjectId);
-    } else {
-      // Handoff from Dashboard's "Amend Website" flow — a dedicated key,
-      // since this page needs a URL, not a prompt+mode pair the way
-      // builder.html/app-builder.html's gurost_pending_generate does.
-      const pending = JSON.parse(localStorage.getItem('gurost_pending_amend') || 'null');
-      if (pending && pending.url) {
-        document.getElementById('siteUrl').value = pending.url;
-        localStorage.removeItem('gurost_pending_amend');
-      }
-    }
-  } catch (err) {
-    console.error('[amend_website] Project handoff/restore setup failed, continuing without it:', err.message);
-    localStorage.removeItem('gurost_pending_amend');
-  }
-
-  // Real, plan-gated reveal — same real logic as builder.html and
-  // app-builder.html. Purely a UX convenience; real security lives
-  // server-side on the actual /api/assistant* routes.
-  GurostAPI.getMyPlan().then((plan) => {
-    if (plan === 'unlimited' || plan === 'ultimate') {
-      document.getElementById('businessAssistantLink').classList.remove('hidden');
-    }
-  }).catch((err) => {
-    console.error('[amend_website] Plan check for Business Assistant link failed, leaving it hidden:', err.message);
+  document.getElementById('pulseCloseBtn').addEventListener('click', () => {
+    document.getElementById('pulsePanel').classList.add('hidden');
   });
-
-  document.getElementById('fixAllBtn').addEventListener('click', runFixAll);
-  document.getElementById('codeToggleBtn').addEventListener('click', toggleCodeView);
-
-  document.getElementById('siteUrl').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') runAudit(document.getElementById('siteUrl').value);
+  document.getElementById('pulseMicBtn').addEventListener('mousedown', async () => {
+    try { pulseRecording = await startRecordingSession(); } catch (err) { console.error('[pulse] Mic unavailable:', err.message); }
   });
-});
-
-// ---------------- Pulse: Pause / talk or text / Restart ----------------
-// Amend Website's flow is Audit then Fix — two discrete completed
-// steps, not a stream. "Restart" re-runs the real /api/revamp/rebuild
-// call this page already uses, with the correction as a new issue.
-//
-// Real, worth-getting-right design point: the backend overwrites
-// project.currentHtml in place after each fix (a documented limitation
-// from an earlier round — the original pre-fix HTML isn't kept
-// separately). That means the SECOND time someone restarts, the
-// backend's current HTML already has everything from the FIRST
-// correction applied. Re-sending the whole accumulated currentIssues
-// list here would ask the model to "fix" problems that no longer
-// exist against HTML that's already moved past them. Sending only the
-// NEW correction each time is what's actually correct, not just
-// simpler.
-
-function setPulseTalkPanel(open) {
-  document.getElementById('pulseTalkPanel').style.display = open ? 'flex' : 'none';
-  document.getElementById('pulsePauseBtn').style.display = open ? 'none' : 'flex';
-  if (!open) document.getElementById('pulseTextInput').value = '';
-}
-
-function showPulseError(message) {
-  const el = document.getElementById('pulseError');
-  el.textContent = message;
-  el.classList.remove('hidden');
-}
-function hidePulseError() {
-  document.getElementById('pulseError').classList.add('hidden');
-}
-
-document.getElementById('pulsePauseBtn')?.addEventListener('click', () => {
-  hidePulseError();
-  setPulseTalkPanel(true);
-});
-
-let activeRecording = null;
-const pulseMicBtn = document.getElementById('pulseMicBtn');
-const pulseMicStatus = document.getElementById('pulseMicStatus');
-
-pulseMicBtn?.addEventListener('mousedown', async () => {
-  try {
-    activeRecording = await startRecordingSession();
-    pulseMicBtn.classList.add('listening');
-    pulseMicStatus.textContent = 'Listening… release to transcribe';
-  } catch (err) {
-    pulseMicStatus.textContent = 'Microphone unavailable — type your correction instead.';
-  }
-});
-
-async function releasePulseMic() {
-  if (!activeRecording) return;
-  pulseMicBtn.classList.remove('listening');
-  pulseMicStatus.textContent = 'Transcribing…';
-  try {
-    const transcript = await activeRecording.stop();
-    document.getElementById('pulseTextInput').value = transcript;
-    pulseMicStatus.textContent = 'Got it — review below, then Restart.';
-  } catch (err) {
-    pulseMicStatus.textContent = 'Could not transcribe — type your correction instead.';
-  } finally {
-    activeRecording = null;
-  }
-}
-pulseMicBtn?.addEventListener('mouseup', releasePulseMic);
-pulseMicBtn?.addEventListener('mouseleave', releasePulseMic);
-pulseMicBtn?.addEventListener('touchend', releasePulseMic);
-
-document.getElementById('pulseRestartBtn')?.addEventListener('click', async () => {
-  hidePulseError();
-  const correction = document.getElementById('pulseTextInput').value.trim();
-  if (!correction) {
-    showPulseError('Hold Pulse to talk, or type an additional change, before restarting.');
-    return;
-  }
-  if (!projectId) {
-    showPulseError('No active project to restart.');
-    return;
-  }
-
-  setPulseTalkPanel(false);
-  const btn = document.getElementById('pulseRestartBtn');
-  const label = document.getElementById('pulseRestartLabel');
-  const icon = document.getElementById('pulseRestartIcon');
-  btn.disabled = true;
-  label.textContent = 'Restarting build…';
-  icon.textContent = 'autorenew';
-
-  try {
-    // Only the NEW correction, not the accumulated currentIssues list —
-    // see the comment above this block for why that's correct here,
-    // not just simpler.
-    const syntheticIssue = { category: 'custom', severity: 'medium', description: correction, fix_summary: correction };
-    const result = await GurostAPI.call('/api/revamp/rebuild', {
-      method: 'POST',
-      body: { projectId, approvedFixes: [syntheticIssue] }
-    });
-    fixedHtml = result.html;
-    showAfterPreview(fixedHtml);
-    document.getElementById('previewPanel').classList.add('active');
-    document.getElementById('codePanel').classList.remove('active');
-    document.getElementById('codeToggleLabel').textContent = 'Show Code';
-
+  document.getElementById('pulseMicBtn').addEventListener('mouseup', async () => {
+    if (!pulseRecording) return;
     try {
-      await speakTextViaRest('Done. Your site has been rebuilt with that change.');
-    } catch {
-      // TTS is a nice-to-have on top of the already-completed rebuild —
-      // never block or error the actual result over a failed voice reply.
-    }
-  } catch (err) {
-    showPulseError(err.message);
-  } finally {
-    btn.disabled = false;
-    label.textContent = 'Restart Live Building';
-    icon.textContent = 'play_circle';
-  }
-});
+      const transcript = await pulseRecording.stop();
+      if (transcript) document.getElementById('pulseInput').value = transcript;
+    } finally { pulseRecording = null; }
+  });
+  document.getElementById('pulseSendBtn').addEventListener('click', () => {
+    const text = document.getElementById('pulseInput').value.trim();
+    const confirm = document.getElementById('pulseConfirm');
+    if (!text) return;
+    confirm.textContent = `Got it — "${text}". Live auto-apply is coming soon; for now, use this as a note for your next message.`;
+    confirm.classList.remove('hidden');
+    document.getElementById('pulseInput').value = '';
+  });
 </script>
 </body></html>

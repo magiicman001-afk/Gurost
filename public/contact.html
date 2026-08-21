@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 
-<html lang="en"><head>
+<html class="light" lang="en"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Contact Us - Gurost AI</title>
+<title>Contact Us - Gurost</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&amp;family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
         tailwind.config = {
@@ -13,18 +14,57 @@
             theme: {
                 extend: {
                     "colors": {
-                        "primary": "#fd8b00",
-                        "background": "#ffffff",
-                        "surface": "#ffffff",
-                        "surface-card": "#f8fafc",
-                        "surface-container": "#f1f5f9",
-                        "surface-container-low": "#f1f5f9",
-                        "surface-bright": "#f8fafc",
-                        "on-background": "#0f172a",
-                        "on-surface": "#1e293b",
-                        "on-surface-variant": "#475569",
-                        "border-subtle": "#e2e8f0",
-                        "white": "#ffffff"
+                        "tertiary-container": "#00b5fc",
+                        "inverse-surface": "#2f2e43",
+                        "on-primary-fixed-variant": "#6e3900",
+                        "inverse-on-surface": "#f2efff",
+                        "surface-variant": "#e2e0fc",
+                        "surface-container-low": "#f5f2ff",
+                        "outline": "#897362",
+                        "on-primary-container": "#623200",
+                        "accent-gradient": "linear-gradient(135deg, #FF8C00 0%, #FEB246 100%)",
+                        "surface-container-highest": "#e2e0fc",
+                        "tertiary": "#00658f",
+                        "on-surface": "#1a1a2e",
+                        "surface-tint": "#904d00",
+                        "primary": "#904d00",
+                        "inverse-primary": "#ffb77d",
+                        "surface-soft": "#F8F9FA",
+                        "on-secondary-container": "#6f4600",
+                        "primary-fixed": "#ffdcc3",
+                        "on-primary": "#ffffff",
+                        "on-background": "#1a1a2e",
+                        "secondary-fixed": "#ffddb6",
+                        "tertiary-fixed-dim": "#85cfff",
+                        "secondary": "#845400",
+                        "secondary-fixed-dim": "#ffb95a",
+                        "surface-bright": "#fcf8ff",
+                        "background-pure": "#FFFFFF",
+                        "on-tertiary-container": "#004360",
+                        "on-error": "#ffffff",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff",
+                        "outline-variant": "#ddc1ae",
+                        "background": "#fcf8ff",
+                        "on-tertiary-fixed-variant": "#004c6c",
+                        "text-muted": "#6B7280",
+                        "on-surface-variant": "#564334",
+                        "on-secondary": "#ffffff",
+                        "surface-container-high": "#e8e5ff",
+                        "surface-dim": "#dad7f3",
+                        "tertiary-fixed": "#c7e7ff",
+                        "on-error-container": "#93000a",
+                        "primary-container": "#ff8c00",
+                        "surface-container": "#efecff",
+                        "primary-fixed-dim": "#ffb77d",
+                        "on-tertiary-fixed": "#001e2e",
+                        "on-primary-fixed": "#2f1500",
+                        "on-secondary-fixed": "#2a1800",
+                        "on-tertiary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#643f00",
+                        "surface": "#fcf8ff",
+                        "secondary-container": "#feb246"
                     },
                     "borderRadius": {
                         "DEFAULT": "0.25rem",
@@ -33,197 +73,168 @@
                         "full": "9999px"
                     },
                     "spacing": {
+                        "sidebar-width": "280px",
+                        "container-max-width": "1200px",
                         "gutter": "24px",
                         "section-gap": "80px",
-                        "unit": "8px",
-                        "container-max": "1280px",
-                        "margin-mobile": "16px"
+                        "base": "8px"
                     },
                     "fontFamily": {
-                        "headline-lg": ["Inter"],
-                        "headline-xl": ["Inter"],
+                        "display-lg-mobile": ["Montserrat"],
+                        "label-bold": ["Inter"],
                         "body-lg": ["Inter"],
-                        "headline-lg-mobile": ["Inter"],
-                        "label-sm": ["Inter"],
-                        "body-md": ["Inter"]
+                        "headline-sm": ["Montserrat"],
+                        "display-lg": ["Montserrat"],
+                        "body-md": ["Inter"],
+                        "headline-md": ["Montserrat"]
                     },
                     "fontSize": {
-                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
-                        "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
-                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
-                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
-                        "label-sm": ["13px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
-                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                        "display-lg-mobile": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }],
+                        "label-bold": ["14px", { "lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-sm": ["24px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-md": ["32px", { "lineHeight": "1.3", "fontWeight": "600" }]
+                    },
+                    "backgroundImage": {
+                        "btn-gradient": "linear-gradient(135deg, #FF8C00 0%, #FEB246 100%)"
+                    },
+                    "boxShadow": {
+                        "premium": "0px 10px 30px rgba(26, 26, 46, 0.08)"
                     }
                 }
             }
         }
     </script>
 <style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-        .gradient-text {
-            background: linear-gradient(to right, #feb246, #fd8b00);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .btn-primary {
-            background: linear-gradient(to right, #feb246, #fd8b00);
-            transition: all 0.2s ease-in-out;
-        }
-        .btn-primary:hover {
-            filter: brightness(1.1);
-        }
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #fcf8ff; color: #1a1a2e; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Montserrat', sans-serif; }
     </style>
 </head>
-<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col antialiased selection:bg-primary selection:text-white">
-<main class="flex-grow flex flex-col items-center justify-center py-section-gap px-margin-mobile md:px-gutter max-w-container-max mx-auto w-full relative z-10">
-<!-- Top-left Logo and Back Button -->
-<div class="w-full mb-12 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-<img alt="Gurost AI Logo" class="h-12 w-12 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-VdVwxRJihp4YDxPkhYhMEA7MN3C5oXPDYP_O7sixufR6ciE7CnYIk6l3uZH4VLtWVTvoAyy7_ra8HVlQTDRzR5SKRn8TgBbJBnEnP-w0yPQOIkqa6GiD7ItGoykFzha8PM_V4lTQB4j3EGnY1dMbSBTiL-5-so46Wu5WKxeKd9tpUpBXH0DLHYmg387U3KSkvyczoT8Vix8Vk7mrI1JHrRDUBkLeM0OWZYa9bMG3su7sokZR35EuXCOeHoZDwUCuQoU"/>
-<a class="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-border-subtle bg-surface-card hover:bg-surface-container transition-colors text-on-surface font-label-sm text-label-sm" href="index.html">
-<span class="material-symbols-outlined text-[18px]">arrow_back</span>
-            Back to Home
-        </a>
+<body class="min-h-screen flex flex-col items-center">
+<!-- Top Navigation Anchor (Suppressing active states as this is a contact page, a dead end/transactional flow) -->
+<header class="w-full bg-white/80 dark:bg-on-background/80 backdrop-blur-md sticky top-0 z-50 flat no shadows border-b border-[#E5E7EB]">
+<div class="flex justify-between items-center w-full px-gutter h-16 max-w-container-max-width mx-auto">
+<!-- Brand Logo (Symbol Only) -->
+<div class="flex items-center justify-center w-10 h-10 rounded-full bg-btn-gradient shadow-md">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">hexagon</span>
 </div>
-<div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Trailing Action -->
+<button class="flex items-center justify-center px-4 py-2 rounded-full border border-[#E5E7EB] hover:bg-surface-soft transition-colors font-label-bold text-label-bold text-on-surface">
+                Back
+            </button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow w-full max-w-container-max-width px-gutter py-section-gap flex flex-col items-center">
 <!-- Header Section -->
-<div class="lg:col-span-12 text-center mb-16">
-<h1 class="font-headline-xl text-headline-xl text-on-surface mb-4">📞 <span class="gradient-text">Contact</span></h1>
-<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">
-                We're here to help. Reach out for general inquiries, support, or partnership opportunities.
-            </p>
+<section class="text-center w-full max-w-3xl mb-section-gap">
+<h1 class="font-display-lg text-display-lg md:font-display-lg md:text-display-lg font-display-lg-mobile text-display-lg-mobile text-on-surface mb-base">Contact Us</h1>
+<p class="font-body-lg text-body-lg text-text-muted">Get in touch with the Gurost team</p>
+</section>
+<!-- Bento Grid Layout for Contact Form & Details -->
+<section class="w-full grid grid-cols-1 md:grid-cols-12 gap-gutter mb-section-gap">
+<!-- Contact Form Card (Spans 7 columns) -->
+<div class="md:col-span-7 bg-background-pure rounded-xl shadow-premium p-8 lg:p-12">
+<form class="flex flex-col space-y-6 w-full max-w-lg mx-auto md:mx-0 md:ml-auto md:mr-8 text-left">
+<h2 class="font-headline-md text-headline-md text-center md:text-left mb-6">Send a Message</h2>
+<div class="flex flex-col">
+<label class="font-label-bold text-label-bold text-on-surface mb-2" for="fullName">Full Name</label>
+<input class="w-full bg-surface-soft border border-[#E5E7EB] rounded-lg px-4 py-3 focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-colors font-body-md text-body-md" id="fullName" placeholder="Enter your full name" type="text"/>
 </div>
-<!-- Left Column: Info Cards & Details -->
-<div class="lg:col-span-5 space-y-6">
-<!-- General Inquiries Card -->
-<div class="bg-surface-card border border-border-subtle rounded-[32px] p-6 hover:scale-[1.02] transition-transform duration-300">
-<div class="flex items-center gap-4 mb-4">
-<div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-primary">
-<span class="material-symbols-outlined" data-weight="fill" style="font-variation-settings: 'FILL' 1;">mail</span>
+<div class="flex flex-col">
+<label class="font-label-bold text-label-bold text-on-surface mb-2" for="email">Email Address</label>
+<input class="w-full bg-surface-soft border border-[#E5E7EB] rounded-lg px-4 py-3 focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-colors font-body-md text-body-md" id="email" placeholder="Enter your email address" type="email"/>
 </div>
-<div>
-<h3 class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">General Inquiries</h3>
-<a class="font-body-lg text-body-lg text-on-surface hover:text-primary transition-colors" href="mailto:hello@gurost.ai">hello@gurost.ai</a>
+<div class="flex flex-col">
+<label class="font-label-bold text-label-bold text-on-surface mb-2" for="subject">Subject</label>
+<select class="w-full bg-surface-soft border border-[#E5E7EB] rounded-lg px-4 py-3 focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-colors font-body-md text-body-md appearance-none" id="subject">
+<option value="general">General</option>
+<option value="support">Support</option>
+<option value="sales">Sales</option>
+<option value="press">Press</option>
+<option value="careers">Careers</option>
+</select>
 </div>
+<div class="flex flex-col">
+<label class="font-label-bold text-label-bold text-on-surface mb-2" for="message">Message</label>
+<textarea class="w-full bg-surface-soft border border-[#E5E7EB] rounded-lg px-4 py-3 focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-colors font-body-md text-body-md resize-y" id="message" placeholder="How can we help you?" rows="5"></textarea>
 </div>
+<button class="w-full bg-btn-gradient text-white rounded-full py-4 font-label-bold text-label-bold shadow-md hover:shadow-lg transition-shadow mt-4" type="submit">
+                        Send Message
+                    </button>
+</form>
 </div>
-<!-- Department Specific Emails Card -->
-<div class="bg-surface-card border border-border-subtle rounded-[32px] p-6 hover:scale-[1.02] transition-transform duration-300">
-<div class="flex items-center gap-4 mb-6">
-<div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-primary">
-<span class="material-symbols-outlined" data-weight="fill" style="font-variation-settings: 'FILL' 1;">lan</span>
-</div>
-<h3 class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Departments</h3>
-</div>
-<ul class="space-y-4">
-<li class="flex justify-between items-center border-b border-border-subtle pb-3">
-<span class="text-on-surface">Sales</span>
-<a class="text-on-surface-variant hover:text-primary transition-colors" href="mailto:sales@gurost.ai">sales@gurost.ai</a>
+<!-- Contact Details Card (Spans 5 columns) -->
+<div class="md:col-span-5 flex flex-col space-y-gutter h-full">
+<!-- Email Directory Card -->
+<div class="bg-background-pure rounded-xl shadow-premium p-8 flex-grow flex flex-col justify-center">
+<h3 class="font-headline-sm text-headline-sm text-center mb-6">Directory</h3>
+<ul class="space-y-4 text-center">
+<li class="flex flex-col items-center">
+<span class="font-label-bold text-label-bold text-primary-container mb-1">Support</span>
+<a class="font-body-md text-body-md hover:text-primary-container transition-colors" href="mailto:support@gurost.com">support@gurost.com</a>
+<span class="text-sm text-text-muted mt-1">(24hr response)</span>
 </li>
-<li class="flex justify-between items-center border-b border-border-subtle pb-3">
-<span class="text-on-surface">Press &amp; Media</span>
-<a class="text-on-surface-variant hover:text-primary transition-colors" href="mailto:press@gurost.ai">press@gurost.ai</a>
+<li class="w-16 h-px bg-[#E5E7EB] mx-auto my-4"></li>
+<li class="flex flex-col items-center">
+<span class="font-label-bold text-label-bold text-on-surface mb-1">Sales</span>
+<a class="font-body-md text-body-md hover:text-primary-container transition-colors" href="mailto:sales@gurost.com">sales@gurost.com</a>
 </li>
-<li class="flex justify-between items-center pb-1">
-<span class="text-on-surface">Partnerships</span>
-<a class="text-on-surface-variant hover:text-primary transition-colors" href="mailto:partners@gurost.ai">partners@gurost.ai</a>
+<li class="flex flex-col items-center mt-3">
+<span class="font-label-bold text-label-bold text-on-surface mb-1">Press</span>
+<a class="font-body-md text-body-md hover:text-primary-container transition-colors" href="mailto:press@gurost.com">press@gurost.com</a>
+</li>
+<li class="flex flex-col items-center mt-3">
+<span class="font-label-bold text-label-bold text-on-surface mb-1">Partnerships</span>
+<a class="font-body-md text-body-md hover:text-primary-container transition-colors" href="mailto:partnerships@gurost.com">partnerships@gurost.com</a>
+</li>
+<li class="flex flex-col items-center mt-3">
+<span class="font-label-bold text-label-bold text-on-surface mb-1">Careers</span>
+<a class="font-body-md text-body-md hover:text-primary-container transition-colors" href="mailto:careers@gurost.com">careers@gurost.com</a>
 </li>
 </ul>
 </div>
-<!-- HQ Info Card -->
-<div class="bg-surface-card border border-border-subtle rounded-[32px] p-6 hover:scale-[1.02] transition-transform duration-300">
-<div class="flex items-center gap-4 mb-4">
-<div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-primary">
-<span class="material-symbols-outlined" data-weight="fill" style="font-variation-settings: 'FILL' 1;">location_on</span>
-</div>
-<div>
-<h3 class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Headquarters</h3>
-<p class="font-body-md text-body-md text-on-surface mt-1">Surii Global LTD<br/>United Kingdom</p>
-</div>
-</div>
-</div>
-<!-- Response Times & Socials -->
-<div class="bg-surface-container-low rounded-[32px] p-6 flex flex-col gap-6 border border-border-subtle">
-<div>
-<h4 class="font-label-sm text-label-sm text-on-surface-variant mb-2">Response Times</h4>
-<p class="text-on-surface text-sm">We aim to respond to all inquiries within <strong class="text-primary">24-48 hours</strong> during business days.</p>
-</div>
-<div>
-<h4 class="font-label-sm text-label-sm text-on-surface-variant mb-3">Connect With Us</h4>
-<div class="flex gap-4">
-<a class="w-10 h-10 rounded-full bg-white border border-border-subtle flex items-center justify-center text-on-surface hover:text-primary hover:border-primary transition-all shadow-sm" href="#">
-<span class="material-symbols-outlined">alternate_email</span>
-</a>
-<a class="w-10 h-10 rounded-full bg-white border border-border-subtle flex items-center justify-center text-on-surface hover:text-primary hover:border-primary transition-all shadow-sm" href="#">
-<span class="material-symbols-outlined">work</span>
-</a>
-<a class="w-10 h-10 rounded-full bg-white border border-border-subtle flex items-center justify-center text-on-surface hover:text-primary hover:border-primary transition-all shadow-sm" href="#">
-<span class="material-symbols-outlined">smart_display</span>
-</a>
-<a class="w-10 h-10 rounded-full bg-white border border-border-subtle flex items-center justify-center text-on-surface hover:text-primary hover:border-primary transition-all shadow-sm" href="#">
-<span class="material-symbols-outlined">photo_camera</span>
-</a>
+<!-- Address Card -->
+<div class="bg-background-pure rounded-xl shadow-premium p-8 text-center relative overflow-hidden group">
+<!-- Subtle Glassmorphic Overlay for Address -->
+<div class="relative z-10 bg-white/80 backdrop-blur-md rounded-lg p-4 inline-block shadow-sm border border-[#E5E7EB]">
+<h4 class="font-label-bold text-label-bold mb-2">Headquarters</h4>
+<address class="not-italic font-body-md text-body-md text-text-muted">
+                            Surii Global Limited<br/>
+                            123 Innovation Drive<br/>
+                            Tech District, London<br/>
+                            UK E1 6AN
+                        </address>
 </div>
 </div>
 </div>
-</div>
-<!-- Right Column: Contact Form (Glassmorphic) -->
-<div class="lg:col-span-7">
-<div class="glass-panel border border-border-subtle rounded-[32px] p-8 relative overflow-hidden h-full">
-<!-- Decorative background blur element behind form -->
-<div class="absolute -top-32 -right-32 w-64 h-64 bg-primary/20 rounded-full blur-3xl pointer-events-none"></div>
-<h2 class="font-headline-lg text-headline-lg md:text-headline-lg-mobile text-on-surface mb-8 relative z-10">Send a Message</h2>
-<form class="space-y-6 relative z-10">
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-<div>
-<label class="block font-label-sm text-label-sm text-on-surface-variant mb-2" for="firstName">First Name</label>
-<input class="w-full bg-white border border-border-subtle rounded-full px-5 py-3 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors shadow-sm" id="firstName" placeholder="Jane" type="text"/>
-</div>
-<div>
-<label class="block font-label-sm text-label-sm text-on-surface-variant mb-2" for="lastName">Last Name</label>
-<input class="w-full bg-white border border-border-subtle rounded-full px-5 py-3 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors shadow-sm" id="lastName" placeholder="Doe" type="text"/>
-</div>
-</div>
-<div>
-<label class="block font-label-sm text-label-sm text-on-surface-variant mb-2" for="email">Email Address</label>
-<input class="w-full bg-white border border-border-subtle rounded-full px-5 py-3 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors shadow-sm" id="email" placeholder="jane@example.com" type="email"/>
-</div>
-<div>
-<label class="block font-label-sm text-label-sm text-on-surface-variant mb-2" for="department">Department</label>
-<div class="relative">
-<select class="w-full bg-white border border-border-subtle rounded-full px-5 py-3 text-on-surface appearance-none focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors cursor-pointer shadow-sm" id="department">
-<option value="general">General Inquiry</option>
-<option value="sales">Sales</option>
-<option value="press">Press &amp; Media</option>
-<option value="support">Technical Support</option>
-</select>
-<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-on-surface-variant">
-<span class="material-symbols-outlined">expand_more</span>
-</div>
-</div>
-</div>
-<div>
-<label class="block font-label-sm text-label-sm text-on-surface-variant mb-2" for="message">Message</label>
-<textarea class="w-full bg-white border border-border-subtle rounded-[32px] px-5 py-4 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none shadow-sm" id="message" placeholder="How can we help you today?" rows="5"></textarea>
-</div>
-<div class="pt-4">
-<button class="btn-primary w-full rounded-full py-4 px-8 font-label-sm text-label-sm text-white font-bold flex items-center justify-center gap-2 group shadow-md" type="button">
-                            Send Message
-                            <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">send</span>
-</button>
-</div>
-</form>
-</div>
-</div>
-</div>
+</section>
 </main>
+<!-- Footer Component from JSON Anchor -->
+<footer class="bg-on-background dark:bg-surface-container-lowest full-width bottom bg-on-background flat flex flex-col items-center justify-center w-full py-section-gap px-gutter text-center">
+<!-- Brand Logo Text in Footer -->
+<div class="text-white font-bold mb-8 font-headline-sm text-headline-sm flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">hexagon</span>
+           Gurost
+        </div>
+<!-- Links List -->
+<nav class="flex flex-wrap justify-center gap-x-6 gap-y-4 mb-8 max-w-2xl">
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors Active: opacity-70" href="about.html">About</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors Active: opacity-70" href="careers.html">Careers</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors Active: opacity-70" href="blog.html">Blog</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors Active: opacity-70" href="docs.html">Docs</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors Active: opacity-70" href="templates.html">Templates</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors Active: opacity-70" href="showcase.html">Showcase</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors Active: opacity-70" href="help.html">Help Center</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors Active: opacity-70" href="contact.html">Contact</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors Active: opacity-70" href="terms.html">Terms</a>
+<a class="font-body-md text-body-md text-surface-variant opacity-80 hover:text-primary-container transition-colors Active: opacity-70" href="privacy.html">Privacy</a>
+</nav>
+<!-- Copyright -->
+<div class="font-body-md text-body-md text-surface-variant opacity-50 w-full text-center">
+            Copyright 2026
+        </div>
+</footer>
 </body></html>

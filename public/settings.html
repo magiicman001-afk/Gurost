@@ -1,124 +1,297 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Settings — Gurost</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shared/styles.css">
-<link rel="stylesheet" href="shared/widget.css">
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gurost - Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed": "#2f1500",
+                        "on-surface": "#1a1a2e",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#85cfff",
+                        "on-tertiary-fixed-variant": "#004c6c",
+                        "secondary-container": "#feb246",
+                        "surface-variant": "#e2e0fc",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface-variant": "#564334",
+                        "surface-container-high": "#e8e5ff",
+                        "primary-fixed-dim": "#ffb77d",
+                        "tertiary": "#00658f",
+                        "on-background": "#1a1a2e",
+                        "surface-tint": "#904d00",
+                        "inverse-surface": "#2f2e43",
+                        "tertiary-fixed": "#c7e7ff",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed": "#001e2e",
+                        "on-secondary-fixed-variant": "#643f00",
+                        "primary-container": "#ff8c00",
+                        "surface-dim": "#dad7f3",
+                        "on-error-container": "#93000a",
+                        "text-muted": "#6B7280",
+                        "surface-container-highest": "#e2e0fc",
+                        "background-pure": "#FFFFFF",
+                        "inverse-on-surface": "#f2efff",
+                        "inverse-primary": "#ffb77d",
+                        "surface": "#fcf8ff",
+                        "outline-variant": "#ddc1ae",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-container": "#6f4600",
+                        "surface-container-low": "#f5f2ff",
+                        "on-tertiary-container": "#004360",
+                        "on-primary-fixed-variant": "#6e3900",
+                        "surface-container": "#efecff",
+                        "accent-gradient": "linear-gradient(135deg, #FF8C00 0%, #FEB246 100%)",
+                        "background": "#fcf8ff",
+                        "error-container": "#ffdad6",
+                        "secondary": "#845400",
+                        "secondary-fixed-dim": "#ffb95a",
+                        "tertiary-container": "#00b5fc",
+                        "on-secondary-fixed": "#2a1800",
+                        "primary-fixed": "#ffdcc3",
+                        "primary": "#904d00",
+                        "surface-bright": "#fcf8ff",
+                        "secondary-fixed": "#ffddb6",
+                        "outline": "#897362",
+                        "surface-soft": "#F8F9FA",
+                        "on-primary-container": "#623200"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "section-gap": "80px",
+                        "sidebar-width": "280px",
+                        "gutter": "24px",
+                        "container-max-width": "1200px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["Inter"],
+                        "headline-sm": ["Montserrat"],
+                        "headline-md": ["Montserrat"],
+                        "display-lg": ["Montserrat"],
+                        "body-lg": ["Inter"],
+                        "label-bold": ["Inter"],
+                        "display-lg-mobile": ["Montserrat"]
+                    },
+                    "fontSize": {
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-sm": ["24px", { "lineHeight": "1.4", "fontWeight": "600" }],
+                        "headline-md": ["32px", { "lineHeight": "1.3", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "label-bold": ["14px", { "lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
 <style>
-  .settings-wrap { display: flex; gap: 32px; padding: 40px 0 64px; }
-  .settings-nav { width: 220px; flex-shrink: 0; }
-  .settings-nav a { display: block; padding: 9px 12px; font-size: 14px; color: var(--text-dim); border-left: 2px solid transparent; border-radius: 0 6px 6px 0; margin-bottom: 2px; }
-  .settings-nav a.active { color: var(--text); border-color: var(--accent); background: var(--accent-dim); font-weight: 600; }
-  .settings-panel { flex: 1; display: none; }
-  .settings-panel.active { display: block; }
-  .plan-row { display: flex; justify-content: space-between; align-items: center; }
-  table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-  th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); font-size: 13px; }
-  .integ-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
-  .danger-card { border-color: var(--red); background: #FFF6F7; }
-</style>
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .card-shadow {
+            box-shadow: 0px 10px 30px rgba(26, 26, 46, 0.08);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #FF8C00 0%, #FEB246 100%);
+        }
+    </style>
 </head>
-<body>
-
-<nav class="nav">
-  <div class="nav-inner">
-    <a href="index.html" class="logo">Gur<span>ost</span></a>
-    <div class="nav-links"><a href="dashboard.html">Dashboard</a><a href="templates.html">Templates</a><a href="resources.html">Resources</a></div>
-    <div></div>
-  </div>
-</nav>
-
-<div class="container settings-wrap">
-  <div class="settings-nav">
-    <a href="#" class="settings-item" onclick="showPanel('billing'); return false;">Profile</a>
-    <a href="#" class="settings-item active" onclick="showPanel('billing'); return false;" id="nav-billing">Billing</a>
-    <a href="#" class="settings-item" onclick="showPanel('billing'); return false;">Security</a>
-    <a href="#" class="settings-item" onclick="showPanel('integrations'); return false;" id="nav-integrations">Integrations</a>
-    <a href="#" class="settings-item" onclick="showPanel('danger'); return false;" id="nav-danger">Danger Zone</a>
-  </div>
-
-  <div class="settings-panel active" id="panel-billing">
-    <h2 style="font-size:20px; margin-bottom:16px;">Billing</h2>
-    <div class="card">
-      <div class="plan-row">
-        <div><strong>Current Plan</strong><p class="text-dim mt-8" style="font-size:14px;" id="currentPlanText">Loading…</p></div>
-        <div class="flex gap-12">
-          <button class="btn btn-outline">Manage Billing</button>
-          <a href="pricing.html" class="btn btn-primary">Upgrade to Ultimate</a>
-        </div>
-      </div>
-    </div>
-    <table>
-      <thead><tr><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
-      <tbody>
-        <tr><td>Jul 1, 2026</td><td>£19.99</td><td><span class="badge badge-green">Paid</span></td></tr>
-        <tr><td>Jun 1, 2026</td><td>£19.99</td><td><span class="badge badge-green">Paid</span></td></tr>
-        <tr><td>May 1, 2026</td><td>£19.99</td><td><span class="badge badge-green">Paid</span></td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="settings-panel" id="panel-integrations">
-    <h2 style="font-size:20px; margin-bottom:16px;">Integrations</h2>
-    <div class="card">
-      <div class="integ-row"><span>Vercel</span><span class="flex gap-12"><span class="badge badge-green">Connected</span></span></div>
-      <div class="integ-row"><span>GitHub</span><span class="flex gap-12"><span class="badge badge-green">Connected</span></span></div>
-      <div class="integ-row"><span>Render</span><span class="flex gap-12"><span class="badge badge-gray">Not Connected</span><button class="btn btn-outline" style="padding:5px 12px; font-size:12px;">Connect</button></span></div>
-      <div class="integ-row" style="border-bottom:none;"><span>Google Play</span><span class="flex gap-12"><span class="badge badge-gray">Not Connected</span><button class="btn btn-outline" style="padding:5px 12px; font-size:12px;">Connect</button></span></div>
-    </div>
-  </div>
-
-  <div class="settings-panel" id="panel-danger">
-    <h2 style="font-size:20px; margin-bottom:16px;">Danger Zone</h2>
-    <div class="card danger-card">
-      <strong>Delete Account</strong>
-      <p class="text-dim mt-8" style="font-size:14px;">This permanently deletes your projects and cannot be undone.</p>
-      <button class="btn btn-danger mt-16" onclick="requestAccountDeletion()">Delete Account</button>
-    </div>
-  </div>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex flex-col items-center">
+<!-- Top NavBar -->
+<nav class="bg-white/80 backdrop-blur-md text-primary font-label-bold text-label-bold docked full-width top-0 bg-white flat no shadows flex justify-between items-center w-full px-gutter h-16 max-w-container-max-width mx-auto fixed z-50">
+<div class="flex items-center">
+<!-- Gurost Logo (Icon Only) -->
+<svg class="w-8 h-8 text-primary" fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor"></path>
+<path d="M2 17L12 22L22 17" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M2 12L12 17L22 12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
 </div>
-
+<div class="flex items-center space-x-4">
+<button class="bg-surface-soft text-on-surface-variant font-label-bold text-label-bold px-4 py-2 rounded-full border border-outline-variant hover:text-primary transition-colors flex items-center gap-2">
+                Back
+                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+<img alt="Gurost Icon" class="w-8 h-8 rounded-full object-cover" data-alt="A small, circular avatar portrait of a professional individual in a corporate setting. High-quality lighting, professional corporate/modern aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDU1FZSYT3Pi9kgduWl21IAwbLX-3R6IR6Own6VmgURJEiKZYYDtp7Id9H1YhZyZU9aja62V4IHHPfvDVYOLNbzrtdQwxRrztp95zyMjW29lap5BfZ7zMCJKvpnPUKg2N-a5T5-1GnnP5Xu_B_PGWsf6Othv21PW6Jibd5VdprRRZZJR_girWkfRNQfNxbGaKrRd7mMCzdn9vWXakkCceEsHO6eiEaUrR3RmhWW-OiUJi-am540DceCnw"/>
+</div>
+</nav>
+<div class="flex w-full max-w-container-max-width mx-auto pt-16 flex-1">
+<!-- SideNav -->
+<aside class="bg-surface-container text-primary font-body-md text-body-md docked left-0 h-full w-sidebar-width border-r border-outline-variant shadow-sm fixed left-0 top-0 h-screen z-40 hidden md:flex flex-col pt-16">
+<div class="p-6 text-center border-b border-outline-variant">
+<img alt="User Avatar" class="w-20 h-20 rounded-full mx-auto mb-4 object-cover" data-alt="A professional headshot avatar of a user, centered in a circular frame, set against a clean, modern corporate background with subtle lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBah-SPQ7LKigjN9Dlu0WqExf_P7-TmAc-44MwikJ2tUpmoLzwTzlCm2Qf4OnCegt1rUm1wIoz3H-CLaZE4RoXYg9s1pdVbV12rw-JbXBUELWfYJWk_Y6vnqT_lZo8yqTf-B2rp-NmEQiuZvZpQ8zY2SgFzt1j22hNeuqI5Zvn6ZQ7vdBPbD8oKTNpL8B_R7qi9J1UONY_en_Krd7Cu-ppZk6bvyBw_13vSkfq7R__sbk7k8txtSVT2eg"/>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-1">Gurost Builder</h2>
+<p class="font-body-md text-body-md text-text-muted">AI-Powered</p>
+<button class="mt-4 w-full btn-primary text-white font-label-bold text-label-bold py-2 rounded-lg card-shadow hover:opacity-90 transition-opacity">New Project</button>
+</div>
+<nav class="flex-1 overflow-y-auto py-4">
+<ul class="space-y-1">
+<li>
+<a class="flex items-center text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest transition-all" href="dashboard.html">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+                            Dashboard
+                        </a>
+</li>
+<li>
+<a class="flex items-center text-primary font-bold border-l-4 border-primary bg-primary-container/10 px-4 py-3 hover:bg-surface-container-highest transition-all" href="settings.html">
+<span class="material-symbols-outlined mr-3" style="font-variation-settings: 'FILL' 1;">settings</span>
+                            Settings
+                        </a>
+</li>
+<li>
+<a class="flex items-center text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest transition-all" href="profile.html">
+<span class="material-symbols-outlined mr-3">account_circle</span>
+                            Profile
+                        </a>
+</li>
+<li>
+<a class="flex items-center text-on-surface-variant px-4 py-3 hover:bg-surface-container-highest transition-all" href="assistant.html">
+<span class="material-symbols-outlined mr-3">smart_toy</span>
+                            Business Assistant
+                        </a>
+</li>
+</ul>
+</nav>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 w-full md:pl-sidebar-width px-gutter py-section-gap flex flex-col items-center">
+<div class="w-full max-w-3xl space-y-12 text-center">
+<header class="mb-12">
+<h1 class="font-display-lg text-display-lg text-on-surface mb-4">Settings</h1>
+<p class="font-body-lg text-body-lg text-text-muted">Manage your account preferences and configurations.</p>
+</header>
+<!-- Profile Section -->
+<section class="bg-white rounded-lg card-shadow p-8 glassmorphism border border-outline-variant/30">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-6">Profile</h2>
+<div class="flex flex-col items-center mb-8">
+<div class="relative mb-4">
+<img class="w-24 h-24 rounded-full object-cover shadow-sm border-2 border-white" data-alt="A close-up, highly detailed avatar portrait of a professional set against a clean, modern corporate white background with subtle warm lighting accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDN-fseasZ-ClvLpp1QS8szmpsGmCkQ3bT22clLu77cs8-ORiWRgr1ZyGrDxiTvTlw4bt4tLs4ZjatvlrnydTO1vnG0oADHNMCMP2Y2FOloZohxuC7rYTH2a-aj5aTe7lBB1qAcFe0sV8Tk1oGl8V9fg7JPqI82AFWdRygN4PJQ20PMaAKME1Fm8MaoHGkCGEb5FNMzyGL3gdA9rzMUAQvP2-QFF2g8pLYWhP5gXqkNpDOQ2kNbqd0Qiw"/>
+<button class="absolute bottom-0 right-0 bg-surface-soft p-2 rounded-full shadow-sm border border-outline-variant text-on-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">edit</span>
+</button>
+</div>
+</div>
+<div class="space-y-6 max-w-md mx-auto text-left">
+<div>
+<label class="block font-label-bold text-label-bold text-on-surface mb-2 text-center">Full Name</label>
+<input class="w-full bg-surface-soft border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-center" type="text" value="Jane Doe"/>
+</div>
+<div>
+<label class="block font-label-bold text-label-bold text-on-surface mb-2 text-center">Email Address</label>
+<input class="w-full bg-surface-soft border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-center" type="email" value="jane.doe@gurost.com"/>
+</div>
+<div class="pt-4 flex justify-center">
+<button class="btn-primary text-white font-label-bold text-label-bold px-8 py-3 rounded-lg card-shadow hover:opacity-90 transition-opacity min-w-[200px]">Save Changes</button>
+</div>
+</div>
+</section>
+<!-- Billing Section -->
+<section class="bg-white rounded-lg card-shadow p-8 glassmorphism border border-outline-variant/30">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-6">Billing</h2>
+<div class="bg-surface-container-low border border-outline-variant rounded-lg p-6 max-w-md mx-auto mb-6">
+<p class="font-label-bold text-label-bold text-text-muted mb-2 uppercase tracking-wider">Current Plan</p>
+<h3 class="font-headline-sm text-headline-sm text-primary mb-2" id="currentPlanName">Loading…</h3>
+<p class="font-body-md text-body-md text-on-surface-variant" id="currentPlanDetails">Fetching your real plan details…</p>
+</div>
+<div class="flex justify-center gap-4">
+<button class="bg-surface-soft text-on-surface font-label-bold text-label-bold px-6 py-3 rounded-lg border border-outline-variant hover:border-primary transition-colors">Manage Payment</button>
+<button class="btn-primary text-white font-label-bold text-label-bold px-8 py-3 rounded-lg card-shadow hover:opacity-90 transition-opacity">Upgrade Plan</button>
+</div>
+</section>
+<!-- Integrations Section -->
+<section class="bg-white rounded-lg card-shadow p-8 glassmorphism border border-outline-variant/30">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-6">Integrations</h2>
+<p class="font-body-md text-body-md text-text-muted mb-8 max-w-md mx-auto">Connect Gurost with your favorite tools to streamline your workflow.</p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto text-left">
+<div class="border border-outline-variant rounded-lg p-4 flex items-center justify-between bg-surface-soft">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-white rounded flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-primary">chat</span>
+</div>
+<div>
+<h4 class="font-label-bold text-label-bold text-on-surface">Slack</h4>
+<p class="text-sm text-text-muted">Connected</p>
+</div>
+</div>
+<button class="text-error font-label-bold text-sm hover:underline">Disconnect</button>
+</div>
+<div class="border border-outline-variant rounded-lg p-4 flex items-center justify-between bg-surface-soft">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-white rounded flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-primary">cloud</span>
+</div>
+<div>
+<h4 class="font-label-bold text-label-bold text-on-surface">Google Drive</h4>
+<p class="text-sm text-text-muted">Not connected</p>
+</div>
+</div>
+<button class="text-primary font-label-bold text-sm hover:underline">Connect</button>
+</div>
+</div>
+</section>
+</div>
+</main>
+</div>
+<!-- Footer -->
+<footer class="bg-on-background text-surface-container-lowest font-body-md text-body-md full-width bottom bg-on-background flat flex flex-col items-center justify-center w-full py-section-gap px-gutter text-center mt-auto z-50 relative">
+<div class="w-full max-w-container-max-width mx-auto flex flex-col items-center">
+<div class="text-white font-bold mb-8">
+<!-- Gurost Brand Logo Place -->
+<svg class="w-8 h-8 text-primary-container" fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor"></path>
+<path d="M2 17L12 22L22 17" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+<path d="M2 12L12 17L22 12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<ul class="flex flex-wrap justify-center gap-6 mb-8">
+<li><a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="about.html">About</a></li>
+<li><a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="careers.html">Careers</a></li>
+<li><a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="blog.html">Blog</a></li>
+<li><a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="docs.html">Docs</a></li>
+<li><a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="templates.html">Templates</a></li>
+<li><a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="showcase.html">Showcase</a></li>
+<li><a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="help.html">Help Center</a></li>
+<li><a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="contact.html">Contact</a></li>
+<li><a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="terms.html">Terms</a></li>
+<li><a class="text-surface-variant opacity-80 hover:text-primary-container transition-colors" href="privacy.html">Privacy</a></li>
+</ul>
+<p class="text-surface-variant opacity-60">Copyright 2026</p>
+</div>
+</footer>
 <script src="shared/api-client.js"></script>
-<script src="shared/pulse-voice.js"></script>
-<script src="shared/widget.js"></script>
 <script>
-  const PLAN_LABELS = {
-    free: 'Free — £0/month',
-    pro: 'Pro — £19.99/month',
-    unlimited: 'Unlimited — £79.99/month',
-    ultimate: 'Ultimate — £99/month'
-  };
-
-  async function loadSettings() {
+  // Real, honest plan display - uses the actual /api/me endpoint
+  // already confirmed working elsewhere tonight, not invented data.
+  const PLAN_DISPLAY_NAMES = { free: 'Free', pro: 'Plus', unlimited: 'Max', ultimate: 'Custom' };
+  (async () => {
     if (!GurostAPI.requireLogin()) return;
     try {
       const me = await GurostAPI.call('/api/me');
-      document.getElementById('currentPlanText').textContent = PLAN_LABELS[me.plan] || me.plan;
+      document.getElementById('currentPlanName').textContent = PLAN_DISPLAY_NAMES[me.plan] || me.plan;
+      document.getElementById('currentPlanDetails').textContent = `${me.creditBalance} purchased credits remaining`;
     } catch (err) {
-      document.getElementById('currentPlanText').textContent = 'Could not load plan info';
+      document.getElementById('currentPlanName').textContent = 'Unable to load';
+      document.getElementById('currentPlanDetails').textContent = err.message;
     }
-  }
-
-  // No self-service "delete my own account" route exists in Gurost's
-  // backend yet — admin can deactivate any account, but there's no
-  // DELETE /api/account endpoint. Honest about that instead of faking
-  // success.
-  function requestAccountDeletion() {
-    alert('Account deletion isn\'t self-service yet — contact support to close your account.');
-  }
-
-  document.addEventListener('DOMContentLoaded', loadSettings);
-
-  function showPanel(name) {
-    document.querySelectorAll('.settings-panel').forEach((p) => p.classList.remove('active'));
-    document.getElementById('panel-' + name).classList.add('active');
-    document.querySelectorAll('.settings-item').forEach((a) => a.classList.remove('active'));
-    document.getElementById('nav-' + name).classList.add('active');
-  }
+  })();
 </script>
-</body>
-</html>
+</body></html>
