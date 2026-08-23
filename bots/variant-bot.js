@@ -34,6 +34,12 @@ Output ONLY valid JSON, no preamble, no markdown fences:
 Rules:
 - Single HTML file, Tailwind via CDN, inline style/script only, mobile-responsive.
 - Commit fully to the assigned direction — do not hedge toward a generic middle-ground design.
+- Images: never invent, guess, or hallucinate an image URL (no made-up unsplash.com,
+  pexels.com, or any other external links) — a fabricated URL will show as a
+  broken image to the real end user. Where the design calls for a photo, build
+  a real, self-contained visual instead using inline SVG, a CSS gradient, or a
+  Material Symbols icon (via <span class="material-symbols-outlined">) inside a
+  colored shape. This must render correctly with zero external image requests.
 ${includeBranding
     ? '- Include a small, unobtrusive "Built with Gurost" text link in the footer (linking to https://gurost.com), styled to match the rest of the page.'
     : "- Do not include any Gurost branding, watermark, or attribution link — this is a white-label build."}`;
@@ -60,7 +66,10 @@ async function generateVariants(prompt, { includeBranding = true } = {}) {
   const failures = [];
   settled.forEach((r, i) => {
     if (r.status === "fulfilled") variants.push(r.value);
-    else failures.push({ variant: BRIEFS[i].id, error: r.reason.message });
+    else {
+      console.error(`[variant-bot] "${BRIEFS[i].id}" failed:`, r.reason.message);
+      failures.push({ variant: BRIEFS[i].id, error: r.reason.message });
+    }
   });
 
   return { variants, failures };

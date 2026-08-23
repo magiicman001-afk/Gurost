@@ -34,7 +34,9 @@ const FRONTEND_SYSTEM = `You are a React frontend engineer. Given a business des
 {"files": [{"path": "...", "content": "..."}], "summary": "one sentence"}
 Build a React app (functional components, hooks) that calls the given endpoints. Tailwind for styling. Keep it to the minimum set of files needed for a working prototype (App.jsx, a couple of page/component files, an api client module).
 
-On each top-level rendered section within a component (the outermost divs/sections a component returns, not every nested element), add a real data-gurost-file="ComponentFileName.jsx" attribute matching the actual file path that component lives in. This is real, load-bearing metadata — the live preview's Clickable Code Boxes feature reads this attribute directly to map a clicked section back to its real source file, so it needs to be accurate, not decorative. Don't add it to every element, just the top-level structural ones a user would reasonably click on.`;
+On each top-level rendered section within a component (the outermost divs/sections a component returns, not every nested element), add a real data-gurost-file="ComponentFileName.jsx" attribute matching the actual file path that component lives in. This is real, load-bearing metadata — the live preview's Clickable Code Boxes feature reads this attribute directly to map a clicked section back to its real source file, so it needs to be accurate, not decorative. Don't add it to every element, just the top-level structural ones a user would reasonably click on.
+
+Images: never invent, guess, or hallucinate an image URL (no made-up unsplash.com, pexels.com, or any other external links) — a fabricated URL will show as a broken image to the real end user. Where the design calls for a photo, build a real, self-contained visual instead using inline SVG, a CSS gradient, or a Material Symbols icon inside a colored shape. This must render correctly with zero external image requests.`;
 
 async function buildApp(prompt, { dbEngine = "postgres", onSchemaComplete } = {}) {
   const schemaRes = await callClaude({
