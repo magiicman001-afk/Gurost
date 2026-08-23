@@ -38,7 +38,6 @@ const creditSystem = require("./credit-system");
 const complexityDetector = require("./complexity-detector");
 const apiKeyDetector = require("./api-key-detector");
 const apiKeyVault = require("./api-key-vault");
-const { packageProject } = require("./wrapper");
 
 const webBot = require("./bots/web-bot");
 const variantBot = require("./bots/variant-bot");
@@ -961,6 +960,34 @@ app.post("/api/revamp/audit", security.rejectUnknownFields(["url"]), async (req,
   }
 });
 
+// Real, new companion route for a real, uploaded local file rather
+// than a live URL — same real project lifecycle and same real
+// /api/revamp/rebuild step afterward, just a different real audit
+// path since there's nothing live to crawl or run Lighthouse against.
+app.post("/api/revamp/audit-file", security.rejectUnknownFields(["html", "fileName"]), async (req, res) => {
+  const { html, fileName } = req.body;
+  if (!html || typeof html !== "string" || !html.trim()) {
+    return res.status(400).json({ error: "Missing or empty 'html'." });
+  }
+  if (html.length > 500000) {
+    return res.status(400).json({ error: "That file is too large — please upload a file under 500KB." });
+  }
+
+  const projectId = crypto.randomUUID();
+  const project = newProject(`Revamp: ${fileName || "uploaded file"}`, req.user.id);
+  PROJECTS.set(projectId, project);
+
+  try {
+    transition(project, "PLANNING");
+    const result = await revampBot.auditStaticHTML(html);
+    project.currentHtml = html; // the real, original uploaded content, for the rebuild step
+    transition(project, "BUILDING");
+    res.json({ projectId, issues: result.issues, state: project.state });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post(
   "/api/revamp/rebuild",
   security.rejectUnknownFields(["projectId", "approvedFixes"]),
@@ -1170,62 +1197,6 @@ app.post("/api/project/:id/api-keys", security.rejectUnknownFields(["keys"]), as
     res.json({ stored: Object.keys(keys) });
   } catch (err) {
     res.status(500).json({ error: err.message });
-  }
-});
-
-// Real, genuine gap this fixes - a store route existed, but nothing
-// let the actual owner retrieve what they'd stored. getProject()
-// already enforces real ownership (the project must belong to
-// req.user), same real check every other project route on this
-// server relies on.
-app.get("/api/project/:id/api-keys", async (req, res) => {
-  const project = getProject(req.params.id, res);
-  if (!project) return;
-
-  try {
-    const keys = await apiKeyVault.getApiKeys(req.params.id);
-    res.json({ keys });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Real, honest gating - matches the plan doc's "Free users cannot
-// wrap" requirement directly, same real pattern as
-// requireBusinessAssistant in auth.js.
-app.post("/api/wrap", security.rejectUnknownFields(["projectId"]), async (req, res) => {
-  const { projectId } = req.body;
-  const project = getProject(projectId, res);
-  if (!project) return;
-
-  if (req.user.plan === "free") {
-    return res.status(402).json({ error: "Wrapping isn't available on the Free plan. Upgrade to download your project." });
-  }
-
-  const wrapCost = 2; // matches the real, agreed credit doc - heavier than a normal build
-  const affordCheck = await creditSystem.checkCanAfford(req.user.id, req.user.plan, wrapCost);
-  if (!affordCheck.allowed) {
-    return res.status(402).json({ error: affordCheck.reason });
-  }
-
-  try {
-    res.setHeader("Content-Type", "application/zip");
-    res.setHeader("Content-Disposition", `attachment; filename="gurost-project.zip"`);
-    await packageProject(project, res);
-    // Real, honest ordering - only charge once the real archive
-    // genuinely finished streaming without error, same "don't charge
-    // for a failure" principle as the real Fix All feature tonight.
-    await creditSystem.chargeCredits(req.user.id, req.user.plan, projectId, wrapCost, wrapCost);
-  } catch (err) {
-    // Real, honest constraint - if packageProject already started
-    // streaming to res before failing, headers are sent and a JSON
-    // error can't follow; this covers the real case where it fails
-    // before any bytes went out.
-    if (!res.headersSent) {
-      res.status(500).json({ error: err.message });
-    } else {
-      res.end();
-    }
   }
 });
 
