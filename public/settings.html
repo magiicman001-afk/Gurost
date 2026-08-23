@@ -248,6 +248,20 @@
 </div>
 </div>
 </section>
+<!-- Real API Keys Section - keys are stored per-project in the real
+     backend, not globally, so this starts with picking a real project
+     rather than showing one imaginary master list. -->
+<section class="bg-white rounded-lg card-shadow p-8 glassmorphism border border-outline-variant/30">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-6">API Keys</h2>
+<p class="font-body-md text-body-md text-text-muted mb-6 max-w-md mx-auto">View the real API keys stored for each of your projects.</p>
+<div class="max-w-md mx-auto">
+<select class="w-full bg-surface-soft border border-outline-variant rounded-lg px-4 py-3 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary mb-4" id="apiKeysProjectSelect">
+<option value="">Select a project…</option>
+</select>
+<div class="hidden text-center text-text-muted text-sm py-4" id="apiKeysEmpty">No keys stored for this project yet.</div>
+<div class="space-y-3" id="apiKeysList"></div>
+</div>
+</section>
 </div>
 </main>
 </div>
@@ -292,6 +306,60 @@
       document.getElementById('currentPlanName').textContent = 'Unable to load';
       document.getElementById('currentPlanDetails').textContent = err.message;
     }
+  })();
+
+  // Real API Keys viewing - populates with the user's actual real
+  // projects, then fetches that specific project's real stored keys
+  // on selection.
+  (async () => {
+    const select = document.getElementById('apiKeysProjectSelect');
+    try {
+      const projects = await GurostAPI.call('/api/projects');
+      projects.forEach((p) => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = (p.prompt || 'Untitled project').slice(0, 50);
+        select.appendChild(opt);
+      });
+    } catch (err) {
+      console.error('[settings] Failed to load real projects for key viewer:', err.message);
+    }
+
+    select.addEventListener('change', async () => {
+      const list = document.getElementById('apiKeysList');
+      const empty = document.getElementById('apiKeysEmpty');
+      list.innerHTML = '';
+      empty.classList.add('hidden');
+      if (!select.value) return;
+
+      try {
+        const result = await GurostAPI.call(`/api/project/${select.value}/api-keys`);
+        const entries = Object.entries(result.keys || {});
+        if (!entries.length) {
+          empty.classList.remove('hidden');
+          return;
+        }
+        entries.forEach(([name, value]) => {
+          const row = document.createElement('div');
+          row.className = 'flex items-center gap-2 bg-surface-soft border border-outline-variant rounded-lg px-4 py-3';
+          row.innerHTML = `
+            <div class="flex-1 min-w-0">
+              <p class="font-label-bold text-label-bold text-on-surface text-sm">${name}</p>
+              <p class="font-body-md text-body-md text-text-muted text-xs truncate">••••••••${value.slice(-4)}</p>
+            </div>
+            <button class="text-primary text-sm font-label-bold hover:underline flex-shrink-0">Copy</button>
+          `;
+          row.querySelector('button').addEventListener('click', () => {
+            navigator.clipboard.writeText(value);
+            row.querySelector('button').textContent = 'Copied!';
+            setTimeout(() => { row.querySelector('button').textContent = 'Copy'; }, 1500);
+          });
+          list.appendChild(row);
+        });
+      } catch (err) {
+        list.innerHTML = `<p class="text-error text-sm text-center">Couldn't load keys: ${err.message}</p>`;
+      }
+    });
   })();
 </script>
 </body></html>
