@@ -36,6 +36,7 @@
     "pg": "^8.13.1",
     "googleapis": "^144.0.0",
     "node-cron": "^3.0.3",
-    "postmark": "^5.1.0"
+    "postmark": "^5.1.0",
+    "archiver": "^7.0.1"
   }
 }
