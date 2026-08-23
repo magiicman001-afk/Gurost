@@ -10,6 +10,26 @@ Output ONLY valid JSON:
 
 Base every issue on the provided data — do not infer performance or accessibility problems that aren't in the Lighthouse output. Order by severity within each category.`;
 
+// Real, honest companion to AUDIT_SYSTEM for a real, uploaded local
+// file rather than a live URL - no Lighthouse or crawl data exists
+// for something that isn't reachable online, so this is deliberately
+// scoped to what's genuinely detectable from the raw markup alone,
+// with no "performance" category invented from data that isn't there.
+const AUDIT_STATIC_SYSTEM = `You are a website auditor reviewing a real, complete HTML document directly - this file is not live online, so no Lighthouse or performance data exists for it.
+
+Output ONLY valid JSON:
+{"issues": [{"category": "seo"|"accessibility"|"broken_links"|"structure", "severity": "high"|"medium"|"low", "description": "...", "fix_summary": "..."}]}
+
+Only report issues genuinely visible in the provided markup itself, such as:
+- Missing or empty alt attributes on real <img> tags
+- Broken internal anchor links (an href="#section" with no matching id="section" anywhere in the document)
+- Missing <title> or meta description
+- Missing viewport meta tag
+- Heading structure that skips levels or has no real <h1>
+- Inline text/background color pairs with genuinely poor contrast
+
+Do not invent a "performance" category or any speed/loading claims — there is no real data to base that on for a file that isn't live. Order by severity within each category.`;
+
 const REBUILD_SYSTEM = `You are rebuilding a website with specific fixes applied. You will receive the original HTML and a list of approved fixes.
 
 Output ONLY valid JSON: {"html": "<complete updated document>", "summary": "one sentence"}
@@ -69,6 +89,20 @@ async function audit(url) {
   return { issues: parsed.issues, crawlData, lighthouse: lhData, usage };
 }
 
+// Real, new path for a real, uploaded local file - no live URL to
+// crawl or run Lighthouse against, so this sends the actual raw HTML
+// directly instead, honestly scoped by AUDIT_STATIC_SYSTEM above to
+// only what's genuinely detectable from static markup.
+async function auditStaticHTML(htmlContent) {
+  const { parsed, usage } = await callClaude({
+    system: AUDIT_STATIC_SYSTEM,
+    messages: [{ role: "user", content: `HTML document:\n${htmlContent.slice(0, 15000)}` }],
+    maxTokens: 3000
+  });
+
+  return { issues: parsed.issues, usage };
+}
+
 async function rebuild(originalHtml, approvedFixes) {
   const { parsed, usage } = await callClaude({
     system: REBUILD_SYSTEM,
@@ -81,4 +115,4 @@ async function rebuild(originalHtml, approvedFixes) {
   return { html: parsed.html, summary: parsed.summary, usage };
 }
 
-module.exports = { crawl, runLighthouse, audit, rebuild };
+module.exports = { crawl, runLighthouse, audit, auditStaticHTML, rebuild };
