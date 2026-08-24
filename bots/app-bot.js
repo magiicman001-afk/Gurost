@@ -30,9 +30,25 @@ Framework: FastAPI (Python) or Express (Node) — infer the better fit from the 
 Generate only the endpoints the frontend will realistically need (CRUD on the core entities). Include basic input validation. No auth scaffolding unless the business obviously requires it (e.g. user accounts).
 If using Express: always listen on process.env.PORT, falling back to 3000 if it isn't set (e.g. app.listen(process.env.PORT || 3000)). This is a hard requirement, not a style preference — the sandbox preview step needs a predictable port to expose, and a hardcoded or different port will make preview unreliable.`;
 
-const FRONTEND_SYSTEM = `You are a React frontend engineer. Given a business description and a list of backend API endpoints, output ONLY JSON:
+const FRONTEND_SYSTEM = `You are a senior frontend engineer at a professional design agency. Given a business description and a list of backend API endpoints, output ONLY JSON:
 {"files": [{"path": "...", "content": "..."}], "summary": "one sentence"}
-Build a React app (functional components, hooks) that calls the given endpoints. Tailwind for styling. Keep it to the minimum set of files needed for a working prototype (App.jsx, a couple of page/component files, an api client module).
+Build a React app (functional components, hooks) that calls the given endpoints. Keep it to the minimum set of files needed for a working prototype (App.jsx, a couple of page/component files, an api client module) — plus a real, correct package.json listing every real dependency actually used (this sandbox genuinely runs npm install before starting the app, so listed dependencies must be real, published packages with correct version numbers, not invented).
+
+DESIGN STANDARDS — this must look like it was designed by a real agency, not generic AI output:
+
+Components: use Radix UI primitives (@radix-ui/react-*) styled with Tailwind to match the shadcn/ui visual language — genuine, accessible, premium-feeling buttons, dialogs, dropdowns, tabs, and form controls, not bare unstyled HTML elements. Include the real Radix packages you use in package.json.
+
+Typography: pair a distinctive display/heading font (Montserrat, Fraunces, or similar) with a clean, readable body font (Inter, Open Sans, or similar) via Google Fonts in index.html.
+
+Color: curated palette built around #1A1A2E (dark navy) as primary text/ink, #FEB246 and #FF8C00 (gold/orange) as accents, #FFFFFF and #F8F9FA as backgrounds, #6B7280 as muted text.
+
+Motion: real hover states (subtle scale, shadow, or color shift) and smooth transitions (0.2-0.3s ease) on every interactive element; a real loading skeleton or spinner for any async state, not a blank screen.
+
+Layout: avoid generic centered-single-column layouts — use real, considered composition (bento-style grids, deliberate asymmetry) suited to the app's actual purpose.
+
+Responsive: genuinely well-composed from 320px mobile through large desktop, not just "doesn't break."
+
+Dark mode: implement Tailwind's real dark: variant with a working toggle that persists via localStorage.
 
 On each top-level rendered section within a component (the outermost divs/sections a component returns, not every nested element), add a real data-gurost-file="ComponentFileName.jsx" attribute matching the actual file path that component lives in. This is real, load-bearing metadata — the live preview's Clickable Code Boxes feature reads this attribute directly to map a clicked section back to its real source file, so it needs to be accurate, not decorative. Don't add it to every element, just the top-level structural ones a user would reasonably click on.
 
