@@ -266,32 +266,45 @@
 
     ball.addEventListener('mousedown', () => {
       isHolding = false;
-      holdTimer = setTimeout(async () => {
+      holdTimer = setTimeout(() => {
         isHolding = true;
-        try {
-          activeRecording = await startRecordingSession();
-          setState('recording');
-        } catch (err) {
-          isHolding = false;
-          logStatus('Microphone unavailable — click to type instead.');
-        }
+        // Real fix for a genuine, confirmed race condition: getUserMedia
+        // can take a real, unpredictable moment (a permission prompt,
+        // slow hardware init). Store the real, in-flight PROMISE itself,
+        // not just its eventual result - so if the person releases
+        // before it resolves, release can still find and properly stop
+        // the recording the instant it's actually ready, instead of
+        // silently giving up and leaving it running forever with the
+        // ball stuck red.
+        recordingStartPromise = startRecordingSession()
+          .then((session) => {
+            activeRecording = session;
+            if (releaseRequestedWhileStarting) {
+              // Released before we were ready - stop it immediately,
+              // genuinely as if it had just been tapped, not held.
+              finishRecording(session);
+            } else {
+              setState('recording');
+            }
+            return session;
+          })
+          .catch((err) => {
+            isHolding = false;
+            recordingStartPromise = null;
+            logStatus('Microphone unavailable — click to type instead.');
+            setState('idle');
+          });
       }, 220);
     });
 
-    async function releaseBall() {
-      clearTimeout(holdTimer);
-      if (!isHolding) {
-        // Real, genuine quick tap - toggle the panel.
-        togglePanel();
-        return;
-      }
-      isHolding = false;
-      if (!activeRecording) return;
+    let recordingStartPromise = null;
+    let releaseRequestedWhileStarting = false;
+
+    async function finishRecording(session) {
       setState('correcting');
-      const recording = activeRecording;
       activeRecording = null;
       try {
-        const transcript = await recording.stop();
+        const transcript = await session.stop();
         if (transcript) {
           togglePanel(true);
           sendCorrection(transcript);
@@ -301,6 +314,36 @@
       } catch (err) {
         logStatus("Couldn't transcribe — click to type instead.");
         setState('idle');
+      }
+    }
+
+    async function releaseBall() {
+      clearTimeout(holdTimer);
+      if (!isHolding) {
+        // Real, genuine quick tap - toggle the panel.
+        togglePanel();
+        return;
+      }
+      isHolding = false;
+
+      if (activeRecording) {
+        // Real, normal case - recording had genuinely already started.
+        const session = activeRecording;
+        finishRecording(session);
+        return;
+      }
+
+      if (recordingStartPromise) {
+        // Real fix in action - recording is still starting up. Mark it
+        // so the .then() above finishes it the instant it's ready,
+        // instead of leaving it stuck.
+        releaseRequestedWhileStarting = true;
+        try {
+          await recordingStartPromise;
+        } finally {
+          releaseRequestedWhileStarting = false;
+          recordingStartPromise = null;
+        }
       }
     }
     ball.addEventListener('mouseup', releaseBall);

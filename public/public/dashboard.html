@@ -285,6 +285,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       const transcript = await recordingSession.stop();
       if (transcript) document.getElementById('dashPromptInput').value = transcript;
+    } catch (err) {
+      validationMsg.textContent = "Couldn't transcribe that — you can type instead. (" + err.message + ")";
+      validationMsg.classList.remove('hidden');
     } finally { recordingSession = null; }
   });
 
