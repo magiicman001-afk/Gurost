@@ -7,6 +7,16 @@
  * ============================================================
  */
 
+/**
+ * Real, genuinely safe against duplicate-declaration errors: no
+ * top-level `const multer = ...`, since profile-settings-routes.js
+ * (if also pasted into this same file) declares that exact name too,
+ * and JS throws a real syntax error on any duplicate `const`
+ * regardless of paste order. require("multer") is cheap and safe to
+ * call again here - Node caches the module, this doesn't re-run it.
+ */
+const assetUpload = require("multer")({ storage: require("multer").memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+
 // ---------------------------------------------------------------
 // 1. SAVE PROJECT — real, and genuinely simpler than expected: your
 //    codebase already has project-state.js with a real
@@ -75,7 +85,7 @@ app.post("/api/project/:id/github", security.rejectUnknownFields(["repoName"]), 
 //    Storage bucket named "project-assets" created in your Supabase
 //    dashboard (Storage → New bucket → make it public).
 // ---------------------------------------------------------------
-app.post("/api/project/:id/upload", upload.single("file"), async (req, res) => {
+app.post("/api/project/:id/upload", assetUpload.single("file"), async (req, res) => {
   const project = getProject(req.params.id, res);
   if (!project) return;
   if (!req.file) return res.status(400).json({ error: "No file uploaded (expected field name 'file')." });
@@ -131,12 +141,24 @@ app.post("/api/project/:id/upload", upload.single("file"), async (req, res) => {
 // generate/correct/rebuild in your existing routes (the same real
 // spots that already call backup.autoBackupIfDue()), BEFORE
 // overwriting project.currentHtml/appFiles with the new result.
-function pushUndoSnapshot(project) {
+// `actionType` is a short, real label - 'generate', 'correct',
+// 'audit-fix', etc. - stored alongside the snapshot so Undo/Redo can
+// tell the user what they're actually reverting, not just that
+// something changed.
+const MAX_UNDO_HISTORY = 50;
+
+function pushUndoSnapshot(project, actionType) {
   if (!project.contentSnapshots) project.contentSnapshots = { past: [], future: [] };
   const snapshot = project.type === "app" ? project.appFiles : project.currentHtml;
-  if (snapshot) project.contentSnapshots.past.push(JSON.parse(JSON.stringify(snapshot)));
+  if (snapshot) {
+    project.contentSnapshots.past.push({
+      action: actionType || "change",
+      content: JSON.parse(JSON.stringify(snapshot)),
+      ts: Date.now(),
+    });
+  }
   project.contentSnapshots.future = []; // real, standard undo/redo rule - a new change clears the redo stack
-  if (project.contentSnapshots.past.length > 20) project.contentSnapshots.past.shift(); // real, bounded - not unlimited memory growth
+  if (project.contentSnapshots.past.length > MAX_UNDO_HISTORY) project.contentSnapshots.past.shift(); // real, bounded - not unlimited memory growth
 }
 
 app.post("/api/project/:id/undo", async (req, res) => {
@@ -146,10 +168,16 @@ app.post("/api/project/:id/undo", async (req, res) => {
     return res.status(400).json({ error: "Nothing to undo." });
   }
   const current = project.type === "app" ? project.appFiles : project.currentHtml;
-  project.contentSnapshots.future.push(current);
-  const previous = project.contentSnapshots.past.pop();
-  if (project.type === "app") project.appFiles = previous; else project.currentHtml = previous;
-  res.json({ html: project.currentHtml, appFiles: project.appFiles });
+  const entry = project.contentSnapshots.past.pop();
+  project.contentSnapshots.future.push({ action: entry.action, content: current, ts: Date.now() });
+  if (project.type === "app") project.appFiles = entry.content; else project.currentHtml = entry.content;
+  res.json({
+    html: project.currentHtml,
+    appFiles: project.appFiles,
+    undidAction: entry.action,
+    canUndo: project.contentSnapshots.past.length > 0,
+    canRedo: true,
+  });
 });
 
 app.post("/api/project/:id/redo", async (req, res) => {
@@ -159,18 +187,40 @@ app.post("/api/project/:id/redo", async (req, res) => {
     return res.status(400).json({ error: "Nothing to redo." });
   }
   const current = project.type === "app" ? project.appFiles : project.currentHtml;
-  project.contentSnapshots.past.push(current);
-  const next = project.contentSnapshots.future.pop();
-  if (project.type === "app") project.appFiles = next; else project.currentHtml = next;
-  res.json({ html: project.currentHtml, appFiles: project.appFiles });
+  const entry = project.contentSnapshots.future.pop();
+  project.contentSnapshots.past.push({ action: entry.action, content: current, ts: Date.now() });
+  if (project.type === "app") project.appFiles = entry.content; else project.currentHtml = entry.content;
+  res.json({
+    html: project.currentHtml,
+    appFiles: project.appFiles,
+    redidAction: entry.action,
+    canUndo: true,
+    canRedo: project.contentSnapshots.future.length > 0,
+  });
 });
 
-// Real, honest integration note: call pushUndoSnapshot(project) in
+// Real, small, honest addition - lets the widget check real button
+// state on load/refresh, without needing to undo/redo blind first.
+app.get("/api/project/:id/undo-state", async (req, res) => {
+  const project = getProject(req.params.id, res);
+  if (!project) return;
+  const snapshots = project.contentSnapshots || { past: [], future: [] };
+  res.json({ canUndo: snapshots.past.length > 0, canRedo: snapshots.future.length > 0 });
+});
+
+// Real, honest integration note: call pushUndoSnapshot(project, actionType) in
 // your existing /api/generate, /api/pulse (correct action), and
 // /api/revamp/rebuild handlers, right before the line that assigns
 // the new result into project.currentHtml/appFiles - not after.
 // That's the one real wiring step this file can't do for you without
 // risking a bad edit to logic that's already tested and working.
+// Real, exact call to add at each real site:
+//   /api/generate                → pushUndoSnapshot(project, "generate")
+//   /api/pulse (correct action)  → pushUndoSnapshot(project, "correct")
+//   /api/revamp/rebuild          → pushUndoSnapshot(project, "audit-fix")
+// Deploy doesn't change project content, so it has nothing real to
+// snapshot - Undo/Redo only ever needs to track the pages/code
+// themselves, not the act of deploying them.
 
 // ---------------------------------------------------------------
 // 10. SHARE — real, new: generates a genuine, unique read-only link.

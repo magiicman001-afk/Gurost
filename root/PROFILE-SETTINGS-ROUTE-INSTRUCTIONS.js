@@ -26,8 +26,7 @@
  * ============================================================
  */
 
-const multer = require("multer");
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+const avatarUpload = require("multer")({ storage: require("multer").memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 // Real, honest note: GET /api/me above only returns id/email/plan/
 // creditBalance, sourced straight from the JWT/API-key resolution -
@@ -92,7 +91,7 @@ app.patch("/api/me", security.rejectUnknownFields(["displayName"]), async (req, 
 
 // POST /api/me/avatar — real file upload to Supabase Storage. Expects
 // multipart/form-data with a single field named "avatar".
-app.post("/api/me/avatar", upload.single("avatar"), async (req, res) => {
+app.post("/api/me/avatar", avatarUpload.single("avatar"), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded (expected field name 'avatar')." });
   if (!req.file.mimetype.startsWith("image/")) {
     return res.status(400).json({ error: "File must be an image." });

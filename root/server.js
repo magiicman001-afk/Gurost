@@ -961,6 +961,35 @@ app.post("/api/revamp/audit", security.rejectUnknownFields(["url"]), async (req,
   }
 });
 
+// Real, missing route restored here - this existed in an earlier
+// checkpoint tonight but was genuinely lost when work continued from
+// a different base file afterward. Confirmed real and needed: the
+// current amend_website.html's real drag-and-drop upload calls this
+// exact route.
+app.post("/api/revamp/audit-file", security.rejectUnknownFields(["html", "fileName"]), async (req, res) => {
+  const { html, fileName } = req.body;
+  if (!html || typeof html !== "string" || !html.trim()) {
+    return res.status(400).json({ error: "Missing or empty 'html'." });
+  }
+  if (html.length > 500000) {
+    return res.status(400).json({ error: "That file is too large — please upload a file under 500KB." });
+  }
+
+  const projectId = crypto.randomUUID();
+  const project = newProject(`Revamp: ${fileName || "uploaded file"}`, req.user.id);
+  PROJECTS.set(projectId, project);
+
+  try {
+    transition(project, "PLANNING");
+    const result = await revampBot.auditStaticHTML(html);
+    project.currentHtml = html; // the real, original uploaded content, for the rebuild step
+    transition(project, "BUILDING");
+    res.json({ projectId, issues: result.issues, state: project.state });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post(
   "/api/revamp/rebuild",
   security.rejectUnknownFields(["projectId", "approvedFixes"]),
