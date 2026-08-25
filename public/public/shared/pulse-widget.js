@@ -59,13 +59,33 @@
     }
   }
 
+  function updateUndoRedoButtons(canUndo, canRedo) {
+    const undoBtn = document.getElementById('actUndo');
+    const redoBtn = document.getElementById('actRedo');
+    if (undoBtn && canUndo !== undefined) undoBtn.disabled = !canUndo;
+    if (redoBtn && canRedo !== undefined) redoBtn.disabled = !canRedo;
+  }
+
+  async function refreshUndoRedoState() {
+    const projectId = window.gurostBuilder?.getProjectId?.();
+    if (!projectId || typeof window.gurostBuilder.undo !== 'function') return;
+    try {
+      const result = await window.GurostAPI.call(`/api/project/${projectId}/undo-state`);
+      updateUndoRedoButtons(result.canUndo, result.canRedo);
+    } catch (err) {
+      // Real, honest - a failed state check just leaves buttons as
+      // they were; it's a convenience refresh, not load-bearing.
+    }
+  }
+
   function updatePauseResumeButtons() {
     const pauseBtn = document.getElementById('pulsePauseBtn');
     const resumeBtn = document.getElementById('pulseResumeBtn');
     if (!pauseBtn || !resumeBtn) return;
+    const supportsPause = typeof window.gurostBuilder?.pause === 'function';
     const hasProject = window.gurostBuilder?.hasActiveProject?.();
-    pauseBtn.classList.toggle('visible', hasProject && currentState === 'building');
-    resumeBtn.classList.toggle('visible', hasProject && currentState === 'paused');
+    pauseBtn.classList.toggle('visible', supportsPause && hasProject && currentState === 'building');
+    resumeBtn.classList.toggle('visible', supportsPause && hasProject && currentState === 'paused');
   }
 
   function logStatus(text) {
@@ -135,6 +155,7 @@
         setState('done');
         logStatus('Done!');
         setTimeout(checkForRealSuggestion, 500);
+        refreshUndoRedoState();
       } catch (err) {
         logStatus('Failed: ' + err.message);
         setState('idle');
@@ -155,6 +176,7 @@
       setState('done');
       logStatus('Done!');
       setTimeout(checkForRealSuggestion, 500);
+      refreshUndoRedoState();
     } catch (err) {
       logStatus('Failed: ' + err.message);
       setState('idle');
@@ -353,6 +375,7 @@
 
     updatePauseResumeButtons();
     setupActionButtons();
+    refreshUndoRedoState();
   }
 
   // Real, honest visibility - a button only shows if this specific
@@ -382,13 +405,15 @@
     }));
 
     document.getElementById('actUndo').addEventListener('click', () => runAction('undo', async () => {
-      await gb.undo();
-      logStatus('Undone.');
+      const result = await gb.undo();
+      logStatus(`Undid: ${result?.undidAction || 'change'}`);
+      updateUndoRedoButtons(result?.canUndo, result?.canRedo);
     }));
 
     document.getElementById('actRedo').addEventListener('click', () => runAction('redo', async () => {
-      await gb.redo();
-      logStatus('Redone.');
+      const result = await gb.redo();
+      logStatus(`Redid: ${result?.redidAction || 'change'}`);
+      updateUndoRedoButtons(result?.canUndo, result?.canRedo);
     }));
 
     document.getElementById('actDeploy').addEventListener('click', () => runAction('deploy', async () => {

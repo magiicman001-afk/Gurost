@@ -532,6 +532,7 @@ async function undoChange() {
     const result = await GurostAPI.call(`/api/project/${projectId}/undo`, { method: 'POST' });
     fixedHtml = result.html;
     showAfterPreview(fixedHtml);
+    return result;
   } catch (err) {
     console.error('[amend_website] undo failed:', err.message);
     throw err;
@@ -543,6 +544,7 @@ async function redoChange() {
     const result = await GurostAPI.call(`/api/project/${projectId}/redo`, { method: 'POST' });
     fixedHtml = result.html;
     showAfterPreview(fixedHtml);
+    return result;
   } catch (err) {
     console.error('[amend_website] redo failed:', err.message);
     throw err;

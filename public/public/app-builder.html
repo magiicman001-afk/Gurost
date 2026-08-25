@@ -757,6 +757,7 @@ async function undoChange() {
     currentAppFiles = result.appFiles;
     renderLivePreview(currentAppFiles);
     renderCodeView(currentAppFiles);
+    return result;
   } catch (err) {
     console.error('[app-builder] undo failed:', err.message);
     throw err;
@@ -769,6 +770,7 @@ async function redoChange() {
     currentAppFiles = result.appFiles;
     renderLivePreview(currentAppFiles);
     renderCodeView(currentAppFiles);
+    return result;
   } catch (err) {
     console.error('[app-builder] redo failed:', err.message);
     throw err;

@@ -258,6 +258,7 @@ async function undoChange() {
     const result = await GurostAPI.call(`/api/project/${projectId}/undo`, { method: 'POST' });
     currentHtml = result.html;
     renderPreview(currentHtml);
+    return result;
   } catch (err) {
     console.error('[builder] undo failed:', err.message);
     throw err;
@@ -269,6 +270,7 @@ async function redoChange() {
     const result = await GurostAPI.call(`/api/project/${projectId}/redo`, { method: 'POST' });
     currentHtml = result.html;
     renderPreview(currentHtml);
+    return result;
   } catch (err) {
     console.error('[builder] redo failed:', err.message);
     throw err;
