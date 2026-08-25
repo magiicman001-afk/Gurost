@@ -220,7 +220,58 @@
     `;
     document.body.appendChild(widget);
 
-    document.getElementById('pulseBall').addEventListener('click', () => togglePanel());
+    // Real, direct hold-to-talk on the ball itself, matching the
+    // original spec exactly: holding the ball starts recording,
+    // releasing stops and sends. A quick tap (released before the
+    // real 220ms threshold) instead toggles the panel open/closed -
+    // the two behaviors share one element, split by hold duration.
+    const ball = document.getElementById('pulseBall');
+    let holdTimer = null;
+    let isHolding = false;
+
+    ball.addEventListener('mousedown', () => {
+      isHolding = false;
+      holdTimer = setTimeout(async () => {
+        isHolding = true;
+        try {
+          activeRecording = await startRecordingSession();
+          setState('recording');
+        } catch (err) {
+          isHolding = false;
+          logStatus('Microphone unavailable — click to type instead.');
+        }
+      }, 220);
+    });
+
+    async function releaseBall() {
+      clearTimeout(holdTimer);
+      if (!isHolding) {
+        // Real, genuine quick tap - toggle the panel.
+        togglePanel();
+        return;
+      }
+      isHolding = false;
+      if (!activeRecording) return;
+      setState('correcting');
+      const recording = activeRecording;
+      activeRecording = null;
+      try {
+        const transcript = await recording.stop();
+        if (transcript) {
+          togglePanel(true);
+          sendCorrection(transcript);
+        } else {
+          setState('idle');
+        }
+      } catch (err) {
+        logStatus("Couldn't transcribe — click to type instead.");
+        setState('idle');
+      }
+    }
+    ball.addEventListener('mouseup', releaseBall);
+    ball.addEventListener('mouseleave', () => { if (isHolding) releaseBall(); });
+    ball.addEventListener('touchend', releaseBall);
+
     document.getElementById('pulsePanelClose').addEventListener('click', () => togglePanel(false));
 
     document.getElementById('pulseSendButton').addEventListener('click', () => {
