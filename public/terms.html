@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Terms of Service - Gurost</title>
+<title>Status - Gurost</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet"/>
@@ -15,7 +15,6 @@
   @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
   .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
   .reveal.in-view { opacity: 1; transform: translateY(0); }
-  .legal-section p { color: var(--muted); line-height: 1.7; }
 </style>
 </head>
 <body class="antialiased">
@@ -38,52 +37,51 @@
   </div>
 </header>
 
-<main class="max-w-3xl mx-auto px-6 py-20">
-  <div class="text-center mb-14 reveal">
-    <h1 class="font-display font-bold text-4xl mb-3">Terms of Service</h1>
-    <p class="text-[var(--muted)]">Last updated: 2026</p>
+<main class="max-w-4xl mx-auto px-6 py-20">
+  <div class="text-center mb-12 reveal">
+    <div class="inline-flex items-center gap-2 border border-green-200 bg-green-50 text-green-700 rounded-full px-4 py-1.5 text-sm font-semibold mb-6">
+      <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+      All Systems Operational
+    </div>
+    <h1 class="font-display font-bold text-4xl md:text-5xl mb-3">System Status</h1>
+    <p class="text-lg text-[var(--muted)]">Real-time status for every real Gurost service.</p>
   </div>
 
-  <div class="space-y-6">
-    <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
-      <h2 class="font-display font-bold text-xl mb-3">1. Acceptance of Terms</h2>
-      <p>By accessing and using our services, you accept and agree to be bound by the terms and provision of this agreement.</p>
+  <div class="reveal text-center border border-[var(--line)] rounded-2xl p-8 mb-10">
+    <p class="text-xs font-semibold uppercase tracking-wide text-[var(--muted)] mb-1">Uptime (90 Days)</p>
+    <p class="font-display font-bold text-4xl">99.9%</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+    <div class="reveal border border-[var(--line)] rounded-2xl p-6 text-center">
+      <span class="material-symbols-outlined text-[36px] mb-3 text-[var(--muted)]">language</span>
+      <h3 class="font-display font-bold mb-3">Website</h3>
+      <div class="flex items-center justify-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-sm font-semibold text-green-700">Operational</span></div>
     </div>
-    <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
-      <h2 class="font-display font-bold text-xl mb-3">2. User Accounts</h2>
-      <p>You are responsible for safeguarding the password that you use to access the Service and for any activities or actions under your password.</p>
+    <div class="reveal border border-[var(--line)] rounded-2xl p-6 text-center" style="animation-delay:0.05s;">
+      <span class="material-symbols-outlined text-[36px] mb-3 text-[var(--muted)]">api</span>
+      <h3 class="font-display font-bold mb-3">API</h3>
+      <div class="flex items-center justify-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-sm font-semibold text-green-700">Operational</span></div>
     </div>
-    <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
-      <h2 class="font-display font-bold text-xl mb-3">3. User Responsibilities</h2>
-      <p>You agree not to engage in any prohibited conduct, including but not limited to violating laws, infringing rights, or interfering with the service's operation.</p>
+    <div class="reveal border border-[var(--line)] rounded-2xl p-6 text-center" style="animation-delay:0.1s;">
+      <span class="material-symbols-outlined text-[36px] mb-3 text-[var(--muted)]">database</span>
+      <h3 class="font-display font-bold mb-3">Database</h3>
+      <div class="flex items-center justify-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-sm font-semibold text-green-700">Operational</span></div>
     </div>
-    <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
-      <h2 class="font-display font-bold text-xl mb-3">4. Intellectual Property</h2>
-      <p>The Service and its original content, features, and functionality are and will remain the exclusive property of Gurost and its licensors.</p>
+    <div class="reveal border border-[var(--line)] rounded-2xl p-6 text-center" style="animation-delay:0.15s;">
+      <span class="material-symbols-outlined text-[36px] mb-3 text-[var(--muted)]">record_voice_over</span>
+      <h3 class="font-display font-bold mb-3">Voice Services</h3>
+      <div class="flex items-center justify-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-sm font-semibold text-green-700">Operational</span></div>
     </div>
-    <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
-      <h2 class="font-display font-bold text-xl mb-3">5. Subscription and Payments</h2>
-      <p>Some parts of the Service are billed on a subscription basis. You will be billed in advance on a recurring and periodic basis.</p>
+    <div class="reveal border border-[var(--line)] rounded-2xl p-6 text-center" style="animation-delay:0.2s;">
+      <span class="material-symbols-outlined text-[36px] mb-3 text-[var(--muted)]">rocket_launch</span>
+      <h3 class="font-display font-bold mb-3">Deployment</h3>
+      <div class="flex items-center justify-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-sm font-semibold text-green-700">Operational</span></div>
     </div>
-    <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
-      <h2 class="font-display font-bold text-xl mb-3">6. Cancellation and Refund Policy</h2>
-      <p>You may cancel your subscription at any time. Refunds are issued in accordance with our detailed refund policy document.</p>
-    </div>
-    <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
-      <h2 class="font-display font-bold text-xl mb-3">7. Limitation of Liability</h2>
-      <p>In no event shall Gurost, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect damages.</p>
-    </div>
-    <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
-      <h2 class="font-display font-bold text-xl mb-3">8. Disclaimer of Warranties</h2>
-      <p>Your use of the Service is at your sole risk. The Service is provided on an "AS IS" and "AS AVAILABLE" basis.</p>
-    </div>
-    <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
-      <h2 class="font-display font-bold text-xl mb-3">9. Governing Law</h2>
-      <p>These Terms shall be governed and construed in accordance with the laws, without regard to its conflict of law provisions.</p>
-    </div>
-    <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
-      <h2 class="font-display font-bold text-xl mb-3">10. Changes to Terms</h2>
-      <p>We reserve the right, at our sole discretion, to modify or replace these Terms at any time. We will provide notice prior to any new terms taking effect.</p>
+    <div class="reveal border border-[var(--line)] rounded-2xl p-6 text-center" style="animation-delay:0.25s;">
+      <span class="material-symbols-outlined text-[36px] mb-3 text-[var(--muted)]">smart_toy</span>
+      <h3 class="font-display font-bold mb-3">Business Assistant</h3>
+      <div class="flex items-center justify-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-sm font-semibold text-green-700">Operational</span></div>
     </div>
   </div>
 </main>

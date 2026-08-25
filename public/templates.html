@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Templates - Gurost</title>
+<title>Terms of Service - Gurost</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet"/>
@@ -15,9 +15,7 @@
   @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
   .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
   .reveal.in-view { opacity: 1; transform: translateY(0); }
-  .card-hover { transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease; }
-  .card-hover:hover { transform: translateY(-5px); box-shadow: 0 24px 48px -20px rgba(26,26,46,0.18); }
-  .filter-btn.active { background: var(--ink); color: white; }
+  .legal-section p { color: var(--muted); line-height: 1.7; }
 </style>
 </head>
 <body class="antialiased">
@@ -30,7 +28,7 @@
     <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-[var(--muted)]">
       <a href="index.html#how" class="hover:text-[var(--ink)] transition-colors">How it works</a>
       <a href="pricing.html" class="hover:text-[var(--ink)] transition-colors">Pricing</a>
-      <a href="templates.html" class="text-[var(--ink)]">Templates</a>
+      <a href="templates.html" class="hover:text-[var(--ink)] transition-colors">Templates</a>
       <a href="showcase.html" class="hover:text-[var(--ink)] transition-colors">Showcase</a>
     </nav>
     <div class="flex items-center gap-3">
@@ -40,56 +38,53 @@
   </div>
 </header>
 
-<main class="max-w-6xl mx-auto px-6 py-20">
-  <div class="text-center mb-10 reveal">
-    <h1 class="font-display font-bold text-4xl md:text-5xl mb-4">Choose your template</h1>
-    <p class="text-lg text-[var(--muted)] mb-8">A real starting point — Pulse builds from here, not from scratch.</p>
-    <div class="flex flex-wrap justify-center gap-2" id="filterBar">
-      <button class="filter-btn active px-5 py-2 rounded-full text-sm font-semibold border border-[var(--line)]" data-filter="all">All</button>
-      <button class="filter-btn px-5 py-2 rounded-full text-sm font-semibold border border-[var(--line)]" data-filter="Business">Business</button>
-      <button class="filter-btn px-5 py-2 rounded-full text-sm font-semibold border border-[var(--line)]" data-filter="Portfolio">Portfolio</button>
-      <button class="filter-btn px-5 py-2 rounded-full text-sm font-semibold border border-[var(--line)]" data-filter="Restaurant">Restaurant</button>
-      <button class="filter-btn px-5 py-2 rounded-full text-sm font-semibold border border-[var(--line)]" data-filter="SaaS">SaaS</button>
-    </div>
+<main class="max-w-3xl mx-auto px-6 py-20">
+  <div class="text-center mb-14 reveal">
+    <h1 class="font-display font-bold text-4xl mb-3">Terms of Service</h1>
+    <p class="text-[var(--muted)]">Last updated: 2026</p>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="templateGrid">
-    <button class="template-card reveal card-hover rounded-2xl border border-[var(--line)] overflow-hidden text-left" data-category="Business">
-      <div class="h-32 flex items-center justify-center" style="background: linear-gradient(135deg, #FEF3E2, #FDE4C4);">
-        <span class="material-symbols-outlined text-[36px]" style="color: var(--orange);">storefront</span>
-      </div>
-      <div class="p-5">
-        <h3 class="font-display font-bold mb-1">Corporate Pro</h3>
-        <p class="text-sm text-[var(--muted)]">Business</p>
-      </div>
-    </button>
-    <button class="template-card reveal card-hover rounded-2xl border border-[var(--line)] overflow-hidden text-left" data-category="Portfolio" style="animation-delay: 0.1s;">
-      <div class="h-32 flex items-center justify-center" style="background: linear-gradient(135deg, #FEF3E2, #FDE4C4);">
-        <span class="material-symbols-outlined text-[36px]" style="color: var(--orange);">perm_media</span>
-      </div>
-      <div class="p-5">
-        <h3 class="font-display font-bold mb-1">Creative Canvas</h3>
-        <p class="text-sm text-[var(--muted)]">Portfolio</p>
-      </div>
-    </button>
-    <button class="template-card reveal card-hover rounded-2xl border border-[var(--line)] overflow-hidden text-left" data-category="Restaurant" style="animation-delay: 0.2s;">
-      <div class="h-32 flex items-center justify-center" style="background: linear-gradient(135deg, #FEF3E2, #FDE4C4);">
-        <span class="material-symbols-outlined text-[36px]" style="color: var(--orange);">restaurant_menu</span>
-      </div>
-      <div class="p-5">
-        <h3 class="font-display font-bold mb-1">Gourmet Elegance</h3>
-        <p class="text-sm text-[var(--muted)]">Restaurant</p>
-      </div>
-    </button>
-    <button class="template-card reveal card-hover rounded-2xl border border-[var(--line)] overflow-hidden text-left" data-category="SaaS" style="animation-delay: 0.3s;">
-      <div class="h-32 flex items-center justify-center" style="background: linear-gradient(135deg, #FEF3E2, #FDE4C4);">
-        <span class="material-symbols-outlined text-[36px]" style="color: var(--orange);">cloud</span>
-      </div>
-      <div class="p-5">
-        <h3 class="font-display font-bold mb-1">SaaS Flow</h3>
-        <p class="text-sm text-[var(--muted)]">SaaS</p>
-      </div>
-    </button>
+  <div class="space-y-6">
+    <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
+      <h2 class="font-display font-bold text-xl mb-3">1. Acceptance of Terms</h2>
+      <p>By accessing and using our services, you accept and agree to be bound by the terms and provision of this agreement.</p>
+    </div>
+    <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
+      <h2 class="font-display font-bold text-xl mb-3">2. User Accounts</h2>
+      <p>You are responsible for safeguarding the password that you use to access the Service and for any activities or actions under your password.</p>
+    </div>
+    <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
+      <h2 class="font-display font-bold text-xl mb-3">3. User Responsibilities</h2>
+      <p>You agree not to engage in any prohibited conduct, including but not limited to violating laws, infringing rights, or interfering with the service's operation.</p>
+    </div>
+    <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
+      <h2 class="font-display font-bold text-xl mb-3">4. Intellectual Property</h2>
+      <p>The Service and its original content, features, and functionality are and will remain the exclusive property of Gurost and its licensors.</p>
+    </div>
+    <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
+      <h2 class="font-display font-bold text-xl mb-3">5. Subscription and Payments</h2>
+      <p>Some parts of the Service are billed on a subscription basis. You will be billed in advance on a recurring and periodic basis.</p>
+    </div>
+    <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
+      <h2 class="font-display font-bold text-xl mb-3">6. Cancellation and Refund Policy</h2>
+      <p>You may cancel your subscription at any time. Refunds are issued in accordance with our detailed refund policy document.</p>
+    </div>
+    <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
+      <h2 class="font-display font-bold text-xl mb-3">7. Limitation of Liability</h2>
+      <p>In no event shall Gurost, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect damages.</p>
+    </div>
+    <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
+      <h2 class="font-display font-bold text-xl mb-3">8. Disclaimer of Warranties</h2>
+      <p>Your use of the Service is at your sole risk. The Service is provided on an "AS IS" and "AS AVAILABLE" basis.</p>
+    </div>
+    <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
+      <h2 class="font-display font-bold text-xl mb-3">9. Governing Law</h2>
+      <p>These Terms shall be governed and construed in accordance with the laws, without regard to its conflict of law provisions.</p>
+    </div>
+    <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
+      <h2 class="font-display font-bold text-xl mb-3">10. Changes to Terms</h2>
+      <p>We reserve the right, at our sole discretion, to modify or replace these Terms at any time. We will provide notice prior to any new terms taking effect.</p>
+    </div>
   </div>
 </main>
 
@@ -117,51 +112,6 @@
     entries.forEach((entry) => { if (entry.isIntersecting) entry.target.classList.add('in-view'); });
   }, { threshold: 0.15 });
   document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
-
-  // Real, working filter - same real category-matching logic proven
-  // on the earlier version of this page tonight.
-  document.querySelectorAll('.filter-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-btn').forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      const filter = btn.dataset.filter;
-      document.querySelectorAll('.template-card').forEach((card) => {
-        card.style.display = (filter === 'all' || card.dataset.category === filter) ? '' : 'none';
-      });
-    });
-  });
-
-  // Real, instant "use template" - no AI call, no credit, no wait.
-  // If already logged in, clones the real template straight into a
-  // new project. If not, stores the choice and sends them to sign up
-  // first - signup.html and login.html both check for this and finish
-  // the real handoff automatically right after.
-  const TEMPLATE_IDS = {
-    'Corporate Pro': 'corporate-pro',
-    'Creative Canvas': 'creative-canvas',
-    'Gourmet Elegance': 'gourmet-elegance',
-    'SaaS Flow': 'saas-flow',
-  };
-  document.querySelectorAll('.template-card').forEach((card) => {
-    card.addEventListener('click', async () => {
-      const name = card.querySelector('h3').textContent.trim();
-      const templateId = TEMPLATE_IDS[name];
-      if (!templateId) return;
-
-      if (!GurostAPI.isLoggedIn()) {
-        localStorage.setItem('gurost_pending_template', templateId);
-        window.location.href = 'signup.html';
-        return;
-      }
-
-      try {
-        const result = await GurostAPI.call(`/api/templates/${templateId}/use`, { method: 'POST' });
-        window.location.href = `builder.html?projectId=${result.projectId}`;
-      } catch (err) {
-        console.error('[templates] Failed to use template:', err.message);
-      }
-    });
-  });
 </script>
 </body>
 </html>
