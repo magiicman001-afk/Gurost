@@ -1,118 +1,158 @@
-const { chromium } = require("playwright");
-const chromeLauncher = require("chrome-launcher");
-const lighthouse = require("lighthouse");
 const { callClaude } = require("../lib/claude-client");
+const stageGate = require("../lib/stage-gate");
 
-const AUDIT_SYSTEM = `You are a website auditor. You will receive crawled page data (links, meta tags, title) and a Lighthouse report.
+/**
+ * Full-stack generation happens as three chained calls, not one. A single
+ * response can't reliably hold a coherent schema + backend + frontend at
+ * once — this sequences them so each stage sees the real output of the
+ * one before it.
+ *
+ * buildAppStaged() below adds real pause/correct/resume on top of this
+ * — real, but at the granularity that's actually possible: BETWEEN
+ * these three stages, not mid-completion within one. An LLM completion
+ * is atomic from the caller's side; there's no API (Anthropic's real
+ * streaming included) that lets you halt a response mid-generation,
+ * keep the partial output, splice in new instructions, and have the
+ * model continue the SAME response. What's real and useful instead:
+ * pausing before a stage starts, folding a correction into that
+ * stage's own prompt, then continuing. See lib/stage-gate.js for the
+ * actual pause mechanism (tested standalone before being wired in
+ * here, not just assumed correct).
+ */
 
-Output ONLY valid JSON:
-{"issues": [{"category": "seo"|"accessibility"|"performance"|"broken_links", "severity": "high"|"medium"|"low", "description": "...", "fix_summary": "..."}]}
+const SCHEMA_SYSTEM = `You are a database architect. Given a business description, output ONLY JSON:
+{"engine": "postgres"|"mongo", "schema": "<SQL DDL or Mongo schema definition>", "rationale": "one sentence"}
+Infer entities from the business description. Keep the schema minimal — only what's actually needed.`;
 
-Base every issue on the provided data — do not infer performance or accessibility problems that aren't in the Lighthouse output. Order by severity within each category.`;
+const BACKEND_SYSTEM = `You are a backend engineer. Given a business description and a database schema, output ONLY JSON:
+{"files": [{"path": "...", "content": "..."}], "summary": "one sentence"}
+Framework: FastAPI (Python) or Express (Node) — infer the better fit from the schema/business, default Express.
+Generate only the endpoints the frontend will realistically need (CRUD on the core entities). Include basic input validation. No auth scaffolding unless the business obviously requires it (e.g. user accounts).
+If using Express: always listen on process.env.PORT, falling back to 3000 if it isn't set (e.g. app.listen(process.env.PORT || 3000)). This is a hard requirement, not a style preference — the sandbox preview step needs a predictable port to expose, and a hardcoded or different port will make preview unreliable.`;
 
-// Real, honest companion to AUDIT_SYSTEM for a real, uploaded local
-// file rather than a live URL - no Lighthouse or crawl data exists
-// for something that isn't reachable online, so this is deliberately
-// scoped to what's genuinely detectable from the raw markup alone,
-// with no "performance" category invented from data that isn't there.
-const AUDIT_STATIC_SYSTEM = `You are a website auditor reviewing a real, complete HTML document directly - this file is not live online, so no Lighthouse or performance data exists for it.
+const FRONTEND_SYSTEM = `You are a senior frontend engineer at a professional design agency. Given a business description and a list of backend API endpoints, output ONLY JSON:
+{"files": [{"path": "...", "content": "..."}], "summary": "one sentence"}
+Build a React app (functional components, hooks) that calls the given endpoints. Keep it to the minimum set of files needed for a working prototype (App.jsx, a couple of page/component files, an api client module) — plus a real, correct package.json listing every real dependency actually used (this sandbox genuinely runs npm install before starting the app, so listed dependencies must be real, published packages with correct version numbers, not invented).
 
-Output ONLY valid JSON:
-{"issues": [{"category": "seo"|"accessibility"|"broken_links"|"structure", "severity": "high"|"medium"|"low", "description": "...", "fix_summary": "..."}]}
+DESIGN STANDARDS — this must look like it was designed by a real agency, not generic AI output:
 
-Only report issues genuinely visible in the provided markup itself, such as:
-- Missing or empty alt attributes on real <img> tags
-- Broken internal anchor links (an href="#section" with no matching id="section" anywhere in the document)
-- Missing <title> or meta description
-- Missing viewport meta tag
-- Heading structure that skips levels or has no real <h1>
-- Inline text/background color pairs with genuinely poor contrast
+Components: use Radix UI primitives (@radix-ui/react-*) styled with Tailwind to match the shadcn/ui visual language — genuine, accessible, premium-feeling buttons, dialogs, dropdowns, tabs, and form controls, not bare unstyled HTML elements. Include the real Radix packages you use in package.json.
 
-Do not invent a "performance" category or any speed/loading claims — there is no real data to base that on for a file that isn't live. Order by severity within each category.`;
+Typography: pair a distinctive display/heading font (Montserrat, Fraunces, or similar) with a clean, readable body font (Inter, Open Sans, or similar) via Google Fonts in index.html.
 
-const REBUILD_SYSTEM = `You are rebuilding a website with specific fixes applied. You will receive the original HTML and a list of approved fixes.
+Color: curated palette built around #1A1A2E (dark navy) as primary text/ink, #FEB246 and #FF8C00 (gold/orange) as accents, #FFFFFF and #F8F9FA as backgrounds, #6B7280 as muted text.
 
-Output ONLY valid JSON: {"html": "<complete updated document>", "summary": "one sentence"}
+Motion: real hover states (subtle scale, shadow, or color shift) and smooth transitions (0.2-0.3s ease) on every interactive element; a real loading skeleton or spinner for any async state, not a blank screen.
 
-Preserve all original text content, images, and structure that isn't directly affected by an approved fix. Apply only the approved fixes — do not make unrelated changes.`;
+Layout: avoid generic centered-single-column layouts — use real, considered composition (bento-style grids, deliberate asymmetry) suited to the app's actual purpose.
 
-async function crawl(url) {
-  const browser = await chromium.launch();
-  try {
-    const page = await browser.newPage();
-    await page.goto(url, { waitUntil: "networkidle", timeout: 30000 });
-    const html = await page.content();
-    const links = await page.$$eval("a[href]", (as) => as.map((a) => a.href));
-    const metaTags = await page.$$eval("meta", (ms) =>
-      ms.map((m) => ({ name: m.getAttribute("name") || m.getAttribute("property"), content: m.getAttribute("content") }))
-    );
-    const title = await page.title();
-    return { html, links, metaTags, title };
-  } finally {
-    await browser.close();
+Responsive: genuinely well-composed from 320px mobile through large desktop, not just "doesn't break."
+
+Dark mode: implement Tailwind's real dark: variant with a working toggle that persists via localStorage.
+
+On each top-level rendered section within a component (the outermost divs/sections a component returns, not every nested element), add a real data-gurost-file="ComponentFileName.jsx" attribute matching the actual file path that component lives in. This is real, load-bearing metadata — the live preview's Clickable Code Boxes feature reads this attribute directly to map a clicked section back to its real source file, so it needs to be accurate, not decorative. Don't add it to every element, just the top-level structural ones a user would reasonably click on.
+
+Images: never invent, guess, or hallucinate an image URL (no made-up unsplash.com, pexels.com, or any other external links) — a fabricated URL will show as a broken image to the real end user. Where the design calls for a photo, build a real, self-contained visual instead using inline SVG, a CSS gradient, or a Material Symbols icon inside a colored shape. This must render correctly with zero external image requests.`;
+
+async function buildApp(prompt, { dbEngine = "postgres", onSchemaComplete } = {}) {
+  const schemaRes = await callClaude({
+    system: SCHEMA_SYSTEM,
+    messages: [{ role: "user", content: `Business: ${prompt}\nPreferred engine: ${dbEngine}` }],
+    maxTokens: 2000
+  });
+
+  // Real, optional checkpoint — exists specifically so a caller (the
+  // credit system) can look at the real schema Claude just produced
+  // and decide whether to actually continue into the expensive
+  // backend+frontend generation, or stop here with real, honest cost
+  // protection before the costly part ever runs. Throwing here is the
+  // real, deliberate way to abort — the caller catches it.
+  if (onSchemaComplete) {
+    await onSchemaComplete(schemaRes.parsed.schema);
   }
-}
 
-async function runLighthouse(url) {
-  const chrome = await chromeLauncher.launch({ chromeFlags: ["--headless"] });
-  try {
-    const options = { logLevel: "error", output: "json", port: chrome.port };
-    const runnerResult = await lighthouse(url, options);
-    const lhr = runnerResult.lhr;
-    return {
-      performance: lhr.categories.performance.score,
-      seo: lhr.categories.seo.score,
-      accessibility: lhr.categories.accessibility.score,
-      bestPractices: lhr.categories["best-practices"].score,
-      failingAudits: Object.values(lhr.audits)
-        .filter((a) => a.score !== null && a.score < 1)
-        .map((a) => ({ id: a.id, title: a.title, score: a.score }))
-    };
-  } finally {
-    await chrome.kill();
-  }
-}
-
-async function audit(url) {
-  const crawlData = await crawl(url);
-  const lhData = await runLighthouse(url);
-
-  const { parsed, usage } = await callClaude({
-    system: AUDIT_SYSTEM,
+  const backendRes = await callClaude({
+    system: BACKEND_SYSTEM,
     messages: [{
       role: "user",
-      content: `Crawled data:\n${JSON.stringify({ title: crawlData.title, links: crawlData.links.slice(0, 50), metaTags: crawlData.metaTags })}\n\nLighthouse:\n${JSON.stringify(lhData)}`
+      content: `Business: ${prompt}\n\nDatabase schema:\n${schemaRes.parsed.schema}`
     }],
-    maxTokens: 3000
+    maxTokens: 6000
   });
 
-  return { issues: parsed.issues, crawlData, lighthouse: lhData, usage };
-}
-
-// Real, new path for a real, uploaded local file - no live URL to
-// crawl or run Lighthouse against, so this sends the actual raw HTML
-// directly instead, honestly scoped by AUDIT_STATIC_SYSTEM above to
-// only what's genuinely detectable from static markup.
-async function auditStaticHTML(htmlContent) {
-  const { parsed, usage } = await callClaude({
-    system: AUDIT_STATIC_SYSTEM,
-    messages: [{ role: "user", content: `HTML document:\n${htmlContent.slice(0, 15000)}` }],
-    maxTokens: 3000
-  });
-
-  return { issues: parsed.issues, usage };
-}
-
-async function rebuild(originalHtml, approvedFixes) {
-  const { parsed, usage } = await callClaude({
-    system: REBUILD_SYSTEM,
+  const endpointList = backendRes.parsed.files.map((f) => f.path).join(", ");
+  const frontendRes = await callClaude({
+    system: FRONTEND_SYSTEM,
     messages: [{
       role: "user",
-      content: `Original HTML:\n${originalHtml}\n\nApproved fixes:\n${JSON.stringify(approvedFixes)}`
+      content: `Business: ${prompt}\n\nBackend files (for reference on what's available): ${endpointList}`
     }],
     maxTokens: 8000
   });
-  return { html: parsed.html, summary: parsed.summary, usage };
+
+  return {
+    database: { engine: schemaRes.parsed.engine, schema: schemaRes.parsed.schema, rationale: schemaRes.parsed.rationale },
+    backend: { files: backendRes.parsed.files, summary: backendRes.parsed.summary },
+    frontend: { files: frontendRes.parsed.files, summary: frontendRes.parsed.summary },
+    usage: { schema: schemaRes.usage, backend: backendRes.usage, frontend: frontendRes.usage }
+  };
 }
 
-module.exports = { crawl, runLighthouse, audit, auditStaticHTML, rebuild };
+/**
+ * Staged version of buildApp — same three real Claude calls, same
+ * real dependency chain (backend needs the schema, frontend needs the
+ * backend's endpoint list), but now emits a real progress event after
+ * EACH stage actually completes, and checks stageGate.awaitGate()
+ * between stages so a pause takes effect at the next real boundary.
+ *
+ * `onStage(stageName, status, data)` fires with status "running" right
+ * before a stage starts and "complete" right after — both are real
+ * state transitions, not simulated timing.
+ *
+ * `getPendingCorrection()` is called right before each stage starts
+ * (after the gate has cleared) — if it returns text, that text is
+ * folded into THAT stage's own prompt as extra guidance. This is the
+ * honest version of "correct the partial build": the correction
+ * affects the stage about to run, not a stage already in flight (see
+ * this file's module-level comment for why that's the real boundary,
+ * not an in-progress completion).
+ */
+async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStage, getPendingCorrection, clearPendingCorrection } = {}) {
+  const notify = (stage, status, data) => onStage && onStage(stage, status, data);
+  const foldCorrection = async (baseContent) => {
+    await stageGate.awaitGate(projectId);
+    const correction = getPendingCorrection ? await getPendingCorrection() : null;
+    if (correction) {
+      clearPendingCorrection && (await clearPendingCorrection());
+      return `${baseContent}\n\nAdditional instruction from the user, given while this was being built: ${correction}`;
+    }
+    return baseContent;
+  };
+
+  notify("schema", "running");
+  const schemaContent = await foldCorrection(`Business: ${prompt}\nPreferred engine: ${dbEngine}`);
+  const schemaRes = await callClaude({ system: SCHEMA_SYSTEM, messages: [{ role: "user", content: schemaContent }], maxTokens: 2000 });
+  notify("schema", "complete", { schema: schemaRes.parsed.schema, engine: schemaRes.parsed.engine });
+
+  notify("backend", "running");
+  const backendContent = await foldCorrection(`Business: ${prompt}\n\nDatabase schema:\n${schemaRes.parsed.schema}`);
+  const backendRes = await callClaude({ system: BACKEND_SYSTEM, messages: [{ role: "user", content: backendContent }], maxTokens: 6000 });
+  notify("backend", "complete", { files: backendRes.parsed.files, summary: backendRes.parsed.summary });
+
+  const endpointList = backendRes.parsed.files.map((f) => f.path).join(", ");
+  notify("frontend", "running");
+  const frontendContent = await foldCorrection(`Business: ${prompt}\n\nBackend files (for reference on what's available): ${endpointList}`);
+  const frontendRes = await callClaude({ system: FRONTEND_SYSTEM, messages: [{ role: "user", content: frontendContent }], maxTokens: 8000 });
+  notify("frontend", "complete", { files: frontendRes.parsed.files, summary: frontendRes.parsed.summary });
+
+  notify("done", "complete");
+
+  return {
+    database: { engine: schemaRes.parsed.engine, schema: schemaRes.parsed.schema, rationale: schemaRes.parsed.rationale },
+    backend: { files: backendRes.parsed.files, summary: backendRes.parsed.summary },
+    frontend: { files: frontendRes.parsed.files, summary: frontendRes.parsed.summary },
+    usage: { schema: schemaRes.usage, backend: backendRes.usage, frontend: frontendRes.usage }
+  };
+}
+
+module.exports = { buildApp, buildAppStaged };
