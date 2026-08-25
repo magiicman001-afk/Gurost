@@ -1,0 +1,213 @@
+/**
+ * Pulse Widget — real, complete styling for the floating widget.
+ * Round ball (not a heart, per spec), bottom-right, real distinct
+ * visual states matching the real backend states each page already
+ * supports: idle, building, paused, recording, correcting, done.
+ */
+
+:root {
+  --pulse-gold: #FEB246;
+  --pulse-orange: #FF8C00;
+  --pulse-amber: #F59E0B;
+  --pulse-red: #EF4444;
+  --pulse-ink: #1A1A2E;
+}
+
+#gurostPulseWidget {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  font-family: 'Inter', sans-serif;
+}
+
+/* The ball itself - round, smooth, premium, per spec */
+#pulseBall {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--pulse-gold), var(--pulse-orange));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 8px 24px rgba(255, 140, 0, 0.35);
+  transition: width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              height 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.3s ease;
+  position: relative;
+}
+#pulseBall:hover { box-shadow: 0 10px 30px rgba(255, 140, 0, 0.45); }
+#pulseBall.expanded { width: 80px; height: 80px; }
+
+#pulseBall .material-symbols-outlined {
+  color: white;
+  font-size: 28px;
+  transition: transform 0.25s ease;
+}
+
+/* Idle - subtle glow, slow pulse */
+@keyframes pulse-idle { 0%, 100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.04); opacity: 1; } }
+#pulseBall.state-idle { animation: pulse-idle 3s ease-in-out infinite; }
+
+/* Building - vibrating, glowing ring, fast pulse */
+@keyframes pulse-vibrate { 0%, 100% { transform: translate(0, 0) scale(1); } 25% { transform: translate(-1px, 1px) scale(1.02); } 50% { transform: translate(1px, -1px) scale(1.04); } 75% { transform: translate(-1px, -1px) scale(1.02); } }
+#pulseBall.state-building { animation: pulse-vibrate 0.5s ease-in-out infinite; }
+#pulseBall.state-building::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px solid var(--pulse-orange);
+  animation: pulse-ring-expand 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes pulse-ring-expand { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.4); opacity: 0; } }
+
+/* Paused - stopped vibration, amber glow */
+#pulseBall.state-paused { animation: none; background: linear-gradient(135deg, var(--pulse-amber), #D97706); box-shadow: 0 8px 24px rgba(245, 158, 11, 0.4); }
+
+/* Recording - stopped vibration, red glow, expanding ring */
+#pulseBall.state-recording { animation: none; background: linear-gradient(135deg, var(--pulse-red), #DC2626); box-shadow: 0 8px 24px rgba(239, 68, 68, 0.45); }
+#pulseBall.state-recording::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px solid var(--pulse-red);
+  animation: pulse-ring-expand 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Correcting - processing, fast spin on the icon */
+#pulseBall.state-correcting .material-symbols-outlined { animation: pulse-spin 0.9s linear infinite; }
+@keyframes pulse-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* Done - brief, calm confirmation */
+#pulseBall.state-done { animation: none; background: linear-gradient(135deg, #34D399, #10B981); }
+
+@media (prefers-reduced-motion: reduce) {
+  #pulseBall, #pulseBall.state-idle, #pulseBall.state-building, #pulseBall::after,
+  #pulseBall.state-recording::after, #pulseBall.state-correcting .material-symbols-outlined {
+    animation: none !important;
+  }
+}
+
+/* ============ Expanded panel ============ */
+#pulsePanel {
+  position: absolute;
+  bottom: 80px;
+  right: 0;
+  width: 420px;
+  max-width: calc(100vw - 48px);
+  max-height: 70vh;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px -12px rgba(26, 26, 46, 0.25);
+  border: 1px solid #E9E9EF;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+#pulsePanel.open { display: flex; }
+
+#pulsePanelHeader {
+  padding: 16px 20px;
+  border-bottom: 1px solid #E9E9EF;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+#pulsePanelHeader h3 { font-weight: 700; font-size: 14px; color: var(--pulse-ink); margin: 0; }
+#pulsePanelStatusText { font-size: 12px; color: #6B7280; }
+#pulsePanelClose { background: none; border: none; cursor: pointer; color: #6B7280; display: flex; align-items: center; }
+
+#pulsePanelBody { flex: 1; overflow-y: auto; padding: 16px 20px; }
+
+#pulseProgressTrack { width: 100%; height: 5px; background: #F3F4F6; border-radius: 3px; overflow: hidden; margin-bottom: 14px; display: none; }
+#pulseProgressTrack.visible { display: block; }
+#pulseProgressBar { height: 100%; background: linear-gradient(90deg, var(--pulse-gold), var(--pulse-orange)); width: 0%; transition: width 0.4s ease; border-radius: 3px; }
+
+#pulseStatusLog { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; max-height: 100px; overflow-y: auto; }
+#pulseStatusLog p { font-size: 12px; color: #6B7280; margin: 0; }
+
+#pulseSuggestion {
+  display: none;
+  background: #FFF8F0;
+  border: 1px solid #FDE4C4;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--pulse-ink);
+  margin-bottom: 14px;
+  gap: 8px;
+}
+#pulseSuggestion.visible { display: flex; }
+#pulseSuggestion .material-symbols-outlined { color: var(--pulse-orange); font-size: 18px; flex-shrink: 0; }
+#pulseSuggestionActions { display: flex; gap: 8px; margin-top: 8px; }
+#pulseSuggestionActions button { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; border: 1px solid #E9E9EF; background: white; cursor: pointer; }
+#pulseSuggestionActions button.primary { background: var(--pulse-orange); color: white; border: none; }
+
+#pulseInputArea { display: flex; flex-direction: column; gap: 10px; }
+#pulseTextArea {
+  width: 100%;
+  min-height: 64px;
+  resize: vertical;
+  border: 1px solid #E9E9EF;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-family: inherit;
+}
+#pulseTextArea:focus { outline: none; border-color: var(--pulse-orange); }
+
+#pulseActionRow { display: flex; gap: 8px; align-items: center; }
+#pulseMicButton {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--pulse-gold), var(--pulse-orange));
+  border: none; color: white; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+#pulseMicButton.listening { background: linear-gradient(135deg, var(--pulse-red), #DC2626); }
+#pulseSendButton {
+  flex: 1; background: var(--pulse-ink); color: white; border: none;
+  border-radius: 10px; padding: 10px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+#pulseSendButton:disabled { opacity: 0.5; cursor: not-allowed; }
+
+#pulsePauseResumeRow { display: flex; gap: 8px; margin-top: 10px; }
+#pulsePauseResumeRow button {
+  flex: 1; padding: 8px; border-radius: 10px; font-size: 12px; font-weight: 600;
+  border: 1px solid #E9E9EF; background: white; cursor: pointer; display: none;
+}
+#pulsePauseResumeRow button.visible { display: block; }
+
+/* ============ Real action button grid ============ */
+#pulseActionGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #E9E9EF;
+}
+.pulse-action-btn {
+  display: none; /* real, deliberate default - JS shows only the ones each page actually supports */
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 4px;
+  border-radius: 10px;
+  border: 1px solid #E9E9EF;
+  background: white;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--pulse-ink);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.pulse-action-btn.visible { display: flex; }
+.pulse-action-btn:hover { border-color: var(--pulse-orange); background: #FFF8F0; }
+.pulse-action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.pulse-action-btn:disabled:hover { border-color: #E9E9EF; background: white; }
+.pulse-action-btn .material-symbols-outlined { font-size: 20px; color: var(--pulse-orange); }
