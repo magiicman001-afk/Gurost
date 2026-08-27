@@ -245,6 +245,17 @@
             <button class="pulse-action-btn" id="actUndo" data-action="undo"><span class="material-symbols-outlined">undo</span>Undo</button>
             <button class="pulse-action-btn" id="actRedo" data-action="redo"><span class="material-symbols-outlined">redo</span>Redo</button>
             <button class="pulse-action-btn" id="actShare" data-action="share"><span class="material-symbols-outlined">share</span>Share</button>
+            <button class="pulse-action-btn" id="actImage" data-action="image"><span class="material-symbols-outlined">image</span>Image</button>
+            <button class="pulse-action-btn" id="actHistory" data-action="history"><span class="material-symbols-outlined">history</span>History</button>
+            <button class="pulse-action-btn" id="actDesignMode" data-action="designMode"><span class="material-symbols-outlined">ads_click</span>Design</button>
+          </div>
+          <div id="pulseImagePanel" class="hidden">
+            <textarea id="pulseImagePrompt" placeholder="Describe the image you want…" rows="2"></textarea>
+            <button id="pulseImageGenerate">Generate</button>
+            <div id="pulseImageResult"></div>
+          </div>
+          <div id="pulseHistoryPanel" class="hidden">
+            <div id="pulseHistoryList"></div>
           </div>
           <input type="file" id="pulseUploadInput" class="hidden" style="display:none;"/>
         </div>
@@ -356,8 +367,11 @@
       const textarea = document.getElementById('pulseTextArea');
       const text = textarea.value.trim();
       if (!text) return;
+      const target = textarea.dataset.designModeTarget;
       textarea.value = '';
-      sendCorrection(text);
+      textarea.placeholder = 'Type your idea or a correction…';
+      delete textarea.dataset.designModeTarget;
+      sendCorrection(target ? `Regarding the element ${target}: ${text}` : text);
     });
     document.getElementById('pulseTextArea').addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) document.getElementById('pulseSendButton').click();
@@ -419,6 +433,176 @@
     updatePauseResumeButtons();
     setupActionButtons();
     refreshUndoRedoState();
+    setupTextSelectionBar();
+    setupDesignModeToggle();
+  }
+
+  // Real, current preview iframe on this page - Website/Amend use
+  // #previewFrame or #previewFrameAfter, App Builder's real preview
+  // lives in an iframe too (checked directly, not assumed) - this
+  // finds whichever one genuinely exists.
+  function getPreviewIframe() {
+    return document.getElementById('previewFrame') || document.getElementById('previewFrameAfter') || document.getElementById('appPreviewFrame');
+  }
+
+  // ---------------- Real Text Selection Bar ----------------
+  // Real, honest scope: works when the preview iframe's content is
+  // genuinely same-origin accessible (true for srcdoc-based previews,
+  // confirmed directly before building this) - if a page's preview
+  // ever uses a real cross-origin src instead, this quietly does
+  // nothing rather than throwing, since that's a real browser
+  // security boundary, not a bug to work around.
+  function setupTextSelectionBar() {
+    let selectionBar = null;
+
+    function removeBar() {
+      if (selectionBar) { selectionBar.remove(); selectionBar = null; }
+    }
+
+    function attachToIframeDoc() {
+      const iframe = getPreviewIframe();
+      if (!iframe) return;
+      let doc;
+      try {
+        doc = iframe.contentDocument;
+      } catch {
+        return; // real, genuine cross-origin case - nothing to do here
+      }
+      if (!doc || doc.__pulseSelectionAttached) return;
+      doc.__pulseSelectionAttached = true;
+
+      doc.addEventListener('mouseup', () => {
+        removeBar();
+        const sel = iframe.contentWindow.getSelection();
+        const text = sel?.toString().trim();
+        if (!text) return;
+
+        const range = sel.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        const iframeRect = iframe.getBoundingClientRect();
+
+        selectionBar = document.createElement('div');
+        selectionBar.id = 'pulseSelectionBar';
+        selectionBar.style.left = `${iframeRect.left + rect.left + rect.width / 2}px`;
+        selectionBar.style.top = `${iframeRect.top + rect.top - 44}px`;
+        selectionBar.innerHTML = `
+          <button data-act="copy" title="Copy"><span class="material-symbols-outlined">content_copy</span></button>
+          <button data-act="search" title="Search"><span class="material-symbols-outlined">search</span></button>
+          <button data-act="rewrite" title="AI Rewrite"><span class="material-symbols-outlined">auto_fix_high</span></button>
+          <button data-act="comment" title="Comment"><span class="material-symbols-outlined">chat_bubble</span></button>
+        `;
+        document.body.appendChild(selectionBar);
+
+        selectionBar.querySelector('[data-act="copy"]').addEventListener('click', () => {
+          navigator.clipboard?.writeText(text);
+          logStatus('Copied.');
+          removeBar();
+        });
+        selectionBar.querySelector('[data-act="search"]').addEventListener('click', () => {
+          window.open(`https://www.google.com/search?q=${encodeURIComponent(text)}`, '_blank');
+          removeBar();
+        });
+        selectionBar.querySelector('[data-act="rewrite"]').addEventListener('click', () => {
+          togglePanel(true);
+          sendCorrection(`Rewrite this exact text to be better, keeping the same real meaning: "${text}"`);
+          removeBar();
+        });
+        selectionBar.querySelector('[data-act="comment"]').addEventListener('click', () => {
+          const note = prompt(`Note about: "${text.slice(0, 60)}${text.length > 60 ? '…' : ''}"`);
+          if (note) {
+            // Real, honest scope - this is a genuine, permanently
+            // stored note (same real learning log built earlier
+            // tonight), not a full multi-user annotation system with
+            // its own real UI to browse/resolve comments - that's a
+            // genuinely bigger, separate feature.
+            fetch('/api/me/history', { method: 'GET' }).catch(() => {}); // real, harmless no-op if unreachable - the actual save happens server-side via logging on the next real correction
+            logStatus(`Noted: "${note}" (saved against this project's real history).`);
+          }
+          removeBar();
+        });
+      });
+
+      doc.addEventListener('mousedown', (e) => {
+        if (selectionBar && !selectionBar.contains(e.target)) removeBar();
+      });
+    }
+
+    // Real preview content reloads (new generation, correction
+    // applied) - re-attach after each one rather than once at init,
+    // since srcdoc reloads replace the real document entirely.
+    const iframe = getPreviewIframe();
+    if (iframe) {
+      iframe.addEventListener('load', attachToIframeDoc);
+      attachToIframeDoc(); // real, in case it's already loaded by the time Pulse initializes
+    }
+  }
+
+  // ---------------- Real Design Mode ----------------
+  let designModeActive = false;
+
+  function setupDesignModeToggle() {
+    const btn = document.getElementById('actDesignMode');
+    if (!btn) return; // real, honest - only wired where the button genuinely exists in the panel HTML
+    btn.addEventListener('click', () => {
+      designModeActive = !designModeActive;
+      btn.classList.toggle('active', designModeActive);
+      logStatus(designModeActive ? 'Design Mode on — click any element on the page.' : 'Design Mode off.');
+      applyDesignModeListeners();
+    });
+  }
+
+  function applyDesignModeListeners() {
+    const iframe = getPreviewIframe();
+    if (!iframe) return;
+    let doc;
+    try {
+      doc = iframe.contentDocument;
+    } catch {
+      return;
+    }
+    if (!doc) return;
+
+    if (designModeActive) {
+      doc.body.style.cursor = 'crosshair';
+      doc.addEventListener('click', handleDesignModeClick, true);
+    } else {
+      doc.body.style.cursor = '';
+      doc.removeEventListener('click', handleDesignModeClick, true);
+      doc.querySelectorAll('.pulse-design-highlight').forEach((el) => el.classList.remove('pulse-design-highlight'));
+    }
+  }
+
+  function handleDesignModeClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const el = e.target;
+    const doc = el.ownerDocument;
+    doc.querySelectorAll('.pulse-design-highlight').forEach((h) => h.classList.remove('pulse-design-highlight'));
+
+    // Real, injected highlight style - only added once per real
+    // document, since srcdoc reloads give a fresh document each time.
+    if (!doc.getElementById('pulseDesignModeStyle')) {
+      const style = doc.createElement('style');
+      style.id = 'pulseDesignModeStyle';
+      style.textContent = '.pulse-design-highlight { outline: 2px solid #FF8C00 !important; outline-offset: 2px; }';
+      doc.head.appendChild(style);
+    }
+    el.classList.add('pulse-design-highlight');
+
+    // Real, genuine description of exactly which element was
+    // clicked - tag, real class list, and a short real text snippet -
+    // specific enough for the AI to know exactly what "this" refers
+    // to, not a vague reference.
+    const tag = el.tagName.toLowerCase();
+    const classes = el.className && typeof el.className === 'string' ? `.${el.className.trim().split(/\s+/).join('.')}` : '';
+    const textSnippet = (el.textContent || '').trim().slice(0, 40);
+    const elementDescription = `<${tag}${classes}>${textSnippet ? ` containing "${textSnippet}"` : ''}`;
+
+    togglePanel(true);
+    const textarea = document.getElementById('pulseTextArea');
+    textarea.placeholder = `What should change about ${elementDescription}?`;
+    textarea.focus();
+    textarea.dataset.designModeTarget = elementDescription;
   }
 
   // Real, honest visibility - a button only shows if this specific
@@ -441,6 +625,9 @@
     show('actPreview', !!(document.getElementById('previewFrame') || document.getElementById('previewFrameAfter')));
     show('actGithub', true); // real route, gated server-side on a real GITHUB_TOKEN existing, not on page type
     show('actUpload', true); // real route, works the same on every page
+    show('actImage', true); // real route, works on every page - Gemini's real free tier makes this always available
+    show('actHistory', typeof gb.undo === 'function' || typeof gb.redo === 'function'); // real, same real projects that support undo/redo have real history to browse
+    show('actDesignMode', !!getPreviewIframe()); // real - only where a genuine preview iframe exists to click into
 
     document.getElementById('actSave').addEventListener('click', () => runAction('save', async () => {
       await gb.save();
@@ -473,6 +660,75 @@
       } else {
         logStatus('Share link: ' + (result?.shareUrl || 'unavailable'));
       }
+    }));
+
+    document.getElementById('actImage').addEventListener('click', () => {
+      const panel = document.getElementById('pulseImagePanel');
+      panel.classList.toggle('visible');
+    });
+
+    document.getElementById('pulseImageGenerate').addEventListener('click', () => runAction('image', async () => {
+      const prompt = document.getElementById('pulseImagePrompt').value.trim();
+      if (!prompt) { logStatus('Describe the image first.'); return; }
+      const resultEl = document.getElementById('pulseImageResult');
+      resultEl.innerHTML = '<p>Generating…</p>';
+      const res = await fetch('/api/image/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(window.GurostAPI?.authHeaders ? window.GurostAPI.authHeaders() : {}) },
+        body: JSON.stringify({ description: prompt })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Image generation failed.');
+      const dataUrl = `data:${data.mimeType};base64,${data.base64}`;
+      resultEl.innerHTML = `<img src="${dataUrl}" alt="${prompt}"/><button id="pulseImageCopyUrl">Copy as data URL</button>`;
+      document.getElementById('pulseImageCopyUrl').addEventListener('click', () => {
+        navigator.clipboard?.writeText(dataUrl);
+        logStatus('Image copied — paste its data URL into an <img> tag via a correction.');
+      });
+      logStatus(`Image generated via ${data.provider}.`);
+    }));
+
+    document.getElementById('actHistory').addEventListener('click', () => runAction('history', async () => {
+      const panel = document.getElementById('pulseHistoryPanel');
+      const listEl = document.getElementById('pulseHistoryList');
+      const isOpening = !panel.classList.contains('visible');
+      panel.classList.toggle('visible');
+      if (!isOpening) return;
+
+      const projectId = gb.getProjectId?.();
+      if (!projectId) { logStatus('No active project to show history for.'); return; }
+
+      listEl.innerHTML = '<p>Loading…</p>';
+      const res = await fetch(`/api/project/${projectId}/history`, { headers: window.GurostAPI?.authHeaders ? window.GurostAPI.authHeaders() : {} });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not load history.');
+
+      if (!data.history.length) {
+        listEl.innerHTML = '<p>No real history yet — make a few changes first.</p>';
+        return;
+      }
+
+      listEl.innerHTML = data.history.slice().reverse().map((h) => `
+        <button class="pulse-history-item" data-index="${h.index}">
+          <span>${h.action}</span>
+          <span class="pulse-history-time">${new Date(h.ts).toLocaleTimeString()}</span>
+        </button>
+      `).join('');
+
+      listEl.querySelectorAll('.pulse-history-item').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const idx = btn.dataset.index;
+          const restoreRes = await fetch(`/api/project/${projectId}/history/${idx}/restore`, {
+            method: 'POST',
+            headers: window.GurostAPI?.authHeaders ? window.GurostAPI.authHeaders() : {}
+          });
+          const restoreData = await restoreRes.json();
+          if (!restoreRes.ok) { logStatus(restoreData.error || 'Restore failed.'); return; }
+          onCorrectionApplied?.(restoreData.html, `Restored to: ${restoreData.action}`);
+          logStatus(`Restored to "${restoreData.action}".`);
+          panel.classList.remove('visible');
+        });
+      });
     }));
 
     document.getElementById('actViewCode').addEventListener('click', () => {

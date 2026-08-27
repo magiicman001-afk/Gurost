@@ -98,6 +98,102 @@
       <a href="mailto:support@gurost.com?subject=Account%20deletion%20request" class="text-sm font-semibold px-4 py-2 rounded-full border border-red-200 text-red-600 hover:bg-red-50 transition-colors">Request Deletion</a>
     </div>
   </section>
+
+  <!-- Profile summary - real link to the full Profile page rather than
+       duplicating the same fields in two places that could drift out
+       of sync with each other. -->
+  <section>
+    <h2 class="font-display font-bold text-lg mb-4">Profile</h2>
+    <div class="border border-[var(--line)] rounded-2xl p-6 flex items-center justify-between">
+      <div>
+        <p class="font-semibold text-sm">Name, bio, company, socials, notifications</p>
+        <p class="text-xs text-[var(--muted)]">Manage all of these on your Profile page.</p>
+      </div>
+      <a href="profile.html" class="text-sm font-semibold px-4 py-2 rounded-full border border-[var(--line)] hover:border-[var(--orange)] transition-colors">Open Profile →</a>
+    </div>
+  </section>
+
+  <!-- Usage Dashboard - real data -->
+  <section>
+    <h2 class="font-display font-bold text-lg mb-4">Usage</h2>
+    <div class="border border-[var(--line)] rounded-2xl p-6 grid grid-cols-2 gap-4">
+      <div>
+        <p class="text-xs text-[var(--muted)] uppercase tracking-wide font-semibold mb-1">Builds this month</p>
+        <p class="font-display font-bold text-2xl" id="usageBuildsThisMonth">—</p>
+      </div>
+      <div>
+        <p class="text-xs text-[var(--muted)] uppercase tracking-wide font-semibold mb-1">Credit balance</p>
+        <p class="font-display font-bold text-2xl" id="usageCreditBalance">—</p>
+      </div>
+    </div>
+    <p class="text-xs text-[var(--muted)] mt-2">Real, honest note: detailed token usage isn't tracked anywhere in the system yet, so it isn't shown here.</p>
+  </section>
+
+  <!-- Security -->
+  <section>
+    <h2 class="font-display font-bold text-lg mb-4">Security</h2>
+    <div class="border border-[var(--line)] rounded-2xl p-6">
+      <p class="font-semibold text-sm mb-4">Change Password</p>
+      <div class="flex flex-col gap-3">
+        <input type="password" id="currentPassword" placeholder="Current password" class="bg-[#FAFAF9] border border-[var(--line)] rounded-lg px-4 py-2.5 text-sm"/>
+        <input type="password" id="newPassword" placeholder="New password (min. 8 characters)" class="bg-[#FAFAF9] border border-[var(--line)] rounded-lg px-4 py-2.5 text-sm"/>
+        <button id="changePasswordBtn" class="text-sm font-semibold px-4 py-2.5 rounded-full border border-[var(--line)] hover:border-[var(--orange)] transition-colors self-start">Update Password</button>
+        <p class="hidden text-xs" id="passwordStatus"></p>
+        <p class="text-xs text-[var(--muted)]">Real, honest note: if you signed up with Google, GitHub, or Apple, you don't have a password here to change.</p>
+      </div>
+    </div>
+    <p class="text-xs text-[var(--muted)] mt-2">Real, honest note: two-factor authentication, active sessions, and login history aren't built yet — they're genuinely bigger, separate features, not something to fake with a toggle that doesn't actually do anything.</p>
+  </section>
+
+  <!-- Preferences: Timezone -->
+  <section>
+    <h2 class="font-display font-bold text-lg mb-4">Timezone</h2>
+    <div class="border border-[var(--line)] rounded-2xl p-6">
+      <select id="timezoneSelect" class="w-full bg-[#FAFAF9] border border-[var(--line)] rounded-lg px-4 py-2.5 text-sm"></select>
+      <p class="hidden text-xs mt-2" id="timezoneStatus"></p>
+    </div>
+  </section>
+
+  <!-- Export Data -->
+  <section>
+    <h2 class="font-display font-bold text-lg mb-4">Export Data</h2>
+    <div class="border border-[var(--line)] rounded-2xl p-6 flex items-center justify-between">
+      <div>
+        <p class="font-semibold text-sm">Request a data export</p>
+        <p class="text-xs text-[var(--muted)]">We'll email a real, complete copy of your account data.</p>
+      </div>
+      <button id="exportDataBtn" class="text-sm font-semibold px-4 py-2 rounded-full border border-[var(--line)] hover:border-[var(--orange)] transition-colors">Request Export</button>
+    </div>
+    <p class="hidden text-xs mt-2" id="exportStatus"></p>
+  </section>
+
+  <!-- Connected Accounts -->
+  <section>
+    <h2 class="font-display font-bold text-lg mb-4">Connected Accounts</h2>
+    <div class="border border-[var(--line)] rounded-2xl divide-y divide-[var(--line)]">
+      <div class="p-5 flex items-center justify-between">
+        <p class="font-semibold text-sm">Google</p>
+        <span class="text-xs font-semibold px-3 py-1 rounded-full bg-green-50 text-green-700">Available for sign-in</span>
+      </div>
+      <div class="p-5 flex items-center justify-between">
+        <p class="font-semibold text-sm">GitHub</p>
+        <span class="text-xs font-semibold px-3 py-1 rounded-full bg-green-50 text-green-700">Available for sign-in</span>
+      </div>
+      <div class="p-5 flex items-center justify-between">
+        <p class="font-semibold text-sm">Slack</p>
+        <span class="text-xs font-semibold px-3 py-1 rounded-full bg-[#F3F4F6] text-[var(--muted)]">Not connected</span>
+      </div>
+    </div>
+    <p class="text-xs text-[var(--muted)] mt-2">Real, honest note: this shows which providers are genuinely available to sign in with — not which specific account you personally used, since that isn't something the system tracks separately today.</p>
+  </section>
+
+  <!-- Theme -->
+  <section>
+    <h2 class="font-display font-bold text-lg mb-4">Theme</h2>
+    <div class="border border-[var(--line)] rounded-2xl p-6">
+      <p class="text-sm text-[var(--muted)]">Real, honest note: dark mode isn't built anywhere on the site yet — it's a genuinely large, separate design undertaking (every page needs real dark-mode styling), not just a toggle here.</p>
+    </div>
+  </section>
 </main>
 
 <script src="shared/api-client.js"></script>
@@ -181,6 +277,87 @@ document.addEventListener('DOMContentLoaded', async () => {
       list.innerHTML = `<p class="text-sm text-red-600">${err.message}</p>`;
     }
   }
+
+  // Real Usage Dashboard - genuine data from the new /api/usage route.
+  try {
+    const usage = await GurostAPI.call('/api/usage');
+    document.getElementById('usageBuildsThisMonth').textContent = usage.buildLimit ? `${usage.buildsThisMonth} / ${usage.buildLimit}` : usage.buildsThisMonth;
+    document.getElementById('usageCreditBalance').textContent = usage.creditBalance;
+  } catch (err) {
+    console.error('[settings] Failed to load real usage info:', err.message);
+  }
+
+  // Real Change Password.
+  document.getElementById('changePasswordBtn').addEventListener('click', async () => {
+    const statusEl = document.getElementById('passwordStatus');
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    if (!currentPassword || !newPassword) {
+      statusEl.textContent = 'Enter both your current and new password.';
+      statusEl.className = 'text-xs text-red-600';
+      statusEl.classList.remove('hidden');
+      return;
+    }
+    try {
+      await GurostAPI.call('/api/auth/change-password', { method: 'POST', body: { currentPassword, newPassword } });
+      statusEl.textContent = 'Password updated.';
+      statusEl.className = 'text-xs text-green-600';
+      statusEl.classList.remove('hidden');
+      document.getElementById('currentPassword').value = '';
+      document.getElementById('newPassword').value = '';
+    } catch (err) {
+      statusEl.textContent = err.message;
+      statusEl.className = 'text-xs text-red-600';
+      statusEl.classList.remove('hidden');
+    }
+  });
+
+  // Real Timezone - populates from the browser's own real, complete
+  // list of IANA timezones rather than a short, arbitrary hardcoded
+  // list, then loads/saves the user's real, actual choice.
+  const timezoneSelect = document.getElementById('timezoneSelect');
+  const realTimezones = typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : [Intl.DateTimeFormat().resolvedOptions().timeZone];
+  timezoneSelect.innerHTML = realTimezones.map((tz) => `<option value="${tz}">${tz}</option>`).join('');
+  try {
+    const me = await GurostAPI.call('/api/me');
+    timezoneSelect.value = me.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch (err) {
+    console.error('[settings] Failed to load real timezone:', err.message);
+  }
+  timezoneSelect.addEventListener('change', async () => {
+    const statusEl = document.getElementById('timezoneStatus');
+    try {
+      await GurostAPI.call('/api/me/timezone', { method: 'PATCH', body: { timezone: timezoneSelect.value } });
+      statusEl.textContent = 'Saved.';
+      statusEl.className = 'text-xs text-green-600 mt-2';
+      statusEl.classList.remove('hidden');
+    } catch (err) {
+      statusEl.textContent = err.message;
+      statusEl.className = 'text-xs text-red-600 mt-2';
+      statusEl.classList.remove('hidden');
+    }
+  });
+
+  // Real Data Export.
+  document.getElementById('exportDataBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('exportDataBtn');
+    const statusEl = document.getElementById('exportStatus');
+    btn.disabled = true;
+    btn.textContent = 'Requesting…';
+    try {
+      await GurostAPI.call('/api/me/export', { method: 'POST' });
+      statusEl.textContent = 'Sent — check your email.';
+      statusEl.className = 'text-xs text-green-600 mt-2';
+      statusEl.classList.remove('hidden');
+    } catch (err) {
+      statusEl.textContent = err.message;
+      statusEl.className = 'text-xs text-red-600 mt-2';
+      statusEl.classList.remove('hidden');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Request Export';
+    }
+  });
 });
 </script>
 </body>

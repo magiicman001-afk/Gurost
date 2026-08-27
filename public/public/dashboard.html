@@ -239,6 +239,20 @@ function goToBuilder(mode, text) {
   }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+  // Real, deliberate fix: this wiring used to live inside the block
+  // below that requires a successful login check first - if that
+  // check ever failed or hung, the hamburger button's own listener
+  // never got attached at all, making the whole menu look completely
+  // dead. Basic navigation must never depend on a data call
+  // succeeding, so it's registered here first, unconditionally.
+  const openSidebar = () => { document.getElementById('sidebarOverlay').classList.remove('hidden'); document.getElementById('sidebarDrawer').classList.remove('translate-x-full'); };
+  const closeSidebar = () => { document.getElementById('sidebarOverlay').classList.add('hidden'); document.getElementById('sidebarDrawer').classList.add('translate-x-full'); };
+  document.getElementById('menuToggleBtn').addEventListener('click', openSidebar);
+  document.getElementById('sidebarCloseBtn').addEventListener('click', closeSidebar);
+  document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
+});
+
 document.addEventListener('DOMContentLoaded', async () => {
   if (!GurostAPI.requireLogin()) return;
 
@@ -258,11 +272,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('[dashboard] Failed to load real user info:', err.message);
   }
 
-  const openSidebar = () => { document.getElementById('sidebarOverlay').classList.remove('hidden'); document.getElementById('sidebarDrawer').classList.remove('translate-x-full'); };
-  const closeSidebar = () => { document.getElementById('sidebarOverlay').classList.add('hidden'); document.getElementById('sidebarDrawer').classList.add('translate-x-full'); };
-  document.getElementById('menuToggleBtn').addEventListener('click', openSidebar);
-  document.getElementById('sidebarCloseBtn').addEventListener('click', closeSidebar);
-  document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
 
   const validationMsg = document.getElementById('dashValidationMsg');
   document.querySelectorAll('.dash-mode-btn').forEach((btn) => {

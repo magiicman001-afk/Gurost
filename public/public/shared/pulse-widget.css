@@ -211,3 +211,43 @@
 .pulse-action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .pulse-action-btn:disabled:hover { border-color: #E9E9EF; background: white; }
 .pulse-action-btn .material-symbols-outlined { font-size: 20px; color: var(--pulse-orange); }
+
+#pulseImagePanel, #pulseHistoryPanel { display: none; margin-top: 10px; padding: 12px; border-radius: 12px; border: 1px solid #E9E9EF; background: #FAFAF9; }
+#pulseImagePanel.visible, #pulseHistoryPanel.visible { display: block; }
+
+#pulseImagePrompt { width: 100%; border: 1px solid #E9E9EF; border-radius: 8px; padding: 8px; font-size: 12px; font-family: inherit; resize: vertical; margin-bottom: 8px; }
+#pulseImageGenerate { width: 100%; background: var(--pulse-orange); color: white; border: none; border-radius: 8px; padding: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
+#pulseImageResult { margin-top: 10px; }
+#pulseImageResult img { width: 100%; border-radius: 8px; margin-bottom: 8px; }
+#pulseImageResult button { width: 100%; font-size: 11px; padding: 6px; border-radius: 8px; border: 1px solid #E9E9EF; background: white; cursor: pointer; }
+
+#pulseHistoryList { max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.pulse-history-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-radius: 8px; border: 1px solid #E9E9EF; background: white; cursor: pointer; font-size: 11px; text-align: left; }
+.pulse-history-item:hover { border-color: var(--pulse-orange); }
+.pulse-history-time { color: #6B7280; font-size: 10px; }
+
+#pulseSelectionBar {
+  position: fixed;
+  transform: translateX(-50%);
+  z-index: 10000;
+  background: var(--pulse-ink);
+  border-radius: 10px;
+  padding: 4px;
+  display: flex;
+  gap: 2px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+}
+#pulseSelectionBar button {
+  background: none;
+  border: none;
+  color: white;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+}
+#pulseSelectionBar button:hover { background: rgba(255,255,255,0.15); }
+#pulseSelectionBar .material-symbols-outlined { font-size: 16px; }
+
+#actDesignMode.active { background: var(--pulse-orange); }
+#actDesignMode.active .material-symbols-outlined { color: white; }

@@ -12,7 +12,6 @@
   body { font-family: 'Inter', sans-serif; background: #FFFFFF; color: var(--ink); }
   .font-display { font-family: 'Montserrat', sans-serif; }
   .gold-gradient { background: linear-gradient(135deg, var(--gold), var(--orange)); }
-  .gold-text { background: linear-gradient(135deg, var(--gold), var(--orange)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
   @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
   .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
   .reveal.in-view { opacity: 1; transform: translateY(0); }
@@ -42,36 +41,98 @@
 
 <main class="max-w-4xl mx-auto px-6 py-20">
   <div class="text-center mb-16 reveal">
-    <h1 class="font-display font-bold text-4xl md:text-5xl mb-5">We build the tool we wished existed.</h1>
-    <p class="text-lg text-[var(--muted)] max-w-2xl mx-auto">Pioneering the future of professional modernism — bridging high-energy innovation with corporate reliability.</p>
+    <h1 class="font-display font-bold text-4xl md:text-5xl mb-5">Build with your voice, not code.</h1>
+    <p class="text-lg text-[var(--muted)] max-w-2xl mx-auto">To make building websites and apps as easy as speaking. No code. No complexity. Just your voice.</p>
   </div>
 
-  <div class="mb-20 reveal">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 reveal">
+    <div class="rounded-2xl border border-[var(--line)] p-8">
+      <span class="material-symbols-outlined text-[28px] mb-3" style="color: var(--orange);">flag</span>
+      <h2 class="font-display font-bold text-xl mb-3">Mission</h2>
+      <p class="text-[var(--muted)] leading-relaxed">To make building websites and apps as easy as speaking. No code. No complexity. Just your voice.</p>
+    </div>
+    <div class="rounded-2xl border border-[var(--line)] p-8">
+      <span class="material-symbols-outlined text-[28px] mb-3" style="color: var(--orange);">visibility</span>
+      <h2 class="font-display font-bold text-xl mb-3">Vision</h2>
+      <p class="text-[var(--muted)] leading-relaxed">A world where anyone can turn an idea into a working digital product in minutes, regardless of their technical background.</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16 reveal">
+    <div class="rounded-2xl border border-[var(--line)] p-8">
+      <span class="material-symbols-outlined text-[28px] mb-3 text-[var(--muted)]">warning</span>
+      <h2 class="font-display font-bold text-xl mb-3">The Problem</h2>
+      <p class="text-[var(--muted)] leading-relaxed">Building a website or app traditionally requires coding skills, expensive developers, or weeks of learning complicated tools. Most people with great ideas never get them online.</p>
+    </div>
+    <div class="rounded-2xl border border-[var(--line)] p-8" style="border-color: var(--orange);">
+      <span class="material-symbols-outlined text-[28px] mb-3" style="color: var(--orange);">lightbulb</span>
+      <h2 class="font-display font-bold text-xl mb-3">The Solution</h2>
+      <p class="text-[var(--muted)] leading-relaxed">Gurost is an AI-powered platform that turns your voice into working websites and apps. Just speak your idea, and Gurost builds it live. See something wrong? Hold the Pulse button — pause, correct, and resume instantly.</p>
+    </div>
+  </div>
+
+  <div class="mb-16 reveal">
+    <h2 class="font-display font-bold text-2xl text-center mb-10">What Makes Gurost Different</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div class="card-hover border border-[var(--line)] rounded-2xl p-6 flex items-start gap-4">
+        <span class="material-symbols-outlined text-[24px] flex-shrink-0" style="color: var(--orange);">graphic_eq</span>
+        <div><h3 class="font-display font-bold mb-1">Voice-First Building</h3><p class="text-sm text-[var(--muted)]">Build with your voice, not code.</p></div>
+      </div>
+      <div class="card-hover border border-[var(--line)] rounded-2xl p-6 flex items-start gap-4">
+        <span class="material-symbols-outlined text-[24px] flex-shrink-0" style="color: var(--orange);">sync</span>
+        <div><h3 class="font-display font-bold mb-1">Real-Time Corrections</h3><p class="text-sm text-[var(--muted)]">Pause, correct, and resume instantly.</p></div>
+      </div>
+      <div class="card-hover border border-[var(--line)] rounded-2xl p-6 flex items-start gap-4">
+        <span class="material-symbols-outlined text-[24px] flex-shrink-0" style="color: var(--orange);">lock_open</span>
+        <div><h3 class="font-display font-bold mb-1">No Lock-In</h3><p class="text-sm text-[var(--muted)]">You own everything you build.</p></div>
+      </div>
+      <div class="card-hover border border-[var(--line)] rounded-2xl p-6 flex items-start gap-4">
+        <span class="material-symbols-outlined text-[24px] flex-shrink-0" style="color: var(--orange);">smart_toy</span>
+        <div><h3 class="font-display font-bold mb-1">24/7 AI Assistant</h3><p class="text-sm text-[var(--muted)]">Self-learning bot that helps you run your business.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-8 reveal">
     <div class="rounded-2xl border border-[var(--line)] p-10">
-      <h2 class="font-display font-bold text-2xl mb-4">Our Mission</h2>
-      <p class="text-[var(--muted)] leading-relaxed">To empower organizations with clarity and high-quality presentation. We believe in harnessing the power of focused design and efficient execution to deliver accessible, energetic interfaces that elevate the human experience. Our commitment is to relentless innovation grounded in structural integrity.</p>
+      <h2 class="font-display font-bold text-2xl mb-4">Our Story</h2>
+      <p class="text-[var(--muted)] leading-relaxed">Gurost was built because building software should be as easy as having a conversation. We started with a simple question: "What if you could just speak your idea and watch it come to life?" Today, Gurost helps thousands of people build websites, apps, and businesses — all with their voice.</p>
     </div>
   </div>
 
-  <div class="reveal">
-    <h2 class="font-display font-bold text-2xl text-center mb-10">What We Do</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="card-hover border border-[var(--line)] rounded-2xl p-7 text-center">
-        <span class="material-symbols-outlined text-[32px] mb-4" style="color: var(--orange);">analytics</span>
-        <h3 class="font-display font-bold text-lg mb-2">Strategic Insights</h3>
-        <p class="text-sm text-[var(--muted)]">Transforming complex data into clear, actionable narratives that drive real success.</p>
+  <div class="mb-16 reveal">
+    <div class="rounded-2xl border border-[var(--line)] p-10">
+      <h2 class="font-display font-bold text-2xl mb-4">The Team</h2>
+      <p class="text-[var(--muted)] leading-relaxed">Gurost is built by a small, passionate team committed to democratizing software creation. We believe the future of building is voice-first, and we're building that future today.</p>
+    </div>
+  </div>
+
+  <div class="mb-16 reveal">
+    <h2 class="font-display font-bold text-2xl text-center mb-10">Trust &amp; Safety</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div class="flex items-center gap-3 border border-[var(--line)] rounded-xl px-5 py-4">
+        <span class="material-symbols-outlined text-[20px]" style="color: var(--orange);">check_circle</span>
+        <p class="text-sm font-medium">Full code ownership — you own everything you build</p>
       </div>
-      <div class="card-hover border border-[var(--line)] rounded-2xl p-7 text-center">
-        <span class="material-symbols-outlined text-[32px] mb-4" style="color: var(--orange);">architecture</span>
-        <h3 class="font-display font-bold text-lg mb-2">Architectural Design</h3>
-        <p class="text-sm text-[var(--muted)]">Building robust, scalable frameworks that support the next generation of digital experiences.</p>
+      <div class="flex items-center gap-3 border border-[var(--line)] rounded-xl px-5 py-4">
+        <span class="material-symbols-outlined text-[20px]" style="color: var(--orange);">check_circle</span>
+        <p class="text-sm font-medium">No vendor lock-in — export your code anytime</p>
       </div>
-      <div class="card-hover border border-[var(--line)] rounded-2xl p-7 text-center">
-        <span class="material-symbols-outlined text-[32px] mb-4" style="color: var(--orange);">lightbulb</span>
-        <h3 class="font-display font-bold text-lg mb-2">Innovation Labs</h3>
-        <p class="text-sm text-[var(--muted)]">Pioneering new technologies with a focus on high-quality presentation and user-centricity.</p>
+      <div class="flex items-center gap-3 border border-[var(--line)] rounded-xl px-5 py-4">
+        <span class="material-symbols-outlined text-[20px]" style="color: var(--orange);">check_circle</span>
+        <p class="text-sm font-medium">Enterprise-grade security — your data is safe</p>
+      </div>
+      <div class="flex items-center gap-3 border border-[var(--line)] rounded-xl px-5 py-4">
+        <span class="material-symbols-outlined text-[20px]" style="color: var(--orange);">check_circle</span>
+        <p class="text-sm font-medium">24/7 support — we're here when you need us</p>
       </div>
     </div>
+  </div>
+
+  <div class="reveal text-center border border-[var(--line)] rounded-2xl p-12">
+    <h2 class="font-display font-bold text-2xl mb-3">Ready to build with your voice?</h2>
+    <p class="text-[var(--muted)] mb-7">Start for free today. No credit card required.</p>
+    <a href="signup.html" class="gold-gradient text-white font-semibold px-8 py-4 rounded-full inline-block">Start Building Free</a>
   </div>
 </main>
 

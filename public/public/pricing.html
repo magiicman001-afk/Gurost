@@ -156,21 +156,49 @@
           Can I change my plan later?
           <span class="material-symbols-outlined text-[var(--muted)] faq-icon">expand_more</span>
         </button>
-        <div class="hidden px-5 pb-4 text-sm text-[var(--muted)]" id="faq1">Yes — upgrade or downgrade anytime. Changes are pro-rated for the rest of your billing cycle.</div>
+        <div class="faq-answer hidden px-5 pb-4 text-sm text-[var(--muted)]" id="faq1">Yes — upgrade or downgrade anytime. Changes are pro-rated for the rest of your billing cycle.</div>
       </div>
       <div class="border border-[var(--line)] rounded-xl overflow-hidden">
         <button class="faq-btn w-full text-left px-5 py-4 flex justify-between items-center font-semibold" data-target="faq2">
           What payment methods do you accept?
           <span class="material-symbols-outlined text-[var(--muted)] faq-icon">expand_more</span>
         </button>
-        <div class="hidden px-5 pb-4 text-sm text-[var(--muted)]" id="faq2">All major credit and debit cards through Stripe. Custom plans can be billed by invoice.</div>
+        <div class="faq-answer hidden px-5 pb-4 text-sm text-[var(--muted)]" id="faq2">All major credit and debit cards through Stripe. Custom plans can be billed by invoice.</div>
       </div>
       <div class="border border-[var(--line)] rounded-xl overflow-hidden">
         <button class="faq-btn w-full text-left px-5 py-4 flex justify-between items-center font-semibold" data-target="faq3">
           Is there a free trial for paid plans?
           <span class="material-symbols-outlined text-[var(--muted)] faq-icon">expand_more</span>
         </button>
-        <div class="hidden px-5 pb-4 text-sm text-[var(--muted)]" id="faq3">There's no separate trial — the Free plan gives you 3 real builds a month, so you can try the actual product before ever paying.</div>
+        <div class="faq-answer hidden px-5 pb-4 text-sm text-[var(--muted)]" id="faq3">There's no separate trial — the Free plan gives you 3 real builds a month, so you can try the actual product before ever paying.</div>
+      </div>
+      <div class="border border-[var(--line)] rounded-xl overflow-hidden">
+        <button class="faq-btn w-full text-left px-5 py-4 flex justify-between items-center font-semibold" data-target="faq4">
+          What happens if I use all my monthly builds?
+          <span class="material-symbols-outlined text-[var(--muted)] faq-icon">expand_more</span>
+        </button>
+        <div class="faq-answer hidden px-5 pb-4 text-sm text-[var(--muted)]" id="faq4">You can top up with extra builds any time, or wait until your plan renews next month — your projects stay exactly as they are either way.</div>
+      </div>
+      <div class="border border-[var(--line)] rounded-xl overflow-hidden">
+        <button class="faq-btn w-full text-left px-5 py-4 flex justify-between items-center font-semibold" data-target="faq5">
+          What's the real difference between Plus and Max?
+          <span class="material-symbols-outlined text-[var(--muted)] faq-icon">expand_more</span>
+        </button>
+        <div class="faq-answer hidden px-5 pb-4 text-sm text-[var(--muted)]" id="faq5">Plus gives you 30 builds and 8 projects. Max gives you 150 builds, unlimited projects, priority processing, and removes the "Built with Gurost" badge from what you build.</div>
+      </div>
+      <div class="border border-[var(--line)] rounded-xl overflow-hidden">
+        <button class="faq-btn w-full text-left px-5 py-4 flex justify-between items-center font-semibold" data-target="faq6">
+          If I downgrade, do I lose my projects?
+          <span class="material-symbols-outlined text-[var(--muted)] faq-icon">expand_more</span>
+        </button>
+        <div class="faq-answer hidden px-5 pb-4 text-sm text-[var(--muted)]" id="faq6">No — your existing projects stay exactly as they are. If you're over your new plan's project limit, you just won't be able to start new ones until you're back under it.</div>
+      </div>
+      <div class="border border-[var(--line)] rounded-xl overflow-hidden">
+        <button class="faq-btn w-full text-left px-5 py-4 flex justify-between items-center font-semibold" data-target="faq7">
+          What does Custom actually include?
+          <span class="material-symbols-outlined text-[var(--muted)] faq-icon">expand_more</span>
+        </button>
+        <div class="faq-answer hidden px-5 pb-4 text-sm text-[var(--muted)]" id="faq7">Unlimited builds and projects, 20 team seats, single sign-on, and priority support — priced individually for your organization, not a fixed rate.</div>
       </div>
     </div>
   </div>
@@ -206,7 +234,7 @@
       const answer = document.getElementById(btn.dataset.target);
       const icon = btn.querySelector('.faq-icon');
       const isOpen = !answer.classList.contains('hidden');
-      document.querySelectorAll('[id^="faq"]').forEach((el) => el.classList.add('hidden'));
+      document.querySelectorAll('.faq-answer').forEach((el) => el.classList.add('hidden'));
       document.querySelectorAll('.faq-icon').forEach((el) => { el.style.transform = 'rotate(0deg)'; });
       if (!isOpen) {
         answer.classList.remove('hidden');

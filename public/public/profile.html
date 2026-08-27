@@ -12,6 +12,17 @@
   body { font-family: 'Inter', sans-serif; background: #FFFFFF; color: var(--ink); }
   .font-display { font-family: 'Montserrat', sans-serif; }
   .gold-gradient { background: linear-gradient(135deg, var(--gold), var(--orange)); }
+  .field-label { font-size: 13px; font-weight: 600; display: block; margin-bottom: 6px; }
+  .field-input { width: 100%; background: #FAFAF9; border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+  .field-input:focus { outline: none; border-color: var(--orange); }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; inset: 0; background: var(--line); border-radius: 999px; cursor: pointer; transition: background 0.2s; }
+  .toggle-slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: transform 0.2s; }
+  .toggle input:checked + .toggle-slider { background: var(--orange); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
 </style>
 </head>
 <body class="antialiased">
@@ -29,7 +40,7 @@
   </a>
 </header>
 
-<main class="max-w-lg mx-auto px-6 py-16">
+<main class="max-w-xl mx-auto px-6 py-16">
   <h1 class="font-display font-bold text-2xl mb-8 text-center">Your Profile</h1>
 
   <div class="flex flex-col items-center mb-10">
@@ -41,28 +52,127 @@
       <input type="file" id="avatarFileInput" accept="image/*" class="hidden"/>
     </div>
     <p class="text-xs text-[var(--muted)] mt-3" id="avatarStatus"></p>
+    <div class="flex gap-4 mt-4 text-xs text-[var(--muted)]">
+      <span>Joined <span id="joinedAtDisplay">—</span></span>
+      <span>·</span>
+      <span>Active <span id="lastActiveDisplay">—</span></span>
+    </div>
   </div>
 
-  <div class="flex flex-col gap-5">
+  <!-- Basic info -->
+  <div class="flex flex-col gap-5 mb-10">
     <div>
-      <label class="text-sm font-semibold block mb-1.5" for="displayName">Display name</label>
-      <input class="w-full bg-[#FAFAF9] border border-[var(--line)] rounded-lg px-4 py-3 focus:outline-none focus:border-[var(--orange)] transition-colors" id="displayName" placeholder="Your name" type="text"/>
+      <label class="field-label" for="displayName">Display name</label>
+      <input class="field-input" id="displayName" placeholder="Your name" type="text"/>
     </div>
     <div>
-      <label class="text-sm font-semibold block mb-1.5" for="emailDisplay">Email</label>
-      <input class="w-full bg-[#F3F4F6] border border-[var(--line)] rounded-lg px-4 py-3 text-[var(--muted)]" id="emailDisplay" disabled type="text"/>
+      <label class="field-label" for="emailDisplay">Email</label>
+      <input class="field-input bg-[#F3F4F6] text-[var(--muted)]" id="emailDisplay" disabled type="text"/>
       <p class="text-xs text-[var(--muted)] mt-1">Contact support to change your email.</p>
     </div>
     <div>
-      <label class="text-sm font-semibold block mb-1.5">Plan</label>
-      <div class="flex items-center justify-between bg-[#FAFAF9] border border-[var(--line)] rounded-lg px-4 py-3">
+      <label class="field-label">Plan</label>
+      <div class="flex items-center justify-between field-input">
         <span class="text-sm font-semibold" id="planDisplay">—</span>
         <a href="settings.html" class="text-xs font-semibold" style="color: var(--orange);">Manage in Settings →</a>
       </div>
     </div>
-    <p class="hidden text-sm" id="profileStatus"></p>
-    <button class="gold-gradient text-white rounded-full py-3.5 font-semibold" id="saveProfileBtn" type="button">Save Changes</button>
+    <div>
+      <label class="field-label" for="bio">Bio / About Me</label>
+      <textarea class="field-input resize-y" id="bio" rows="4" maxlength="500" placeholder="Tell us about yourself and your business..."></textarea>
+      <p class="text-xs text-[var(--muted)] mt-1 text-right"><span id="bioCount">0</span>/500</p>
+    </div>
   </div>
+
+  <!-- Professional -->
+  <div class="mb-10">
+    <h2 class="font-display font-bold text-sm uppercase tracking-wide text-[var(--muted)] mb-4">Professional</h2>
+    <div class="flex flex-col gap-5">
+      <div>
+        <label class="field-label" for="companyName">Company Name</label>
+        <input class="field-input" id="companyName" placeholder="Your company name" type="text"/>
+      </div>
+      <div>
+        <label class="field-label" for="jobTitle">Job Title</label>
+        <input class="field-input" id="jobTitle" placeholder="e.g. Founder, CEO, Developer" type="text"/>
+      </div>
+      <div>
+        <label class="field-label" for="location">Location</label>
+        <input class="field-input" id="location" placeholder="City, Country" type="text"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- Social links -->
+  <div class="mb-10">
+    <h2 class="font-display font-bold text-sm uppercase tracking-wide text-[var(--muted)] mb-4">Social Links</h2>
+    <div class="flex flex-col gap-5">
+      <div>
+        <label class="field-label" for="linkedinUrl">LinkedIn</label>
+        <input class="field-input" id="linkedinUrl" placeholder="https://linkedin.com/in/..." type="url"/>
+      </div>
+      <div>
+        <label class="field-label" for="twitterUrl">Twitter / X</label>
+        <input class="field-input" id="twitterUrl" placeholder="https://x.com/..." type="url"/>
+      </div>
+      <div>
+        <label class="field-label" for="githubUrl">GitHub</label>
+        <input class="field-input" id="githubUrl" placeholder="https://github.com/..." type="url"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preferences -->
+  <div class="mb-10">
+    <h2 class="font-display font-bold text-sm uppercase tracking-wide text-[var(--muted)] mb-4">Preferences</h2>
+    <div>
+      <label class="field-label" for="preferredLanguage">Preferred Language</label>
+      <select class="field-input" id="preferredLanguage">
+        <option>English</option>
+        <option>Spanish</option>
+        <option>French</option>
+        <option>German</option>
+        <option>Arabic</option>
+        <option>Other</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Notifications -->
+  <div class="mb-10">
+    <h2 class="font-display font-bold text-sm uppercase tracking-wide text-[var(--muted)] mb-2">Notification Settings</h2>
+    <div class="border border-[var(--line)] rounded-xl px-4">
+      <div class="toggle-row">
+        <span class="text-sm font-medium">Email notifications</span>
+        <label class="toggle"><input type="checkbox" id="notifyEmail"/><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <span class="text-sm font-medium">Push notifications</span>
+        <label class="toggle"><input type="checkbox" id="notifyPush"/><span class="toggle-slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <span class="text-sm font-medium">In-app notifications</span>
+        <label class="toggle"><input type="checkbox" id="notifyInApp"/><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Visibility -->
+  <div class="mb-10">
+    <h2 class="font-display font-bold text-sm uppercase tracking-wide text-[var(--muted)] mb-2">Profile Visibility</h2>
+    <div class="border border-[var(--line)] rounded-xl px-4">
+      <div class="toggle-row">
+        <div>
+          <span class="text-sm font-medium">Public profile</span>
+          <p class="text-xs text-[var(--muted)]">When on, your profile can be viewed by others.</p>
+        </div>
+        <label class="toggle"><input type="checkbox" id="isPublic"/><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <p class="hidden text-sm mb-3" id="profileStatus"></p>
+  <button class="gold-gradient text-white rounded-full py-3.5 font-semibold w-full" id="saveProfileBtn" type="button">Save Changes</button>
 </main>
 
 <script src="shared/api-client.js"></script>
@@ -72,11 +182,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const PLAN_DISPLAY_NAMES = { free: 'Free', pro: 'Plus', unlimited: 'Max', ultimate: 'Custom' };
 
+  function formatDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
   try {
     const me = await GurostAPI.call('/api/me');
     document.getElementById('emailDisplay').value = me.email || '';
     document.getElementById('planDisplay').textContent = `${PLAN_DISPLAY_NAMES[me.plan] || me.plan} plan`;
     document.getElementById('displayName').value = me.displayName || '';
+    document.getElementById('bio').value = me.bio || '';
+    document.getElementById('bioCount').textContent = (me.bio || '').length;
+    document.getElementById('companyName').value = me.companyName || '';
+    document.getElementById('jobTitle').value = me.jobTitle || '';
+    document.getElementById('location').value = me.location || '';
+    document.getElementById('linkedinUrl').value = me.linkedinUrl || '';
+    document.getElementById('twitterUrl').value = me.twitterUrl || '';
+    document.getElementById('githubUrl').value = me.githubUrl || '';
+    document.getElementById('preferredLanguage').value = me.preferredLanguage || 'English';
+    document.getElementById('notifyEmail').checked = me.notifyEmail !== false;
+    document.getElementById('notifyPush').checked = me.notifyPush !== false;
+    document.getElementById('notifyInApp').checked = me.notifyInApp !== false;
+    document.getElementById('isPublic').checked = !!me.isPublic;
+    document.getElementById('joinedAtDisplay').textContent = formatDate(me.joinedAt);
+    document.getElementById('lastActiveDisplay').textContent = formatDate(me.lastActiveAt);
+
     const avatarEl = document.getElementById('avatarDisplay');
     if (me.avatarUrl) {
       avatarEl.innerHTML = `<img src="${me.avatarUrl}" class="w-full h-full object-cover" alt="Your avatar"/>`;
@@ -86,6 +218,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (err) {
     console.error('[profile] Failed to load real profile info:', err.message);
   }
+
+  document.getElementById('bio').addEventListener('input', (e) => {
+    document.getElementById('bioCount').textContent = e.target.value.length;
+  });
 
   document.getElementById('uploadPhotoBtn').addEventListener('click', () => {
     document.getElementById('avatarFileInput').click();
@@ -121,20 +257,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     const name = document.getElementById('displayName').value.trim();
     if (!name) {
       statusEl.textContent = 'Enter a display name first.';
-      statusEl.className = 'text-sm text-red-600';
+      statusEl.className = 'text-sm text-red-600 mb-3';
       statusEl.classList.remove('hidden');
       return;
     }
     btn.disabled = true;
     btn.textContent = 'Saving…';
     try {
-      await GurostAPI.call('/api/me', { method: 'PATCH', body: { displayName: name } });
+      await GurostAPI.call('/api/me', {
+        method: 'PATCH',
+        body: {
+          displayName: name,
+          bio: document.getElementById('bio').value,
+          companyName: document.getElementById('companyName').value,
+          jobTitle: document.getElementById('jobTitle').value,
+          location: document.getElementById('location').value,
+          linkedinUrl: document.getElementById('linkedinUrl').value,
+          twitterUrl: document.getElementById('twitterUrl').value,
+          githubUrl: document.getElementById('githubUrl').value,
+          preferredLanguage: document.getElementById('preferredLanguage').value,
+          notifyEmail: document.getElementById('notifyEmail').checked,
+          notifyPush: document.getElementById('notifyPush').checked,
+          notifyInApp: document.getElementById('notifyInApp').checked,
+          isPublic: document.getElementById('isPublic').checked,
+        },
+      });
       statusEl.textContent = 'Saved.';
-      statusEl.className = 'text-sm text-green-600';
+      statusEl.className = 'text-sm text-green-600 mb-3';
       statusEl.classList.remove('hidden');
     } catch (err) {
       statusEl.textContent = err.message;
-      statusEl.className = 'text-sm text-red-600';
+      statusEl.className = 'text-sm text-red-600 mb-3';
       statusEl.classList.remove('hidden');
     } finally {
       btn.disabled = false;

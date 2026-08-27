@@ -15,8 +15,8 @@
   @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
   .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
   .reveal.in-view { opacity: 1; transform: translateY(0); }
-  .card-hover { transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease; }
-  .card-hover:hover { transform: translateY(-5px); box-shadow: 0 24px 48px -20px rgba(26,26,46,0.18); }
+  @keyframes soft-pulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+  .soft-pulse { animation: soft-pulse 2.4s ease-in-out infinite; }
 </style>
 </head>
 <body class="antialiased">
@@ -39,103 +39,25 @@
   </div>
 </header>
 
-<main class="max-w-6xl mx-auto px-6 py-20">
-  <div class="text-center mb-14 reveal">
-    <h1 class="font-display font-bold text-4xl md:text-5xl mb-4">Built with Gurost</h1>
-    <p class="text-lg text-[var(--muted)]">Real projects, built by real people describing what they wanted.</p>
+<main class="max-w-2xl mx-auto px-6 py-24 text-center">
+  <div class="reveal">
+    <div class="w-16 h-16 rounded-full gold-gradient mx-auto mb-8 flex items-center justify-center soft-pulse">
+      <span class="material-symbols-outlined text-[28px] text-white">auto_awesome</span>
+    </div>
+    <h1 class="font-display font-bold text-4xl md:text-5xl mb-5">Showcase — Coming Soon</h1>
+    <p class="text-lg text-[var(--muted)] mb-3">We're building something amazing. Real projects from the Gurost community will be showcased here soon.</p>
+    <p class="text-lg text-[var(--muted)] mb-10">Join us and be the first to have your project featured. Build your website or app today, and you could be on this page tomorrow.</p>
+    <a href="dashboard.html" class="gold-gradient text-white font-semibold px-8 py-4 rounded-full inline-block">Start Building Now</a>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <article class="reveal card-hover border border-[var(--line)] rounded-2xl overflow-hidden flex flex-col">
-      <div class="h-40 relative flex items-center justify-center" style="background: linear-gradient(135deg, #FEF3E2, #FDE4C4);">
-        <span class="material-symbols-outlined text-[40px]" style="color: var(--orange);">local_cafe</span>
-        <span class="absolute top-3 right-3 bg-white/90 text-[var(--ink)] font-semibold px-3 py-1 rounded-full text-xs">Food &amp; Bev</span>
-      </div>
-      <div class="p-6 flex flex-col flex-1">
-        <h3 class="font-display font-bold mb-2">Amber Hour</h3>
-        <p class="text-sm text-[var(--muted)] flex-1">A vibrant e-commerce platform and subscription service for a boutique coffee roastery.</p>
-      </div>
-    </article>
-    <article class="reveal card-hover border border-[var(--line)] rounded-2xl overflow-hidden flex flex-col" style="animation-delay:0.05s;">
-      <div class="h-40 relative flex items-center justify-center" style="background: linear-gradient(135deg, #FEF3E2, #FDE4C4);">
-        <span class="material-symbols-outlined text-[40px]" style="color: var(--orange);">local_florist</span>
-        <span class="absolute top-3 right-3 bg-white/90 text-[var(--ink)] font-semibold px-3 py-1 rounded-full text-xs">E-commerce</span>
-      </div>
-      <div class="p-6 flex flex-col flex-1">
-        <h3 class="font-display font-bold mb-2">Root &amp; Bloom</h3>
-        <p class="text-sm text-[var(--muted)] flex-1">Custom subscription management dashboard for an indoor plant delivery service.</p>
-      </div>
-    </article>
-    <article class="reveal card-hover border border-[var(--line)] rounded-2xl overflow-hidden flex flex-col" style="animation-delay:0.1s;">
-      <div class="h-40 relative flex items-center justify-center" style="background: linear-gradient(135deg, #FEF3E2, #FDE4C4);">
-        <span class="material-symbols-outlined text-[40px]" style="color: var(--orange);">architecture</span>
-        <span class="absolute top-3 right-3 bg-white/90 text-[var(--ink)] font-semibold px-3 py-1 rounded-full text-xs">Portfolio</span>
-      </div>
-      <div class="p-6 flex flex-col flex-1">
-        <h3 class="font-display font-bold mb-2">Northline Studio</h3>
-        <p class="text-sm text-[var(--muted)] flex-1">An elegant, image-forward portfolio site for an award-winning architecture practice.</p>
-      </div>
-    </article>
-    <article class="reveal card-hover border border-[var(--line)] rounded-2xl overflow-hidden flex flex-col" style="animation-delay:0.15s;">
-      <div class="h-40 relative flex items-center justify-center" style="background: linear-gradient(135deg, #FEF3E2, #FDE4C4);">
-        <span class="material-symbols-outlined text-[40px]" style="color: var(--orange);">business_center</span>
-        <span class="absolute top-3 right-3 bg-white/90 text-[var(--ink)] font-semibold px-3 py-1 rounded-full text-xs">Corporate</span>
-      </div>
-      <div class="p-6 flex flex-col flex-1">
-        <h3 class="font-display font-bold mb-2">Fieldwork Consulting</h3>
-        <p class="text-sm text-[var(--muted)] flex-1">Client portal and internal tools hub for a global professional services firm.</p>
-      </div>
-    </article>
-    <article class="reveal card-hover border border-[var(--line)] rounded-2xl overflow-hidden flex flex-col" style="animation-delay:0.2s;">
-      <div class="h-40 relative flex items-center justify-center" style="background: linear-gradient(135deg, #FEF3E2, #FDE4C4);">
-        <span class="material-symbols-outlined text-[40px]" style="color: var(--orange);">local_florist</span>
-        <span class="absolute top-3 right-3 bg-white/90 text-[var(--ink)] font-semibold px-3 py-1 rounded-full text-xs">Retail</span>
-      </div>
-      <div class="p-6 flex flex-col flex-1">
-        <h3 class="font-display font-bold mb-2">Bloom Studio</h3>
-        <p class="text-sm text-[var(--muted)] flex-1">A visually stunning booking and catalog site for event floral design.</p>
-      </div>
-    </article>
-    <article class="reveal card-hover border border-[var(--line)] rounded-2xl overflow-hidden flex flex-col" style="animation-delay:0.25s;">
-      <div class="h-40 relative flex items-center justify-center" style="background: linear-gradient(135deg, #FEF3E2, #FDE4C4);">
-        <span class="material-symbols-outlined text-[40px]" style="color: var(--orange);">precision_manufacturing</span>
-        <span class="absolute top-3 right-3 bg-white/90 text-[var(--ink)] font-semibold px-3 py-1 rounded-full text-xs">Manufacturing</span>
-      </div>
-      <div class="p-6 flex flex-col flex-1">
-        <h3 class="font-display font-bold mb-2">Ironworks Mfg</h3>
-        <p class="text-sm text-[var(--muted)] flex-1">A B2B ordering platform and inventory tracking system for custom metalwork.</p>
-      </div>
-    </article>
-    <article class="reveal card-hover border border-[var(--line)] rounded-2xl overflow-hidden flex flex-col" style="animation-delay:0.3s;">
-      <div class="h-40 relative flex items-center justify-center" style="background: linear-gradient(135deg, #FEF3E2, #FDE4C4);">
-        <span class="material-symbols-outlined text-[40px]" style="color: var(--orange);">query_stats</span>
-        <span class="absolute top-3 right-3 bg-white/90 text-[var(--ink)] font-semibold px-3 py-1 rounded-full text-xs">SaaS</span>
-      </div>
-      <div class="p-6 flex flex-col flex-1">
-        <h3 class="font-display font-bold mb-2">DataFlow App</h3>
-        <p class="text-sm text-[var(--muted)] flex-1">Next-generation analytics dashboard with real-time syncing capabilities.</p>
-      </div>
-    </article>
-    <article class="reveal card-hover border border-[var(--line)] rounded-2xl overflow-hidden flex flex-col" style="animation-delay:0.35s;">
-      <div class="h-40 relative flex items-center justify-center" style="background: linear-gradient(135deg, #FEF3E2, #FDE4C4);">
-        <span class="material-symbols-outlined text-[40px]" style="color: var(--orange);">health_and_safety</span>
-        <span class="absolute top-3 right-3 bg-white/90 text-[var(--ink)] font-semibold px-3 py-1 rounded-full text-xs">Health</span>
-      </div>
-      <div class="p-6 flex flex-col flex-1">
-        <h3 class="font-display font-bold mb-2">CareConnect</h3>
-        <p class="text-sm text-[var(--muted)] flex-1">A patient-first scheduling and telehealth portal designed for modern clinics.</p>
-      </div>
-    </article>
-    <article class="reveal card-hover border border-[var(--line)] rounded-2xl overflow-hidden flex flex-col" style="animation-delay:0.4s;">
-      <div class="h-40 relative flex items-center justify-center" style="background: linear-gradient(135deg, #FEF3E2, #FDE4C4);">
-        <span class="material-symbols-outlined text-[40px]" style="color: var(--orange);">villa</span>
-        <span class="absolute top-3 right-3 bg-white/90 text-[var(--ink)] font-semibold px-3 py-1 rounded-full text-xs">Real Estate</span>
-      </div>
-      <div class="p-6 flex flex-col flex-1">
-        <h3 class="font-display font-bold mb-2">Lumina Estates</h3>
-        <p class="text-sm text-[var(--muted)] flex-1">Luxury property showcase featuring immersive galleries and virtual tours.</p>
-      </div>
-    </article>
+  <div class="reveal border border-[var(--line)] rounded-2xl p-10 mt-20">
+    <h2 class="font-display font-bold text-xl mb-2">Get notified when the Showcase launches</h2>
+    <p class="text-sm text-[var(--muted)] mb-6">We'll let you know the moment it's live.</p>
+    <form id="notifyForm" class="flex flex-col gap-3 max-w-sm mx-auto">
+      <input type="email" id="notifyEmail" placeholder="Your email" required class="w-full bg-[#FAFAF9] border border-[var(--line)] rounded-full px-4 py-3 focus:outline-none focus:border-[var(--orange)] transition-colors"/>
+      <button type="submit" class="gold-gradient text-white text-sm font-semibold px-5 py-2.5 rounded-full">Notify Me</button>
+    </form>
+    <p class="hidden text-xs mt-3" id="notifyStatus"></p>
   </div>
 </main>
 
@@ -163,6 +85,16 @@
     entries.forEach((entry) => { if (entry.isIntersecting) entry.target.classList.add('in-view'); });
   }, { threshold: 0.15 });
   document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+
+  // Real, honest note, same as Blog's subscribe box: no backend
+  // exists for this yet - genuinely just UI for now, as asked.
+  document.getElementById('notifyForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const status = document.getElementById('notifyStatus');
+    status.textContent = "Thanks — we'll notify this address when Showcase goes live.";
+    status.className = 'text-xs text-[var(--muted)] mt-3';
+    status.classList.remove('hidden');
+  });
 </script>
 </body>
 </html>

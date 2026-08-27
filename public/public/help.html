@@ -45,27 +45,42 @@
 
   <div class="mb-14 reveal">
     <h2 class="font-display font-bold text-lg mb-5">Popular questions</h2>
-    <div class="flex flex-col gap-3">
-      <a href="contact.html" class="flex items-center justify-between border border-[var(--line)] rounded-xl px-6 py-4 hover:border-[var(--orange)] transition-colors">
-        <span class="font-medium text-sm">How do I create an account?</span>
-        <span class="material-symbols-outlined text-[18px] text-[var(--muted)]">chevron_right</span>
-      </a>
-      <a href="contact.html" class="flex items-center justify-between border border-[var(--line)] rounded-xl px-6 py-4 hover:border-[var(--orange)] transition-colors">
-        <span class="font-medium text-sm">How do I build a website?</span>
-        <span class="material-symbols-outlined text-[18px] text-[var(--muted)]">chevron_right</span>
-      </a>
-      <a href="contact.html" class="flex items-center justify-between border border-[var(--line)] rounded-xl px-6 py-4 hover:border-[var(--orange)] transition-colors">
-        <span class="font-medium text-sm">How does the Pulse button work?</span>
-        <span class="material-symbols-outlined text-[18px] text-[var(--muted)]">chevron_right</span>
-      </a>
-      <a href="contact.html" class="flex items-center justify-between border border-[var(--line)] rounded-xl px-6 py-4 hover:border-[var(--orange)] transition-colors">
-        <span class="font-medium text-sm">What is the Business Assistant?</span>
-        <span class="material-symbols-outlined text-[18px] text-[var(--muted)]">chevron_right</span>
-      </a>
-      <a href="contact.html" class="flex items-center justify-between border border-[var(--line)] rounded-xl px-6 py-4 hover:border-[var(--orange)] transition-colors">
-        <span class="font-medium text-sm">How do I cancel my subscription?</span>
-        <span class="material-symbols-outlined text-[18px] text-[var(--muted)]">chevron_right</span>
-      </a>
+    <div class="flex flex-col gap-3" id="faqList">
+      <div class="border border-[var(--line)] rounded-xl overflow-hidden">
+        <button class="faq-btn w-full text-left px-6 py-4 flex items-center justify-between" data-target="faqAccount">
+          <span class="font-medium text-sm">How do I create an account?</span>
+          <span class="material-symbols-outlined text-[18px] text-[var(--muted)] faq-icon">expand_more</span>
+        </button>
+        <div class="hidden px-6 pb-4 text-sm text-[var(--muted)]" id="faqAccount">Click Sign up at the top of the page. You can create an account with your email and a password, or continue instantly with Google, GitHub, or Apple.</div>
+      </div>
+      <div class="border border-[var(--line)] rounded-xl overflow-hidden">
+        <button class="faq-btn w-full text-left px-6 py-4 flex items-center justify-between" data-target="faqBuild">
+          <span class="font-medium text-sm">How do I build a website?</span>
+          <span class="material-symbols-outlined text-[18px] text-[var(--muted)] faq-icon">expand_more</span>
+        </button>
+        <div class="hidden px-6 pb-4 text-sm text-[var(--muted)]" id="faqBuild">From your Dashboard, describe what you want to build — by typing or holding Pulse to speak — and choose Website. Gurost builds it live, and you can keep refining it with more corrections until it's right.</div>
+      </div>
+      <div class="border border-[var(--line)] rounded-xl overflow-hidden">
+        <button class="faq-btn w-full text-left px-6 py-4 flex items-center justify-between" data-target="faqPulse">
+          <span class="font-medium text-sm">How does the Pulse button work?</span>
+          <span class="material-symbols-outlined text-[18px] text-[var(--muted)] faq-icon">expand_more</span>
+        </button>
+        <div class="hidden px-6 pb-4 text-sm text-[var(--muted)]" id="faqPulse">Hold the Pulse button and speak your idea or correction, then release — Gurost transcribes it and applies it right away. You can also tap it to type instead, if you'd rather not talk.</div>
+      </div>
+      <div class="border border-[var(--line)] rounded-xl overflow-hidden">
+        <button class="faq-btn w-full text-left px-6 py-4 flex items-center justify-between" data-target="faqAssistant">
+          <span class="font-medium text-sm">What is the Business Assistant?</span>
+          <span class="material-symbols-outlined text-[18px] text-[var(--muted)] faq-icon">expand_more</span>
+        </button>
+        <div class="hidden px-6 pb-4 text-sm text-[var(--muted)]" id="faqAssistant">A dedicated AI assistant for running your business day-to-day, included with the Max and Custom plans. It's not available on Free or Plus.</div>
+      </div>
+      <div class="border border-[var(--line)] rounded-xl overflow-hidden">
+        <button class="faq-btn w-full text-left px-6 py-4 flex items-center justify-between" data-target="faqCancel">
+          <span class="font-medium text-sm">How do I cancel my subscription?</span>
+          <span class="material-symbols-outlined text-[18px] text-[var(--muted)] faq-icon">expand_more</span>
+        </button>
+        <div class="hidden px-6 pb-4 text-sm text-[var(--muted)]" id="faqCancel">Go to Settings → Billing → Manage Payment. That opens your real billing portal, where you can cancel or change your plan directly.</div>
+      </div>
     </div>
   </div>
 
@@ -101,6 +116,20 @@
     entries.forEach((entry) => { if (entry.isIntersecting) entry.target.classList.add('in-view'); });
   }, { threshold: 0.15 });
   document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+
+  document.querySelectorAll('.faq-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const answer = document.getElementById(btn.dataset.target);
+      const icon = btn.querySelector('.faq-icon');
+      const isOpen = !answer.classList.contains('hidden');
+      document.querySelectorAll('#faqList [id^="faq"]').forEach((el) => el.classList.add('hidden'));
+      document.querySelectorAll('.faq-icon').forEach((el) => { el.style.transform = 'rotate(0deg)'; });
+      if (!isOpen) {
+        answer.classList.remove('hidden');
+        icon.style.transform = 'rotate(180deg)';
+      }
+    });
+  });
 </script>
 </body>
 </html>

@@ -15,8 +15,6 @@
   @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
   .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
   .reveal.in-view { opacity: 1; transform: translateY(0); }
-  .card-hover { transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease; }
-  .card-hover:hover { transform: translateY(-5px); box-shadow: 0 24px 48px -20px rgba(26,26,46,0.18); }
 </style>
 </head>
 <body class="antialiased">
@@ -39,93 +37,67 @@
   </div>
 </header>
 
-<main class="max-w-6xl mx-auto px-6 py-20">
+<main class="max-w-3xl mx-auto px-6 py-20">
   <div class="text-center mb-14 reveal">
-    <h1 class="font-display font-bold text-4xl md:text-5xl mb-4">The Gurost Blog</h1>
-    <p class="text-lg text-[var(--muted)]">Real updates, real stories, real ideas.</p>
+    <h1 class="font-display font-bold text-4xl md:text-5xl mb-4">Gurost Blog</h1>
+    <p class="text-lg text-[var(--muted)]">News, tips, and tutorials from the Gurost team.</p>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="postsGrid">
-    <!-- Post 1 -->
-    <article class="reveal card-hover border border-[var(--line)] rounded-2xl overflow-hidden flex flex-col">
-      <div class="h-40 flex items-center justify-center" style="background: linear-gradient(135deg, #FEF3E2, #FDE4C4);"><span class="material-symbols-outlined text-[40px]" style="color: var(--orange);">bolt</span></div>
-      <div class="p-6 flex flex-col flex-1">
-        <span class="text-xs font-semibold uppercase tracking-wide mb-2" style="color: var(--orange);">Product Updates</span>
-        <h2 class="font-display font-bold text-lg mb-2">Introducing the New Automation Workflow Engine</h2>
-        <p class="text-sm text-[var(--muted)] mb-4 flex-1">Discover how our latest update streamlines your daily tasks with intelligent, conditional triggers designed for enterprise scale operations.</p>
-        <p class="text-xs text-[var(--muted)]">Oct 24, 2026 · By Sarah Jenkins</p>
+  <div class="reveal border border-[var(--line)] rounded-2xl p-10 mb-8">
+    <h2 class="font-display font-bold text-xl mb-4">Welcome to the Gurost Blog.</h2>
+    <p class="text-[var(--muted)] leading-relaxed mb-5">We're building the future of voice-powered creation. This blog will be your source for:</p>
+    <ul class="space-y-3">
+      <li class="flex items-start gap-3">
+        <span class="material-symbols-outlined text-[18px] mt-0.5" style="color: var(--orange);">check</span>
+        <span class="text-[var(--muted)]">Product updates and new features</span>
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="material-symbols-outlined text-[18px] mt-0.5" style="color: var(--orange);">check</span>
+        <span class="text-[var(--muted)]">Tips and tutorials to get the most out of Gurost</span>
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="material-symbols-outlined text-[18px] mt-0.5" style="color: var(--orange);">check</span>
+        <span class="text-[var(--muted)]">Customer success stories</span>
+      </li>
+      <li class="flex items-start gap-3">
+        <span class="material-symbols-outlined text-[18px] mt-0.5" style="color: var(--orange);">check</span>
+        <span class="text-[var(--muted)]">Industry insights and trends</span>
+      </li>
+    </ul>
+  </div>
+
+  <div class="reveal text-center mb-16">
+    <p class="font-semibold mb-1">Coming Soon</p>
+    <p class="text-sm text-[var(--muted)] mb-6">We're working on our first articles. Check back regularly for updates.</p>
+    <p class="text-sm text-[var(--muted)]">Want to contribute? Email us at <a href="mailto:support@gurost.com" class="font-semibold" style="color: var(--orange);">support@gurost.com</a></p>
+  </div>
+
+  <div class="mb-16 reveal">
+    <h2 class="font-display font-bold text-xl text-center mb-8">Latest Posts</h2>
+    <div class="space-y-3">
+      <div class="flex items-center justify-between border border-[var(--line)] rounded-xl px-6 py-4">
+        <span class="font-medium text-sm">How to build a website with your voice</span>
+        <span class="text-xs font-semibold px-3 py-1 rounded-full bg-[#F3F4F6] text-[var(--muted)]">Coming Soon</span>
       </div>
-    </article>
-    <!-- Post 2 -->
-    <article class="reveal card-hover border border-[var(--line)] rounded-2xl overflow-hidden flex flex-col" style="animation-delay:0.05s;">
-      <div class="h-40 flex items-center justify-center" style="background: linear-gradient(135deg, #FEF3E2, #FDE4C4);"><span class="material-symbols-outlined text-[40px]" style="color: var(--orange);">groups</span></div>
-      <div class="p-6 flex flex-col flex-1">
-        <span class="text-xs font-semibold uppercase tracking-wide mb-2" style="color: var(--orange);">Tips &amp; Tricks</span>
-        <h2 class="font-display font-bold text-lg mb-2">5 Ways to Optimize Your Team's Communication</h2>
-        <p class="text-sm text-[var(--muted)] mb-4 flex-1">Learn proven strategies to reduce meeting fatigue and ensure critical information flows seamlessly across decentralized departments.</p>
-        <p class="text-xs text-[var(--muted)]">Oct 20, 2026 · By Marcus Lee</p>
+      <div class="flex items-center justify-between border border-[var(--line)] rounded-xl px-6 py-4">
+        <span class="font-medium text-sm">5 tips for faster building</span>
+        <span class="text-xs font-semibold px-3 py-1 rounded-full bg-[#F3F4F6] text-[var(--muted)]">Coming Soon</span>
       </div>
-    </article>
-    <!-- Post 3 -->
-    <article class="reveal card-hover border border-[var(--line)] rounded-2xl overflow-hidden flex flex-col" style="animation-delay:0.1s;">
-      <div class="h-40 flex items-center justify-center" style="background: linear-gradient(135deg, #FEF3E2, #FDE4C4);"><span class="material-symbols-outlined text-[40px]" style="color: var(--orange);">trending_up</span></div>
-      <div class="p-6 flex flex-col flex-1">
-        <span class="text-xs font-semibold uppercase tracking-wide mb-2" style="color: var(--orange);">Customer Stories</span>
-        <h2 class="font-display font-bold text-lg mb-2">How Acme Corp Scaled Operations by 300%</h2>
-        <p class="text-sm text-[var(--muted)] mb-4 flex-1">Read the in-depth case study on how implementing our core modules allowed Acme Corp to break through their operational bottlenecks.</p>
-        <p class="text-xs text-[var(--muted)]">Oct 15, 2026 · By Emily Chen</p>
+      <div class="flex items-center justify-between border border-[var(--line)] rounded-xl px-6 py-4">
+        <span class="font-medium text-sm">Customer success: How a bakery went live in 5 minutes</span>
+        <span class="text-xs font-semibold px-3 py-1 rounded-full bg-[#F3F4F6] text-[var(--muted)]">Coming Soon</span>
       </div>
-    </article>
-    <!-- Post 4 -->
-    <article class="reveal card-hover border border-[var(--line)] rounded-2xl overflow-hidden flex flex-col" style="animation-delay:0.15s;">
-      <div class="h-40 flex items-center justify-center" style="background: linear-gradient(135deg, #FEF3E2, #FDE4C4);"><span class="material-symbols-outlined text-[40px]" style="color: var(--orange);">schedule</span></div>
-      <div class="p-6 flex flex-col flex-1">
-        <span class="text-xs font-semibold uppercase tracking-wide mb-2" style="color: var(--orange);">Industry Insights</span>
-        <h2 class="font-display font-bold text-lg mb-2">The Future of Asynchronous Work Environments</h2>
-        <p class="text-sm text-[var(--muted)] mb-4 flex-1">Explore our latest research report on the shift towards asynchronous methodologies and what it means for global enterprise productivity.</p>
-        <p class="text-xs text-[var(--muted)]">Oct 10, 2026 · By Dr. Robert Vance</p>
-      </div>
-    </article>
-    <!-- Post 5 -->
-    <article class="reveal card-hover border border-[var(--line)] rounded-2xl overflow-hidden flex flex-col" style="animation-delay:0.2s;">
-      <div class="h-40 flex items-center justify-center" style="background: linear-gradient(135deg, #FEF3E2, #FDE4C4);"><span class="material-symbols-outlined text-[40px]" style="color: var(--orange);">integration_instructions</span></div>
-      <div class="p-6 flex flex-col flex-1">
-        <span class="text-xs font-semibold uppercase tracking-wide mb-2" style="color: var(--orange);">Tutorials</span>
-        <h2 class="font-display font-bold text-lg mb-2">Mastering Advanced API Integrations</h2>
-        <p class="text-sm text-[var(--muted)] mb-4 flex-1">A step-by-step guide to connecting third-party services securely and efficiently using our updated developer tools.</p>
-        <p class="text-xs text-[var(--muted)]">Oct 05, 2026 · By Dev Team</p>
-      </div>
-    </article>
-    <!-- Post 6 -->
-    <article class="reveal card-hover border border-[var(--line)] rounded-2xl overflow-hidden flex flex-col" style="animation-delay:0.25s;">
-      <div class="h-40 flex items-center justify-center" style="background: linear-gradient(135deg, #FEF3E2, #FDE4C4);"><span class="material-symbols-outlined text-[40px]" style="color: var(--orange);">analytics</span></div>
-      <div class="p-6 flex flex-col flex-1">
-        <span class="text-xs font-semibold uppercase tracking-wide mb-2" style="color: var(--orange);">Product Updates</span>
-        <h2 class="font-display font-bold text-lg mb-2">Analytics Dashboard Revamp: What's New</h2>
-        <p class="text-sm text-[var(--muted)] mb-4 flex-1">We've completely overhauled our reporting interface to provide deeper insights with greater visual clarity and faster load times.</p>
-        <p class="text-xs text-[var(--muted)]">Sep 28, 2026 · By Sarah Jenkins</p>
-      </div>
-    </article>
-    <!-- Post 7 -->
-    <article class="reveal card-hover border border-[var(--line)] rounded-2xl overflow-hidden flex flex-col" style="animation-delay:0.3s;">
-      <div class="h-40 flex items-center justify-center" style="background: linear-gradient(135deg, #FEF3E2, #FDE4C4);"><span class="material-symbols-outlined text-[40px]" style="color: var(--orange);">event_available</span></div>
-      <div class="p-6 flex flex-col flex-1">
-        <span class="text-xs font-semibold uppercase tracking-wide mb-2" style="color: var(--orange);">Tips &amp; Tricks</span>
-        <h2 class="font-display font-bold text-lg mb-2">Time Management Strategies for Executives</h2>
-        <p class="text-sm text-[var(--muted)] mb-4 flex-1">Regain control of your calendar with these high-level strategies for prioritizing deep work over reactive tasks.</p>
-        <p class="text-xs text-[var(--muted)]">Sep 22, 2026 · By Marcus Lee</p>
-      </div>
-    </article>
-    <!-- Post 8 -->
-    <article class="reveal card-hover border border-[var(--line)] rounded-2xl overflow-hidden flex flex-col" style="animation-delay:0.35s;">
-      <div class="h-40 flex items-center justify-center" style="background: linear-gradient(135deg, #FEF3E2, #FDE4C4);"><span class="material-symbols-outlined text-[40px]" style="color: var(--orange);">forum</span></div>
-      <div class="p-6 flex flex-col flex-1">
-        <span class="text-xs font-semibold uppercase tracking-wide mb-2" style="color: var(--orange);">Industry Insights</span>
-        <h2 class="font-display font-bold text-lg mb-2">Navigating the Return to Office Debate</h2>
-        <p class="text-sm text-[var(--muted)] mb-4 flex-1">An objective analysis of current trends balancing remote flexibility with the need for in-person collaboration spaces.</p>
-        <p class="text-xs text-[var(--muted)]">Sep 15, 2026 · By Dr. Robert Vance</p>
-      </div>
-    </article>
+    </div>
+  </div>
+
+  <div class="reveal text-center border border-[var(--line)] rounded-2xl p-10">
+    <h2 class="font-display font-bold text-xl mb-2">Stay Updated</h2>
+    <p class="text-sm text-[var(--muted)] mb-6">Get the latest posts delivered to your inbox.</p>
+    <form id="subscribeForm" class="flex flex-col gap-3 max-w-sm mx-auto">
+      <input type="email" id="subscribeEmail" placeholder="Your email" required class="w-full bg-[#FAFAF9] border border-[var(--line)] rounded-full px-4 py-3 focus:outline-none focus:border-[var(--orange)] transition-colors"/>
+      <button type="submit" class="gold-gradient text-white text-sm font-semibold px-5 py-2.5 rounded-full">Subscribe</button>
+    </form>
+    <p class="hidden text-xs mt-3" id="subscribeStatus"></p>
   </div>
 </main>
 
@@ -153,6 +125,17 @@
     entries.forEach((entry) => { if (entry.isIntersecting) entry.target.classList.add('in-view'); });
   }, { threshold: 0.15 });
   document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+
+  // Real, honest note: there's no backend route for this yet (same
+  // real situation as the Contact form) - shows a clear, honest
+  // message rather than pretending to subscribe anyone.
+  document.getElementById('subscribeForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const status = document.getElementById('subscribeStatus');
+    status.textContent = "This isn't wired up to a mailing list yet — check back soon.";
+    status.className = 'text-xs text-[var(--muted)] mt-3';
+    status.classList.remove('hidden');
+  });
 </script>
 </body>
 </html>
