@@ -1,5 +1,32 @@
 const { callClaude } = require("../lib/claude-client");
 const stageGate = require("../lib/stage-gate");
+const imageBot = require("../image-bot");
+
+// Real, honest step - App Builder's frontend is multiple real files
+// (unlike variant-bot's single HTML document), so this searches every
+// real file's content for each requested placeholder and replaces it
+// with an actual, generated image. A failure on any single image is
+// caught and logged - it doesn't fail the whole build.
+async function fulfillImageRequestsMultiFile(files, imageRequests) {
+  if (!imageRequests || !imageRequests.length) return files;
+
+  const replacements = [];
+  for (const req of imageRequests) {
+    try {
+      const result = await imageBot.generateImage(req.description);
+      replacements.push({ placeholder: req.placeholder, dataUrl: `data:${result.mimeType};base64,${result.base64}` });
+    } catch (err) {
+      console.error(`[app-bot] Real image generation failed for "${req.placeholder}":`, err.message);
+      replacements.push({ placeholder: req.placeholder, dataUrl: "" }); // real, honest fallback - empty rather than a visibly broken placeholder string
+    }
+  }
+
+  return files.map((f) => {
+    let content = f.content;
+    for (const r of replacements) content = content.split(r.placeholder).join(r.dataUrl);
+    return { ...f, content };
+  });
+}
 
 /**
  * Full-stack generation happens as three chained calls, not one. A single
@@ -30,9 +57,26 @@ Framework: FastAPI (Python) or Express (Node) — infer the better fit from the 
 Generate only the endpoints the frontend will realistically need (CRUD on the core entities). Include basic input validation. No auth scaffolding unless the business obviously requires it (e.g. user accounts).
 If using Express: always listen on process.env.PORT, falling back to 3000 if it isn't set (e.g. app.listen(process.env.PORT || 3000)). This is a hard requirement, not a style preference — the sandbox preview step needs a predictable port to expose, and a hardcoded or different port will make preview unreliable.`;
 
+const ANTI_SLOP_RULES = `
+AVOID THESE SPECIFIC, RECOGNIZABLE "AI SLOP" TELLS:
+- A hero/landing section that is: centered heading, centered subheading, two centered buttons, generic blob/gradient behind it. This exact pattern is the single most common AI-generated layout — do not produce it.
+- Every screen using identical padding, identical corner radius, and identical shadow — real design varies these deliberately to create rhythm.
+- A features/dashboard grid that is a uniform repeat of {icon, heading, one sentence} with no variation in size or emphasis.
+- Purple-to-blue or pink-to-orange gradient backgrounds used decoratively with no relationship to the brand.
+- Placeholder copy that reads like a template ("Lorem ipsum," "Your Company," "Item One") — write real, specific, plausible copy and sample data for the actual business described.
+
+REAL, SPECIFIC DISCIPLINE TO APPLY INSTEAD:
+- Spacing: use a real, consistent scale — 4, 8, 12, 16, 24, 32, 48, 64, 96px — nothing arbitrary.
+- Type scale: pick a real ratio (e.g. 1.25 or 1.333) and stick to it for every heading level.
+- Asymmetry: at least one screen should break from a centered/symmetric layout.
+- Real content specificity: sample data, labels, and copy should sound like they belong to THIS business, not generic placeholder text.
+`;
+
 const FRONTEND_SYSTEM = `You are a senior frontend engineer at a professional design agency. Given a business description and a list of backend API endpoints, output ONLY JSON:
-{"files": [{"path": "...", "content": "..."}], "summary": "one sentence"}
+{"files": [{"path": "...", "content": "..."}], "summary": "one sentence", "imageRequests": [{"placeholder": "IMG_1", "description": "detailed, specific description of the image to generate"}]}
 Build a React app (functional components, hooks) that calls the given endpoints. Keep it to the minimum set of files needed for a working prototype (App.jsx, a couple of page/component files, an api client module) — plus a real, correct package.json listing every real dependency actually used (this sandbox genuinely runs npm install before starting the app, so listed dependencies must be real, published packages with correct version numbers, not invented).
+
+${ANTI_SLOP_RULES}
 
 DESIGN STANDARDS — this must look like it was designed by a real agency, not generic AI output:
 
@@ -52,7 +96,7 @@ Dark mode: implement Tailwind's real dark: variant with a working toggle that pe
 
 On each top-level rendered section within a component (the outermost divs/sections a component returns, not every nested element), add a real data-gurost-file="ComponentFileName.jsx" attribute matching the actual file path that component lives in. This is real, load-bearing metadata — the live preview's Clickable Code Boxes feature reads this attribute directly to map a clicked section back to its real source file, so it needs to be accurate, not decorative. Don't add it to every element, just the top-level structural ones a user would reasonably click on.
 
-Images: never invent, guess, or hallucinate an image URL (no made-up unsplash.com, pexels.com, or any other external links) — a fabricated URL will show as a broken image to the real end user. Where the design calls for a photo, build a real, self-contained visual instead using inline SVG, a CSS gradient, or a Material Symbols icon inside a colored shape. This must render correctly with zero external image requests.`;
+Images: where the design genuinely calls for a real photo or illustration (a hero image, a product shot, an avatar), do NOT draw it with SVG and do NOT invent an external image URL. Instead, write a literal placeholder token directly into the JSX's src attribute — e.g. src="IMG_1" — and add a matching entry to imageRequests with a detailed, specific description of exactly what that image should show. Use as many as the design genuinely benefits from, typically 1-4. For anything NOT requested this way (icons, decorative shapes), build a real, self-contained visual using inline SVG, a CSS gradient, or a Material Symbols icon inside a colored shape — never invent an external image URL for those.`;
 
 async function buildApp(prompt, { dbEngine = "postgres", onSchemaComplete } = {}) {
   const schemaRes = await callClaude({
@@ -90,10 +134,12 @@ async function buildApp(prompt, { dbEngine = "postgres", onSchemaComplete } = {}
     maxTokens: 8000
   });
 
+  const frontendFiles = await fulfillImageRequestsMultiFile(frontendRes.parsed.files, frontendRes.parsed.imageRequests);
+
   return {
     database: { engine: schemaRes.parsed.engine, schema: schemaRes.parsed.schema, rationale: schemaRes.parsed.rationale },
     backend: { files: backendRes.parsed.files, summary: backendRes.parsed.summary },
-    frontend: { files: frontendRes.parsed.files, summary: frontendRes.parsed.summary },
+    frontend: { files: frontendFiles, summary: frontendRes.parsed.summary },
     usage: { schema: schemaRes.usage, backend: backendRes.usage, frontend: frontendRes.usage }
   };
 }
@@ -143,14 +189,15 @@ async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStag
   notify("frontend", "running");
   const frontendContent = await foldCorrection(`Business: ${prompt}\n\nBackend files (for reference on what's available): ${endpointList}`);
   const frontendRes = await callClaude({ system: FRONTEND_SYSTEM, messages: [{ role: "user", content: frontendContent }], maxTokens: 8000 });
-  notify("frontend", "complete", { files: frontendRes.parsed.files, summary: frontendRes.parsed.summary });
+  const frontendFiles = await fulfillImageRequestsMultiFile(frontendRes.parsed.files, frontendRes.parsed.imageRequests);
+  notify("frontend", "complete", { files: frontendFiles, summary: frontendRes.parsed.summary });
 
   notify("done", "complete");
 
   return {
     database: { engine: schemaRes.parsed.engine, schema: schemaRes.parsed.schema, rationale: schemaRes.parsed.rationale },
     backend: { files: backendRes.parsed.files, summary: backendRes.parsed.summary },
-    frontend: { files: frontendRes.parsed.files, summary: frontendRes.parsed.summary },
+    frontend: { files: frontendFiles, summary: frontendRes.parsed.summary },
     usage: { schema: schemaRes.usage, backend: backendRes.usage, frontend: frontendRes.usage }
   };
 }

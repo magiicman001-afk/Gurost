@@ -1,4 +1,5 @@
 const { callClaude } = require("../lib/claude-client");
+const imageBot = require("../image-bot");
 
 const BRIEFS = [
   {
@@ -23,13 +24,39 @@ const BRIEFS = [
   }
 ];
 
+// Real, specific, named anti-patterns - the actual, recognizable tells
+// of AI-generated design, called out directly so the model has a
+// concrete negative example to avoid, not just a vague instruction
+// to "look professional."
+const ANTI_SLOP_RULES = `
+AVOID THESE SPECIFIC, RECOGNIZABLE "AI SLOP" TELLS:
+- A hero section that is: centered heading, centered subheading, two centered buttons, generic blob/gradient behind it. This exact pattern is the single most common AI-generated layout — do not produce it.
+- Every section using identical padding, identical corner radius, and identical shadow — real design varies these deliberately between sections to create rhythm.
+- Generic checkmark bullet lists (✓ Fast ✓ Secure ✓ Reliable) as filler content — replace with real, specific claims relevant to the actual business.
+- A features section that is a uniform 3-column grid of {icon, heading, one sentence} repeated 3-6 times with no variation in size or emphasis.
+- Purple-to-blue or pink-to-orange gradient backgrounds used decoratively with no relationship to the brand.
+- Emoji used as section icons instead of a real icon system.
+- Placeholder copy that reads like a template ("Lorem ipsum," "Your Company," "Amazing Feature One") — write real, specific, plausible copy for the actual business described.
+
+REAL, SPECIFIC DISCIPLINE TO APPLY INSTEAD:
+- Spacing: use a real, consistent scale — 4, 8, 12, 16, 24, 32, 48, 64, 96px — nothing arbitrary like 13px or 27px.
+- Type scale: pick a real ratio (e.g. 1.25 or 1.333) and stick to it for every heading level, so hierarchy reads as engineered, not eyeballed.
+- Asymmetry: at least one section per page should break from a centered/symmetric layout — an offset image, a two-column split with unequal widths, a staggered card grid.
+- Editorial detail: include at least one "human" design touch that a template wouldn't have on its own — a pull quote, an oversized number/stat treated as a graphic element, a diagonal or overlapping element, a real testimonial with a name and role, not "Happy Customer."
+- Real content specificity: every headline, stat, and claim should sound like it belongs to THIS business, not a placeholder that could apply to any business.
+`;
+
 function systemFor(brief, includeBranding) {
   return `You are a senior designer at a professional design agency. Given a business description, generate a distinct, premium visual direction — this must look like it was designed by a real agency, not generic AI output.
 
 ${brief}
 
 Output ONLY valid JSON, no preamble, no markdown fences:
-{"html": "<complete self-contained HTML document>", "summary": "one sentence describing what you built"}
+{"html": "<complete self-contained HTML document>", "summary": "one sentence describing what you built", "imageRequests": [{"placeholder": "IMG_1", "description": "detailed, specific description of the image to generate"}]}
+
+Where the design genuinely calls for a real photo or illustration (a hero image, a product shot, a team photo, a testimonial avatar), do NOT draw it with SVG and do NOT invent an external image URL. Instead, write a literal placeholder token directly into the HTML's src attribute — e.g. src="IMG_1" — and add a matching entry to imageRequests with a detailed, specific description of exactly what that image should show (subject, mood, framing, lighting, style — enough detail that a real image generator produces something genuinely fitting, not generic stock-photo filler). These tokens will be replaced with real, generated images after your response — use as many as the design genuinely benefits from, typically 1-4, not one on every element.
+
+${ANTI_SLOP_RULES}
 
 DESIGN STANDARDS — every output must follow these:
 
@@ -50,15 +77,38 @@ Dark mode: implement Tailwind's real dark: variant throughout, with a real, work
 Rules:
 - Single HTML file, Tailwind via CDN, inline style/script only, mobile-responsive.
 - Commit fully to the assigned direction — do not hedge toward a generic middle-ground design.
-- Images: never invent, guess, or hallucinate an image URL (no made-up unsplash.com,
-  pexels.com, or any other external links) — a fabricated URL will show as a
-  broken image to the real end user. Where the design calls for a photo, build
-  a real, self-contained visual instead using inline SVG, a CSS gradient, or a
-  Material Symbols icon (via <span class="material-symbols-outlined">) inside a
-  colored shape. This must render correctly with zero external image requests.
+- For any image NOT requested via imageRequests (icons, decorative shapes), build a real, self-contained visual using inline SVG, a CSS gradient, or a Material Symbols icon (via <span class="material-symbols-outlined">) inside a colored shape. Never invent an external image URL.
 ${includeBranding
     ? '- Include a small, unobtrusive "Built with Gurost" text link in the footer (linking to https://gurost.com), styled to match the rest of the page.'
     : "- Do not include any Gurost branding, watermark, or attribution link — this is a white-label build."}`;
+}
+
+// Real, honest step - takes the model's real HTML plus its real image
+// requests, generates each one for real via image-bot's Gemini/OpenAI
+// router, and splices the actual result in. A failure on any single
+// image is caught and logged - it doesn't fail the whole variant,
+// since a page with one missing image is still far better than no
+// page at all.
+async function fulfillImageRequests(html, imageRequests) {
+  if (!imageRequests || !imageRequests.length) return html;
+
+  let finalHtml = html;
+  for (const req of imageRequests) {
+    try {
+      const result = await imageBot.generateImage(req.description);
+      const dataUrl = `data:${result.mimeType};base64,${result.base64}`;
+      // Real, exact replacement - matches the literal placeholder the
+      // model was instructed to write into src="..." attributes.
+      finalHtml = finalHtml.split(req.placeholder).join(dataUrl);
+    } catch (err) {
+      console.error(`[variant-bot] Real image generation failed for "${req.placeholder}":`, err.message);
+      // Real, honest fallback - remove the now-broken placeholder
+      // reference rather than ship a literal "IMG_1" string as a
+      // visible broken image to the real end user.
+      finalHtml = finalHtml.split(req.placeholder).join("");
+    }
+  }
+  return finalHtml;
 }
 
 async function generateVariants(prompt, { includeBranding = true } = {}) {
@@ -68,10 +118,10 @@ async function generateVariants(prompt, { includeBranding = true } = {}) {
         system: systemFor(b.brief, includeBranding),
         messages: [{ role: "user", content: prompt }],
         maxTokens: 8000
-      }).then((r) => ({
+      }).then(async (r) => ({
         id: b.id,
         label: b.label,
-        html: r.parsed.html,
+        html: await fulfillImageRequests(r.parsed.html, r.parsed.imageRequests),
         summary: r.parsed.summary,
         usage: r.usage
       }))
