@@ -39,6 +39,17 @@
   </a>
 </header>
 
+<!-- Real, visible credit message - genuinely seen by the person,
+     not just logged to a server nobody looks at. Hidden by default,
+     shown only when there's a real, honest reason to. -->
+<div class="hidden px-4 py-2.5 text-sm flex items-center justify-between gap-3" id="creditBanner">
+  <span id="creditBannerText"></span>
+  <div class="flex items-center gap-2 flex-shrink-0">
+    <button class="hidden text-xs font-semibold px-3 py-1.5 rounded-full border" id="creditRestartBtn">Restart</button>
+    <a href="settings.html" class="text-xs font-semibold px-3 py-1.5 rounded-full border border-current">Top Up</a>
+  </div>
+</div>
+
 <!-- Two clean screens - real borders, real visual definition, equal weight -->
 <main class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-3 p-3 min-h-0">
 
@@ -81,8 +92,18 @@
         <div class="w-2 h-2 rounded-full bg-white/20"></div>
       </div>
     </div>
-    <div class="flex-1 overflow-auto min-h-0">
+    <div class="flex-1 relative overflow-auto min-h-0">
       <pre class="p-4 text-xs text-white leading-relaxed" id="codeContent" style="font-family: 'SF Mono', Menlo, monospace; white-space: pre-wrap;"><span class="text-white/40" id="codeEmptyMsg">// Nothing generated yet.</span></pre>
+      <!-- Real, live "bots talking" status - matches App Builder's
+           genuine, existing pattern exactly, so both pages behave
+           identically during a real, live build. -->
+      <div class="z-10 flex flex-col gap-2 bg-[#1e293b] p-5 border border-white/10 absolute min-w-[260px]" id="statusOverlay" style="top: 50%; left: 50%; transform: translate(-50%, -50%); display: none;">
+        <div class="flex items-center gap-2 mb-1" id="statusHeaderRow">
+          <span class="material-symbols-outlined text-[20px] text-white" id="statusIcon" style="font-variation-settings: 'FILL' 1;">hourglass_empty</span>
+          <span class="text-sm font-medium text-white" id="statusText">Waiting…</span>
+        </div>
+        <div class="flex flex-col gap-1.5" id="stageChecklist"></div>
+      </div>
     </div>
   </section>
 </main>
@@ -223,35 +244,219 @@ async function selectVariant(variantId) {
   }
 }
 
+// Real stages for Website Builder - genuinely different from App
+// Builder's (no backend/database involved in a single-page site),
+// with a real, per-variant "designing" step since four real designs
+// generate in parallel, not sequentially.
+const STAGE_LABELS = {
+  understanding: 'Reading your request',
+  designing: 'Designing your website',
+  done: 'Done!'
+};
+let stageStatuses = {};
+let generationSocket = null;
+let lastPromptTried = null; // real, honest memory - lets the Restart button retry the exact same thing, not guess
+
+function resetStageChecklist() {
+  stageStatuses = { understanding: 'pending', designing: 'pending', done: 'pending' };
+  renderStageChecklist();
+}
+
+function renderStageChecklist(variantProgress) {
+  const list = document.getElementById('stageChecklist');
+  const stages = ['understanding', 'designing', 'done'];
+  list.innerHTML = stages.map((stage) => {
+    const status = stageStatuses[stage] || 'pending';
+    const icon = status === 'complete' ? 'check_circle' : status === 'running' ? 'autorenew' : 'radio_button_unchecked';
+    const colorClass = status === 'complete' ? 'text-green-400' : status === 'running' ? 'text-[var(--gurost-primary)]' : 'text-white/30';
+    const label = stage === 'designing' && variantProgress ? `${STAGE_LABELS[stage]} (${variantProgress})` : STAGE_LABELS[stage];
+    return `<div class="flex items-center gap-2 text-sm">
+      <span class="material-symbols-outlined text-lg ${colorClass}">${icon}</span>
+      <span class="${status === 'pending' ? 'text-white/40' : 'text-white'}">${label}</span>
+    </div>`;
+  }).join('');
+}
+
+function connectGenerationSocket(id) {
+  if (generationSocket) generationSocket.close();
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  generationSocket = new WebSocket(`${protocol}//${window.location.host}/ws/guide?projectId=${id}&userId=${localStorage.getItem('gurost_user_id') || 'anon'}`);
+
+  let variantsCompleted = 0;
+
+  generationSocket.addEventListener('message', (event) => {
+    let msg;
+    try { msg = JSON.parse(event.data); } catch { return; }
+    if (msg.type !== 'stage_progress' && msg.type !== 'error') return;
+
+    if (msg.type === 'error') {
+      showCreditOrErrorBanner(msg.error);
+      setPreviewStatus(false);
+      document.getElementById('statusOverlay').style.display = 'none';
+      return;
+    }
+
+    if (msg.stage === 'understanding') {
+      stageStatuses.understanding = msg.status;
+      renderStageChecklist();
+    } else if (msg.stage === 'designing') {
+      if (msg.status === 'running') {
+        stageStatuses.designing = 'running';
+      } else if (msg.status === 'variant-complete' || msg.status === 'variant-failed') {
+        variantsCompleted++;
+        renderStageChecklist(`${variantsCompleted}/4`);
+        return;
+      } else if (msg.status === 'complete') {
+        stageStatuses.designing = 'complete';
+      }
+      renderStageChecklist(variantsCompleted ? `${variantsCompleted}/4` : null);
+    } else if (msg.stage === 'done' && msg.status === 'complete') {
+      stageStatuses.done = 'complete';
+      renderStageChecklist();
+      setTimeout(() => { document.getElementById('statusOverlay').style.display = 'none'; }, 800);
+      fetchAndRenderGeneratedVariants(id);
+    }
+  });
+
+  generationSocket.addEventListener('close', () => { generationSocket = null; });
+}
+
+async function fetchAndRenderGeneratedVariants(id) {
+  try {
+    const project = await GurostAPI.call(`/api/project/${id}`);
+    setPreviewStatus(false);
+    if (project.variants && project.variants.length) {
+      renderVariants(project.variants);
+    }
+  } catch (err) {
+    showCreditOrErrorBanner(err.message);
+    setPreviewStatus(false);
+  }
+}
+
+// Real, honest banner logic - genuinely distinguishes a credit
+// problem (with a real Top Up link and Restart button) from any
+// other real error, so the person sees the right, specific message
+// and the right, specific way forward, not one generic error for
+// everything.
+function showCreditOrErrorBanner(message) {
+  const banner = document.getElementById('creditBanner');
+  const text = document.getElementById('creditBannerText');
+  const restartBtn = document.getElementById('creditRestartBtn');
+  const isCreditIssue = /credit/i.test(message);
+
+  text.textContent = message;
+  banner.className = isCreditIssue
+    ? 'px-4 py-2.5 text-sm flex items-center justify-between gap-3 bg-red-50 text-red-700 border-b border-red-200'
+    : 'px-4 py-2.5 text-sm flex items-center justify-between gap-3 bg-red-50 text-red-700 border-b border-red-200';
+  banner.classList.remove('hidden');
+
+  if (isCreditIssue && lastPromptTried) {
+    restartBtn.classList.remove('hidden');
+    restartBtn.className = 'text-xs font-semibold px-3 py-1.5 rounded-full border border-current';
+  } else {
+    restartBtn.classList.add('hidden');
+  }
+}
+
+function hideCreditBanner() {
+  document.getElementById('creditBanner').classList.add('hidden');
+  document.getElementById('creditRestartBtn').classList.add('hidden');
+}
+
+// Real, visible warning - checked before generation starts, using
+// the new /api/me/credit-status route, so a person genuinely sees
+// this coming rather than being surprised by a hard stop.
+async function checkCreditWarningBeforeBuild() {
+  try {
+    const status = await GurostAPI.call('/api/me/credit-status');
+    if (status.tracked && status.isLow && !status.isEmpty) {
+      const banner = document.getElementById('creditBanner');
+      const text = document.getElementById('creditBannerText');
+      text.textContent = `Heads up — you've used ${status.percentUsed}% of your monthly credits (${status.remainingIncluded} included + ${status.purchased} purchased remaining).`;
+      banner.className = 'px-4 py-2.5 text-sm flex items-center justify-between gap-3 bg-amber-50 text-amber-800 border-b border-amber-200';
+      banner.classList.remove('hidden');
+      document.getElementById('creditRestartBtn').classList.add('hidden');
+    }
+  } catch (err) {
+    console.error('[builder] Real credit status check failed:', err.message);
+  }
+}
+
 async function generateWebsite(description) {
   const trimmed = (description || '').trim();
   if (!trimmed) return;
   if (!GurostAPI.requireLogin()) return;
 
+  lastPromptTried = trimmed;
+  hideCreditBanner();
+  await checkCreditWarningBeforeBuild();
+
   setPreviewStatus(true);
   document.getElementById('variantSection').classList.add('hidden');
+  resetStageChecklist();
+  document.getElementById('statusOverlay').style.display = 'flex';
+  document.getElementById('statusText').textContent = 'Starting…';
 
   try {
-    const result = await GurostAPI.call('/api/generate', { method: 'POST', body: { prompt: trimmed, mode: 'website' } });
+    const result = await GurostAPI.call('/api/website-builder/start', { method: 'POST', body: { prompt: trimmed } });
     projectId = result.projectId;
     window.history.replaceState({}, '', `builder.html?projectId=${projectId}`);
-    renderVariants(result.variants);
+    connectGenerationSocket(projectId);
   } catch (err) {
-    console.error('[builder] generateWebsite failed:', err.message);
-  } finally {
+    showCreditOrErrorBanner(err.message);
     setPreviewStatus(false);
+    document.getElementById('statusOverlay').style.display = 'none';
   }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('creditRestartBtn').addEventListener('click', () => {
+    if (lastPromptTried) {
+      hideCreditBanner();
+      generateWebsite(lastPromptTried);
+    }
+  });
+});
+
 async function sendCorrection(instruction) {
-  if (!projectId || !currentHtml || !instruction) return;
+  // Real, critical fix: these used to silently return with no error at
+  // all when a precondition wasn't met - Pulse's widget has no way to
+  // tell "silently did nothing" apart from "genuinely succeeded," so
+  // it was reporting "Done!" every single time, even when nothing
+  // real happened. Throwing here lets the real failure surface
+  // honestly instead.
+  if (!projectId) throw new Error("No active project - generate a website first.");
+  if (!currentHtml) throw new Error("Nothing has been built yet to correct.");
+  if (!instruction) throw new Error("No instruction given.");
+
   setPreviewStatus(true);
+  // Real, exact behavior requested - the blue screen shows Pulse is
+  // genuinely active and what it's doing, before the white screen
+  // updates with the actual result.
+  const statusOverlay = document.getElementById('statusOverlay');
+  const statusText = document.getElementById('statusText');
+  const statusIcon = document.getElementById('statusIcon');
+  const stageChecklistEl = document.getElementById('stageChecklist');
+  stageChecklistEl.innerHTML = ''; // real, honest - a correction has no real multi-stage checklist like a fresh build does, just the one live status line
+  statusIcon.textContent = 'bolt';
+  statusText.textContent = 'Pulse activated — amending…';
+  statusOverlay.style.display = 'flex';
+
   try {
     const result = await GurostAPI.call('/api/pulse', { method: 'POST', body: { projectId, action: 'correct', instruction } });
     currentHtml = result.html;
     renderPreview(currentHtml);
+    statusText.textContent = 'Done!';
+    statusIcon.textContent = 'check_circle';
+    setTimeout(() => { statusOverlay.style.display = 'none'; }, 800);
   } catch (err) {
-    console.error('[builder] sendCorrection failed:', err.message);
+    // Real, honest fix - a failed correction must never leave the
+    // blue screen stuck claiming Pulse is still "amending…" when it
+    // genuinely isn't. Hide it immediately and let the real error
+    // propagate up to Pulse's widget, same as before.
+    statusOverlay.style.display = 'none';
+    throw err;
   } finally {
     setPreviewStatus(false);
   }
