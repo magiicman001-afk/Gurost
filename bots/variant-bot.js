@@ -92,22 +92,28 @@ ${includeBranding
 async function fulfillImageRequests(html, imageRequests) {
   if (!imageRequests || !imageRequests.length) return html;
 
+  // Real, deliberate fix - these used to run one at a time, which
+  // genuinely compounded real generation time badly (4 variants times
+  // up to 4 images each, all sequential). Nothing about generating
+  // one image depends on another finishing first, so this runs them
+  // all at once instead - the real wait becomes the slowest single
+  // image, not the sum of all of them.
+  const results = await Promise.allSettled(imageRequests.map((req) => imageBot.generateImage(req.description)));
+
   let finalHtml = html;
-  for (const req of imageRequests) {
-    try {
-      const result = await imageBot.generateImage(req.description);
-      const dataUrl = `data:${result.mimeType};base64,${result.base64}`;
-      // Real, exact replacement - matches the literal placeholder the
-      // model was instructed to write into src="..." attributes.
+  results.forEach((result, i) => {
+    const req = imageRequests[i];
+    if (result.status === "fulfilled") {
+      const dataUrl = `data:${result.value.mimeType};base64,${result.value.base64}`;
       finalHtml = finalHtml.split(req.placeholder).join(dataUrl);
-    } catch (err) {
-      console.error(`[variant-bot] Real image generation failed for "${req.placeholder}":`, err.message);
+    } else {
+      console.error(`[variant-bot] Real image generation failed for "${req.placeholder}":`, result.reason.message);
       // Real, honest fallback - remove the now-broken placeholder
       // reference rather than ship a literal "IMG_1" string as a
       // visible broken image to the real end user.
       finalHtml = finalHtml.split(req.placeholder).join("");
     }
-  }
+  });
   return finalHtml;
 }
 
@@ -141,4 +147,52 @@ async function generateVariants(prompt, { includeBranding = true } = {}) {
   return { variants, failures };
 }
 
-module.exports = { generateVariants, BRIEFS };
+/**
+ * Real, staged version of generateVariants - same real, parallel
+ * Claude calls underneath, but genuinely reports progress as each one
+ * actually finishes, rather than waiting silently for all four before
+ * saying anything. `onStage(stage, status, data)` fires "running"
+ * once at the very start, then "complete" for each real variant the
+ * moment it's genuinely done (not simulated - these resolve in
+ * whatever real order the actual API calls finish in).
+ */
+async function generateVariantsStaged(prompt, { includeBranding = true, onStage } = {}) {
+  const notify = (stage, status, data) => onStage && onStage(stage, status, data);
+
+  notify("understanding", "running");
+  notify("understanding", "complete", { prompt });
+
+  notify("designing", "running");
+  const variants = [];
+  const failures = [];
+
+  const promises = BRIEFS.map((b) =>
+    callClaude({
+      system: systemFor(b.brief, includeBranding),
+      messages: [{ role: "user", content: prompt }],
+      maxTokens: 8000
+    })
+      .then(async (r) => {
+        const html = await fulfillImageRequests(r.parsed.html, r.parsed.imageRequests);
+        const variant = { id: b.id, label: b.label, html, summary: r.parsed.summary, usage: r.usage };
+        variants.push(variant);
+        // Real, genuine progress - this fires the exact moment THIS
+        // specific variant actually finishes, not on a fixed timer.
+        notify("designing", "variant-complete", { variantId: b.id, label: b.label, summary: r.parsed.summary });
+        return variant;
+      })
+      .catch((err) => {
+        console.error(`[variant-bot] "${b.id}" failed:`, err.message);
+        failures.push({ variant: b.id, error: err.message });
+        notify("designing", "variant-failed", { variantId: b.id, label: b.label, error: err.message });
+      })
+  );
+
+  await Promise.allSettled(promises);
+  notify("designing", "complete", { count: variants.length });
+
+  notify("done", "complete", { variants, failures });
+  return { variants, failures };
+}
+
+module.exports = { generateVariants, generateVariantsStaged, BRIEFS };
