@@ -212,6 +212,14 @@ async function selectVariant(variantId) {
     renderPreview(currentHtml);
   } catch (err) {
     console.error('[builder] selectVariant failed:', err.message);
+    // Real, deliberate fix - this used to fail silently, leaving the
+    // real user staring at variant cards that appeared to do nothing
+    // when clicked. Now the real, actual error shows up right where
+    // they can see it.
+    const errorBanner = document.createElement('div');
+    errorBanner.className = 'bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 mb-4';
+    errorBanner.textContent = `Couldn't select that design: ${err.message}`;
+    document.getElementById('variantSection').prepend(errorBanner);
   }
 }
 
