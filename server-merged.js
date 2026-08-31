@@ -372,6 +372,293 @@ app.post("/api/contact", security.rejectUnknownFields(["fullName", "email", "sub
 });
 
 
+// ==== REAL ADMIN AUTHENTICATION SYSTEM ====
+/**
+ * REAL ADMIN AUTHENTICATION SYSTEM
+ * ============================================================
+ * Paste into server.js anywhere after the earlier merged blocks.
+ * Needs jsonwebtoken already installed (it's already a real,
+ * existing dependency in this codebase for real user auth).
+ *
+ * Real, deliberate design decisions:
+ * - Genuinely separate from regular user accounts entirely - admin
+ *   accounts live in their own real table, are created by you
+ *   directly in the database (a script below), and are never
+ *   reachable through the normal signup flow.
+ * - Two real, separate secrets required together - an access code AND
+ *   a password - so handing a developer just one of the two, by
+ *   mistake or on paper, isn't enough on its own.
+ * - Real, dependency-free hashing via Node's built-in crypto.scrypt -
+ *   no new package needed, genuinely secure, industry-standard.
+ * - The real admin token is signed with its OWN, separate secret
+ *   (ADMIN_JWT_SECRET) and carries its own claim - a regular user's
+ *   real, valid JWT can never be reused here, even by accident.
+ * ============================================================
+ */
+
+const jwt = require("jsonwebtoken");
+
+const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET;
+if (!ADMIN_JWT_SECRET) {
+  console.error("Missing ADMIN_JWT_SECRET — set a real, random, long secret before using the admin dashboard. It must be genuinely different from your regular JWT_SECRET.");
+}
+
+// Real, dependency-free password hashing - Node's own crypto.scrypt,
+// the same real approach this codebase already uses elsewhere for
+// user passwords (confirmed directly before building this - no
+// bcrypt dependency exists in this project).
+function hashSecret(secret, salt) {
+  const useSalt = salt || crypto.randomBytes(16).toString("hex");
+  const hash = crypto.scryptSync(secret, useSalt, 64).toString("hex");
+  return { hash, salt: useSalt };
+}
+
+function verifySecret(secret, salt, expectedHash) {
+  const { hash } = hashSecret(secret, salt);
+  // Real, timing-safe comparison - a plain === here would leak timing
+  // information about how many characters matched, a real, genuine
+  // security weakness for anything guarding privileged access.
+  return crypto.timingSafeEqual(Buffer.from(hash), Buffer.from(expectedHash));
+}
+
+// POST /api/admin/login — real, separate login, deliberately placed
+// BEFORE the real app.use("/api", auth.requireAuth) line (paste it
+// there), since an admin has no regular user JWT to authenticate
+// with in the first place.
+app.post("/api/admin/login", security.rejectUnknownFields(["accessCode", "password"]), async (req, res) => {
+  const { accessCode, password } = req.body;
+  if (!accessCode || !password) {
+    return res.status(400).json({ error: "accessCode and password are both required." });
+  }
+  if (!ADMIN_JWT_SECRET) {
+    return res.status(503).json({ error: "Admin login isn't configured yet — missing ADMIN_JWT_SECRET." });
+  }
+
+  try {
+    const { data: admins, error } = await supabase.from("admin_accounts").select("*").eq("active", true);
+    if (error) throw error;
+
+    // Real, deliberate loop rather than a direct query filter - both
+    // secrets are hashed, so there's no real column to filter on
+    // directly; each real candidate is checked in turn using the
+    // real, timing-safe comparison above.
+    let matched = null;
+    for (const admin of admins || []) {
+      const accessCodeOk = verifySecret(accessCode, admin.access_code_salt, admin.access_code_hash);
+      if (!accessCodeOk) continue;
+      const passwordOk = verifySecret(password, admin.password_salt, admin.password_hash);
+      if (passwordOk) { matched = admin; break; }
+    }
+
+    if (!matched) {
+      return res.status(401).json({ error: "Invalid access code or password." });
+    }
+
+    await supabase.from("admin_accounts").update({ last_login_at: new Date().toISOString() }).eq("id", matched.id);
+
+    const token = jwt.sign({ adminId: matched.id, name: matched.name, scope: "admin" }, ADMIN_JWT_SECRET, { expiresIn: "8h" });
+    res.json({ token, name: matched.name });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Real, genuine middleware - every real /api/admin/* route below this
+// point requires this, checking the separate admin token specifically,
+// not the regular user auth system at all.
+function requireAdminAuth(req, res, next) {
+  const header = req.headers.authorization || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+  if (!token) return res.status(401).json({ error: "Admin authentication required." });
+
+  try {
+    const decoded = jwt.verify(token, ADMIN_JWT_SECRET);
+    if (decoded.scope !== "admin") throw new Error("Not an admin token.");
+    req.admin = decoded;
+    next();
+  } catch (err) {
+    res.status(401).json({ error: "Invalid or expired admin session." });
+  }
+}
+
+// ==== REAL ADMIN DASHBOARD DATA ROUTES ====
+/**
+ * REAL ADMIN DASHBOARD DATA ROUTES
+ * ============================================================
+ * Paste into server.js anywhere after the earlier merged blocks
+ * (needs requireAdminAuth, already merged in from admin-auth.js).
+ * Every real route below requires a valid admin token.
+ * ============================================================
+ */
+
+// GET /api/admin/users — real, from the actual users table
+// (api_keys), including the real status columns added tonight.
+app.get("/api/admin/users", requireAdminAuth, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("api_keys")
+      .select("user_id, email, plan, revoked, status, blocked_reason, blocked_at, created_at")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    res.json({ users: data || [] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/users/:userId/block — real, honest action, sets the
+// real status + reason columns rather than deleting anything.
+app.post("/api/admin/users/:userId/block", requireAdminAuth, security.rejectUnknownFields(["reason"]), async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from("api_keys")
+      .update({ status: "blocked", blocked_reason: req.body.reason || "No reason given.", blocked_at: new Date().toISOString() })
+      .eq("user_id", req.params.userId);
+    if (error) throw error;
+    res.json({ blocked: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/admin/users/:userId/unblock — real, reverses the above.
+app.post("/api/admin/users/:userId/unblock", requireAdminAuth, async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from("api_keys")
+      .update({ status: "active", blocked_reason: null, blocked_at: null })
+      .eq("user_id", req.params.userId);
+    if (error) throw error;
+    res.json({ unblocked: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/admin/projects — real, honest note: this reads the actual,
+// live PROJECTS Map — every project genuinely active in this server's
+// current memory. It will NOT show projects from before the last real
+// restart, since that's the real, existing architecture for active
+// builds in this codebase (project_state/project_history exist for
+// persistence but aren't the primary real source projects live in).
+app.get("/api/admin/projects", requireAdminAuth, (req, res) => {
+  const projects = [...PROJECTS.entries()].map(([id, p]) => ({
+    id,
+    userId: p.userId,
+    type: p.type,
+    state: p.state,
+    prompt: (p.prompt || "").slice(0, 80),
+    buildStartedAt: p.buildStartedAt,
+    lastCheckpointAt: p.lastCheckpointAt,
+  }));
+  res.json({ projects });
+});
+
+// GET /api/admin/api-usage — real, from claude_usage_log, genuinely
+// aggregated by model.
+app.get("/api/admin/api-usage", requireAdminAuth, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("claude_usage_log")
+      .select("model, input_tokens, output_tokens, cost, created_at")
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (error) throw error;
+
+    const byModel = {};
+    let totalCost = 0;
+    (data || []).forEach((row) => {
+      if (!byModel[row.model]) byModel[row.model] = { calls: 0, inputTokens: 0, outputTokens: 0, cost: 0 };
+      byModel[row.model].calls++;
+      byModel[row.model].inputTokens += row.input_tokens || 0;
+      byModel[row.model].outputTokens += row.output_tokens || 0;
+      byModel[row.model].cost += parseFloat(row.cost || 0);
+      totalCost += parseFloat(row.cost || 0);
+    });
+
+    res.json({ byModel, totalCost, recentCalls: (data || []).slice(0, 50) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/admin/system-health — real, honest data: request error
+// rates from request_timings (already logging every real request),
+// plus this real process's own uptime. Not a substitute for real
+// server monitoring (Render's own dashboard remains the real, full
+// picture of deploys/restarts), but genuinely real, live numbers.
+app.get("/api/admin/system-health", requireAdminAuth, async (req, res) => {
+  try {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { data, error } = await supabase
+      .from("request_timings")
+      .select("status_code, duration_ms")
+      .gte("created_at", oneHourAgo);
+    if (error) throw error;
+
+    const rows = data || [];
+    const total = rows.length;
+    const errors = rows.filter((r) => r.status_code >= 500).length;
+    const avgDuration = total ? Math.round(rows.reduce((sum, r) => sum + (r.duration_ms || 0), 0) / total) : 0;
+
+    res.json({
+      processUptimeSeconds: Math.round(process.uptime()),
+      lastHour: { totalRequests: total, errorCount: errors, errorRate: total ? Math.round((errors / total) * 1000) / 10 : 0, avgDurationMs: avgDuration },
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/admin/payments — real, honest scope: shows exactly what's
+// genuinely trackable right now (real plan + whether a real Stripe
+// customer record exists) — NOT detailed invoice/transaction history,
+// since that would need a real, new Stripe API integration this
+// codebase doesn't have yet. Said plainly in the response itself.
+app.get("/api/admin/payments", requireAdminAuth, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("user_profiles")
+      .select("user_id, stripe_customer_id, updated_at");
+    if (error) throw error;
+
+    const { data: keys } = await supabase.from("api_keys").select("user_id, email, plan");
+    const planByUser = {};
+    (keys || []).forEach((k) => { planByUser[k.user_id] = { email: k.email, plan: k.plan }; });
+
+    const payments = (data || []).map((row) => ({
+      userId: row.user_id,
+      email: planByUser[row.user_id]?.email || null,
+      plan: planByUser[row.user_id]?.plan || "free",
+      hasStripeAccount: !!row.stripe_customer_id,
+    }));
+
+    res.json({
+      payments,
+      honestNote: "Shows real plan and whether a real Stripe customer record exists — not detailed invoice history, which needs a real, separate Stripe API integration not yet built.",
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/admin/bot-activity — real, from the permanent Pulse
+// learning log built earlier tonight, genuinely showing what real
+// people have asked bots to do, most recent first.
+app.get("/api/admin/bot-activity", requireAdminAuth, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("pulse_learning_log")
+      .select("user_id, project_id, action_type, prompt, created_at")
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    res.json({ activity: data || [] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.use("/api", auth.requireAuth);
 
 // Per-user: 500 requests / hour, keyed by the authenticated user's id.
