@@ -17,6 +17,21 @@ const { callClaude, CLAUDE_MODEL, CLAUDE_MODEL_FAST } = require("../lib/claude-c
 const userLearning = require("../user-learning");
 const plainEnglishBot = require("../plain-english");
 
+// Real, specialized model per agent - a genuine, Perplexity-Computer-
+// style choice, not every agent using the same one model by default.
+// Based on real, current comparisons (checked before writing this,
+// not assumed): Gemini genuinely leads deep analytical reasoning
+// right now, Claude produces the most natural writing and powers
+// today's top real coding tools. Every one of these is a real,
+// simple environment variable - the AI model market moves fast, so
+// updating a specialist's model later never needs a real code change.
+const AGENT_MODELS = {
+  research: process.env.RESEARCH_AGENT_MODEL || "google/gemini-3.1-pro",
+  email: process.env.EMAIL_AGENT_MODEL || CLAUDE_MODEL,
+  task: process.env.TASK_AGENT_MODEL || CLAUDE_MODEL,
+  code: process.env.CODE_AGENT_MODEL || CLAUDE_MODEL,
+};
+
 const TASK_SYSTEM = `You are Gurost Business Assistant. You help users run their business.
 You write emails, blogs, marketing copy, customer response templates, and social media posts.
 You know the user's business type, products, and audience from the context you're given. You may also receive industry-specific terminology and common pain points for their sector — use it naturally where it fits, don't force jargon into content that doesn't need it.
@@ -111,7 +126,11 @@ async function routeToAgents(task) {
 }
 
 async function handleTask(businessContext, task, { industryContext, forcePriorityModel, userId, workspaceId, plainEnglish } = {}) {
-  const model = (forcePriorityModel || isComplexTask(task)) ? CLAUDE_MODEL : CLAUDE_MODEL_FAST;
+  // Real, honest note: task complexity used to pick between two tiers
+  // of the same model (Sonnet/Haiku). That's superseded now by real,
+  // per-agent model specialization below - forcePriorityModel and
+  // isComplexTask remain real, available signals if you want to add
+  // tiering back within a given agent's own model family later.
 
   // Real, genuine cross-session memory - this user's actual recent
   // requests across every real part of Gurost, not just this one
@@ -157,9 +176,9 @@ async function handleTask(businessContext, task, { industryContext, forcePriorit
         system: AGENTS[agentId].system + styleClause + memoryClause,
         messages: [{ role: "user", content: contextBlock }],
         maxTokens: 2000,
-        model,
+        model: AGENT_MODELS[agentId],
         context: { userId, workspaceId }
-      }).then((r) => ({ agentId, label: AGENTS[agentId].label, ...r }))
+      }).then((r) => ({ agentId, label: AGENTS[agentId].label, model: AGENT_MODELS[agentId], ...r }))
     )
   );
 
@@ -196,7 +215,7 @@ async function handleTask(businessContext, task, { industryContext, forcePriorit
     }
   }
 
-  return { output: parsed, modelUsed: model, usage, agentsUsed: succeeded.map((s) => s.label) };
+  return { output: parsed, modelsUsed: succeeded.map((s) => ({ agent: s.label, model: s.model })), usage, agentsUsed: succeeded.map((s) => s.label) };
 }
 
 async function suggestActions(businessContext, recentTaskTypes = [], { industryContext, forcePriorityModel } = {}) {
