@@ -106,6 +106,7 @@ Dashboard
     <div class="px-4 py-2.5 border-b border-[#E5E7EB] flex items-center justify-between flex-shrink-0">
       <h2 class="font-semibold text-xs uppercase tracking-wide text-text-muted">Before</h2>
       <span class="text-xs font-semibold px-2 py-0.5 rounded-none" style="background:#FEE2E2; color:#B91C1C;" id="issuesHeading">Issues Found</span>
+      <span class="hidden text-xs text-[#6B7280] ml-2" id="auditModelTag"></span>
     </div>
     <div class="flex-1 relative overflow-hidden min-h-0">
       <iframe class="w-full h-full border-0 bg-white" id="previewFrameBefore" sandbox="allow-scripts" title="Original site preview"></iframe>
@@ -282,6 +283,11 @@ async function runAudit(url) {
     projectId = result.projectId;
     currentIssues = result.issues || [];
     window.history.replaceState({}, '', `amend_website.html?projectId=${projectId}`);
+    if (result.modelUsed) {
+      const tag = document.getElementById('auditModelTag');
+      tag.textContent = `Audited by ${result.modelUsed}`;
+      tag.classList.remove('hidden');
+    }
 
     document.getElementById('reportSection').style.display = 'grid';
     renderIssues(currentIssues);
@@ -314,6 +320,11 @@ async function runAuditFromFile(html, fileName) {
     projectId = result.projectId;
     currentIssues = result.issues || [];
     window.history.replaceState({}, '', `amend_website.html?projectId=${projectId}`);
+    if (result.modelUsed) {
+      const tag = document.getElementById('auditModelTag');
+      tag.textContent = `Audited by ${result.modelUsed}`;
+      tag.classList.remove('hidden');
+    }
 
     document.getElementById('reportSection').style.display = 'grid';
     renderIssues(currentIssues);

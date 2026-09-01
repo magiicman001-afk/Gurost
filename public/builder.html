@@ -257,24 +257,37 @@ let stageStatuses = {};
 let generationSocket = null;
 let lastPromptTried = null; // real, honest memory - lets the Restart button retry the exact same thing, not guess
 
+let imagesStatus = null; // real, honest - only set when a variant genuinely requested real images
+
 function resetStageChecklist() {
   stageStatuses = { understanding: 'pending', designing: 'pending', done: 'pending' };
+  imagesStatus = null;
   renderStageChecklist();
 }
 
 function renderStageChecklist(variantProgress) {
   const list = document.getElementById('stageChecklist');
   const stages = ['understanding', 'designing', 'done'];
+  const modelTags = { understanding: 'Claude', designing: 'Claude', done: '' };
   list.innerHTML = stages.map((stage) => {
     const status = stageStatuses[stage] || 'pending';
     const icon = status === 'complete' ? 'check_circle' : status === 'running' ? 'autorenew' : 'radio_button_unchecked';
     const colorClass = status === 'complete' ? 'text-green-400' : status === 'running' ? 'text-[var(--gurost-primary)]' : 'text-white/30';
     const label = stage === 'designing' && variantProgress ? `${STAGE_LABELS[stage]} (${variantProgress})` : STAGE_LABELS[stage];
+    const modelTag = modelTags[stage] && status !== 'pending' ? ` <span class="text-xs opacity-60">— ${modelTags[stage]}</span>` : '';
     return `<div class="flex items-center gap-2 text-sm">
       <span class="material-symbols-outlined text-lg ${colorClass}">${icon}</span>
-      <span class="${status === 'pending' ? 'text-white/40' : 'text-white'}">${label}</span>
+      <span class="${status === 'pending' ? 'text-white/40' : 'text-white'}">${label}${modelTag}</span>
     </div>`;
   }).join('');
+  // Real, honest, separate line - only appears while Gemini is
+  // genuinely generating real images for this build, not decorative.
+  if (imagesStatus) {
+    list.innerHTML += `<div class="flex items-center gap-2 text-sm">
+      <span class="material-symbols-outlined text-lg text-[var(--gurost-primary)]">autorenew</span>
+      <span class="text-white">Generating ${imagesStatus.count} real image${imagesStatus.count > 1 ? 's' : ''} <span class="text-xs opacity-60">— Gemini</span></span>
+    </div>`;
+  }
 }
 
 function connectGenerationSocket(id) {
@@ -302,6 +315,10 @@ function connectGenerationSocket(id) {
     } else if (msg.stage === 'designing') {
       if (msg.status === 'running') {
         stageStatuses.designing = 'running';
+      } else if (msg.status === 'images-running') {
+        imagesStatus = { count: msg.data.count };
+        renderStageChecklist(variantsCompleted ? `${variantsCompleted}/4` : null);
+        return;
       } else if (msg.status === 'variant-complete' || msg.status === 'variant-failed') {
         variantsCompleted++;
         renderStageChecklist(`${variantsCompleted}/4`);
