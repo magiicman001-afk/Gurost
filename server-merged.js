@@ -1564,7 +1564,7 @@ app.post("/api/revamp/audit", security.rejectUnknownFields(["url"]), async (req,
     integrator.integrateRevampAudit(project, result);
     project.currentHtml = result.crawlData.html; // original, pre-fix, for the rebuild step
     transition(project, "BUILDING");
-    res.json({ projectId, issues: result.issues, lighthouse: result.lighthouse, state: project.state });
+    res.json({ projectId, issues: result.issues, lighthouse: result.lighthouse, state: project.state, modelUsed: result.modelUsed });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -1593,7 +1593,7 @@ app.post("/api/revamp/audit-file", security.rejectUnknownFields(["html", "fileNa
     const result = await revampBot.auditStaticHTML(html);
     project.currentHtml = html; // the real, original uploaded content, for the rebuild step
     transition(project, "BUILDING");
-    res.json({ projectId, issues: result.issues, state: project.state });
+    res.json({ projectId, issues: result.issues, state: project.state, modelUsed: result.modelUsed });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
