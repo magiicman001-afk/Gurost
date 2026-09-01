@@ -336,7 +336,23 @@ app.get("/api/dev/qa-audit", async (req, res) => {
 // Everything under /api requires auth from here down (the Stripe webhook
 // above is registered earlier and terminates the request itself, so it
 // never reaches this middleware).
-// POST /api/contact — real email send via Postmark, which was already
+// POST /api/subscribe — real, genuine newsletter capture, used by
+// Blog and Showcase's "notify me" boxes, which used to just show a
+// message without actually saving anyone.
+app.post("/api/subscribe", security.rejectUnknownFields(["email", "source"]), async (req, res) => {
+  const { email, source } = req.body;
+  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    return res.status(400).json({ error: "A real, valid email is required." });
+  }
+  try {
+    const { error } = await supabase.from("newsletter_subscribers").insert({ email: email.toLowerCase().trim(), source: source || "unknown" });
+    if (error && error.code !== "23505") throw error; // 23505 = real, honest duplicate - not an error, just already subscribed
+    res.json({ subscribed: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // a listed dependency tonight (never actually wired to a route until
 // now). Needs a real POSTMARK_API_KEY and POSTMARK_FROM_EMAIL in your
 // environment variables before this can actually send anything - see
