@@ -126,14 +126,25 @@
   }, { threshold: 0.15 });
   document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
 
-  // Real, honest note: there's no backend route for this yet (same
-  // real situation as the Contact form) - shows a clear, honest
-  // message rather than pretending to subscribe anyone.
-  document.getElementById('subscribeForm').addEventListener('submit', (e) => {
+  document.getElementById('subscribeForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const status = document.getElementById('subscribeStatus');
-    status.textContent = "This isn't wired up to a mailing list yet — check back soon.";
-    status.className = 'text-xs text-[var(--muted)] mt-3';
+    const email = document.getElementById('subscribeEmail').value.trim();
+    try {
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, source: 'blog' })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+      status.textContent = "You're subscribed — thanks for joining.";
+      status.className = 'text-xs text-green-600 mt-3';
+      document.getElementById('subscribeEmail').value = '';
+    } catch (err) {
+      status.textContent = err.message;
+      status.className = 'text-xs text-red-600 mt-3';
+    }
     status.classList.remove('hidden');
   });
 </script>

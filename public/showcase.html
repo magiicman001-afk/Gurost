@@ -86,13 +86,25 @@
   }, { threshold: 0.15 });
   document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
 
-  // Real, honest note, same as Blog's subscribe box: no backend
-  // exists for this yet - genuinely just UI for now, as asked.
-  document.getElementById('notifyForm').addEventListener('submit', (e) => {
+  document.getElementById('notifyForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const status = document.getElementById('notifyStatus');
-    status.textContent = "Thanks — we'll notify this address when Showcase goes live.";
-    status.className = 'text-xs text-[var(--muted)] mt-3';
+    const email = document.getElementById('notifyEmail').value.trim();
+    try {
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, source: 'showcase' })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Something went wrong.');
+      status.textContent = "You're on the list — we'll notify this address when Showcase goes live.";
+      status.className = 'text-xs text-green-600 mt-3';
+      document.getElementById('notifyEmail').value = '';
+    } catch (err) {
+      status.textContent = err.message;
+      status.className = 'text-xs text-red-600 mt-3';
+    }
     status.classList.remove('hidden');
   });
 </script>
