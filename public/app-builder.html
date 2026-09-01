@@ -515,11 +515,13 @@ const STAGE_LABELS = {
 };
 const STAGE_ORDER = ['schema', 'backend', 'frontend', 'reviewing', 'fixing', 'done'];
 let stageStatuses = {}; // stage -> 'pending' | 'running' | 'complete'
+let stageModels = {}; // real, genuine model name per stage, from the backend's own broadcast - Perplexity-style transparency, not decorative
 let isPaused = false;
 let generationSocket = null;
 
 function resetStageChecklist() {
   stageStatuses = {};
+  stageModels = {};
   STAGE_ORDER.forEach((s) => { stageStatuses[s] = 'pending'; });
   renderStageChecklist();
 }
@@ -535,9 +537,10 @@ function renderStageChecklist() {
       const status = stageStatuses[stage] || 'pending';
       const icon = status === 'complete' ? 'check_circle' : status === 'running' ? 'autorenew' : 'radio_button_unchecked';
       const colorClass = status === 'complete' ? 'text-green-500' : status === 'running' ? 'text-secondary' : 'text-outline-variant';
+      const modelTag = stageModels[stage] ? ` <span class="text-xs opacity-60">— ${stageModels[stage]}</span>` : '';
       return `<div class="flex items-center gap-2 text-sm">
         <span class="material-symbols-outlined text-lg ${colorClass}">${icon}</span>
-        <span class="${status === 'pending' ? 'text-on-surface-variant' : 'text-on-surface'}">${STAGE_LABELS[stage]}</span>
+        <span class="${status === 'pending' ? 'text-on-surface-variant' : 'text-on-surface'}">${STAGE_LABELS[stage]}${modelTag}</span>
       </div>`;
     })
     .join('');
@@ -621,6 +624,7 @@ function handleStageProgress(msg) {
 
   if (STAGE_ORDER.includes(msg.stage)) {
     stageStatuses[msg.stage] = msg.status;
+    if (msg.data?.model) stageModels[msg.stage] = msg.data.model;
     renderStageChecklist();
   }
 
@@ -767,23 +771,21 @@ async function pauseBuild() {
 // parameter instead of reading a page-local textarea, so the future
 // Pulse widget can call this directly.
 async function applyCorrection(instruction) {
+  // Real, critical fix: every path below used to fail silently -
+  // logged to the console at most, never thrown - so Pulse's widget
+  // had no way to detect a real failure and always reported "Done!"
+  // regardless of what actually happened. Every real failure now
+  // throws honestly.
   const correction = (instruction || '').trim();
-  if (!correction) return;
+  if (!correction) throw new Error("No instruction given.");
 
   if (isGenerating && projectId) {
-    try {
-      await GurostAPI.call('/api/app-builder/correct', { method: 'POST', body: { projectId, instruction: correction } });
-      await GurostAPI.call('/api/app-builder/resume', { method: 'POST', body: { projectId } });
-    } catch (err) {
-      console.error('[app-builder] Correction failed:', err.message);
-    }
+    await GurostAPI.call('/api/app-builder/correct', { method: 'POST', body: { projectId, instruction: correction } });
+    await GurostAPI.call('/api/app-builder/resume', { method: 'POST', body: { projectId } });
     return;
   }
 
-  if (!originalPrompt) {
-    console.error('[app-builder] No original description to rebuild from.');
-    return;
-  }
+  if (!originalPrompt) throw new Error("No active project - generate an app first.");
   const combinedPrompt = `${originalPrompt}\n\nAdditional correction: ${correction}`;
   await generateApp(combinedPrompt);
 
