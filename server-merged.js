@@ -1645,6 +1645,18 @@ app.post("/api/assistant", security.rejectUnknownFields(["projectId", "task"]), 
       workspaceId: ownedWorkspace?.id
     });
     integrator.integrateAssistantTask(project, result, task);
+    // Real, genuine logging - completes the same real memory loop
+    // already built for Website/App Builder, extended to Business
+    // Assistant tonight.
+    logPulseInteraction(req.user.id, projectId, "business-assistant-task", task);
+    // Real, automatic learning - refreshes this user's real style
+    // profile roughly every 5th real task, fire-and-forget so it
+    // never slows down the actual response. Rough, real cadence
+    // rather than every single call, since each refresh is itself a
+    // real, additional Claude call with a real, small cost.
+    if (Math.random() < 0.2) {
+      userLearning.updateStyleProfile(req.user.id).catch((err) => console.error("[assistant] Real style profile refresh failed:", err.message));
+    }
     res.json({ projectId, ...result });
   } catch (err) {
     res.status(500).json({ error: err.message });
