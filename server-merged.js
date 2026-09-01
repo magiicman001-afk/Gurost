@@ -1072,7 +1072,7 @@ app.post(
     // website-only checks elsewhere) — checkCanAfford returns allowed
     // immediately for those, this only actually gates Plus/Max.
     const estimatedCost = complexityDetector.estimateBaseCost(mode);
-    const affordCheck = await creditSystem.checkCanAfford(req.user.id, req.user.plan, estimatedCost);
+    const affordCheck = await creditSystem.checkCanAfford(req.user.id, req.user.plan, estimatedCost, auth.isAdmin(req.user.email));
     if (!affordCheck.allowed) {
       PROJECTS.delete(projectId);
       return res.status(402).json({ error: affordCheck.reason });
@@ -1093,7 +1093,7 @@ app.post(
           onSchemaComplete: async (schemaText) => {
             const escalatedCost = complexityDetector.detectSchemaComplexity(schemaText, estimatedCost);
             if (escalatedCost > estimatedCost) {
-              const escalatedCheck = await creditSystem.checkCanAfford(req.user.id, req.user.plan, escalatedCost);
+              const escalatedCheck = await creditSystem.checkCanAfford(req.user.id, req.user.plan, escalatedCost, auth.isAdmin(req.user.email));
               if (!escalatedCheck.allowed) {
                 throw new Error(`This app turned out more complex than expected (needs ~${escalatedCost} credits) and you don't have enough remaining this month. Try a simpler description, or top up credits.`);
               }
@@ -1853,7 +1853,7 @@ app.post("/api/wrap", security.rejectUnknownFields(["projectId"]), async (req, r
   }
 
   const wrapCost = 2; // matches the real, agreed credit doc - heavier than a normal build
-  const affordCheck = await creditSystem.checkCanAfford(req.user.id, req.user.plan, wrapCost);
+  const affordCheck = await creditSystem.checkCanAfford(req.user.id, req.user.plan, wrapCost, auth.isAdmin(req.user.email));
   if (!affordCheck.allowed) {
     return res.status(402).json({ error: affordCheck.reason });
   }
@@ -4452,7 +4452,7 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt"]),
   }
 
   const estimatedCost = complexityDetector.estimateBaseCost("website");
-  const affordCheck = await creditSystem.checkCanAfford(req.user.id, req.user.plan, estimatedCost);
+  const affordCheck = await creditSystem.checkCanAfford(req.user.id, req.user.plan, estimatedCost, auth.isAdmin(req.user.email));
   if (!affordCheck.allowed) return res.status(402).json({ error: affordCheck.reason });
 
   const projectId = crypto.randomUUID();
@@ -4520,6 +4520,10 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt"]),
 
 app.get("/api/me/credit-status", async (req, res) => {
   try {
+    if (auth.isAdmin(req.user.email)) {
+      return res.json({ tracked: true, unlimited: true, admin: true });
+    }
+
     const plan = req.user.plan || "free";
     const included = creditSystem.MONTHLY_INCLUDED_CREDITS[plan] ?? 0;
 

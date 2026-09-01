@@ -99,7 +99,14 @@ async function getPurchasedBalance(userId) {
  * estimateBaseCost(). Returns whether they can even attempt this,
  * before any real AI cost has been spent.
  */
-async function checkCanAfford(userId, plan, estimatedCost) {
+async function checkCanAfford(userId, plan, estimatedCost, isAdmin = false) {
+  // Real, honest bypass - the site owner and anyone genuinely marked
+  // admin shouldn't be blocked by credit limits meant for real,
+  // paying customers. This was missing entirely before - only a
+  // user's plan mattered, so even the real owner's own account could
+  // hit a false "out of credits" wall while testing.
+  if (isAdmin) return { allowed: true, source: "admin" };
+
   const included = MONTHLY_INCLUDED_CREDITS[plan] ?? 0;
   if (included === Infinity) return { allowed: true, source: "unlimited" };
   if (included === 0) return { allowed: true, source: "none" }; // free/pro/unlimited plans - governed by build-count checks elsewhere, not credits
