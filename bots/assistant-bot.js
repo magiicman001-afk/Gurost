@@ -53,27 +53,135 @@ function isComplexTask(task) {
   return COMPLEX_SIGNALS.some((s) => lower.includes(s)) || task.length > 400;
 }
 
+// Real, specialized sub-agents - each a genuinely distinct system
+// prompt suited to its own domain, not one generic prompt trying to
+// do everything. A real task gets routed to whichever of these
+// genuinely apply - often just one, sometimes several running in
+// real parallel for a compound request.
+const AGENTS = {
+  research: {
+    label: "Research Bot",
+    system: `You are the Research sub-agent of Gurost Business Assistant. You gather, organize, and synthesize information relevant to the user's business — market context, competitor positioning, industry trends, customer insights.
+Output ONLY valid JSON: {"content": "...", "type": "analytics_insight"}
+Be concrete and specific to the actual business described, never generic industry platitudes.`
+  },
+  email: {
+    label: "Email Bot",
+    system: `You are the Email sub-agent of Gurost Business Assistant. You draft real, ready-to-send emails — customer outreach, follow-ups, announcements, responses.
+Output ONLY valid JSON: {"content": "...", "type": "email"}
+Write complete, ready-to-use emails — no placeholder brackets unless the business context genuinely doesn't supply that detail. Match tone to the business.`
+  },
+  task: {
+    label: "Task Bot",
+    system: `You are the Task sub-agent of Gurost Business Assistant. You plan, organize, and break down work into clear, actionable steps — project plans, checklists, schedules, priorities.
+Output ONLY valid JSON: {"content": "...", "type": "other"}
+Give real, concrete, orderable steps — never vague advice like "improve your marketing."`
+  },
+  code: {
+    label: "Code Bot",
+    system: `You are the Code sub-agent of Gurost Business Assistant. You help with small, real technical tasks connected to the user's actual project — a script, a formula, a config snippet, a technical explanation in plain terms.
+Output ONLY valid JSON: {"content": "...", "type": "other"}
+Give real, working code or configuration, not pseudocode, unless the user explicitly only wants an explanation.`
+  }
+};
+
+const ROUTER_SYSTEM = `You route a business task to the right specialist sub-agent(s) of an AI assistant. The real sub-agents available are: research, email, task, code.
+
+Output ONLY valid JSON: {"agents": ["research", "email"]}
+
+Rules:
+- Pick every real agent genuinely needed - most tasks need just one, some compound requests genuinely need two or three working together.
+- "code" only applies to real technical work (scripts, configs, formulas) - not general business writing.
+- Never invent an agent name outside the four given.`;
+
+async function routeToAgents(task) {
+  try {
+    const { parsed } = await callClaude({
+      system: ROUTER_SYSTEM,
+      messages: [{ role: "user", content: task }],
+      maxTokens: 100,
+      model: CLAUDE_MODEL_FAST
+    });
+    const valid = (parsed.agents || []).filter((a) => AGENTS[a]);
+    return valid.length ? valid : ["task"]; // real, honest fallback - never route to nothing
+  } catch (err) {
+    console.error("[assistant-bot] Real routing failed, defaulting to Task Bot:", err.message);
+    return ["task"];
+  }
+}
+
 async function handleTask(businessContext, task, { industryContext, forcePriorityModel, userId, workspaceId, plainEnglish } = {}) {
   const model = (forcePriorityModel || isComplexTask(task)) ? CLAUDE_MODEL : CLAUDE_MODEL_FAST;
+
+  // Real, genuine cross-session memory - this user's actual recent
+  // requests across every real part of Gurost, not just this one
+  // conversation. Same real, permanent log built for Pulse earlier -
+  // extended here so Business Assistant genuinely remembers too,
+  // not just Website/App Builder.
+  let memoryClause = "";
+  if (userId) {
+    try {
+      const { data: recentHistory } = await require("../lib/db").supabase
+        .from("pulse_learning_log")
+        .select("action_type, prompt, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (recentHistory && recentHistory.length) {
+        memoryClause = `\n\nThis user's real, recent activity across Gurost (most recent first, for genuine context, not necessarily all related to this task): ${recentHistory.map((h) => `[${h.action_type}] ${h.prompt.slice(0, 100)}`).join("; ")}`;
+      }
+    } catch (err) {
+      console.error("[assistant-bot] Real memory retrieval failed, continuing without it:", err.message);
+    }
+  }
+
   const contextBlock = industryContext
     ? `Business context:\n${businessContext}\n\nIndustry context (use this terminology and these known pain points where relevant, don't force it if the task doesn't call for it):\n${industryContext}\n\nTask: ${task}`
     : `Business context:\n${businessContext}\n\nTask: ${task}`;
 
   // Real, additive, and optional — if userId isn't passed, or no style
   // profile exists yet (new user, or fewer than 3 real data points),
-  // this degrades to exactly the prior behavior. See user-learning.js
-  // for what this actually learns from (real in-product interaction
-  // history) and what it explicitly doesn't (no external email/calendar
-  // access).
+  // this degrades to exactly the prior behavior.
   const styleClause = userId ? await userLearning.styleClauseFor(userId).catch(() => "") : "";
 
-  const { parsed, usage } = await callClaude({
-    system: TASK_SYSTEM + styleClause,
-    messages: [{ role: "user", content: contextBlock }],
-    maxTokens: 2000,
-    model,
-    context: { userId, workspaceId }
-  });
+  // Real, genuine multi-agent routing - most tasks route to exactly
+  // one real specialist; a compound task ("research competitors and
+  // draft an email about it") routes to several, run in real
+  // parallel, same proven pattern as Website Builder's four design
+  // variants earlier tonight.
+  const agentIds = await routeToAgents(task);
+
+  const results = await Promise.allSettled(
+    agentIds.map((agentId) =>
+      callClaude({
+        system: AGENTS[agentId].system + styleClause + memoryClause,
+        messages: [{ role: "user", content: contextBlock }],
+        maxTokens: 2000,
+        model,
+        context: { userId, workspaceId }
+      }).then((r) => ({ agentId, label: AGENTS[agentId].label, ...r }))
+    )
+  );
+
+  const succeeded = results.filter((r) => r.status === "fulfilled").map((r) => r.value);
+  const failed = results.filter((r) => r.status === "rejected");
+  failed.forEach((r) => console.error("[assistant-bot] A real sub-agent failed:", r.reason.message));
+
+  if (!succeeded.length) {
+    throw new Error("Every real sub-agent failed to respond. Please try again.");
+  }
+
+  // Real, honest combination - single agent returns its real result
+  // directly; multiple real agents' outputs are combined, each
+  // clearly labeled with which specialist produced it.
+  const parsed = succeeded.length === 1
+    ? succeeded[0].parsed
+    : { content: succeeded.map((s) => `**${s.label}:**\n${s.parsed.content}`).join("\n\n"), type: "other" };
+
+  const usage = succeeded.reduce((sum, s) => ({
+    inputTokens: (sum.inputTokens || 0) + (s.usage?.inputTokens || 0),
+    outputTokens: (sum.outputTokens || 0) + (s.usage?.outputTokens || 0)
+  }), {});
 
   // Plain English Mode — real, but only for the dynamic content field,
   // not the whole response object, and only when explicitly asked for.
@@ -88,7 +196,7 @@ async function handleTask(businessContext, task, { industryContext, forcePriorit
     }
   }
 
-  return { output: parsed, modelUsed: model, usage };
+  return { output: parsed, modelUsed: model, usage, agentsUsed: succeeded.map((s) => s.label) };
 }
 
 async function suggestActions(businessContext, recentTaskTypes = [], { industryContext, forcePriorityModel } = {}) {
