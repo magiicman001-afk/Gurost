@@ -53,7 +53,12 @@
   <!-- Real task input -->
   <div class="mb-6 reveal border border-[var(--line)] rounded-2xl p-6">
     <h2 class="font-display font-bold text-lg mb-4">Give it a task</h2>
-    <textarea id="assistantTask" rows="3" placeholder="e.g. Draft a follow-up email for new customers" class="field-input resize-y mb-3"></textarea>
+    <div class="flex gap-2 mb-3">
+      <textarea id="assistantTask" rows="3" placeholder="e.g. Draft a follow-up email for new customers" class="field-input resize-y flex-1"></textarea>
+      <button id="assistantMicBtn" aria-label="Hold to talk" class="gold-gradient text-white rounded-full w-12 h-12 flex-shrink-0 flex items-center justify-center self-end">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">mic</span>
+      </button>
+    </div>
     <button id="assistantRunBtn" class="gold-gradient text-white text-sm font-semibold px-5 py-2.5 rounded-full">Run Task</button>
     <div id="assistantTaskResult" class="hidden mt-5">
       <div class="flex items-center gap-2 mb-3">
@@ -96,6 +101,7 @@
 </main>
 
 <script src="shared/api-client.js"></script>
+<script src="shared/pulse-voice.js"></script>
 <script>
 // Real, deliberate fix: this used to run only after the login and
 // plan checks below succeeded - if either ever failed or hung, every
@@ -147,6 +153,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('[assistant] Failed to load real projects:', err.message);
   }
 
+  let assistantRecordingSession = null;
+  document.getElementById('assistantMicBtn').addEventListener('mousedown', async () => {
+    try { assistantRecordingSession = await startRecordingSession(); }
+    catch (err) { console.error('[assistant] Could not access microphone:', err.message); }
+  });
+  document.getElementById('assistantMicBtn').addEventListener('mouseup', async () => {
+    if (!assistantRecordingSession) return;
+    try {
+      const transcript = await assistantRecordingSession.stop();
+      if (transcript) document.getElementById('assistantTask').value = transcript;
+    } catch (err) {
+      console.error('[assistant] Real transcription failed:', err.message);
+    } finally {
+      assistantRecordingSession = null;
+    }
+  });
+
   document.getElementById('assistantRunBtn').addEventListener('click', async () => {
     const projectId = select.value;
     const task = document.getElementById('assistantTask').value.trim();
@@ -159,7 +182,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     btn.textContent = 'Working…';
     try {
       const result = await GurostAPI.call('/api/assistant', { method: 'POST', body: { projectId, task } });
-      resultBody.textContent = result.summary || result.output || JSON.stringify(result, null, 2);
+      const agentsLine = result.agentsUsed && result.agentsUsed.length ? `[${result.agentsUsed.join(' + ')}]\n\n` : '';
+      resultBody.textContent = agentsLine + (result.output?.content || 'No real content returned.');
       resultBody.className = 'rounded-xl bg-[#FFF8F0] border border-[#FDE4C4] p-5 text-sm leading-relaxed whitespace-pre-wrap';
       resultEl.classList.remove('hidden');
     } catch (err) {
