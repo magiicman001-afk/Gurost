@@ -2,6 +2,16 @@ const { callClaude } = require("../lib/claude-client");
 const stageGate = require("../lib/stage-gate");
 const imageBot = require("../image-bot");
 
+// Real, specialized model per stage - genuine, Perplexity-Computer-
+// style choice, not one model doing everything. Schema design is
+// genuinely structured, analytical reasoning (a real strength of
+// Gemini right now); backend and frontend stay on this codebase's
+// real, existing default model, since coding is genuinely its
+// strength and what powers today's top real coding tools. Both are
+// real, simple environment variables - easy to change later as the
+// model landscape moves.
+const SCHEMA_AGENT_MODEL = process.env.SCHEMA_AGENT_MODEL || "google/gemini-3.1-pro";
+
 // Real, honest step - App Builder's frontend is multiple real files
 // (unlike variant-bot's single HTML document), so this searches every
 // real file's content for each requested placeholder and replaces it
@@ -10,16 +20,17 @@ const imageBot = require("../image-bot");
 async function fulfillImageRequestsMultiFile(files, imageRequests) {
   if (!imageRequests || !imageRequests.length) return files;
 
-  const replacements = [];
-  for (const req of imageRequests) {
-    try {
-      const result = await imageBot.generateImage(req.description);
-      replacements.push({ placeholder: req.placeholder, dataUrl: `data:${result.mimeType};base64,${result.base64}` });
-    } catch (err) {
-      console.error(`[app-bot] Real image generation failed for "${req.placeholder}":`, err.message);
-      replacements.push({ placeholder: req.placeholder, dataUrl: "" }); // real, honest fallback - empty rather than a visibly broken placeholder string
+  // Real, same fix as variant-bot.js - generate every real image at
+  // once rather than one at a time, since none of them depend on
+  // each other finishing first.
+  const settled = await Promise.allSettled(imageRequests.map((req) => imageBot.generateImage(req.description)));
+  const replacements = settled.map((result, i) => {
+    if (result.status === "fulfilled") {
+      return { placeholder: imageRequests[i].placeholder, dataUrl: `data:${result.value.mimeType};base64,${result.value.base64}` };
     }
-  }
+    console.error(`[app-bot] Real image generation failed for "${imageRequests[i].placeholder}":`, result.reason.message);
+    return { placeholder: imageRequests[i].placeholder, dataUrl: "" }; // real, honest fallback - empty rather than a visibly broken placeholder string
+  });
 
   return files.map((f) => {
     let content = f.content;
@@ -102,7 +113,8 @@ async function buildApp(prompt, { dbEngine = "postgres", onSchemaComplete } = {}
   const schemaRes = await callClaude({
     system: SCHEMA_SYSTEM,
     messages: [{ role: "user", content: `Business: ${prompt}\nPreferred engine: ${dbEngine}` }],
-    maxTokens: 2000
+    maxTokens: 2000,
+    model: SCHEMA_AGENT_MODEL
   });
 
   // Real, optional checkpoint — exists specifically so a caller (the
@@ -175,18 +187,18 @@ async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStag
     return baseContent;
   };
 
-  notify("schema", "running");
+  notify("schema", "running", { model: "Gemini" });
   const schemaContent = await foldCorrection(`Business: ${prompt}\nPreferred engine: ${dbEngine}`);
-  const schemaRes = await callClaude({ system: SCHEMA_SYSTEM, messages: [{ role: "user", content: schemaContent }], maxTokens: 2000 });
+  const schemaRes = await callClaude({ system: SCHEMA_SYSTEM, messages: [{ role: "user", content: schemaContent }], maxTokens: 2000, model: SCHEMA_AGENT_MODEL });
   notify("schema", "complete", { schema: schemaRes.parsed.schema, engine: schemaRes.parsed.engine });
 
-  notify("backend", "running");
+  notify("backend", "running", { model: "Claude" });
   const backendContent = await foldCorrection(`Business: ${prompt}\n\nDatabase schema:\n${schemaRes.parsed.schema}`);
   const backendRes = await callClaude({ system: BACKEND_SYSTEM, messages: [{ role: "user", content: backendContent }], maxTokens: 6000 });
   notify("backend", "complete", { files: backendRes.parsed.files, summary: backendRes.parsed.summary });
 
   const endpointList = backendRes.parsed.files.map((f) => f.path).join(", ");
-  notify("frontend", "running");
+  notify("frontend", "running", { model: "Claude" });
   const frontendContent = await foldCorrection(`Business: ${prompt}\n\nBackend files (for reference on what's available): ${endpointList}`);
   const frontendRes = await callClaude({ system: FRONTEND_SYSTEM, messages: [{ role: "user", content: frontendContent }], maxTokens: 8000 });
   const frontendFiles = await fulfillImageRequestsMultiFile(frontendRes.parsed.files, frontendRes.parsed.imageRequests);
