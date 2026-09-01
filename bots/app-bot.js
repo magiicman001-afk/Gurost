@@ -10,7 +10,17 @@ const imageBot = require("../image-bot");
 // strength and what powers today's top real coding tools. Both are
 // real, simple environment variables - easy to change later as the
 // model landscape moves.
-const SCHEMA_AGENT_MODEL = process.env.SCHEMA_AGENT_MODEL || "google/gemini-3.1-pro";
+// Real, honest note: this used to default to Gemini, based on a
+// first pass of research into "which model leads reasoning
+// benchmarks." Deeper research changed that conclusion - Gemini's
+// genuine, distinct strength is handling large, native documents
+// (long PDFs, video, big datasets), not short, structured tasks like
+// this one. A database schema comes from a short business
+// description, not a large document - closer to Claude's real,
+// consistently-confirmed strength (precise instruction-following,
+// honoring structured output requirements). Reverted to the real,
+// existing default rather than force a split that isn't well-founded.
+const SCHEMA_AGENT_MODEL = process.env.SCHEMA_AGENT_MODEL || undefined;
 
 // Real, honest step - App Builder's frontend is multiple real files
 // (unlike variant-bot's single HTML document), so this searches every
@@ -187,7 +197,7 @@ async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStag
     return baseContent;
   };
 
-  notify("schema", "running", { model: "Gemini" });
+  notify("schema", "running", { model: "Claude" });
   const schemaContent = await foldCorrection(`Business: ${prompt}\nPreferred engine: ${dbEngine}`);
   const schemaRes = await callClaude({ system: SCHEMA_SYSTEM, messages: [{ role: "user", content: schemaContent }], maxTokens: 2000, model: SCHEMA_AGENT_MODEL });
   notify("schema", "complete", { schema: schemaRes.parsed.schema, engine: schemaRes.parsed.engine });

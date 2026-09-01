@@ -77,30 +77,48 @@ async function audit(url) {
   const crawlData = await crawl(url);
   const lhData = await runLighthouse(url);
 
+  const auditContent = `Crawled data:\n${JSON.stringify({ title: crawlData.title, links: crawlData.links.slice(0, 50), metaTags: crawlData.metaTags })}\n\nLighthouse:\n${JSON.stringify(lhData)}`;
+  // Real, same honest, size-based choice as auditStaticHTML above -
+  // a genuinely large, content-heavy real site's crawl+Lighthouse
+  // data routes to Gemini instead of Claude.
+  const isLarge = auditContent.length > LARGE_DOCUMENT_THRESHOLD;
+
   const { parsed, usage } = await callClaude({
     system: AUDIT_SYSTEM,
-    messages: [{
-      role: "user",
-      content: `Crawled data:\n${JSON.stringify({ title: crawlData.title, links: crawlData.links.slice(0, 50), metaTags: crawlData.metaTags })}\n\nLighthouse:\n${JSON.stringify(lhData)}`
-    }],
-    maxTokens: 3000
+    messages: [{ role: "user", content: auditContent }],
+    maxTokens: 3000,
+    model: isLarge ? LARGE_DOCUMENT_MODEL : undefined
   });
 
-  return { issues: parsed.issues, crawlData, lighthouse: lhData, usage };
+  return { issues: parsed.issues, crawlData, lighthouse: lhData, usage, modelUsed: isLarge ? "Gemini" : "Claude" };
 }
 
 // Real, new path for a real, uploaded local file - no live URL to
 // crawl or run Lighthouse against, so this sends the actual raw HTML
 // directly instead, honestly scoped by AUDIT_STATIC_SYSTEM above to
 // only what's genuinely detectable from static markup.
+// Real, honest, size-based choice - a small, typical page goes to
+// Claude, same as always. A genuinely large document (a real,
+// complex, content-heavy page) routes to Gemini instead, since
+// handling large, native documents directly is its real, distinct
+// strength - and it's given real, larger real content to match,
+// not the same small slice Claude gets, or the whole point of using
+// it would be lost. The threshold is a real, simple environment
+// variable, not fixed in code, since what counts as "large" is a
+// judgment call worth being able to tune.
+const LARGE_DOCUMENT_THRESHOLD = parseInt(process.env.LARGE_DOCUMENT_THRESHOLD || "15000", 10);
+const LARGE_DOCUMENT_MODEL = process.env.LARGE_DOCUMENT_MODEL || "google/gemini-3.1-pro";
+
 async function auditStaticHTML(htmlContent) {
+  const isLarge = htmlContent.length > LARGE_DOCUMENT_THRESHOLD;
   const { parsed, usage } = await callClaude({
     system: AUDIT_STATIC_SYSTEM,
-    messages: [{ role: "user", content: `HTML document:\n${htmlContent.slice(0, 15000)}` }],
-    maxTokens: 3000
+    messages: [{ role: "user", content: `HTML document:\n${htmlContent.slice(0, isLarge ? 60000 : 15000)}` }],
+    maxTokens: 3000,
+    model: isLarge ? LARGE_DOCUMENT_MODEL : undefined
   });
 
-  return { issues: parsed.issues, usage };
+  return { issues: parsed.issues, usage, modelUsed: isLarge ? "Gemini" : "Claude" };
 }
 
 async function rebuild(originalHtml, approvedFixes) {

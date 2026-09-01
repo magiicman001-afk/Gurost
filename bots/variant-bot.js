@@ -89,8 +89,12 @@ ${includeBranding
 // image is caught and logged - it doesn't fail the whole variant,
 // since a page with one missing image is still far better than no
 // page at all.
-async function fulfillImageRequests(html, imageRequests) {
+async function fulfillImageRequests(html, imageRequests, onImageStart) {
   if (!imageRequests || !imageRequests.length) return html;
+
+  // Real, honest visibility - this genuinely only fires when there
+  // are real images to generate, not decoratively on every variant.
+  if (onImageStart) onImageStart(imageRequests.length);
 
   // Real, deliberate fix - these used to run one at a time, which
   // genuinely compounded real generation time badly (4 variants times
@@ -173,7 +177,9 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage 
       maxTokens: 8000
     })
       .then(async (r) => {
-        const html = await fulfillImageRequests(r.parsed.html, r.parsed.imageRequests);
+        const html = await fulfillImageRequests(r.parsed.html, r.parsed.imageRequests, (count) => {
+          notify("designing", "images-running", { variantId: b.id, label: b.label, count, model: "Gemini" });
+        });
         const variant = { id: b.id, label: b.label, html, summary: r.parsed.summary, usage: r.usage };
         variants.push(variant);
         // Real, genuine progress - this fires the exact moment THIS
