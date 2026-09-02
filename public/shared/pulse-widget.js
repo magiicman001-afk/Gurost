@@ -269,8 +269,20 @@
     // Real, direct hold-to-talk on the ball itself, matching the
     // original spec exactly: holding the ball starts recording,
     // releasing stops and sends. A quick tap (released before the
-    // real 220ms threshold) instead toggles the panel open/closed -
+    // real threshold below) instead toggles the panel open/closed -
     // the two behaviors share one element, split by hold duration.
+    //
+    // Real, critical fix: this threshold used to be 220ms - genuinely
+    // too short. Real, live testing (Claude Code, using actual browser
+    // automation to click the button) found that a completely normal,
+    // unhurried human click - especially a touch tap on a phone, which
+    // is what most real testing tonight happened on - regularly takes
+    // longer than that, meaning ordinary taps were being silently
+    // misread as "start recording." Since every real status message
+    // lives inside the panel, and a misread hold never opens it, this
+    // made the button look completely dead. 500ms genuinely gives a
+    // real, normal tap room to complete while still feeling
+    // responsive for a real, deliberate hold-to-talk gesture.
     const ball = document.getElementById('pulseBall');
     let holdTimer = null;
     let isHolding = false;
@@ -305,7 +317,7 @@
             logStatus('Microphone unavailable — click to type instead.');
             setState('idle');
           });
-      }, 220);
+      }, 500);
     });
 
     let recordingStartPromise = null;
