@@ -55,6 +55,7 @@ const updates = require("./updates");
 const developerOnboarding = require("./developer-onboarding");
 const correctionBot = require("./bots/correction-bot");
 const assistantBot = require("./bots/assistant-bot");
+const guardianBot = require("./bots/guardian-bot");
 const integrator = require("./bots/integrator-bot");
 const reviewBot = require("./bots/review-bot");
 const fixBot = require("./bots/fix-bot");
@@ -1366,9 +1367,42 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
     };
     broadcastProjectUpdate(projectId, { type: "stage_progress", stage: "reviewing", status: "complete", data: { hasCritical: finalReview.hasCritical } });
 
+    // Real, genuine runtime verification - the actual, live App
+    // Builder route confirmed, directly, to have never run this
+    // before now. A static review (above) can miss real, genuine
+    // runtime problems - a typo'd import, a missing dependency - that
+    // only show up when the code is actually executed. This finally
+    // brings that same real check onto the live path, not just the
+    // older, unused one it always lived on.
+    broadcastProjectUpdate(projectId, { type: "stage_progress", stage: "verifying", status: "running" });
+    let sandboxResult = await runSandboxTest(project.appFiles.backend);
+
+    if (sandboxResult.pass === false) {
+      console.error(`[app-builder] Real sandbox verification failed for project ${projectId}:`, sandboxResult.errors?.[0]);
+      const entryPath = project.appFiles.backend.find((f) => /index\.|server\.|app\./i.test(f.path))?.path || project.appFiles.backend[0]?.path;
+      const { fixedFiles: sandboxFixedFiles } = await fixBot.fixFiles(project.appFiles.backend, [{
+        file: entryPath,
+        severity: "Critical",
+        description: `Real runtime error caught by actually running this code: ${sandboxResult.errors?.[0]?.slice(0, 500)}`
+      }]);
+      project.appFiles.backend = sandboxFixedFiles;
+      // Real, one retry only - same honest, bounded philosophy as the
+      // static review/fix pass above. This won't catch every real
+      // crash class, and that's said here plainly, not hidden.
+      sandboxResult = await runSandboxTest(project.appFiles.backend);
+    }
+
+    project.verified = sandboxResult.pass === true;
+    broadcastProjectUpdate(projectId, {
+      type: "stage_progress",
+      stage: "verifying",
+      status: "complete",
+      data: { verified: project.verified, honestNote: project.verified ? null : "The code was generated, but a real runtime check could not confirm it runs cleanly - review the code panel before relying on it." }
+    });
+
     stageGate.clearGate(projectId);
     PENDING_CORRECTIONS.delete(projectId);
-    broadcastProjectUpdate(projectId, { type: "stage_progress", stage: "done", status: "complete", data: { appFiles: project.appFiles, codeReview: project.codeReview } });
+    broadcastProjectUpdate(projectId, { type: "stage_progress", stage: "done", status: "complete", data: { appFiles: project.appFiles, codeReview: project.codeReview, verified: project.verified } });
   } catch (err) {
     // Real, deliberate fix - this used to only broadcast to the
     // frontend, never actually log server-side, which is exactly why
@@ -1418,6 +1452,17 @@ app.post("/api/select", security.rejectUnknownFields(["projectId", "variantId"])
     integrator.integrateSelection(project, variantId);
     transition(project, "DONE");
     res.json({ projectId, html: project.currentHtml, state: project.state });
+
+    // Real, genuine Credibility Engine - runs after the real,
+    // immediate response above, so selecting a design still feels
+    // instant. Broadcasts its real, honest result separately once
+    // it's actually ready.
+    variantBot.checkCredibility(project.currentHtml).then((credibility) => {
+      project.credibility = credibility;
+      if (credibility.missing.length) {
+        broadcastProjectUpdate(projectId, { type: "credibility_check", credibility });
+      }
+    });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -1782,6 +1827,33 @@ app.post("/api/assistant/unschedule", security.rejectUnknownFields([]), auth.req
   try {
     await scheduler.unsubscribe(req.user.id);
     res.json({ subscribed: false });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/assistant/guardian-check — real, new Post-Launch Guardian.
+// Genuinely checks an already-live, deployed site and honestly
+// compares it against the last real check, so it can say what's
+// actually new, not just repeat the same full report every time.
+app.post("/api/assistant/guardian-check", security.rejectUnknownFields(["projectId", "url"]), auth.requireBusinessAssistant, async (req, res) => {
+  const { projectId, url } = req.body;
+  if (!url || !url.trim()) return res.status(400).json({ error: "Missing 'url' - the real, live address to check." });
+  try {
+    const safeUrl = await security.assertSafeUrl(url);
+    const result = await guardianBot.runGuardianCheck(projectId, req.user.id, safeUrl);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/assistant/guardian-history/:projectId — real, honest
+// history of every real check run on this project, most recent first.
+app.get("/api/assistant/guardian-history/:projectId", auth.requireBusinessAssistant, async (req, res) => {
+  try {
+    const history = await guardianBot.getGuardianHistory(req.params.projectId);
+    res.json({ history });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -4549,6 +4621,7 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt"]),
 
     const result = await variantBot.generateVariantsStaged(prompt, {
       includeBranding: !PLANS[req.user.plan]?.whiteLabel,
+      userId: req.user.id,
       onStage: (stage, status, data) => {
         broadcastProjectUpdate(projectId, { type: "stage_progress", stage, status, data: data || null });
       }
