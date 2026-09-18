@@ -170,7 +170,6 @@ Dashboard
 
 <script src="shared/api-client.js"></script>
 <script src="shared/pulse-voice.js"></script>
-<script src="shared/widget.js"></script>
 <script>
 /**
  * Amend Website — wired to the real /api/revamp/audit and
@@ -512,29 +511,33 @@ document.addEventListener('DOMContentLoaded', () => {
 // instruction as a parameter instead of reading a page-local textarea,
 // so the future Pulse widget can call this directly.
 async function applyCorrection(instruction) {
+  // Real, critical fix: this used to silently return with no error at
+  // all when there was no active project, and its catch block only
+  // logged instead of throwing - the exact same double-silent-failure
+  // pattern already fixed on Website Builder and App Builder much
+  // earlier, but never applied here. Pulse's widget has no way to
+  // tell "silently did nothing" apart from "genuinely succeeded," so
+  // it was reporting "Done!" every time, real failure or not.
   const correction = (instruction || '').trim();
-  if (!correction || !projectId) return;
+  if (!correction) throw new Error('No instruction given.');
+  if (!projectId) throw new Error('Nothing has been audited yet to amend.');
+
+  const syntheticIssue = { category: 'custom', severity: 'medium', description: correction, fix_summary: correction };
+  const result = await GurostAPI.call('/api/revamp/rebuild', {
+    method: 'POST',
+    body: { projectId, approvedFixes: [syntheticIssue] }
+  });
+  fixedHtml = result.html;
+  showAfterPreview(fixedHtml);
+  document.getElementById('previewPanel').classList.add('active');
+  document.getElementById('codePanel').classList.remove('active');
+  document.getElementById('codeToggleLabel').textContent = 'Show Code';
 
   try {
-    const syntheticIssue = { category: 'custom', severity: 'medium', description: correction, fix_summary: correction };
-    const result = await GurostAPI.call('/api/revamp/rebuild', {
-      method: 'POST',
-      body: { projectId, approvedFixes: [syntheticIssue] }
-    });
-    fixedHtml = result.html;
-    showAfterPreview(fixedHtml);
-    document.getElementById('previewPanel').classList.add('active');
-    document.getElementById('codePanel').classList.remove('active');
-    document.getElementById('codeToggleLabel').textContent = 'Show Code';
-
-    try {
-      await speakTextViaRest('Done. Your site has been rebuilt with that change.');
-    } catch {
-      // TTS is a nice-to-have on top of the already-completed rebuild —
-      // never block or error the actual result over a failed voice reply.
-    }
-  } catch (err) {
-    console.error('[amend_website] Correction failed:', err.message);
+    await speakTextViaRest('Done. Your site has been rebuilt with that change.');
+  } catch {
+    // TTS is a nice-to-have on top of the already-completed rebuild —
+    // never block or error the actual result over a failed voice reply.
   }
 }
 
@@ -542,7 +545,7 @@ async function applyCorrection(instruction) {
 // it's layered onto this page in a later pass - same real pattern as
 // Website Builder and App Builder.
 async function undoChange() {
-  if (!projectId) return;
+  if (!projectId) throw new Error('Nothing to undo yet.');
   try {
     const result = await GurostAPI.call(`/api/project/${projectId}/undo`, { method: 'POST' });
     fixedHtml = result.html;
@@ -554,7 +557,7 @@ async function undoChange() {
   }
 }
 async function redoChange() {
-  if (!projectId) return;
+  if (!projectId) throw new Error('Nothing to redo yet.');
   try {
     const result = await GurostAPI.call(`/api/project/${projectId}/redo`, { method: 'POST' });
     fixedHtml = result.html;

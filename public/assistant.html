@@ -98,6 +98,23 @@
       <div id="todaysBriefingBody" class="rounded-xl bg-[#FFF8F0] border border-[#FDE4C4] p-5 text-sm leading-relaxed whitespace-pre-wrap"></div>
     </div>
   </div>
+
+  <!-- Real, new Post-Launch Guardian -->
+  <div class="mb-6 reveal border border-[var(--line)] rounded-2xl p-6">
+    <h2 class="font-display font-bold text-lg mb-2">Post-Launch Guardian</h2>
+    <p class="text-sm text-[var(--muted)] mb-4">Check a real, live site for genuine issues — and see honestly what's changed since the last check.</p>
+    <div class="flex gap-2 mb-3">
+      <input type="url" id="guardianUrl" placeholder="https://your-real-live-site.com" class="field-input flex-1"/>
+      <button id="guardianCheckBtn" class="gold-gradient text-white text-sm font-semibold px-5 py-2.5 rounded-full flex-shrink-0">Check Now</button>
+    </div>
+    <div id="guardianResult" class="hidden mt-5">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="material-symbols-outlined text-[18px]" style="color: var(--orange);">shield</span>
+        <span class="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]" id="guardianResultLabel"></span>
+      </div>
+      <div id="guardianResultBody" class="rounded-xl bg-[#FFF8F0] border border-[#FDE4C4] p-5 text-sm leading-relaxed"></div>
+    </div>
+  </div>
 </main>
 
 <script src="shared/api-client.js"></script>
@@ -215,6 +232,45 @@ document.addEventListener('DOMContentLoaded', async () => {
       `).join('');
     } catch (err) {
       listEl.innerHTML = `<p class="text-sm text-red-600">${err.message}</p>`;
+    }
+  });
+
+  document.getElementById('guardianCheckBtn').addEventListener('click', async () => {
+    const projectId = select.value;
+    const url = document.getElementById('guardianUrl').value.trim();
+    if (!projectId) { alert('Pick a project first.'); return; }
+    if (!url) { alert('Enter the real, live URL to check.'); return; }
+
+    const btn = document.getElementById('guardianCheckBtn');
+    const resultEl = document.getElementById('guardianResult');
+    const resultBody = document.getElementById('guardianResultBody');
+    const resultLabel = document.getElementById('guardianResultLabel');
+    btn.disabled = true;
+    btn.textContent = 'Checking…';
+
+    try {
+      const result = await GurostAPI.call('/api/assistant/guardian-check', { method: 'POST', body: { projectId, url } });
+      resultLabel.textContent = result.isFirstCheck ? 'First real check' : 'Checked again';
+
+      let html = `<p class="mb-3"><strong>${result.totalIssues}</strong> real issue${result.totalIssues === 1 ? '' : 's'} found right now.</p>`;
+      if (result.newIssues.length) {
+        html += `<p class="font-semibold text-red-700 mb-1">New since last check:</p><ul class="list-disc list-inside mb-3">${result.newIssues.map((i) => `<li>${i.description}</li>`).join('')}</ul>`;
+      }
+      if (result.resolvedIssues.length) {
+        html += `<p class="font-semibold text-green-700 mb-1">Genuinely fixed since last check:</p><ul class="list-disc list-inside">${result.resolvedIssues.map((i) => `<li>${i.description}</li>`).join('')}</ul>`;
+      }
+      if (!result.newIssues.length && !result.resolvedIssues.length && !result.isFirstCheck) {
+        html += `<p class="text-[var(--muted)]">No real change since the last check.</p>`;
+      }
+      resultBody.innerHTML = html;
+      resultEl.classList.remove('hidden');
+    } catch (err) {
+      resultLabel.textContent = 'Error';
+      resultBody.innerHTML = `<p class="text-red-700">${err.message}</p>`;
+      resultEl.classList.remove('hidden');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Check Now';
     }
   });
 

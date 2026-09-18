@@ -50,6 +50,16 @@ Dashboard
 <!-- Main Content -->
 <main class="flex-grow flex flex-col items-center pt-24 pb-32 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto w-full gap-20">
 
+<!-- Real, visible error banner - this was genuinely missing entirely.
+     showGenerateError() used to only console.error() - a real build
+     failure (OpenRouter down, a bad response, anything) left the user
+     staring at a blank screen with zero visible indication anything
+     went wrong. This is the real, exact fix for that. -->
+<div class="hidden w-full max-w-4xl mx-auto px-4 py-3 text-sm bg-red-50 text-red-700 border border-red-200 rounded-lg flex items-center justify-between gap-3" id="appBuilderErrorBanner">
+  <span id="appBuilderErrorText"></span>
+  <button class="text-xs font-semibold underline flex-shrink-0" id="appBuilderErrorDismiss">Dismiss</button>
+</div>
+
 <!-- Two clean screens - same real, proven pattern as Website Builder -->
 <div class="w-full flex-1 grid grid-cols-1 lg:grid-cols-2 gap-3 p-3 min-h-0" style="min-height: calc(100vh - 56px);">
 
@@ -169,7 +179,6 @@ Dashboard
 <script src="shared/api-client.js"></script>
 <script src="shared/checkpoint-ui.js"></script>
 <script src="shared/pulse-voice.js"></script>
-<script src="shared/widget.js"></script>
 <script src="shared/code-boxes.js"></script>
 <script>
 /**
@@ -257,12 +266,23 @@ function setPreviewStatus(active) {
 }
 
 function showGenerateError(message) {
-  // No visible input/error UI on this page anymore - surfaced to
-  // console for now; the Pulse widget (added in a later pass) will
-  // own real, visible error display.
+  // Real, critical fix - this used to be a real, honest stub that
+  // only logged to the console, on the assumption Pulse would own
+  // error display. It never did for this specific path - a genuine
+  // build failure left the user staring at a blank screen with
+  // absolutely no visible indication anything went wrong. This is
+  // the actual, real fix.
   console.error('[app-builder] Generate error:', message);
+  const banner = document.getElementById('appBuilderErrorBanner');
+  const text = document.getElementById('appBuilderErrorText');
+  if (banner && text) {
+    text.textContent = message;
+    banner.classList.remove('hidden');
+  }
 }
-function hideGenerateError() {}
+function hideGenerateError() {
+  document.getElementById('appBuilderErrorBanner')?.classList.add('hidden');
+}
 
 // ---------------- Code view ----------------
 
@@ -511,9 +531,10 @@ const STAGE_LABELS = {
   frontend: 'Generating frontend components',
   reviewing: 'Reviewing generated code',
   fixing: 'Fixing issues found in review',
+  verifying: 'Actually running the code to check it works',
   done: 'Done!'
 };
-const STAGE_ORDER = ['schema', 'backend', 'frontend', 'reviewing', 'fixing', 'done'];
+const STAGE_ORDER = ['schema', 'backend', 'frontend', 'reviewing', 'fixing', 'verifying', 'done'];
 let stageStatuses = {}; // stage -> 'pending' | 'running' | 'complete'
 let stageModels = {}; // real, genuine model name per stage, from the backend's own broadcast - Perplexity-style transparency, not decorative
 let isPaused = false;
@@ -711,6 +732,7 @@ async function loadExistingProject(id) {
 // ---------------- Wiring ----------------
 
 document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('appBuilderErrorDismiss')?.addEventListener('click', hideGenerateError);
   if (!GurostAPI.requireLogin()) return;
 
   try {
@@ -807,7 +829,7 @@ document.getElementById('deployBtn').addEventListener('click', () => attemptDepl
 // it's layered onto this page in a later pass - same real pattern as
 // Website Builder's window.gurostBuilder.
 async function undoChange() {
-  if (!projectId) return;
+  if (!projectId) throw new Error('Nothing to undo yet.');
   try {
     const result = await GurostAPI.call(`/api/project/${projectId}/undo`, { method: 'POST' });
     currentAppFiles = result.appFiles;
@@ -820,7 +842,7 @@ async function undoChange() {
   }
 }
 async function redoChange() {
-  if (!projectId) return;
+  if (!projectId) throw new Error('Nothing to redo yet.');
   try {
     const result = await GurostAPI.call(`/api/project/${projectId}/redo`, { method: 'POST' });
     currentAppFiles = result.appFiles;

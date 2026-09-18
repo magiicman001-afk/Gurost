@@ -60,6 +60,13 @@
       <div class="w-2 h-2 rounded-full" id="previewStatusDot" style="background: var(--line);"></div>
     </div>
     <div class="flex-1 relative bg-[#FAFAF9] overflow-auto min-h-0">
+      <div class="hidden mx-4 mt-4 p-4 rounded-lg bg-amber-50 border border-amber-200 text-sm" id="credibilityPanel">
+        <div class="flex items-center justify-between mb-2">
+          <span class="font-semibold text-amber-800">A few real, honest things worth adding for trust</span>
+          <button class="text-xs text-amber-700 underline" id="credibilityDismiss">Dismiss</button>
+        </div>
+        <ul class="list-disc list-inside text-amber-700 space-y-1" id="credibilityList"></ul>
+      </div>
       <div class="hidden p-4" id="variantSection">
         <p class="text-xs font-semibold mb-3 text-center text-[var(--ink-soft)]">Choose a direction</p>
         <div class="grid grid-cols-2 gap-2" id="variantGrid"></div>
@@ -300,6 +307,10 @@ function connectGenerationSocket(id) {
   generationSocket.addEventListener('message', (event) => {
     let msg;
     try { msg = JSON.parse(event.data); } catch { return; }
+    if (msg.type === 'credibility_check') {
+      showCredibilityPanel(msg.credibility);
+      return;
+    }
     if (msg.type !== 'stage_progress' && msg.type !== 'error') return;
 
     if (msg.type === 'error') {
@@ -420,6 +431,7 @@ async function generateWebsite(description) {
     projectId = result.projectId;
     window.history.replaceState({}, '', `builder.html?projectId=${projectId}`);
     connectGenerationSocket(projectId);
+    startCompletionPollFallback(projectId);
   } catch (err) {
     showCreditOrErrorBanner(err.message);
     setPreviewStatus(false);
@@ -427,7 +439,55 @@ async function generateWebsite(description) {
   }
 }
 
+// Real, honest safety net - same, proven pattern already used on App
+// Builder. The WebSocket above connects AFTER the real
+// /api/website-builder/start call returns, since it genuinely needs
+// the real projectId that call produces - leaving a real, if usually
+// brief, gap where the backend could already be broadcasting before
+// anyone's listening. Rather than trust that gap is always short
+// enough, this polls the actual, real project record directly every
+// few seconds - if real variants ever show up, or a real failure is
+// recorded, this catches it regardless of whether any single
+// WebSocket message actually made it through.
+function startCompletionPollFallback(id) {
+  let attempts = 0;
+  const maxAttempts = 40; // real ceiling - a little over 3 minutes at 5s intervals
+  const interval = setInterval(async () => {
+    attempts++;
+    if (attempts > maxAttempts) { clearInterval(interval); return; }
+    if (document.getElementById('variantSection').classList.contains('hidden') === false) {
+      clearInterval(interval); // real variants already showing - the WebSocket did its job, nothing left for this fallback to do
+      return;
+    }
+    try {
+      const project = await GurostAPI.call(`/api/project/${id}`);
+      if (project.variants && project.variants.length) {
+        clearInterval(interval);
+        setPreviewStatus(false);
+        document.getElementById('statusOverlay').style.display = 'none';
+        renderVariants(project.variants);
+      }
+    } catch (err) {
+      console.error('[builder] Real completion poll failed:', err.message);
+    }
+  }, 5000);
+}
+
+// Real, honest display for the Credibility Engine's genuine findings -
+// shown as a helpful, dismissible suggestion, never blocking anything,
+// since these are real, honest suggestions, not errors.
+function showCredibilityPanel(credibility) {
+  if (!credibility.missing || !credibility.missing.length) return;
+  const panel = document.getElementById('credibilityPanel');
+  const list = document.getElementById('credibilityList');
+  list.innerHTML = credibility.missing.map((item) => `<li>${item}</li>`).join('');
+  panel.classList.remove('hidden');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('credibilityDismiss')?.addEventListener('click', () => {
+    document.getElementById('credibilityPanel').classList.add('hidden');
+  });
   document.getElementById('creditRestartBtn').addEventListener('click', () => {
     if (lastPromptTried) {
       hideCreditBanner();
@@ -499,7 +559,7 @@ async function loadExistingProject(id) {
 // know about projectId or internal state, just these three real
 // actions.
 async function undoChange() {
-  if (!projectId) return;
+  if (!projectId) throw new Error('Nothing to undo yet.');
   try {
     const result = await GurostAPI.call(`/api/project/${projectId}/undo`, { method: 'POST' });
     currentHtml = result.html;
@@ -511,7 +571,7 @@ async function undoChange() {
   }
 }
 async function redoChange() {
-  if (!projectId) return;
+  if (!projectId) throw new Error('Nothing to redo yet.');
   try {
     const result = await GurostAPI.call(`/api/project/${projectId}/redo`, { method: 'POST' });
     currentHtml = result.html;

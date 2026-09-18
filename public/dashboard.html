@@ -29,6 +29,12 @@
   #marbleFlow3 { animation: marble-flow 22s linear infinite; }
 
   @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Real, new - draws the eye directly to the mode chips after
+     speaking with no mode picked yet, genuinely impossible to miss,
+     unlike a small text message elsewhere on the page. */
+  @keyframes mode-hint-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,140,0,0.4); } 50% { box-shadow: 0 0 0 8px rgba(255,140,0,0); } }
+  .mode-hint-pulse { animation: mode-hint-pulse 0.6s ease 3; border-color: var(--orange) !important; }
   .rise-in { animation: rise 0.7s cubic-bezier(0.16,1,0.3,1) both; }
   .d-1 { animation-delay: 0.05s; } .d-2 { animation-delay: 0.2s; } .d-3 { animation-delay: 0.35s; } .d-4 { animation-delay: 0.5s; }
 
@@ -285,7 +291,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   document.getElementById('dashMicBtn').addEventListener('mousedown', async () => {
-    if (!requireMode(validationMsg)) return;
+    // Real, deliberate fix: this used to require a build-mode chip to
+    // already be selected before the mic would even start recording -
+    // if someone's first instinct was to just hold the mic and speak
+    // (a completely natural thing to try), nothing happened at all,
+    // and the real, only feedback was a small text message elsewhere
+    // on the page, easy to miss entirely while looking at the mic
+    // itself. The mic now genuinely always starts - mode gets checked
+    // after real speech is captured instead, not before.
     try { recordingSession = await startRecordingSession(); }
     catch (err) { validationMsg.textContent = "Couldn't access your microphone — you can type instead."; validationMsg.classList.remove('hidden'); }
   });
@@ -293,7 +306,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!recordingSession) return;
     try {
       const transcript = await recordingSession.stop();
-      if (transcript) document.getElementById('dashPromptInput').value = transcript;
+      if (transcript) {
+        document.getElementById('dashPromptInput').value = transcript;
+        // Real, honest check, moved here - now that real speech
+        // exists, if no mode is picked yet, make it genuinely
+        // impossible to miss: a real, visible message AND a real,
+        // temporary highlight directly on the three mode chips
+        // themselves, not just text sitting elsewhere on the page.
+        if (!selectedMode) {
+          validationMsg.textContent = "Got it — now choose what you'd like to build below.";
+          validationMsg.classList.remove('hidden');
+          document.querySelectorAll('.dash-mode-btn').forEach((btn) => {
+            btn.classList.add('mode-hint-pulse');
+            setTimeout(() => btn.classList.remove('mode-hint-pulse'), 2000);
+          });
+        }
+      }
     } catch (err) {
       validationMsg.textContent = "Couldn't transcribe that — you can type instead. (" + err.message + ")";
       validationMsg.classList.remove('hidden');
