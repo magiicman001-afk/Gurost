@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Admin Dashboard - Gurost</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root { --ink: #1A1A2E; --muted: #6B7280; --line: #E9E9EF; --gold: #FEB246; --orange: #FF8C00; }
+  body { font-family: 'Inter', sans-serif; background: #FAFAF9; color: var(--ink); }
+  .font-display { font-family: 'Montserrat', sans-serif; }
+  .gold-gradient { background: linear-gradient(135deg, var(--gold), var(--orange)); }
+  .field-input { width: 100%; background: #FAFAF9; border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+  .field-input:focus { outline: none; border-color: var(--orange); }
+  table { width: 100%; font-size: 13px; border-collapse: collapse; }
+  th { text-align: left; padding: 8px 10px; color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid var(--line); }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  .tab-btn { padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; border: 1px solid var(--line); background: white; cursor: pointer; }
+  .tab-btn.active { background: var(--orange); color: white; border-color: var(--orange); }
+  .badge { padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+</style>
+</head>
+<body class="antialiased">
+
+<!-- Real login screen - shown until a genuine admin token exists -->
+<div id="loginScreen" class="min-h-screen flex items-center justify-center px-6">
+  <div class="w-full max-w-sm">
+    <h1 class="font-display font-bold text-2xl mb-2 text-center">Admin Access</h1>
+    <p class="text-sm text-[var(--muted)] mb-8 text-center">Restricted to Gurost admins and developers.</p>
+    <div class="flex flex-col gap-3">
+      <input type="text" id="accessCodeInput" placeholder="Access code" class="field-input"/>
+      <input type="password" id="passwordInput" placeholder="Password" class="field-input"/>
+      <button id="loginBtn" class="gold-gradient text-white font-semibold py-3 rounded-full">Log In</button>
+      <p class="hidden text-sm text-red-600 text-center" id="loginError"></p>
+    </div>
+  </div>
+</div>
+
+<!-- Real dashboard - hidden until login succeeds -->
+<div id="dashboardScreen" class="hidden">
+  <header class="bg-white border-b border-[var(--line)] px-6 py-4 flex items-center justify-between">
+    <div>
+      <h1 class="font-display font-bold text-lg">Gurost Admin</h1>
+      <p class="text-xs text-[var(--muted)]" id="welcomeText"></p>
+    </div>
+    <button id="logoutBtn" class="text-xs font-semibold px-3 py-1.5 rounded-full border border-[var(--line)]">Log Out</button>
+  </header>
+
+  <div class="px-6 py-4 flex flex-wrap gap-2 border-b border-[var(--line)] bg-white">
+    <button class="tab-btn active" data-tab="users">Users</button>
+    <button class="tab-btn" data-tab="projects">Projects</button>
+    <button class="tab-btn" data-tab="usage">API Usage</button>
+    <button class="tab-btn" data-tab="health">System Health</button>
+    <button class="tab-btn" data-tab="payments">Payments</button>
+    <button class="tab-btn" data-tab="bots">Bot Activity</button>
+  </div>
+
+  <main class="p-6">
+    <div id="tab-users" class="tab-panel"></div>
+    <div id="tab-projects" class="tab-panel hidden"></div>
+    <div id="tab-usage" class="tab-panel hidden"></div>
+    <div id="tab-health" class="tab-panel hidden"></div>
+    <div id="tab-payments" class="tab-panel hidden"></div>
+    <div id="tab-bots" class="tab-panel hidden"></div>
+  </main>
+</div>
+
+<script>
+const API_BASE = window.location.origin;
+let adminToken = localStorage.getItem('gurost_admin_token');
+
+function authHeaders() {
+  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` };
+}
+
+async function adminCall(path, options = {}) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: options.method || 'GET',
+    headers: authHeaders(),
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed.');
+  return data;
+}
+
+function showDashboard(name) {
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('dashboardScreen').classList.remove('hidden');
+  document.getElementById('welcomeText').textContent = `Logged in as ${name}`;
+  loadTab('users');
+}
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const accessCode = document.getElementById('accessCodeInput').value.trim();
+  const password = document.getElementById('passwordInput').value;
+  const errorEl = document.getElementById('loginError');
+  errorEl.classList.add('hidden');
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessCode, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Login failed.');
+    adminToken = data.token;
+    localStorage.setItem('gurost_admin_token', adminToken);
+    showDashboard(data.name);
+  } catch (err) {
+    errorEl.textContent = err.message;
+    errorEl.classList.remove('hidden');
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  localStorage.removeItem('gurost_admin_token');
+  adminToken = null;
+  document.getElementById('dashboardScreen').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+});
+
+document.querySelectorAll('.tab-btn').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach((p) => p.classList.add('hidden'));
+    document.getElementById(`tab-${btn.dataset.tab}`).classList.remove('hidden');
+    loadTab(btn.dataset.tab);
+  });
+});
+
+async function loadTab(tab) {
+  const el = document.getElementById(`tab-${tab}`);
+  el.innerHTML = '<p class="text-sm text-[var(--muted)]">Loading…</p>';
+  try {
+    if (tab === 'users') await renderUsers(el);
+    else if (tab === 'projects') await renderProjects(el);
+    else if (tab === 'usage') await renderUsage(el);
+    else if (tab === 'health') await renderHealth(el);
+    else if (tab === 'payments') await renderPayments(el);
+    else if (tab === 'bots') await renderBots(el);
+  } catch (err) {
+    el.innerHTML = `<p class="text-sm text-red-600">${err.message}</p>`;
+  }
+}
+
+async function renderUsers(el) {
+  const { users } = await adminCall('/api/admin/users');
+  el.innerHTML = `
+    <table>
+      <thead><tr><th>Email</th><th>Plan</th><th>Status</th><th>Joined</th><th></th></tr></thead>
+      <tbody>${users.map((u) => `
+        <tr>
+          <td>${u.email || '—'}</td>
+          <td>${u.plan}</td>
+          <td><span class="badge" style="background:${u.status === 'blocked' ? '#fee2e2' : '#dcfce7'};color:${u.status === 'blocked' ? '#991b1b' : '#166534'};">${u.status || 'active'}${u.status === 'blocked' && u.blocked_reason ? ' — ' + u.blocked_reason : ''}</span></td>
+          <td>${new Date(u.created_at).toLocaleDateString()}</td>
+          <td><button class="text-xs font-semibold underline" data-user="${u.user_id}" data-action="${u.status === 'blocked' ? 'unblock' : 'block'}">${u.status === 'blocked' ? 'Unblock' : 'Block'}</button></td>
+        </tr>`).join('')}</tbody>
+    </table>`;
+  el.querySelectorAll('[data-action]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const userId = btn.dataset.user;
+      const action = btn.dataset.action;
+      try {
+        if (action === 'block') {
+          const reason = prompt('Reason for blocking this user?') || 'No reason given.';
+          await adminCall(`/api/admin/users/${userId}/block`, { method: 'POST', body: { reason } });
+        } else {
+          await adminCall(`/api/admin/users/${userId}/unblock`, { method: 'POST' });
+        }
+        renderUsers(el);
+      } catch (err) { alert(err.message); }
+    });
+  });
+}
+
+async function renderProjects(el) {
+  const { projects } = await adminCall('/api/admin/projects');
+  el.innerHTML = `
+    <p class="text-xs text-[var(--muted)] mb-3">Real, currently active projects in this server's memory since its last restart.</p>
+    <table>
+      <thead><tr><th>Prompt</th><th>Type</th><th>State</th><th>Started</th></tr></thead>
+      <tbody>${projects.map((p) => `
+        <tr><td>${p.prompt || '—'}</td><td>${p.type || '—'}</td><td>${p.state}</td><td>${p.buildStartedAt ? new Date(p.buildStartedAt).toLocaleString() : '—'}</td></tr>`).join('')}</tbody>
+    </table>`;
+}
+
+async function renderUsage(el) {
+  const { byModel, totalCost, recentCalls } = await adminCall('/api/admin/api-usage');
+  el.innerHTML = `
+    <p class="font-display font-bold text-2xl mb-4">$${totalCost.toFixed(2)} <span class="text-sm font-normal text-[var(--muted)]">total (last 500 calls)</span></p>
+    <table class="mb-6">
+      <thead><tr><th>Model</th><th>Calls</th><th>Input tokens</th><th>Output tokens</th><th>Cost</th></tr></thead>
+      <tbody>${Object.entries(byModel).map(([model, d]) => `
+        <tr><td>${model}</td><td>${d.calls}</td><td>${d.inputTokens.toLocaleString()}</td><td>${d.outputTokens.toLocaleString()}</td><td>$${d.cost.toFixed(2)}</td></tr>`).join('')}</tbody>
+    </table>`;
+}
+
+async function renderHealth(el) {
+  const data = await adminCall('/api/admin/system-health');
+  const hours = Math.floor(data.processUptimeSeconds / 3600);
+  el.innerHTML = `
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-white border border-[var(--line)] rounded-xl p-4"><p class="text-xs text-[var(--muted)] mb-1">Uptime</p><p class="font-display font-bold text-xl">${hours}h</p></div>
+      <div class="bg-white border border-[var(--line)] rounded-xl p-4"><p class="text-xs text-[var(--muted)] mb-1">Requests (1h)</p><p class="font-display font-bold text-xl">${data.lastHour.totalRequests}</p></div>
+      <div class="bg-white border border-[var(--line)] rounded-xl p-4"><p class="text-xs text-[var(--muted)] mb-1">Error rate</p><p class="font-display font-bold text-xl">${data.lastHour.errorRate}%</p></div>
+      <div class="bg-white border border-[var(--line)] rounded-xl p-4"><p class="text-xs text-[var(--muted)] mb-1">Avg response</p><p class="font-display font-bold text-xl">${data.lastHour.avgDurationMs}ms</p></div>
+    </div>`;
+}
+
+async function renderPayments(el) {
+  const { payments, honestNote } = await adminCall('/api/admin/payments');
+  el.innerHTML = `
+    <p class="text-xs text-[var(--muted)] mb-3">${honestNote}</p>
+    <table>
+      <thead><tr><th>Email</th><th>Plan</th><th>Stripe account</th></tr></thead>
+      <tbody>${payments.map((p) => `
+        <tr><td>${p.email || '—'}</td><td>${p.plan}</td><td>${p.hasStripeAccount ? 'Yes' : 'No'}</td></tr>`).join('')}</tbody>
+    </table>`;
+}
+
+async function renderBots(el) {
+  const { activity } = await adminCall('/api/admin/bot-activity');
+  el.innerHTML = `
+    <table>
+      <thead><tr><th>User</th><th>Action</th><th>Prompt</th><th>When</th></tr></thead>
+      <tbody>${activity.map((a) => `
+        <tr><td>${a.user_id.slice(0, 8)}…</td><td>${a.action_type}</td><td>${(a.prompt || '').slice(0, 60)}</td><td>${new Date(a.created_at).toLocaleString()}</td></tr>`).join('')}</tbody>
+    </table>`;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (adminToken) showDashboard('Admin');
+});
+</script>
+</body>
+</html>
