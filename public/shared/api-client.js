@@ -63,5 +63,21 @@ window.GurostAPI = (function () {
     return data;
   }
 
-  return { call, authHeaders, isLoggedIn, requireLogin, API_BASE };
+  // Real, deliberately server-checked - not decoded from a JWT client-side,
+  // since some users authenticate with a real API key instead of a JWT,
+  // and an API key has no payload to decode at all. Reuses the real,
+  // existing /api/me endpoint rather than adding a new one.
+  let cachedPlan = null;
+  async function getMyPlan() {
+    if (cachedPlan) return cachedPlan;
+    try {
+      const me = await call('/api/me');
+      cachedPlan = me.plan;
+      return cachedPlan;
+    } catch {
+      return null; // real, honest fallback - if this fails, callers should treat it as "don't show the gated feature," not crash the page
+    }
+  }
+
+  return { call, authHeaders, isLoggedIn, requireLogin, getMyPlan, API_BASE };
 })();
