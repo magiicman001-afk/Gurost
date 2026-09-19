@@ -2,6 +2,7 @@ const { chromium } = require("playwright");
 const chromeLauncher = require("chrome-launcher");
 const lighthouse = require("lighthouse");
 const { callClaude } = require("../lib/claude-client");
+const { modelForTier } = require("../lib/tier-router");
 
 const AUDIT_SYSTEM = `You are a website auditor. You will receive crawled page data (links, meta tags, title) and a Lighthouse report.
 
@@ -73,7 +74,7 @@ async function runLighthouse(url) {
   }
 }
 
-async function audit(url) {
+async function audit(url, { plan } = {}) {
   const crawlData = await crawl(url);
   const lhData = await runLighthouse(url);
 
@@ -87,7 +88,7 @@ async function audit(url) {
     system: AUDIT_SYSTEM,
     messages: [{ role: "user", content: auditContent }],
     maxTokens: 3000,
-    model: isLarge ? LARGE_DOCUMENT_MODEL : undefined
+    model: isLarge ? LARGE_DOCUMENT_MODEL : modelForTier(plan, { complex: false })
   });
 
   return { issues: parsed.issues, crawlData, lighthouse: lhData, usage, modelUsed: isLarge ? "Gemini" : "Claude" };
@@ -109,13 +110,13 @@ async function audit(url) {
 const LARGE_DOCUMENT_THRESHOLD = parseInt(process.env.LARGE_DOCUMENT_THRESHOLD || "15000", 10);
 const LARGE_DOCUMENT_MODEL = process.env.LARGE_DOCUMENT_MODEL || "google/gemini-3.1-pro";
 
-async function auditStaticHTML(htmlContent) {
+async function auditStaticHTML(htmlContent, { plan } = {}) {
   const isLarge = htmlContent.length > LARGE_DOCUMENT_THRESHOLD;
   const { parsed, usage } = await callClaude({
     system: AUDIT_STATIC_SYSTEM,
     messages: [{ role: "user", content: `HTML document:\n${htmlContent.slice(0, isLarge ? 60000 : 15000)}` }],
     maxTokens: 3000,
-    model: isLarge ? LARGE_DOCUMENT_MODEL : undefined
+    model: isLarge ? LARGE_DOCUMENT_MODEL : modelForTier(plan, { complex: false })
   });
 
   return { issues: parsed.issues, usage, modelUsed: isLarge ? "Gemini" : "Claude" };
@@ -133,14 +134,15 @@ function verifyRealHtml(html) {
   return { ok: true };
 }
 
-async function rebuild(originalHtml, approvedFixes) {
+async function rebuild(originalHtml, approvedFixes, { plan } = {}) {
   const { parsed, usage } = await callClaude({
     system: REBUILD_SYSTEM,
     messages: [{
       role: "user",
       content: `Original HTML:\n${originalHtml}\n\nApproved fixes:\n${JSON.stringify(approvedFixes)}`
     }],
-    maxTokens: 8000
+    maxTokens: 8000,
+    model: modelForTier(plan, { complex: true })
   });
 
   // Real, genuine check - the rebuild only counts as real success if

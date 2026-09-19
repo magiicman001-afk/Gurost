@@ -1,5 +1,6 @@
 const DiffMatchPatch = require("diff-match-patch");
 const { callClaude } = require("../lib/claude-client");
+const { modelForTier } = require("../lib/tier-router");
 
 const dmp = new DiffMatchPatch();
 
@@ -17,11 +18,12 @@ const FULL_EDIT_SYSTEM = `You are editing existing code. Return the complete cor
 
 Output ONLY valid JSON: {"html": "<complete updated document>", "summary": "one sentence"}`;
 
-async function applyCorrection(currentCode, instruction) {
+async function applyCorrection(currentCode, instruction, { plan } = {}) {
   const primary = await callClaude({
     system: PATCH_SYSTEM,
     messages: [{ role: "user", content: `Current code:\n${currentCode}\n\nInstruction: ${instruction}` }],
-    maxTokens: 2000
+    maxTokens: 2000,
+    model: modelForTier(plan, { complex: false })
   });
 
   const { find, replace } = primary.parsed.patch;
@@ -42,7 +44,8 @@ async function applyCorrection(currentCode, instruction) {
   const fallback = await callClaude({
     system: FULL_EDIT_SYSTEM,
     messages: [{ role: "user", content: `Current code:\n${currentCode}\n\nInstruction: ${instruction}` }],
-    maxTokens: 8000
+    maxTokens: 8000,
+    model: modelForTier(plan, { complex: true })
   });
   const newCode = fallback.parsed.html;
   const patches = dmp.patch_make(currentCode, newCode);

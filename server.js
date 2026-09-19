@@ -1146,6 +1146,7 @@ app.post(
 
       if (mode === "app") {
         const result = await appBot.buildApp(prompt, {
+          plan: req.user.plan,
           // Real, mid-flow complexity check — runs after the cheap
           // schema step, before the expensive backend+frontend calls.
           // Throwing here aborts the build before that real cost is
@@ -1253,7 +1254,7 @@ app.post(
 
       // default: website, multi-variant
       const includeBranding = !PLANS[req.user.plan]?.whiteLabel;
-      const { variants, failures } = await variantBot.generateVariants(prompt, { includeBranding });
+      const { variants, failures } = await variantBot.generateVariants(prompt, { includeBranding, plan: req.user.plan });
       if (variants.length === 0) {
         return res.status(502).json({ error: "All variant generations failed.", failures });
       }
@@ -1326,6 +1327,7 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
     const result = await Promise.race([
       appBot.buildAppStaged(projectId, prompt, {
         dbEngine,
+        plan: req.user.plan,
         onStage: (stage, status, data) => {
           broadcastProjectUpdate(projectId, { type: "stage_progress", stage, status, data: data || null });
         },
@@ -1500,7 +1502,7 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
       // can't read the same starting HTML and silently overwrite this
       // one's result — see lib/project-lock.js for the real bug this fixes.
       const result = await withProjectLock(projectId, async () => {
-        const r = await correctionBot.applyCorrection(project.currentHtml, instruction);
+        const r = await correctionBot.applyCorrection(project.currentHtml, instruction, { plan: req.user.plan });
         integrator.integrateCorrection(project, r);
         return r;
       });
@@ -1557,7 +1559,7 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
       }
 
       const ownedWorkspace = await teamCollab.getOwnedWorkspace(req.user.id).catch(() => null);
-      const result = await assistantBot.handleTask(project.prompt, task, { userId: req.user.id, workspaceId: ownedWorkspace?.id });
+      const result = await assistantBot.handleTask(project.prompt, task, { userId: req.user.id, workspaceId: ownedWorkspace?.id, plan: req.user.plan });
       integrator.integrateAssistantTask(project, result, task);
       project.pendingAssistantSuggestion = null;
 
@@ -1681,7 +1683,7 @@ app.post("/api/revamp/audit", security.rejectUnknownFields(["url"]), async (req,
 
   try {
     transition(project, "PLANNING");
-    const result = await revampBot.audit(safeUrl);
+    const result = await revampBot.audit(safeUrl, { plan: req.user.plan });
     integrator.integrateRevampAudit(project, result);
     project.currentHtml = result.crawlData.html; // original, pre-fix, for the rebuild step
     transition(project, "BUILDING");
@@ -1711,7 +1713,7 @@ app.post("/api/revamp/audit-file", security.rejectUnknownFields(["html", "fileNa
 
   try {
     transition(project, "PLANNING");
-    const result = await revampBot.auditStaticHTML(html);
+    const result = await revampBot.auditStaticHTML(html, { plan: req.user.plan });
     project.currentHtml = html; // the real, original uploaded content, for the rebuild step
     transition(project, "BUILDING");
     res.json({ projectId, issues: result.issues, state: project.state, modelUsed: result.modelUsed });
@@ -1731,7 +1733,7 @@ app.post(
     if (!project.currentHtml) return res.status(400).json({ error: "No audited site on this project yet." });
 
     try {
-      const result = await revampBot.rebuild(project.currentHtml, approvedFixes || []);
+      const result = await revampBot.rebuild(project.currentHtml, approvedFixes || [], { plan: req.user.plan });
       integrator.integrateRevampRebuild(project, result);
       transition(project, "DONE");
       await auth.recordBuildEvent(req.user.id);
@@ -1763,7 +1765,8 @@ app.post("/api/assistant", security.rejectUnknownFields(["projectId", "task"]), 
       industryContext: industry?.context,
       forcePriorityModel: plan?.priorityModel,
       userId: req.user.id,
-      workspaceId: ownedWorkspace?.id
+      workspaceId: ownedWorkspace?.id,
+      plan: req.user.plan
     });
     integrator.integrateAssistantTask(project, result, task);
     // Real, genuine logging - completes the same real memory loop
@@ -1799,7 +1802,8 @@ app.post("/api/assistant/suggest", security.rejectUnknownFields(["projectId"]), 
     const recentTypes = (project.assistantHistory || []).map((h) => h.type);
     const { suggestions, usage } = await assistantBot.suggestActions(project.prompt, recentTypes, {
       industryContext: industry?.context,
-      forcePriorityModel: plan?.priorityModel
+      forcePriorityModel: plan?.priorityModel,
+      plan: req.user.plan
     });
     project.pendingAssistantSuggestion = suggestions[0] || null;
     res.json({ projectId, suggestions, usage });
@@ -4622,6 +4626,7 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt"]),
     const result = await variantBot.generateVariantsStaged(prompt, {
       includeBranding: !PLANS[req.user.plan]?.whiteLabel,
       userId: req.user.id,
+      plan: req.user.plan,
       onStage: (stage, status, data) => {
         broadcastProjectUpdate(projectId, { type: "stage_progress", stage, status, data: data || null });
       }

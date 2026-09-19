@@ -1,6 +1,7 @@
 const { callClaude } = require("../lib/claude-client");
 const stageGate = require("../lib/stage-gate");
 const imageBot = require("../image-bot");
+const { modelForTier } = require("../lib/tier-router");
 
 // Real, specialized model per stage - genuine, Perplexity-Computer-
 // style choice, not one model doing everything. Schema design is
@@ -119,12 +120,12 @@ On each top-level rendered section within a component (the outermost divs/sectio
 
 Images: where the design genuinely calls for a real photo or illustration (a hero image, a product shot, an avatar), do NOT draw it with SVG and do NOT invent an external image URL. Instead, write a literal placeholder token directly into the JSX's src attribute — e.g. src="IMG_1" — and add a matching entry to imageRequests with a detailed, specific description of exactly what that image should show. Use as many as the design genuinely benefits from, typically 1-4. For anything NOT requested this way (icons, decorative shapes), build a real, self-contained visual using inline SVG, a CSS gradient, or a Material Symbols icon inside a colored shape — never invent an external image URL for those.`;
 
-async function buildApp(prompt, { dbEngine = "postgres", onSchemaComplete } = {}) {
+async function buildApp(prompt, { dbEngine = "postgres", onSchemaComplete, plan } = {}) {
   const schemaRes = await callClaude({
     system: SCHEMA_SYSTEM,
     messages: [{ role: "user", content: `Business: ${prompt}\nPreferred engine: ${dbEngine}` }],
     maxTokens: 2000,
-    model: SCHEMA_AGENT_MODEL
+    model: SCHEMA_AGENT_MODEL || modelForTier(plan, { complex: false })
   });
 
   // Real, optional checkpoint — exists specifically so a caller (the
@@ -143,7 +144,8 @@ async function buildApp(prompt, { dbEngine = "postgres", onSchemaComplete } = {}
       role: "user",
       content: `Business: ${prompt}\n\nDatabase schema:\n${schemaRes.parsed.schema}`
     }],
-    maxTokens: 6000
+    maxTokens: 6000,
+    model: modelForTier(plan, { complex: true })
   });
 
   const endpointList = backendRes.parsed.files.map((f) => f.path).join(", ");
@@ -153,7 +155,8 @@ async function buildApp(prompt, { dbEngine = "postgres", onSchemaComplete } = {}
       role: "user",
       content: `Business: ${prompt}\n\nBackend files (for reference on what's available): ${endpointList}`
     }],
-    maxTokens: 8000
+    maxTokens: 8000,
+    model: modelForTier(plan, { complex: true })
   });
 
   const frontendFiles = await fulfillImageRequestsMultiFile(frontendRes.parsed.files, frontendRes.parsed.imageRequests);
@@ -185,7 +188,7 @@ async function buildApp(prompt, { dbEngine = "postgres", onSchemaComplete } = {}
  * this file's module-level comment for why that's the real boundary,
  * not an in-progress completion).
  */
-async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStage, getPendingCorrection, clearPendingCorrection } = {}) {
+async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStage, getPendingCorrection, clearPendingCorrection, plan } = {}) {
   const notify = (stage, status, data) => onStage && onStage(stage, status, data);
   const foldCorrection = async (baseContent) => {
     await stageGate.awaitGate(projectId);
@@ -199,18 +202,18 @@ async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStag
 
   notify("schema", "running", { model: "Claude" });
   const schemaContent = await foldCorrection(`Business: ${prompt}\nPreferred engine: ${dbEngine}`);
-  const schemaRes = await callClaude({ system: SCHEMA_SYSTEM, messages: [{ role: "user", content: schemaContent }], maxTokens: 2000, model: SCHEMA_AGENT_MODEL });
+  const schemaRes = await callClaude({ system: SCHEMA_SYSTEM, messages: [{ role: "user", content: schemaContent }], maxTokens: 2000, model: SCHEMA_AGENT_MODEL || modelForTier(plan, { complex: false }) });
   notify("schema", "complete", { schema: schemaRes.parsed.schema, engine: schemaRes.parsed.engine });
 
   notify("backend", "running", { model: "Claude" });
   const backendContent = await foldCorrection(`Business: ${prompt}\n\nDatabase schema:\n${schemaRes.parsed.schema}`);
-  const backendRes = await callClaude({ system: BACKEND_SYSTEM, messages: [{ role: "user", content: backendContent }], maxTokens: 6000 });
+  const backendRes = await callClaude({ system: BACKEND_SYSTEM, messages: [{ role: "user", content: backendContent }], maxTokens: 6000, model: modelForTier(plan, { complex: true }) });
   notify("backend", "complete", { files: backendRes.parsed.files, summary: backendRes.parsed.summary });
 
   const endpointList = backendRes.parsed.files.map((f) => f.path).join(", ");
   notify("frontend", "running", { model: "Claude" });
   const frontendContent = await foldCorrection(`Business: ${prompt}\n\nBackend files (for reference on what's available): ${endpointList}`);
-  const frontendRes = await callClaude({ system: FRONTEND_SYSTEM, messages: [{ role: "user", content: frontendContent }], maxTokens: 8000 });
+  const frontendRes = await callClaude({ system: FRONTEND_SYSTEM, messages: [{ role: "user", content: frontendContent }], maxTokens: 8000, model: modelForTier(plan, { complex: true }) });
   const frontendFiles = await fulfillImageRequestsMultiFile(frontendRes.parsed.files, frontendRes.parsed.imageRequests);
   notify("frontend", "complete", { files: frontendFiles, summary: frontendRes.parsed.summary });
 

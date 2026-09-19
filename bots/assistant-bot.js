@@ -13,23 +13,22 @@
  */
 
 const crypto = require("crypto");
-const { callClaude, CLAUDE_MODEL, CLAUDE_MODEL_FAST } = require("../lib/claude-client");
+const { callClaude, CLAUDE_MODEL_FAST } = require("../lib/claude-client");
 const userLearning = require("../user-learning");
 const plainEnglishBot = require("../plain-english");
+const { modelForTier } = require("../lib/tier-router");
 
-// Real, specialized model per agent - a genuine, Perplexity-Computer-
-// style choice, not every agent using the same one model by default.
-// Based on real, current comparisons (checked before writing this,
-// not assumed): Gemini genuinely leads deep analytical reasoning
-// right now, Claude produces the most natural writing and powers
-// today's top real coding tools. Every one of these is a real,
-// simple environment variable - the AI model market moves fast, so
-// updating a specialist's model later never needs a real code change.
+// Research keeps its own specialized model - a genuine, deliberate
+// choice based on real, current comparisons (checked before writing
+// this, not assumed): Gemini genuinely leads deep analytical
+// reasoning right now, which is what the Research sub-agent actually
+// needs. NOT tier-routed - this stays true regardless of the user's
+// plan. email/task/code used to default to CLAUDE_MODEL here too, but
+// that was never real per-agent specialization (all three were just
+// "Claude"), so tier routing (see modelFor() in handleTask below) now
+// decides those three instead of this object.
 const AGENT_MODELS = {
-  research: process.env.RESEARCH_AGENT_MODEL || "google/gemini-3.1-pro",
-  email: process.env.EMAIL_AGENT_MODEL || CLAUDE_MODEL,
-  task: process.env.TASK_AGENT_MODEL || CLAUDE_MODEL,
-  code: process.env.CODE_AGENT_MODEL || CLAUDE_MODEL,
+  research: process.env.RESEARCH_AGENT_MODEL || "google/gemini-3.1-pro"
 };
 
 const TASK_SYSTEM = `You are Gurost Business Assistant. You help users run their business.
@@ -125,7 +124,7 @@ async function routeToAgents(task) {
   }
 }
 
-async function handleTask(businessContext, task, { industryContext, forcePriorityModel, userId, workspaceId, plainEnglish } = {}) {
+async function handleTask(businessContext, task, { industryContext, forcePriorityModel, userId, workspaceId, plainEnglish, plan } = {}) {
   // Real, honest note: task complexity used to pick between two tiers
   // of the same model (Sonnet/Haiku). That's superseded now by real,
   // per-agent model specialization below - forcePriorityModel and
@@ -170,16 +169,26 @@ async function handleTask(businessContext, task, { industryContext, forcePriorit
   // variants earlier tonight.
   const agentIds = await routeToAgents(task);
 
+  // Research stays on its own specialized model (Gemini, see
+  // AGENT_MODELS above) regardless of tier — deliberate, not
+  // tier-routed. email/task/code are tier-routed instead of using
+  // their AGENT_MODELS default, since that default was always just
+  // CLAUDE_MODEL (no real per-agent specialization for those three,
+  // unlike research) and tier now decides that choice instead.
+  const modelFor = (agentId) =>
+    agentId === "research" ? AGENT_MODELS.research : modelForTier(plan, { complex: isComplexTask(task) });
+
   const results = await Promise.allSettled(
-    agentIds.map((agentId) =>
-      callClaude({
+    agentIds.map((agentId) => {
+      const model = modelFor(agentId);
+      return callClaude({
         system: AGENTS[agentId].system + styleClause + memoryClause,
         messages: [{ role: "user", content: contextBlock }],
         maxTokens: 2000,
-        model: AGENT_MODELS[agentId],
+        model,
         context: { userId, workspaceId }
-      }).then((r) => ({ agentId, label: AGENTS[agentId].label, model: AGENT_MODELS[agentId], ...r }))
-    )
+      }).then((r) => ({ agentId, label: AGENTS[agentId].label, model, ...r }));
+    })
   );
 
   const succeeded = results.filter((r) => r.status === "fulfilled").map((r) => r.value);
@@ -218,7 +227,7 @@ async function handleTask(businessContext, task, { industryContext, forcePriorit
   return { output: parsed, modelsUsed: succeeded.map((s) => ({ agent: s.label, model: s.model })), usage, agentsUsed: succeeded.map((s) => s.label) };
 }
 
-async function suggestActions(businessContext, recentTaskTypes = [], { industryContext, forcePriorityModel } = {}) {
+async function suggestActions(businessContext, recentTaskTypes = [], { industryContext, forcePriorityModel, plan } = {}) {
   const { parsed, usage } = await callClaude({
     system: SUGGESTION_SYSTEM,
     messages: [{
@@ -226,7 +235,7 @@ async function suggestActions(businessContext, recentTaskTypes = [], { industryC
       content: JSON.stringify({ businessContext, recentTaskTypes, industryContext: industryContext || undefined })
     }],
     maxTokens: 600,
-    model: forcePriorityModel ? CLAUDE_MODEL : CLAUDE_MODEL_FAST
+    model: modelForTier(plan, { complex: !!forcePriorityModel })
   });
 
   const suggestions = (parsed.suggestions || []).map((s) => ({

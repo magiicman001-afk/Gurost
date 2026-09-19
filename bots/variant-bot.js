@@ -1,5 +1,6 @@
 const { callClaude } = require("../lib/claude-client");
 const imageBot = require("../image-bot");
+const { modelForTier } = require("../lib/tier-router");
 
 const BRIEFS = [
   {
@@ -121,13 +122,14 @@ async function fulfillImageRequests(html, imageRequests, onImageStart) {
   return finalHtml;
 }
 
-async function generateVariants(prompt, { includeBranding = true } = {}) {
+async function generateVariants(prompt, { includeBranding = true, plan } = {}) {
   const settled = await Promise.allSettled(
     BRIEFS.map((b) =>
       callClaude({
         system: systemFor(b.brief, includeBranding),
         messages: [{ role: "user", content: prompt }],
-        maxTokens: 8000
+        maxTokens: 8000,
+        model: modelForTier(plan, { complex: true })
       }).then(async (r) => ({
         id: b.id,
         label: b.label,
@@ -176,7 +178,7 @@ function verifyRealHtml(html) {
   return { ok: true };
 }
 
-async function generateVariantsStaged(prompt, { includeBranding = true, onStage, userId } = {}) {
+async function generateVariantsStaged(prompt, { includeBranding = true, onStage, userId, plan } = {}) {
   const notify = (stage, status, data) => onStage && onStage(stage, status, data);
 
   notify("understanding", "running");
@@ -215,7 +217,8 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
     callClaude({
       system: systemFor(b.brief, includeBranding),
       messages: [{ role: "user", content: effectivePrompt }],
-      maxTokens: 8000
+      maxTokens: 8000,
+      model: modelForTier(plan, { complex: true })
     })
       .then(async (r) => {
         const html = await fulfillImageRequests(r.parsed.html, r.parsed.imageRequests, (count) => {
