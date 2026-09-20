@@ -176,6 +176,24 @@ Dashboard
   <p class="text-[10px] text-[var(--ink-soft)] flex-shrink-0">Copyright 2026 Gurost AI. All rights reserved.</p>
 </footer>
 
+<!-- Real API Key Collection Modal - hidden by default. This is the
+     actual page's own copy; a matching block also exists inside the
+     sandboxed-preview HTML string above (for the generated app being
+     previewed), but that one never touches this real DOM, so it can't
+     satisfy the getElementById calls below on its own. -->
+<div class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" id="apiKeyModal">
+  <div class="bg-white rounded-2xl p-8 max-w-md w-full max-h-[80vh] overflow-y-auto">
+    <h2 class="text-xl font-bold text-[var(--ink)] mb-2">Real API Keys Needed</h2>
+    <p class="text-[var(--ink-soft)] text-sm mb-6">Your app uses these real services — add your own keys so it actually works once deployed.</p>
+    <div id="apiKeyFields"></div>
+    <p class="hidden text-red-600 text-sm mb-4" id="apiKeyModalError"></p>
+    <div class="flex gap-3 mt-6">
+      <button class="flex-1 border border-[var(--line)] rounded-full py-2 text-sm font-semibold" id="apiKeyModalCancel" type="button">Cancel</button>
+      <button class="flex-1 gold-gradient text-white rounded-full py-2 text-sm font-semibold" id="apiKeyModalSubmit" type="button">Save &amp; Deploy</button>
+    </div>
+  </div>
+</div>
+
 <script src="shared/api-client.js"></script>
 <script src="shared/checkpoint-ui.js"></script>
 <script src="shared/pulse-voice.js"></script>
