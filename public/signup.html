@@ -111,27 +111,35 @@
     window.location.href = 'dashboard.html';
   }
 
-  async function continueWithGoogle() {
-    const client = getSupabaseClient();
-    await client.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.origin + window.location.pathname }
-    });
+  // Supabase redirects straight to a raw JSON 400 page ("provider is not
+  // enabled") when a provider hasn't been switched on in the Supabase
+  // dashboard, so check its public auth settings first and show a real
+  // message instead. Once the provider is enabled (with its real client
+  // ID/secret from Google/GitHub), this passes straight through.
+  async function isOAuthProviderEnabled(provider) {
+    try {
+      const res = await fetch(`${GUROST_SUPABASE_URL}/auth/v1/settings`, { headers: { apikey: GUROST_SUPABASE_ANON_KEY } });
+      const settings = await res.json();
+      return settings?.external?.[provider] === true;
+    } catch {
+      return true; // can't tell - let Supabase handle it rather than block a working provider
+    }
   }
-  document.getElementById('googleBtnSignup').addEventListener('click', continueWithGoogle);
 
-  // Real, same proven Supabase OAuth pattern as Google above - Supabase
-  // handles the actual token exchange server-side; the only real work
-  // left for a human is enabling each provider in the Supabase
-  // dashboard with its real client ID/secret from GitHub/Apple.
-  async function continueWithGitHub() {
+  async function startOAuth(provider, label) {
+    hideError('signupError');
+    if (!(await isOAuthProviderEnabled(provider))) {
+      return showError('signupError', `${label} sign-up isn't available yet. Please create your account with an email and password.`);
+    }
     const client = getSupabaseClient();
     await client.auth.signInWithOAuth({
-      provider: "github",
+      provider,
       options: { redirectTo: window.location.origin + window.location.pathname }
     });
   }
-  document.getElementById('githubBtnSignup').addEventListener('click', continueWithGitHub);
+
+  document.getElementById('googleBtnSignup').addEventListener('click', () => startOAuth("google", "Google"));
+  document.getElementById('githubBtnSignup').addEventListener('click', () => startOAuth("github", "GitHub"));
 
   // Real, missing session check, now added - without this, a Google/
   // GitHub/Apple signup would redirect back here and just silently

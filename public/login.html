@@ -94,21 +94,34 @@
     document.getElementById(id).classList.add('hidden');
   }
 
-  async function continueWithGoogle() {
+  // Supabase redirects straight to a raw JSON 400 page ("provider is not
+  // enabled") when a provider hasn't been switched on in the Supabase
+  // dashboard, so check its public auth settings first and show a real
+  // message instead. Once the provider is enabled, this passes through.
+  async function isOAuthProviderEnabled(provider) {
+    try {
+      const res = await fetch(`${GUROST_SUPABASE_URL}/auth/v1/settings`, { headers: { apikey: GUROST_SUPABASE_ANON_KEY } });
+      const settings = await res.json();
+      return settings?.external?.[provider] === true;
+    } catch {
+      return true; // can't tell - let Supabase handle it rather than block a working provider
+    }
+  }
+
+  async function startOAuth(provider, label) {
+    hideError('loginError');
+    if (!(await isOAuthProviderEnabled(provider))) {
+      return showError('loginError', `${label} sign-in isn't available yet. Please log in with your email and password.`);
+    }
     const client = getSupabaseClient();
     await client.auth.signInWithOAuth({
-      provider: "google",
+      provider,
       options: { redirectTo: window.location.origin + window.location.pathname }
     });
   }
 
-  async function continueWithGitHub() {
-    const client = getSupabaseClient();
-    await client.auth.signInWithOAuth({
-      provider: "github",
-      options: { redirectTo: window.location.origin + window.location.pathname }
-    });
-  }
+  const continueWithGoogle = () => startOAuth("google", "Google");
+  const continueWithGitHub = () => startOAuth("github", "GitHub");
 
   // Real, shared post-auth redirect - checks for a pending template
   // click first (see templates.html), otherwise goes to Dashboard.
