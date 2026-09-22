@@ -249,7 +249,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!projects.length) {
       picker.innerHTML = '<option>No projects yet</option>';
     } else {
-      picker.innerHTML = projects.map((p) => `<option value="${p.id}">${(p.prompt || 'Untitled').slice(0, 40)}</option>`).join('');
+      picker.innerHTML = projects.map((p) => `<option value="${p.id}">${GurostAPI.escapeHtml((p.prompt || 'Untitled').slice(0, 40))}</option>`).join('');
       loadApiKeys(projects[0].id);
       picker.addEventListener('change', () => loadApiKeys(picker.value));
     }

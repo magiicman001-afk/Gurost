@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const me = await GurostAPI.call('/api/me');
     const name = me.email ? me.email.split('@')[0] : 'there';
-    document.getElementById('dashboardGreeting').innerHTML = `Hi ${name}, what do you want to <span class="gold-text">build?</span>`;
+    document.getElementById('dashboardGreeting').innerHTML = `Hi ${GurostAPI.escapeHtml(name)}, what do you want to <span class="gold-text">build?</span>`;
     document.getElementById('sidebarName').textContent = me.email || 'Account';
     document.getElementById('sidebarPlan').textContent = `${PLAN_DISPLAY_NAMES[me.plan] || me.plan} plan`;
     document.getElementById('sidebarAvatar').textContent = (me.email || '?')[0].toUpperCase();

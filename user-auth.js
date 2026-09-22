@@ -35,9 +35,18 @@ function hashApiKey(key) {
   return crypto.createHash("sha256").update(key).digest("hex");
 }
 
+// Real, honest email shape check — not exhaustive RFC 5322 validation,
+// but enough to reject the HTML-metacharacter payloads that let an
+// unvalidated email execute as stored XSS wherever it's later rendered
+// (e.g. the admin dashboard's user list).
+const EMAIL_RE = /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/;
+
 async function signup(email, password) {
   if (!email || !password || password.length < 8) {
     throw new Error("Email and a password of at least 8 characters are required.");
+  }
+  if (!EMAIL_RE.test(email)) {
+    throw new Error("Enter a valid email address.");
   }
 
   const { data: existing } = await supabase.from("api_keys").select("user_id").eq("email", email).maybeSingle();
@@ -120,6 +129,13 @@ async function requestPasswordReset(email) {
   // leak (the same "extraction, however phrased" concern flagged
   // elsewhere in this codebase's security work). The caller always
   // gets a generic "if that email exists, a reset link was sent."
+  //
+  // That guarantee only holds if every failure past this point is
+  // swallowed instead of surfaced — a DB-insert failure or a Postmark
+  // failure can only ever happen on the "email exists" branch, so
+  // letting either reach the HTTP response (even as an "error") lets
+  // an attacker tell existing emails apart from nonexistent ones by
+  // status code alone. Real failures are logged server-side instead.
   if (!data) return { sent: true };
 
   const rawToken = crypto.randomBytes(32).toString("hex");
@@ -127,16 +143,16 @@ async function requestPasswordReset(email) {
   const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
 
   const { error } = await supabase.from("password_resets").insert({ token_hash: tokenHash, user_id: data.user_id, expires_at: expiresAt });
-  if (error) throw new Error(`Failed to create reset token: ${error.message}`);
+  if (error) {
+    console.error(`[password-reset] Failed to create reset token for ${email}: ${error.message}`);
+    return { sent: true };
+  }
 
   const baseUrl = process.env.FRONTEND_BASE_URL || "http://localhost:3000";
   const resetUrl = `${baseUrl}/reset-password.html?token=${rawToken}`;
 
   await emailClient.sendPasswordReset(email, resetUrl).catch((err) => {
-    // The token still exists even if the email send fails — surface
-    // this as a real error rather than silently claim success, since
-    // "sent: true" with no actual email would leave the user stuck.
-    throw new Error(`Reset token created but the email failed to send: ${err.message}`);
+    console.error(`[password-reset] Reset token created but the email failed to send for ${email}: ${err.message}`);
   });
 
   return { sent: true };

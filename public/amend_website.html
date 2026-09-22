@@ -576,6 +576,10 @@ async function shareProject() {
   if (!projectId) throw new Error('Nothing to share yet.');
   return GurostAPI.call(`/api/project/${projectId}/share`, { method: 'POST' });
 }
+function applyHistoryRestore(restoreData) {
+  fixedHtml = restoreData.html;
+  showAfterPreview(fixedHtml);
+}
 
 window.gurostBuilder = {
   audit: runAudit,
@@ -589,6 +593,7 @@ window.gurostBuilder = {
   save: saveProject,
   share: shareProject,
   toggleCode: toggleCodeView,
+  applyHistoryRestore,
 };
 </script>
 <script src="shared/pulse-widget.js"></script>

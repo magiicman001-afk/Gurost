@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('noProjectsMsg').classList.remove('hidden');
       select.disabled = true;
     } else {
-      select.innerHTML = projects.map((p) => `<option value="${p.id}">${(p.prompt || p.id).slice(0, 60)}</option>`).join('');
+      select.innerHTML = projects.map((p) => `<option value="${p.id}">${GurostAPI.escapeHtml((p.prompt || p.id).slice(0, 60))}</option>`).join('');
     }
   } catch (err) {
     console.error('[assistant] Failed to load real projects:', err.message);

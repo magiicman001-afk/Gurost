@@ -307,9 +307,11 @@ app.post("/api/auth/forgot-password", security.rejectUnknownFields(["email"]), a
     const result = await userAuth.requestPasswordReset(req.body.email);
     res.json(result);
   } catch (err) {
-    // Genuine send failures (e.g. Postmark misconfigured) are a real
-    // operational error worth surfacing, distinct from "email doesn't
-    // exist" which deliberately returns the same generic success above.
+    // requestPasswordReset itself swallows and logs every failure that
+    // can only happen on the "email exists" branch (DB insert, email
+    // send) so the response can't be used to tell accounts apart by
+    // status code — this catch is only a safety net for a genuinely
+    // unexpected exception, not part of that leak-prevention design.
     res.status(500).json({ error: err.message });
   }
 });
@@ -1000,15 +1002,33 @@ app.patch(
   }
 );
 
+// Real, honest allowlist for both upload routes below — the storage
+// extension is derived from this validated mimetype, never from the
+// client-supplied filename, so a crafted "extension" (e.g. containing a
+// "/") in originalname can't influence the generated Storage object key,
+// and an .exe renamed to look like an image is rejected by content-type
+// rather than trusted at face value.
+const IMAGE_MIME_TO_EXT = {
+  "image/png": "png", "image/jpeg": "jpg", "image/gif": "gif", "image/webp": "webp",
+  "image/svg+xml": "svg", "image/x-icon": "ico", "image/vnd.microsoft.icon": "ico",
+};
+// Project assets are a superset — website builds also need to upload
+// fonts and PDFs (spec sheets, menus, etc.), not just images.
+const PROJECT_ASSET_MIME_TO_EXT = {
+  ...IMAGE_MIME_TO_EXT,
+  "font/woff": "woff", "font/woff2": "woff2", "font/ttf": "ttf", "font/otf": "otf",
+  "application/pdf": "pdf",
+};
+
 // POST /api/me/avatar — real file upload to Supabase Storage. Expects
 // multipart/form-data with a single field named "avatar".
 app.post("/api/me/avatar", avatarUpload.single("avatar"), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: "No file uploaded (expected field name 'avatar')." });
-  if (!req.file.mimetype.startsWith("image/")) {
-    return res.status(400).json({ error: "File must be an image." });
+  const ext = IMAGE_MIME_TO_EXT[req.file.mimetype];
+  if (!ext) {
+    return res.status(400).json({ error: "File must be an image (png, jpeg, gif, webp, svg, or ico)." });
   }
 
-  const ext = (req.file.originalname.split(".").pop() || "jpg").toLowerCase();
   const path = `${req.user.id}/${crypto.randomUUID()}.${ext}`;
 
   try {
@@ -4037,8 +4057,11 @@ app.post("/api/project/:id/upload", assetUpload.single("file"), async (req, res)
   const project = getProject(req.params.id, req, res);
   if (!project) return;
   if (!req.file) return res.status(400).json({ error: "No file uploaded (expected field name 'file')." });
+  const ext = PROJECT_ASSET_MIME_TO_EXT[req.file.mimetype];
+  if (!ext) {
+    return res.status(400).json({ error: "Unsupported file type. Allowed: images, fonts, and PDFs." });
+  }
 
-  const ext = (req.file.originalname.split(".").pop() || "bin").toLowerCase();
   const path = `${req.params.id}/${crypto.randomUUID()}.${ext}`;
 
   try {
@@ -4621,6 +4644,7 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt"]),
   res.json({ projectId, state: "GENERATING" });
 
   try {
+    transition(project, "PLANNING");
     transition(project, "BUILDING");
 
     const result = await variantBot.generateVariantsStaged(prompt, {

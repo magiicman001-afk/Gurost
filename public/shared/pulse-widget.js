@@ -736,7 +736,7 @@
           });
           const restoreData = await restoreRes.json();
           if (!restoreRes.ok) { logStatus(restoreData.error || 'Restore failed.'); return; }
-          onCorrectionApplied?.(restoreData.html, `Restored to: ${restoreData.action}`);
+          gb.applyHistoryRestore?.(restoreData);
           logStatus(`Restored to "${restoreData.action}".`);
           panel.classList.remove('visible');
         });

@@ -16,6 +16,15 @@
 window.GurostAPI = (function () {
   const API_BASE = window.location.origin;
 
+  // Real, honest escaping for any server value (email, prompt text, etc.)
+  // that gets interpolated into innerHTML — those values are user-supplied
+  // and aren't validated for HTML-safe characters at the point they're
+  // stored, so every render site is responsible for escaping them itself.
+  const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+  function escapeHtml(str) {
+    return String(str == null ? '' : str).replace(/[&<>"']/g, (c) => HTML_ESCAPES[c]);
+  }
+
   function authHeaders() {
     const apiKey = localStorage.getItem('gurost_api_key');
     const jwt = localStorage.getItem('gurost_jwt');
@@ -79,5 +88,5 @@ window.GurostAPI = (function () {
     }
   }
 
-  return { call, authHeaders, isLoggedIn, requireLogin, getMyPlan, API_BASE };
+  return { call, authHeaders, isLoggedIn, requireLogin, getMyPlan, API_BASE, escapeHtml };
 })();

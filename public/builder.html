@@ -594,6 +594,10 @@ async function shareProject() {
   if (!projectId) throw new Error('Nothing to share yet.');
   return GurostAPI.call(`/api/project/${projectId}/share`, { method: 'POST' });
 }
+function applyHistoryRestore(restoreData) {
+  currentHtml = restoreData.html;
+  renderPreview(currentHtml);
+}
 
 window.gurostBuilder = {
   generate: generateWebsite,
@@ -605,6 +609,7 @@ window.gurostBuilder = {
   save: saveProject,
   deploy: deployProject,
   share: shareProject,
+  applyHistoryRestore,
 };
 
 document.addEventListener('DOMContentLoaded', () => {

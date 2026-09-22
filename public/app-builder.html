@@ -880,6 +880,11 @@ async function shareProject() {
   if (!projectId) throw new Error('Nothing to share yet.');
   return GurostAPI.call(`/api/project/${projectId}/share`, { method: 'POST' });
 }
+function applyHistoryRestore(restoreData) {
+  currentAppFiles = restoreData.appFiles;
+  renderLivePreview(currentAppFiles);
+  renderCodeView(currentAppFiles);
+}
 
 window.gurostBuilder = {
   generate: generateApp,
@@ -892,6 +897,7 @@ window.gurostBuilder = {
   save: saveProject,
   deploy: () => attemptDeploy(),
   share: shareProject,
+  applyHistoryRestore,
 };
 
 async function attemptDeploy() {
