@@ -30,7 +30,7 @@
 <a class="text-on-surface-variant hover:text-on-surface transition-colors" href="templates.html">Templates</a>
 </nav>
 <div class="flex items-center gap-4">
-<a class="hidden sm:block text-on-surface-variant font-medium" href="signup.html">Log in</a>
+<a class="hidden sm:block text-on-surface-variant font-medium" href="login.html">Log in</a>
 <a class="gold-gradient px-6 py-2 rounded-full text-white font-bold lift-hover transition-all" href="signup.html">Sign Up</a>
 </div>
 </div>
@@ -41,6 +41,27 @@
 <h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary text-center mb-8">Contact</h1>
 
 <p class="text-body-lg font-body-lg text-on-surface-variant">Get in touch with us. We'd love to hear from you.</p>
+<!-- Real contact form, posting to the existing /api/contact route. -->
+<form id="contactForm" novalidate style="display:grid; gap:14px; margin:8px 0 28px;">
+  <div style="display:grid; gap:14px; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));">
+    <label style="display:grid; gap:6px; font-weight:600; font-size:14px;">Full name
+      <input id="cfName" name="fullName" type="text" autocomplete="name" required maxlength="120" style="padding:12px 14px; border:1px solid #d6d3db; border-radius:10px; font:inherit; font-weight:400; background:#fff;"/>
+    </label>
+    <label style="display:grid; gap:6px; font-weight:600; font-size:14px;">Email
+      <input id="cfEmail" name="email" type="email" autocomplete="email" required maxlength="200" style="padding:12px 14px; border:1px solid #d6d3db; border-radius:10px; font:inherit; font-weight:400; background:#fff;"/>
+    </label>
+  </div>
+  <label style="display:grid; gap:6px; font-weight:600; font-size:14px;">Subject
+    <select id="cfSubject" name="subject" style="padding:12px 14px; border:1px solid #d6d3db; border-radius:10px; font:inherit; font-weight:400; background:#fff;">
+      <option>General question</option><option>Support</option><option>Sales</option><option>Press</option><option>Partnerships</option><option>Careers</option>
+    </select>
+  </label>
+  <label style="display:grid; gap:6px; font-weight:600; font-size:14px;">Message
+    <textarea id="cfMessage" name="message" rows="5" required maxlength="5000" style="padding:12px 14px; border:1px solid #d6d3db; border-radius:10px; font:inherit; font-weight:400; background:#fff; resize:vertical;"></textarea>
+  </label>
+  <div id="cfStatus" role="status" style="display:none; padding:12px 14px; border-radius:10px; font-size:14px;"></div>
+  <button id="cfSubmit" type="submit" class="gold-gradient lift-hover" style="justify-self:start; padding:12px 28px; border:0; border-radius:999px; color:#fff; font:inherit; font-weight:700; cursor:pointer;">Send message</button>
+</form>
 <div class="space-y-2 text-on-surface-variant">
 <p><strong>Email:</strong> <a class="text-secondary font-medium hover:underline" href="mailto:support@gurost.com">support@gurost.com</a></p>
 <p><strong>Response time:</strong> Within 24 hours</p>
@@ -75,10 +96,10 @@
 </a>
 <p class="text-on-surface-variant font-body-md">Building the future of the web through the power of voice and intelligence.</p>
 <div class="flex gap-4">
-<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-gold-gradient-start hover:text-white transition-all" href="#" aria-label="Website">
+<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-gold-gradient-start hover:text-white transition-all" href="index.html" aria-label="Website">
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
 </a>
-<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-gold-gradient-start hover:text-white transition-all" href="#" aria-label="Message us">
+<a class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center hover:bg-gold-gradient-start hover:text-white transition-all" href="contact.html" aria-label="Message us">
 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
 </a>
 </div>
@@ -150,4 +171,49 @@
             observer.observe(section);
         });
     </script>
+<script>
+  (function () {
+    const form = document.getElementById('contactForm');
+    const statusEl = document.getElementById('cfStatus');
+    const submitBtn = document.getElementById('cfSubmit');
+    function showStatus(ok, text) {
+      statusEl.textContent = text;
+      statusEl.style.display = 'block';
+      statusEl.style.background = ok ? '#ecfdf5' : '#fef2f2';
+      statusEl.style.color = ok ? '#065f46' : '#991b1b';
+      statusEl.style.border = `1px solid ${ok ? '#a7f3d0' : '#fecaca'}`;
+    }
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const body = {
+        fullName: document.getElementById('cfName').value.trim(),
+        email: document.getElementById('cfEmail').value.trim(),
+        subject: document.getElementById('cfSubject').value,
+        message: document.getElementById('cfMessage').value.trim(),
+      };
+      if (!body.fullName || !body.email || !body.message) return showStatus(false, 'Please fill in your name, email, and message.');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) return showStatus(false, 'Please enter a valid email address.');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending…';
+      try {
+        const res = await fetch('/api/contact', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) {
+          form.reset();
+          showStatus(true, "Thanks — your message has been sent. We'll reply within 24 hours.");
+        } else if (res.status === 503) {
+          // Email delivery isn't configured on the server yet - point people at the real inbox instead of a dead end.
+          showStatus(false, "Our contact form is temporarily unavailable. Please email support@gurost.com directly and we'll get back to you.");
+        } else {
+          showStatus(false, data.error || 'Something went wrong sending your message. Please email support@gurost.com.');
+        }
+      } catch {
+        showStatus(false, "Couldn't reach the server. Please email support@gurost.com.");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send message';
+      }
+    });
+  })();
+</script>
 </body></html>
