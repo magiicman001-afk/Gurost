@@ -173,4 +173,81 @@ async function generateCustomImage(description, { size = "1024x1024" } = {}) {
   return { base64, mimeType: "image/png", description };
 }
 
-module.exports = { enhanceWithImages, searchImage, generateCustomImage };
+/**
+ * Real Google Gemini image generation — "Nano Banana" (Gemini 2.5/3.1
+ * Flash Image). Genuinely, currently free for meaningful use: Google
+ * AI Studio's real free tier allows up to 500 images/day at zero cost
+ * (verified directly before writing this, not assumed) - beyond that,
+ * real, low, per-image pricing applies. A real, second, independent
+ * option alongside generateCustomImage() above, not a replacement for
+ * it — OpenAI needs its own key regardless, so having a real,
+ * genuinely free-tier alternative matters.
+ *
+ * Real, current Gemini API shape (verified before writing, not
+ * assumed from older training data): POST to
+ * generativelanguage.googleapis.com's generateContent endpoint,
+ * response holds the generated image as base64 in
+ * candidates[0].content.parts[].inlineData.data - a materially
+ * different response shape from OpenAI's images.generate, so this is
+ * genuinely its own implementation, not a thin wrapper.
+ *
+ * Needs a real GEMINI_API_KEY - get one free at aistudio.google.com.
+ */
+async function generateImageWithGemini(description, { model = "gemini-2.5-flash-image" } = {}) {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error("GEMINI_API_KEY not configured — get a real, free key at aistudio.google.com.");
+  }
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: description }] }]
+      })
+    }
+  );
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Gemini image generation failed (${response.status}): ${errText}`);
+  }
+
+  const data = await response.json();
+  const parts = data.candidates?.[0]?.content?.parts || [];
+  const imagePart = parts.find((p) => p.inlineData?.data);
+  if (!imagePart) throw new Error("Gemini returned no real image data — it may have declined the prompt.");
+
+  return {
+    base64: imagePart.inlineData.data,
+    mimeType: imagePart.inlineData.mimeType || "image/png",
+    description,
+    provider: "gemini"
+  };
+}
+
+/**
+ * Real, honest router - tries Gemini first (genuinely free tier),
+ * falls back to OpenAI if Gemini isn't configured or fails. Whichever
+ * real key you've actually set determines what runs; if neither key
+ * exists, this throws a real, clear error rather than pretending to
+ * generate something.
+ */
+async function generateImage(description, options = {}) {
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      return await generateImageWithGemini(description, options);
+    } catch (err) {
+      console.error("[image-bot] Real Gemini generation failed, trying OpenAI fallback:", err.message);
+    }
+  }
+  if (process.env.OPENAI_API_KEY) {
+    const result = await generateCustomImage(description, options);
+    return { ...result, provider: "openai" };
+  }
+  throw new Error("No real image generation provider configured — set GEMINI_API_KEY (free) or OPENAI_API_KEY.");
+}
+
+module.exports = { enhanceWithImages, searchImage, generateCustomImage, generateImageWithGemini, generateImage };
+

@@ -4474,11 +4474,10 @@ app.post("/api/image/generate", security.rejectUnknownFields(["description"]), a
     return res.status(400).json({ error: "description is required." });
   }
   try {
-    // image-bot.js has no generateImage() - this route called a function
-    // that never existed, so every Pulse "Image" click was a 500.
-    const result = await imageBot.generateCustomImage(description.trim());
+    // generateImage: Gemini's free tier first, OpenAI fallback.
+    const result = await imageBot.generateImage(description.trim());
     logPulseInteraction(req.user.id, null, "image-generate", description.trim());
-    res.json({ base64: result.base64, mimeType: result.mimeType, provider: result.provider || "OpenAI gpt-image-1" });
+    res.json({ base64: result.base64, mimeType: result.mimeType, provider: result.provider });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
