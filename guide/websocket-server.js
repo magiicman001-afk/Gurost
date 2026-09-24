@@ -58,11 +58,32 @@ function broadcastPresence(projectId) {
  * No-op (not an error) if nobody's connected to this project's room.
  */
 function broadcastProjectUpdate(projectId, message) {
+  if (message && (message.type === "stage_progress" || message.type === "error")) {
+    const history = STATUS_HISTORY.get(projectId) || [];
+    history.push(message);
+    STATUS_HISTORY.set(projectId, history.slice(-30));
+  }
   broadcastToRoom(projectId, message);
 }
 
+// projectId -> recent build status messages. Builds start the moment the
+// REST call returns, so early stages (or an immediate failure) are often
+// broadcast before the browser's socket has connected; replaying them on
+// join means a late joiner still sees real progress and real errors
+// instead of sitting on "Starting…" forever.
+const STATUS_HISTORY = new Map();
+
 function attachGuideBotSocket(httpServer, PROJECTS) {
-  const wss = new WebSocketServer({ server: httpServer, path: "/ws/guide" });
+  // noServer + a path-checked upgrade listener, not { server, path }: with
+  // ws's { server } option every WebSocketServer on the same HTTP server
+  // runs handleUpgrade on EVERY upgrade and aborts the ones whose path
+  // doesn't match - so the /ws/meeting server was destroying every
+  // /ws/guide socket about a second after it opened.
+  const wss = new WebSocketServer({ noServer: true });
+  httpServer.on("upgrade", (req, socket, head) => {
+    if (new URL(req.url, "http://localhost").pathname !== "/ws/guide") return;
+    wss.handleUpgrade(req, socket, head, (ws) => wss.emit("connection", ws, req));
+  });
 
   wss.on("connection", (ws, req) => {
     const url = new URL(req.url, "http://localhost");
@@ -78,6 +99,7 @@ function attachGuideBotSocket(httpServer, PROJECTS) {
     const client = { ws, userId };
     room.add(client);
     broadcastPresence(projectId); // let everyone know someone joined, including the new arrival
+    for (const past of STATUS_HISTORY.get(projectId) || []) ws.send(JSON.stringify(past));
 
     let pendingSuggestion = null;
 
@@ -91,7 +113,11 @@ function attachGuideBotSocket(httpServer, PROJECTS) {
           ws.send(JSON.stringify({ type: "suggestion", suggestion: s }));
         }
       } catch (err) {
-        ws.send(JSON.stringify({ type: "error", error: err.message }));
+        // Background suggestions are optional - a failure here must not
+        // arrive as type "error", which builder pages treat as the build
+        // itself failing (it hid the live progress panel mid-build).
+        console.warn(`[guide-bot] Suggestion pass failed for project ${projectId}:`, err.message);
+        ws.send(JSON.stringify({ type: "suggestion_unavailable", error: err.message }));
       }
     }
 

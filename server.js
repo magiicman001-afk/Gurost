@@ -4474,9 +4474,11 @@ app.post("/api/image/generate", security.rejectUnknownFields(["description"]), a
     return res.status(400).json({ error: "description is required." });
   }
   try {
-    const result = await imageBot.generateImage(description.trim());
+    // image-bot.js has no generateImage() - this route called a function
+    // that never existed, so every Pulse "Image" click was a 500.
+    const result = await imageBot.generateCustomImage(description.trim());
     logPulseInteraction(req.user.id, null, "image-generate", description.trim());
-    res.json({ base64: result.base64, mimeType: result.mimeType, provider: result.provider });
+    res.json({ base64: result.base64, mimeType: result.mimeType, provider: result.provider || "OpenAI gpt-image-1" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

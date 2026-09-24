@@ -95,7 +95,13 @@ function closeSession(sessionId) {
  * from here, same standing caveat as everything else in this build.
  */
 function attachMeetingSocket(httpServer) {
-  const wss = new WebSocket.Server({ server: httpServer, path: "/ws/meeting" });
+  // noServer + path-checked upgrade listener (see guide/websocket-server.js):
+  // with { server, path } this server aborted every /ws/guide upgrade.
+  const wss = new WebSocket.Server({ noServer: true });
+  httpServer.on("upgrade", (req, socket, head) => {
+    if (new URL(req.url, "http://localhost").pathname !== "/ws/meeting") return;
+    wss.handleUpgrade(req, socket, head, (ws) => wss.emit("connection", ws, req));
+  });
 
   wss.on("connection", async (ws, req) => {
     const url = new URL(req.url, `http://${req.headers.host}`);

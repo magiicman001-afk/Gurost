@@ -636,6 +636,7 @@
     show('actViewCode', typeof gb.toggleCode === 'function' || document.getElementById('codeContent'));
     show('actPreview', !!(document.getElementById('previewFrame') || document.getElementById('previewFrameAfter')));
     show('actGithub', true); // real route, gated server-side on a real GITHUB_TOKEN existing, not on page type
+    show('actDownload', true); // real /api/wrap route, needs only a projectId (checked on click) - was never shown at all
     show('actUpload', true); // real route, works the same on every page
     show('actImage', true); // real route, works on every page - Gemini's real free tier makes this always available
     show('actHistory', typeof gb.undo === 'function' || typeof gb.redo === 'function'); // real, same real projects that support undo/redo have real history to browse
