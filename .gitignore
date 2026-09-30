@@ -5,3 +5,4 @@ node_modules/
 screenshots/
 *.log
 __auth-state.json
+CLAUDE.local.md
