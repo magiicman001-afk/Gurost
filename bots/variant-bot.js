@@ -2,6 +2,7 @@ const { callClaude } = require("../lib/claude-client");
 const imageBot = require("../image-bot");
 const { modelForTier } = require("../lib/tier-router");
 const { designPromptLines } = require("../lib/industry-design");
+const { parseVariantResponse, VariantParseError } = require("../lib/variant-response");
 
 const BRIEFS = [
   {
@@ -66,10 +67,9 @@ function systemFor(brief, includeBranding, design) {
 
 ${brief}
 
-Output ONLY valid JSON, no preamble, no markdown fences:
-{"html": "<complete self-contained HTML document>", "summary": "one sentence describing what you built", "imageRequests": [{"placeholder": "IMG_1", "description": "detailed, specific description of the image to generate"}]}
+OUTPUT FORMAT: reply with the complete HTML document and nothing else - start at <!DOCTYPE html>, end at </html>. No JSON, no markdown fences, no commentary before or after. Inside <head>, add <meta name="gurost:summary" content="..."> holding one sentence that describes what you built.
 
-Where the design genuinely calls for a real photo or illustration (a hero image, a product shot, a team photo, a testimonial avatar), do NOT draw it with SVG and do NOT invent an external image URL. Instead, write a literal placeholder token directly into the HTML's src attribute — e.g. src="IMG_1" — and add a matching entry to imageRequests with a detailed, specific description of exactly what that image should show (subject, mood, framing, lighting, style — enough detail that a real image generator produces something genuinely fitting, not generic stock-photo filler). These tokens will be replaced with real, generated images after your response — use as many as the design genuinely benefits from, typically 1-4, not one on every element.
+Where the design genuinely calls for a real photo or illustration (a hero image, a product shot, a team photo, a testimonial avatar), do NOT draw it with SVG and do NOT invent an external image URL. Instead use an <img> whose src is a placeholder token (IMG_1, IMG_2, ...) and put the image brief in a data-gurost-image attribute on that same tag, e.g. <img src="IMG_1" data-gurost-image="..." alt="...">. The brief must say exactly what the image should show (subject, mood, framing, lighting, style — enough detail that a real image generator produces something genuinely fitting, not generic stock-photo filler). Placeholders only work in an <img> src, not in CSS. They are replaced with real, generated images after your response — use as many as the design genuinely benefits from, typically 1-4, not one on every element.
 
 ${ANTI_SLOP_RULES}
 
@@ -96,7 +96,7 @@ COMPLETE WEBSITE - this must be a finished, launch-ready site, never a hero-only
 - Footer with section links, contact details, social links and a copyright line.
 - Every button and link must do something real: scroll to a section, focus the form, or submit it. No dead "#" links.
 ${design?.mustHaves ? `- Industry must-haves for this business: ${design.mustHaves}\n` : ""}
-Technical checklist: load Tailwind from its CDN script tag, and load the Google Fonts and Material Symbols stylesheets you use, all in <head> - icons and styling break without them. The "html" value is an ordinary JSON string: line breaks inside it are JSON escapes, never visible backslash-n text on the page.
+Technical checklist: load Tailwind from its CDN script tag, and load the Google Fonts and Material Symbols stylesheets you use, all in <head> - icons and styling break without them.
 
 Rules:
 - Single HTML file, Tailwind via CDN, inline style/script only, mobile-responsive.
@@ -105,6 +105,40 @@ Rules:
 ${includeBranding
     ? '- Include a small, unobtrusive "Built with Gurost" text link in the footer (linking to https://gurost.com), styled to match the rest of the page.'
     : "- Do not include any Gurost branding, watermark, or attribution link — this is a white-label build."}`;
+}
+
+// Full raw reply to the logs, chunked so long pages survive log-line limits.
+function logRawReply(variantId, err) {
+  const raw = String(err.raw ?? "");
+  const CHUNK = 4000;
+  const parts = Math.max(1, Math.ceil(raw.length / CHUNK));
+  console.error(`[variant-bot] "${variantId}" reply unusable: ${err.reason} (${raw.length} chars, raw reply follows in ${parts} part(s))`);
+  for (let i = 0; i < parts; i++) console.error(`[variant-bot raw ${variantId} ${i + 1}/${parts}] ${raw.slice(i * CHUNK, (i + 1) * CHUNK)}`);
+}
+
+// One design call, parsed by lib/variant-response.js. An unusable reply
+// is logged in full and retried once with the specific problem named;
+// any other error (network, credits, leak check) is not retried here.
+async function generateDesign({ system, content, plan, variantId }) {
+  const call = (userContent) => callClaude({
+    system,
+    parse: parseVariantResponse,
+    messages: [{ role: "user", content: userContent }],
+    maxTokens: 32000,
+    model: modelForTier(plan, { complex: true })
+  });
+  try {
+    return await call(content);
+  } catch (err) {
+    if (!(err instanceof VariantParseError)) throw err;
+    logRawReply(variantId, err);
+    try {
+      return await call(`${content}\n\n(Your previous reply for this design could not be used: ${err.reason} Reply again with ONLY the complete HTML document, from <!DOCTYPE html> to </html>, with nothing before or after it.)`);
+    } catch (retryErr) {
+      if (retryErr instanceof VariantParseError) logRawReply(`${variantId} retry`, retryErr);
+      throw retryErr;
+    }
+  }
 }
 
 // Models sometimes write more src="IMG_n" slots than they list in
@@ -155,12 +189,7 @@ async function generateVariants(prompt, { includeBranding = true, plan } = {}) {
   const design = industryDesignFor(prompt);
   const settled = await Promise.allSettled(
     BRIEFS.map((b) =>
-      callClaude({
-        system: systemFor(b.brief, includeBranding, design),
-        messages: [{ role: "user", content: prompt }],
-        maxTokens: 32000,
-        model: modelForTier(plan, { complex: true })
-      }).then(async (r) => ({
+      generateDesign({ system: systemFor(b.brief, includeBranding, design), content: prompt, plan, variantId: b.id }).then(async (r) => ({
         id: b.id,
         label: b.label,
         html: await fulfillImageRequests(r.parsed.html, r.parsed.imageRequests),
@@ -245,12 +274,7 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
   const failures = [];
 
   const promises = BRIEFS.map((b) =>
-    callClaude({
-      system: systemFor(b.brief, includeBranding, design),
-      messages: [{ role: "user", content: effectivePrompt }],
-      maxTokens: 32000,
-      model: modelForTier(plan, { complex: true })
-    })
+    generateDesign({ system: systemFor(b.brief, includeBranding, design), content: effectivePrompt, plan, variantId: b.id })
       .then(async (r) => {
         const html = await fulfillImageRequests(r.parsed.html, r.parsed.imageRequests, (count) => {
           notify("designing", "images-running", { variantId: b.id, label: b.label, count, model: "Gemini" });
