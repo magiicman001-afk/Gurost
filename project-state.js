@@ -48,6 +48,10 @@ function toRow(projectId, userId, project) {
       type: project.type,
       state: project.state,
       currentHtml: project.currentHtml,
+      // Website Builder design choices - without these a restart between
+      // "designs ready" and "pick one" loses the options.
+      variants: project.variants,
+      selectedVariantId: project.selectedVariantId,
       appFiles: project.appFiles,
       history: project.history,
       stateHistory: project.stateHistory,
@@ -72,8 +76,8 @@ function fromRow(row) {
     prompt: ctx.prompt,
     userId: row.user_id,
     type: ctx.type,
-    variants: null,
-    selectedVariantId: null,
+    variants: ctx.variants || null,
+    selectedVariantId: ctx.selectedVariantId || null,
     currentHtml: ctx.currentHtml,
     appFiles: ctx.appFiles,
     lastAudit: null,

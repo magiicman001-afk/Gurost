@@ -762,6 +762,14 @@ function newProject(prompt, userId) {
   };
 }
 
+// Fire-and-forget save to project_state. Every deploy restarts the
+// server and empties PROJECTS; Website Builder projects used to be
+// saved only by the explicit Save button, so unsaved sites vanished.
+function persistInBackground(projectId, project) {
+  projectState.persistProjectState(projectId, project.userId, project)
+    .catch((err) => console.warn("[project-state] Persist failed:", err.message));
+}
+
 // Real, critical security fix - this used to only check whether a
 // project existed, never who it actually belonged to. Any
 // authenticated user could read or modify any other user's real
@@ -1279,6 +1287,7 @@ app.post(
         return res.status(502).json({ error: "All variant generations failed.", failures });
       }
       integrator.integrateVariants(project, variants);
+      persistInBackground(projectId, project);
       // Stays in BUILDING until the user selects a variant.
       await auth.recordBuildEvent(req.user.id);
       await creditSystem.chargeCredits(req.user.id, req.user.plan, projectId, estimatedCost, estimatedCost);
@@ -1474,6 +1483,7 @@ app.post("/api/select", security.rejectUnknownFields(["projectId", "variantId"])
     pushUndoSnapshot(project, "select-design");
     integrator.integrateSelection(project, variantId);
     transition(project, "DONE");
+    persistInBackground(projectId, project);
     res.json({ projectId, html: project.currentHtml, state: project.state });
 
     // Real, genuine Credibility Engine - runs after the real,
@@ -1536,6 +1546,7 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
 
       transition(project, "RESUMING");
       transition(project, "DONE");
+      persistInBackground(projectId, project);
 
       // Real, honest logging - every genuine correction a user asks
       // for gets stored permanently, the real, actual basis for
@@ -1589,6 +1600,7 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
       const result = await assistantBot.handleTask(project.prompt, task, { userId: req.user.id, workspaceId: ownedWorkspace?.id, plan: req.user.plan });
       integrator.integrateAssistantTask(project, result, task);
       project.pendingAssistantSuggestion = null;
+      persistInBackground(projectId, project);
 
       return res.json({ projectId, ...result, state: project.state });
     }
@@ -4156,6 +4168,7 @@ app.post("/api/project/:id/undo", async (req, res) => {
   const entry = project.contentSnapshots.past.pop();
   project.contentSnapshots.future.push({ action: entry.action, content: current, ts: Date.now() });
   if (project.type === "app") project.appFiles = entry.content; else project.currentHtml = entry.content;
+  persistInBackground(req.params.id, project);
   res.json({
     html: project.currentHtml,
     appFiles: project.appFiles,
@@ -4175,6 +4188,7 @@ app.post("/api/project/:id/redo", async (req, res) => {
   const entry = project.contentSnapshots.future.pop();
   project.contentSnapshots.past.push({ action: entry.action, content: current, ts: Date.now() });
   if (project.type === "app") project.appFiles = entry.content; else project.currentHtml = entry.content;
+  persistInBackground(req.params.id, project);
   res.json({
     html: project.currentHtml,
     appFiles: project.appFiles,
@@ -4602,6 +4616,7 @@ app.post("/api/project/:id/history/:index/restore", async (req, res) => {
   } else {
     project.currentHtml = target.content;
   }
+  persistInBackground(req.params.id, project);
 
   res.json({
     restored: true,
@@ -4687,6 +4702,7 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt"]),
     }
 
     integrator.integrateVariants(project, result.variants);
+    persistInBackground(projectId, project);
     // Real, same established pattern as the existing generate route -
     // stays in BUILDING until the user actually selects a variant via
     // the real, existing /api/select route, which does the DONE
