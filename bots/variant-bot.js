@@ -1,6 +1,7 @@
 const { callClaude } = require("../lib/claude-client");
 const imageBot = require("../image-bot");
 const { modelForTier } = require("../lib/tier-router");
+const { designPromptLines } = require("../lib/industry-design");
 
 const BRIEFS = [
   {
@@ -47,7 +48,20 @@ REAL, SPECIFIC DISCIPLINE TO APPLY INSTEAD:
 - Real content specificity: every headline, stat, and claim should sound like it belongs to THIS business, not a placeholder that could apply to any business.
 `;
 
-function systemFor(brief, includeBranding) {
+// Used when the prompt matches no industry in lib/industry-design.js.
+const DEFAULT_TYPOGRAPHY = `Typography: pair a distinctive display/heading font (Montserrat, Fraunces, or similar) with a clean, highly-readable body font (Inter, Open Sans, or similar), imported from Google Fonts. Real, deliberate type hierarchy — headings should look considered, not just "bigger and bold."`;
+const DEFAULT_COLOR = `Color: use a curated palette built around #1A1A2E (dark navy) as the primary text/ink color, #FEB246 and #FF8C00 (gold/orange) as accents, #FFFFFF and #F8F9FA as backgrounds, #6B7280 as muted text — adapted to fit the assigned design direction's own mood, not applied identically to every direction.`;
+
+// Industry palette + fonts for this prompt, or null for the defaults.
+// Matched on the user's own prompt only, never the memory-augmented
+// one, so an earlier project's industry can't leak into this build.
+function industryDesignFor(prompt) {
+  const design = designPromptLines(prompt);
+  console.log(`[variant-bot] Industry design: ${design ? design.industry : "none matched, using default palette"}`);
+  return design;
+}
+
+function systemFor(brief, includeBranding, design) {
   return `You are a senior designer at a professional design agency. Given a business description, generate a distinct, premium visual direction — this must look like it was designed by a real agency, not generic AI output.
 
 ${brief}
@@ -61,9 +75,9 @@ ${ANTI_SLOP_RULES}
 
 DESIGN STANDARDS — every output must follow these:
 
-Typography: pair a distinctive display/heading font (Montserrat, Fraunces, or similar) with a clean, highly-readable body font (Inter, Open Sans, or similar), imported from Google Fonts. Real, deliberate type hierarchy — headings should look considered, not just "bigger and bold."
+${design?.typography || DEFAULT_TYPOGRAPHY}
 
-Color: use a curated palette built around #1A1A2E (dark navy) as the primary text/ink color, #FEB246 and #FF8C00 (gold/orange) as accents, #FFFFFF and #F8F9FA as backgrounds, #6B7280 as muted text — adapted to fit the assigned design direction's own mood, not applied identically to every direction.
+${design?.color || DEFAULT_COLOR}
 
 Components: hand-build every button, card, form, and nav element with genuine, premium-quality Tailwind styling — considered padding, real shadow and border treatment, deliberate corner radii. This must look and feel like a professional component library, even though it's built directly in Tailwind rather than importing one (this is a single, dependency-free HTML file, so React-based libraries like shadcn/ui cannot run here — the visual bar is the same, the implementation is hand-crafted Tailwind instead).
 
@@ -123,10 +137,11 @@ async function fulfillImageRequests(html, imageRequests, onImageStart) {
 }
 
 async function generateVariants(prompt, { includeBranding = true, plan } = {}) {
+  const design = industryDesignFor(prompt);
   const settled = await Promise.allSettled(
     BRIEFS.map((b) =>
       callClaude({
-        system: systemFor(b.brief, includeBranding),
+        system: systemFor(b.brief, includeBranding, design),
         messages: [{ role: "user", content: prompt }],
         maxTokens: 8000,
         model: modelForTier(plan, { complex: true })
@@ -212,10 +227,11 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
   notify("designing", "running");
   const variants = [];
   const failures = [];
+  const design = industryDesignFor(prompt);
 
   const promises = BRIEFS.map((b) =>
     callClaude({
-      system: systemFor(b.brief, includeBranding),
+      system: systemFor(b.brief, includeBranding, design),
       messages: [{ role: "user", content: effectivePrompt }],
       maxTokens: 8000,
       model: modelForTier(plan, { complex: true })

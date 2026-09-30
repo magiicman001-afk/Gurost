@@ -2,6 +2,7 @@ const { callClaude } = require("../lib/claude-client");
 const stageGate = require("../lib/stage-gate");
 const imageBot = require("../image-bot");
 const { modelForTier } = require("../lib/tier-router");
+const { designPromptLines } = require("../lib/industry-design");
 
 // Real, specialized model per stage - genuine, Perplexity-Computer-
 // style choice, not one model doing everything. Schema design is
@@ -94,7 +95,18 @@ REAL, SPECIFIC DISCIPLINE TO APPLY INSTEAD:
 - Real content specificity: sample data, labels, and copy should sound like they belong to THIS business, not generic placeholder text.
 `;
 
-const FRONTEND_SYSTEM = `You are a senior frontend engineer at a professional design agency. Given a business description and a list of backend API endpoints, output ONLY JSON:
+// Used when the prompt matches no industry in lib/industry-design.js.
+const DEFAULT_TYPOGRAPHY = `Typography: pair a distinctive display/heading font (Montserrat, Fraunces, or similar) with a clean, readable body font (Inter, Open Sans, or similar) via Google Fonts in index.html.`;
+const DEFAULT_COLOR = `Color: curated palette built around #1A1A2E (dark navy) as primary text/ink, #FEB246 and #FF8C00 (gold/orange) as accents, #FFFFFF and #F8F9FA as backgrounds, #6B7280 as muted text.`;
+
+// Industry palette + fonts for this prompt (or the defaults above).
+function frontendSystemFor(prompt) {
+  const design = designPromptLines(prompt);
+  console.log(`[app-bot] Industry design: ${design ? design.industry : "none matched, using default palette"}`);
+  return frontendSystem(design);
+}
+
+const frontendSystem = (design) => `You are a senior frontend engineer at a professional design agency. Given a business description and a list of backend API endpoints, output ONLY JSON:
 {"files": [{"path": "...", "content": "..."}], "summary": "one sentence", "imageRequests": [{"placeholder": "IMG_1", "description": "detailed, specific description of the image to generate"}]}
 Build a React app (functional components, hooks) that calls the given endpoints. Keep it to the minimum set of files needed for a working prototype (App.jsx, a couple of page/component files, an api client module) — plus a real, correct package.json listing every real dependency actually used (this sandbox genuinely runs npm install before starting the app, so listed dependencies must be real, published packages with correct version numbers, not invented).
 
@@ -104,9 +116,9 @@ DESIGN STANDARDS — this must look like it was designed by a real agency, not g
 
 Components: use Radix UI primitives (@radix-ui/react-*) styled with Tailwind to match the shadcn/ui visual language — genuine, accessible, premium-feeling buttons, dialogs, dropdowns, tabs, and form controls, not bare unstyled HTML elements. Include the real Radix packages you use in package.json.
 
-Typography: pair a distinctive display/heading font (Montserrat, Fraunces, or similar) with a clean, readable body font (Inter, Open Sans, or similar) via Google Fonts in index.html.
+${design?.typography || DEFAULT_TYPOGRAPHY}
 
-Color: curated palette built around #1A1A2E (dark navy) as primary text/ink, #FEB246 and #FF8C00 (gold/orange) as accents, #FFFFFF and #F8F9FA as backgrounds, #6B7280 as muted text.
+${design?.color || DEFAULT_COLOR}
 
 Motion: real hover states (subtle scale, shadow, or color shift) and smooth transitions (0.2-0.3s ease) on every interactive element; a real loading skeleton or spinner for any async state, not a blank screen.
 
@@ -150,7 +162,7 @@ async function buildApp(prompt, { dbEngine = "postgres", onSchemaComplete, plan 
 
   const endpointList = backendRes.parsed.files.map((f) => f.path).join(", ");
   const frontendRes = await callClaude({
-    system: FRONTEND_SYSTEM,
+    system: frontendSystemFor(prompt),
     messages: [{
       role: "user",
       content: `Business: ${prompt}\n\nBackend files (for reference on what's available): ${endpointList}`
@@ -213,7 +225,7 @@ async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStag
   const endpointList = backendRes.parsed.files.map((f) => f.path).join(", ");
   notify("frontend", "running", { model: "Claude" });
   const frontendContent = await foldCorrection(`Business: ${prompt}\n\nBackend files (for reference on what's available): ${endpointList}`);
-  const frontendRes = await callClaude({ system: FRONTEND_SYSTEM, messages: [{ role: "user", content: frontendContent }], maxTokens: 8000, model: modelForTier(plan, { complex: true }) });
+  const frontendRes = await callClaude({ system: frontendSystemFor(prompt), messages: [{ role: "user", content: frontendContent }], maxTokens: 8000, model: modelForTier(plan, { complex: true }) });
   const frontendFiles = await fulfillImageRequestsMultiFile(frontendRes.parsed.files, frontendRes.parsed.imageRequests);
   notify("frontend", "complete", { files: frontendFiles, summary: frontendRes.parsed.summary });
 
