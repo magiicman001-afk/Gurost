@@ -130,7 +130,10 @@ function requireProjectOwnership(lookupProject) {
   // one that falls back to a database fetch when nothing's in
   // memory) without needing two separate versions of this middleware.
   return async (req, res, next) => {
-    const projectId = req.body.projectId || req.params.id;
+    // Mounted with app.use("/api"), so req.params is always empty here -
+    // /api/project/:id/* routes must be read from the path, or they
+    // never hydrate a restarted project and 404 instead.
+    const projectId = req.body?.projectId || req.params.id || req.path.match(/^\/project\/([^/]+)/)?.[1];
     if (!projectId) return next(); // routes that create a new project have nothing to own yet
     const project = await lookupProject(projectId);
     if (!project) return res.status(404).json({ error: "Project not found." });
