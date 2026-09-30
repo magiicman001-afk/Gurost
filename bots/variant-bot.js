@@ -98,6 +98,13 @@ ${includeBranding
     : "- Do not include any Gurost branding, watermark, or attribution link — this is a white-label build."}`;
 }
 
+// Models sometimes write more src="IMG_n" slots than they list in
+// imageRequests; nothing fills those, so drop the <img> rather than ship
+// a broken image.
+function stripUnfilledImages(html) {
+  return html.replace(/<img\b[^>]*\bsrc=["']IMG_\d+["'][^>]*>/g, "");
+}
+
 // Real, honest step - takes the model's real HTML plus its real image
 // requests, generates each one for real via image-bot's Gemini/OpenAI
 // router, and splices the actual result in. A failure on any single
@@ -105,7 +112,7 @@ ${includeBranding
 // since a page with one missing image is still far better than no
 // page at all.
 async function fulfillImageRequests(html, imageRequests, onImageStart) {
-  if (!imageRequests || !imageRequests.length) return html;
+  if (!imageRequests || !imageRequests.length) return stripUnfilledImages(html);
 
   // Real, honest visibility - this genuinely only fires when there
   // are real images to generate, not decoratively on every variant.
@@ -117,14 +124,13 @@ async function fulfillImageRequests(html, imageRequests, onImageStart) {
   // one image depends on another finishing first, so this runs them
   // all at once instead - the real wait becomes the slowest single
   // image, not the sum of all of them.
-  const results = await Promise.allSettled(imageRequests.map((req) => imageBot.generateImage(req.description)));
+  const results = await Promise.allSettled(imageRequests.map((req) => imageBot.generateImageUrl(req.description)));
 
   let finalHtml = html;
   results.forEach((result, i) => {
     const req = imageRequests[i];
     if (result.status === "fulfilled") {
-      const dataUrl = `data:${result.value.mimeType};base64,${result.value.base64}`;
-      finalHtml = finalHtml.split(req.placeholder).join(dataUrl);
+      finalHtml = finalHtml.split(req.placeholder).join(result.value);
     } else {
       console.error(`[variant-bot] Real image generation failed for "${req.placeholder}":`, result.reason.message);
       // Real, honest fallback - remove the now-broken placeholder
@@ -133,7 +139,7 @@ async function fulfillImageRequests(html, imageRequests, onImageStart) {
       finalHtml = finalHtml.split(req.placeholder).join("");
     }
   });
-  return finalHtml;
+  return stripUnfilledImages(finalHtml);
 }
 
 async function generateVariants(prompt, { includeBranding = true, plan } = {}) {

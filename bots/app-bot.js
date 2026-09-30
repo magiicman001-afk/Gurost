@@ -35,10 +35,10 @@ async function fulfillImageRequestsMultiFile(files, imageRequests) {
   // Real, same fix as variant-bot.js - generate every real image at
   // once rather than one at a time, since none of them depend on
   // each other finishing first.
-  const settled = await Promise.allSettled(imageRequests.map((req) => imageBot.generateImage(req.description)));
+  const settled = await Promise.allSettled(imageRequests.map((req) => imageBot.generateImageUrl(req.description)));
   const replacements = settled.map((result, i) => {
     if (result.status === "fulfilled") {
-      return { placeholder: imageRequests[i].placeholder, dataUrl: `data:${result.value.mimeType};base64,${result.value.base64}` };
+      return { placeholder: imageRequests[i].placeholder, dataUrl: result.value };
     }
     console.error(`[app-bot] Real image generation failed for "${imageRequests[i].placeholder}":`, result.reason.message);
     return { placeholder: imageRequests[i].placeholder, dataUrl: "" }; // real, honest fallback - empty rather than a visibly broken placeholder string

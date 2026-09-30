@@ -249,5 +249,30 @@ async function generateImage(description, options = {}) {
   throw new Error("No real image generation provider configured — set GEMINI_API_KEY (free) or OPENAI_API_KEY.");
 }
 
-module.exports = { enhanceWithImages, searchImage, generateCustomImage, generateImageWithGemini, generateImage };
+/**
+ * generateImage, then store the result in the public "project-assets"
+ * bucket and return its URL. Generated pages used to inline the image as
+ * a base64 data URL - one image was ~3M characters of page HTML, which
+ * overflowed the model context on every later Pulse edit and bloated
+ * share/download. If the upload fails the image is still inlined, so a
+ * storage problem never costs the build its image.
+ */
+async function generateImageUrl(description, options = {}) {
+  const img = await generateImage(description, options);
+  try {
+    const { supabase } = require("./lib/db");
+    const ext = { "image/jpeg": "jpg", "image/webp": "webp" }[img.mimeType] || "png";
+    const path = `generated/${require("crypto").randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("project-assets").upload(path, Buffer.from(img.base64, "base64"), {
+      contentType: img.mimeType,
+    });
+    if (error) throw error;
+    return supabase.storage.from("project-assets").getPublicUrl(path).data.publicUrl;
+  } catch (err) {
+    console.error("[image-bot] Storing generated image failed, inlining it instead:", err.message);
+    return `data:${img.mimeType};base64,${img.base64}`;
+  }
+}
+
+module.exports = { enhanceWithImages, searchImage, generateCustomImage, generateImageWithGemini, generateImage, generateImageUrl };
 
