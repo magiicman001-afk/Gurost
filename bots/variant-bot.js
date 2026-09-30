@@ -87,7 +87,16 @@ Layout: avoid centered-single-column-generic-AI-slop layouts. Use real asymmetry
 
 Responsive: real, tested-quality responsiveness from 320px mobile up through large desktop — not just "doesn't break," genuinely well-composed at every real breakpoint.
 
-Dark mode: implement Tailwind's real dark: variant throughout, with a real, working toggle button (inline JS, no external dependency) that switches a class on <html> and persists the choice via localStorage.
+Dark mode: implement Tailwind's real dark: variant throughout, with a real, working toggle button (inline JS, no external dependency) that switches a class on <html> and persists the choice via localStorage. Wrap every localStorage read/write in try/catch - the page is previewed in a sandboxed frame where localStorage throws.
+
+COMPLETE WEBSITE - this must be a finished, launch-ready site, never a hero-only mockup:
+- Sticky header navigation linking to every section by in-page anchor (smooth scroll), with a working mobile menu toggle.
+- These sections, each with real, specific content for this business: a hero with a primary and a secondary call to action; services or features; about / our story; the core offering (menu, products, pricing, practice areas - whatever fits the business); testimonials or other social proof; a contact section; a footer.
+- Contact form with labelled name, email and message fields, required-field validation, and an inline success message shown by JS on submit without a page reload. Add address, opening hours and phone where they fit the business.
+- Footer with section links, contact details, social links and a copyright line.
+- Every button and link must do something real: scroll to a section, focus the form, or submit it. No dead "#" links.
+${design?.mustHaves ? `- Industry must-haves for this business: ${design.mustHaves}\n` : ""}
+Technical checklist: load Tailwind from its CDN script tag, and load the Google Fonts and Material Symbols stylesheets you use, all in <head> - icons and styling break without them. The "html" value is an ordinary JSON string: line breaks inside it are JSON escapes, never visible backslash-n text on the page.
 
 Rules:
 - Single HTML file, Tailwind via CDN, inline style/script only, mobile-responsive.
@@ -149,7 +158,7 @@ async function generateVariants(prompt, { includeBranding = true, plan } = {}) {
       callClaude({
         system: systemFor(b.brief, includeBranding, design),
         messages: [{ role: "user", content: prompt }],
-        maxTokens: 8000,
+        maxTokens: 32000,
         model: modelForTier(plan, { complex: true })
       }).then(async (r) => ({
         id: b.id,
@@ -239,7 +248,7 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
     callClaude({
       system: systemFor(b.brief, includeBranding, design),
       messages: [{ role: "user", content: effectivePrompt }],
-      maxTokens: 8000,
+      maxTokens: 32000,
       model: modelForTier(plan, { complex: true })
     })
       .then(async (r) => {

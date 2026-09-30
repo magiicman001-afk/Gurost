@@ -89,27 +89,27 @@
     </div>
   </section>
 
-  <!-- RIGHT: Code - equal weight to Preview, real definition, no longer cramped -->
+  <!-- RIGHT: bot conversation by default; the generated code sits behind
+       the Code tab (also opened by Pulse's View Code button). -->
   <section class="screen-panel flex flex-col bg-[#0f172a] border border-[var(--line)] rounded-none min-h-[300px] lg:min-h-0 overflow-hidden" style="animation-delay: 0.1s;">
-    <div class="px-4 py-2.5 border-b border-white/10 flex items-center justify-between flex-shrink-0">
-      <h2 class="font-display font-semibold text-xs uppercase tracking-wide text-white/60">Code</h2>
-      <div class="flex gap-1.5">
+    <div class="px-2 border-b border-white/10 flex items-center justify-between flex-shrink-0" role="tablist">
+      <div class="flex">
+        <button class="right-tab px-3 py-2.5 font-display font-semibold text-xs uppercase tracking-wide border-b-2" data-tab="activity" role="tab">Bot activity</button>
+        <button class="right-tab px-3 py-2.5 font-display font-semibold text-xs uppercase tracking-wide border-b-2" data-tab="code" role="tab">Code</button>
+      </div>
+      <div class="flex gap-1.5 pr-2">
         <div class="w-2 h-2 rounded-full bg-white/20"></div>
         <div class="w-2 h-2 rounded-full bg-white/20"></div>
         <div class="w-2 h-2 rounded-full bg-white/20"></div>
       </div>
     </div>
-    <!-- Live bot activity log: every build step, design result, Guide Bot
-         suggestion and Pulse edit is appended here and stays visible
-         above the code, during and after the build. -->
-    <div class="hidden flex-shrink-0 max-h-[45%] overflow-y-auto border-b border-white/10 bg-[#0b1220] px-4 py-3" id="botLog" aria-live="polite">
-      <div class="flex items-center gap-2 mb-2">
-        <span class="material-symbols-outlined text-[16px] text-white/50">forum</span>
-        <h3 class="font-display font-semibold text-[11px] uppercase tracking-wide text-white/50">Build activity</h3>
-      </div>
+    <!-- Live bot conversation: every build step, design result, Guide Bot
+         suggestion and Pulse edit is appended here and never replaced. -->
+    <div class="flex-1 min-h-0 overflow-y-auto px-4 py-3" id="botLog" aria-live="polite">
+      <p class="text-xs text-white/40" id="botLogEmpty" style="font-family: 'SF Mono', Menlo, monospace;">// The bots will talk here once a build starts.</p>
       <ol class="flex flex-col gap-1.5 text-xs" id="botLogList" style="font-family: 'SF Mono', Menlo, monospace;"></ol>
     </div>
-    <div class="flex-1 relative overflow-auto min-h-0">
+    <div class="hidden flex-1 relative overflow-auto min-h-0" id="codePane">
       <pre class="p-4 text-xs text-white leading-relaxed" id="codeContent" style="font-family: 'SF Mono', Menlo, monospace; white-space: pre-wrap;"><span class="text-white/40" id="codeEmptyMsg">// Nothing generated yet.</span></pre>
     </div>
   </section>
@@ -280,15 +280,38 @@ function logBot(bot, text, tone = 'info', at = Date.now()) {
   li.className = 'flex items-start gap-2';
   li.innerHTML = `<span class="text-white/30 flex-shrink-0">${time}</span>
     <span class="material-symbols-outlined text-[14px] leading-4 ${color} flex-shrink-0">${icon}</span>
-    <span class="text-white/90"><span class="text-white/50">${escapeLogText(bot)}:</span> ${escapeLogText(text)}</span>`;
+    <span class="text-white/90 min-w-0 [overflow-wrap:anywhere]"><span class="text-white/50">${escapeLogText(bot)}:</span> ${escapeLogText(text)}</span>`;
   list.appendChild(li);
-  wrap.classList.remove('hidden');
+  document.getElementById('botLogEmpty')?.remove();
   wrap.scrollTop = wrap.scrollHeight;
 }
 
 function clearBotLog() {
   document.getElementById('botLogList').innerHTML = '';
 }
+
+// Right panel tabs: bot conversation (default) or the generated code.
+function showRightTab(tab) {
+  document.getElementById('botLog').classList.toggle('hidden', tab !== 'activity');
+  document.getElementById('codePane').classList.toggle('hidden', tab !== 'code');
+  document.querySelectorAll('.right-tab').forEach((b) => {
+    const active = b.dataset.tab === tab;
+    b.classList.toggle('text-white', active);
+    b.classList.toggle('border-[var(--gurost-primary)]', active);
+    b.classList.toggle('text-white/50', !active);
+    b.classList.toggle('border-transparent', !active);
+    b.setAttribute('aria-selected', String(active));
+  });
+}
+
+function toggleCode() {
+  showRightTab(document.getElementById('codePane').classList.contains('hidden') ? 'code' : 'activity');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.right-tab').forEach((b) => b.addEventListener('click', () => showRightTab(b.dataset.tab)));
+  showRightTab('activity');
+});
 
 function connectGenerationSocket(id) {
   if (generationSocket) generationSocket.close();
@@ -342,7 +365,8 @@ function connectGenerationSocket(id) {
         log('Designer', `${d.count} of 4 designs ready.`, d.count ? 'ok' : 'fail');
       }
     } else if (msg.stage === 'done' && msg.status === 'complete') {
-      log('Builder', 'Done — pick a direction on the left.', 'ok');
+      if (d.variants?.length) log('Builder', 'Done — pick a direction on the left.', 'ok');
+      else log('Builder', 'Finished with no usable designs — see the errors above.', 'fail');
       // A replay to a reopened, already-chosen project must not swap the
       // live preview back to the direction picker.
       if (!currentHtml) fetchAndRenderGeneratedVariants(id);
@@ -600,6 +624,7 @@ window.gurostBuilder = {
   save: saveProject,
   deploy: deployProject,
   share: shareProject,
+  toggleCode,
   applyHistoryRestore,
 };
 
