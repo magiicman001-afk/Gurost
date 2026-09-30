@@ -165,7 +165,9 @@ function renderPreview(html) {
   document.getElementById('previewEmptyState').style.display = 'none';
   lastRenderedHtml = html;
   document.getElementById('previewFrame').srcdoc = injectCodeBoxScript(html);
-  document.getElementById('codeEmptyMsg').style.display = 'none';
+  // codeEmptyMsg lives inside codeContent, so the textContent write below
+  // deletes it - it only exists on the first render.
+  document.getElementById('codeEmptyMsg')?.remove();
   document.getElementById('codeContent').textContent = html;
 
   if (!codeBoxController) {

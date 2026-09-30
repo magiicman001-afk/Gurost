@@ -1471,6 +1471,7 @@ app.post("/api/select", security.rejectUnknownFields(["projectId", "variantId"])
   if (!project) return;
 
   try {
+    pushUndoSnapshot(project, "select-design");
     integrator.integrateSelection(project, variantId);
     transition(project, "DONE");
     res.json({ projectId, html: project.currentHtml, state: project.state });
@@ -1528,6 +1529,7 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
       // one's result — see lib/project-lock.js for the real bug this fixes.
       const result = await withProjectLock(projectId, async () => {
         const r = await correctionBot.applyCorrection(project.currentHtml, instruction, { plan: req.user.plan });
+        pushUndoSnapshot(project, "correct");
         integrator.integrateCorrection(project, r);
         return r;
       });
@@ -1765,6 +1767,7 @@ app.post(
 
     try {
       const result = await revampBot.rebuild(project.currentHtml, approvedFixes || [], { plan: req.user.plan });
+      pushUndoSnapshot(project, "audit-fix");
       integrator.integrateRevampRebuild(project, result);
       transition(project, "DONE");
       await auth.recordBuildEvent(req.user.id);
