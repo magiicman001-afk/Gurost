@@ -230,10 +230,10 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
 
   notify("understanding", "complete", { prompt });
 
-  notify("designing", "running");
+  const design = industryDesignFor(prompt);
+  notify("designing", "running", design ? { industry: design.industry, fonts: design.fonts, palette: design.palette } : undefined);
   const variants = [];
   const failures = [];
-  const design = industryDesignFor(prompt);
 
   const promises = BRIEFS.map((b) =>
     callClaude({
