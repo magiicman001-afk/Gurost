@@ -58,7 +58,8 @@ function broadcastPresence(projectId) {
  * No-op (not an error) if nobody's connected to this project's room.
  */
 function broadcastProjectUpdate(projectId, message) {
-  if (message && (message.type === "stage_progress" || message.type === "error")) {
+  if (message && !message.at) message.at = Date.now(); // replayed events keep their real time
+  if (message && (message.type === "stage_progress" || message.type === "error" || message.type === "credibility_check")) {
     const history = STATUS_HISTORY.get(projectId) || [];
     history.push(message);
     STATUS_HISTORY.set(projectId, history.slice(-30));

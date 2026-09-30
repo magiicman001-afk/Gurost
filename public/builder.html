@@ -271,11 +271,11 @@ function escapeLogText(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 }
 
-function logBot(bot, text, tone = 'info') {
+function logBot(bot, text, tone = 'info', at = Date.now()) {
   const wrap = document.getElementById('botLog');
   const list = document.getElementById('botLogList');
   const { icon, color } = BOT_TONES[tone] || BOT_TONES.info;
-  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const time = new Date(at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const li = document.createElement('li');
   li.className = 'flex items-start gap-2';
   li.innerHTML = `<span class="text-white/30 flex-shrink-0">${time}</span>
@@ -301,17 +301,18 @@ function connectGenerationSocket(id) {
   generationSocket.addEventListener('message', (event) => {
     let msg;
     try { msg = JSON.parse(event.data); } catch { return; }
-    if (msg.type === 'credibility_check') {
-      showCredibilityPanel(msg.credibility);
-      return;
-    }
-    if (msg.type !== 'stage_progress' && msg.type !== 'error') return;
-    const key = JSON.stringify([msg.type, msg.stage, msg.status, msg.data?.variantId, msg.error]);
+    if (!['stage_progress', 'error', 'credibility_check'].includes(msg.type)) return;
+    const key = JSON.stringify([msg.type, msg.stage, msg.status, msg.data?.variantId, msg.error, msg.credibility?.missing]);
     if (seen.has(key)) return;
     seen.add(key);
+    const log = (bot, text, tone) => logBot(bot, text, tone, msg.at || Date.now());
+    if (msg.type === 'credibility_check') {
+      showCredibilityPanel(msg.credibility, msg.at);
+      return;
+    }
 
     if (msg.type === 'error') {
-      logBot('Builder', msg.error, 'fail');
+      log('Builder', msg.error, 'fail');
       showCreditOrErrorBanner(msg.error);
       setPreviewStatus(false);
       return;
@@ -319,28 +320,32 @@ function connectGenerationSocket(id) {
 
     const d = msg.data || {};
     if (msg.stage === 'understanding') {
-      if (msg.status === 'running') logBot('Planner', 'Reading your request…', 'work');
-      else logBot('Planner', 'Request understood.', 'ok');
+      if (msg.status === 'running') log('Planner', 'Reading your request…', 'work');
+      else log('Planner', 'Request understood.', 'ok');
     } else if (msg.stage === 'designing') {
       if (msg.status === 'running') {
         if (d.industry) {
-          logBot('Design intelligence', `Industry: ${d.industry}${d.fonts ? ` — ${d.fonts}` : ''}${d.palette ? ` · ${d.palette}` : ''}`, 'tip');
+          log('Design intelligence', `Industry: ${d.industry}${d.fonts ? ` — ${d.fonts}` : ''}${d.palette ? ` · ${d.palette}` : ''}`, 'tip');
         }
-        logBot('Designer', 'Designing 4 directions in parallel…', 'work');
+        log('Designer', 'Designing 4 directions in parallel…', 'work');
       } else if (msg.status === 'images-running') {
-        logBot('Gemini', `Generating ${d.count} image${d.count > 1 ? 's' : ''} for ${d.label || 'a design'}…`, 'work');
+        log('Gemini', `Generating ${d.count} image${d.count > 1 ? 's' : ''} for ${d.label || 'a design'}…`, 'work');
       } else if (msg.status === 'variant-complete') {
         variantsFinished++;
-        logBot('Designer', `${d.label || 'Design'} ready (${variantsFinished}/4).`, 'ok');
+        log('Designer', `${d.label || 'Design'} ready (${variantsFinished}/4).`, 'ok');
       } else if (msg.status === 'variant-failed') {
         variantsFinished++;
-        logBot('Designer', `${d.label || 'A design'} couldn't be finished (${variantsFinished}/4).`, 'fail');
+        // The real reason, minus the raw model response the server appends.
+        const reason = String(d.error || 'unknown error').split(' Raw:')[0].slice(0, 220);
+        log('Designer', `${d.label || 'A design'} failed (${variantsFinished}/4): ${reason}`, 'fail');
       } else if (msg.status === 'complete') {
-        logBot('Designer', `${d.count} of 4 designs ready.`, d.count ? 'ok' : 'fail');
+        log('Designer', `${d.count} of 4 designs ready.`, d.count ? 'ok' : 'fail');
       }
     } else if (msg.stage === 'done' && msg.status === 'complete') {
-      logBot('Builder', 'Done — pick a direction on the left.', 'ok');
-      fetchAndRenderGeneratedVariants(id);
+      log('Builder', 'Done — pick a direction on the left.', 'ok');
+      // A replay to a reopened, already-chosen project must not swap the
+      // live preview back to the direction picker.
+      if (!currentHtml) fetchAndRenderGeneratedVariants(id);
     }
   });
 
@@ -472,13 +477,13 @@ function startCompletionPollFallback(id) {
 // Real, honest display for the Credibility Engine's genuine findings -
 // shown as a helpful, dismissible suggestion, never blocking anything,
 // since these are real, honest suggestions, not errors.
-function showCredibilityPanel(credibility) {
+function showCredibilityPanel(credibility, at) {
   if (!credibility.missing || !credibility.missing.length) return;
   const panel = document.getElementById('credibilityPanel');
   const list = document.getElementById('credibilityList');
   list.innerHTML = credibility.missing.map((item) => `<li>${item}</li>`).join('');
   panel.classList.remove('hidden');
-  credibility.missing.forEach((item) => logBot('Guide Bot', item, 'tip'));
+  credibility.missing.forEach((item) => logBot('Guide Bot', item, 'tip', at));
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -526,6 +531,9 @@ async function loadExistingProject(id) {
   try {
     const project = await GurostAPI.call(`/api/project/${id}`);
     projectId = id;
+    // Joining late (reload, second tab) still gets the full bot log: the
+    // server replays this project's recent events on connect.
+    connectGenerationSocket(id);
     if (project.currentHtml) {
       currentHtml = project.currentHtml;
       renderPreview(currentHtml);
