@@ -11,6 +11,7 @@
     "postinstall": "playwright install chromium"
   },
   "dependencies": {
+    "@octokit/rest": "^22.0.1",
     "@supabase/supabase-js": "^2.45.4",
     "aislop": "^0.14.0",
     "archiver": "^7.0.1",
