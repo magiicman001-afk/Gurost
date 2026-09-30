@@ -1501,6 +1501,7 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
   const project = getProject(projectId, req, res);
   if (!project) return;
 
+  let recoverTo = null;
   try {
     if (action === "pause") {
       transition(project, "PAUSED");
@@ -1514,7 +1515,11 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
       if (!project.currentHtml) {
         return res.status(400).json({ error: "No current build to correct yet." });
       }
-      if (project.state !== "PAUSED") transition(project, "PAUSED"); // allow correcting straight from DONE
+      // Only a live build needs pausing first; DONE -> CORRECTING is a
+      // direct transition (DONE -> PAUSED is not, which failed every
+      // correction on a finished site).
+      if (project.state === "BUILDING") transition(project, "PAUSED");
+      recoverTo = project.state === "PAUSED" ? "BUILDING" : "DONE";
       transition(project, "CORRECTING");
 
       // Locked so a second concurrent correction on this same project
@@ -1588,6 +1593,12 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
 
     res.status(400).json({ error: `Unknown action "${action}". Use pause, correct, resume, or business.` });
   } catch (err) {
+    // A failed correction must not strand the project in CORRECTING,
+    // or every later correction fails its state transition too.
+    if (recoverTo && project.state === "CORRECTING") {
+      transition(project, "RESUMING");
+      transition(project, recoverTo);
+    }
     res.status(500).json({ error: err.message });
   }
 });

@@ -217,7 +217,7 @@ function renderVariants(variants) {
   grid.innerHTML = variants.map((v) => `
     <button class="group text-left border border-[var(--line)] rounded-none overflow-hidden hover:border-[var(--gurost-primary)] transition-colors bg-white" data-variant-id="${v.id}">
       <div class="aspect-video bg-white overflow-hidden pointer-events-none">
-        <iframe class="w-full h-full border-0" srcdoc="${v.html.replace(/"/g, '&quot;')}" sandbox="" tabindex="-1" title="${v.label} preview"></iframe>
+        <iframe class="w-full h-full border-0" srcdoc="${v.html.replace(/"/g, '&quot;')}" sandbox="allow-scripts" tabindex="-1" title="${v.label} preview"></iframe>
       </div>
       <div class="p-2">
         <p class="text-xs font-semibold group-hover:text-[var(--gurost-primary)] transition-colors">${v.label}</p>
