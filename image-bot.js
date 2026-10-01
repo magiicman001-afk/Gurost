@@ -274,5 +274,37 @@ async function generateImageUrl(description, options = {}) {
   }
 }
 
-module.exports = { enhanceWithImages, searchImage, generateCustomImage, generateImageWithGemini, generateImage, generateImageUrl };
+// The MP4 rendition to embed: the smallest one at least 1280px wide
+// (sharp on a desktop hero without a 4K download), else the largest
+// one that is smaller.
+function pickVideoFile(files) {
+  const mp4 = (files || []).filter((f) => f && f.link && /mp4/i.test(f.file_type || "") && f.width);
+  const big = mp4.filter((f) => f.width >= 1280 && f.width <= 2560).sort((a, b) => a.width - b.width);
+  if (big.length) return big[0];
+  return mp4.filter((f) => f.width < 1280).sort((a, b) => b.width - a.width)[0] || null;
+}
+
+/**
+ * Free stock video from Pexels (same PEXELS_API_KEY as photos).
+ * Returns { url, poster, credit, provider } or null when there is no
+ * key, no result or no usable MP4.
+ */
+async function searchVideo(query, { orientation = "landscape" } = {}) {
+  const key = process.env.PEXELS_API_KEY;
+  if (!key || !String(query || "").trim()) return null;
+  const res = await fetch(`https://api.pexels.com/videos/search?query=${encodeURIComponent(query)}&per_page=5&orientation=${orientation}&size=medium`, {
+    headers: { Authorization: key }
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  // Short clips loop better and download faster.
+  const videos = (data.videos || []).filter((v) => !v.duration || v.duration <= 40);
+  for (const v of videos.length ? videos : data.videos || []) {
+    const file = pickVideoFile(v.video_files);
+    if (file) return { url: file.link, poster: v.image || "", credit: `Video by ${v.user?.name || "a Pexels creator"} on Pexels`, provider: "pexels" };
+  }
+  return null;
+}
+
+module.exports = { enhanceWithImages, searchImage, searchVideo, pickVideoFile, generateCustomImage, generateImageWithGemini, generateImage, generateImageUrl };
 

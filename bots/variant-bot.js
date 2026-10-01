@@ -73,6 +73,8 @@ OUTPUT FORMAT: reply with the complete HTML document and nothing else - start at
 
 Where the design genuinely calls for a real photo or illustration (a hero image, a product shot, a team photo, a testimonial avatar), do NOT draw it with SVG and do NOT invent an external image URL. Instead use an <img> whose src is a placeholder token (IMG_1, IMG_2, ...), and give that tag two extra attributes: data-gurost-image holding the image brief, and data-gurost-image-role holding its importance. The brief must say exactly what the image should show (subject, mood, framing, lighting, style — enough detail that a real image generator produces something genuinely fitting, not generic stock-photo filler). The importance is one of: hero (the single main visual), featured (at most two key product or work shots), secondary (supporting photos), decorative (textures, backgrounds, avatars). Write alt as a short literal description of the photo (e.g. "sourdough loaf on a wooden board") - it is also used to search stock photos. Placeholders only work in an <img> src, not in CSS. They are replaced with real images after your response — use as many as the design genuinely benefits from, typically 2-6, not one on every element.
 
+Where moving footage genuinely lifts the design (a full-bleed hero background loop, an atmosphere band between sections, a behind-the-scenes or process clip), use a video placeholder: a <video> element whose own src attribute is a token (VID_1, VID_2, ...), with a data-gurost-video attribute holding 2-5 plain words to search stock footage with (e.g. "baker kneading dough", "city skyline night"). It is replaced with a real stock clip and poster frame after your response. Background and decorative videos must be autoplay, muted, loop and playsinline with no controls, sit behind a dark or brand-coloured overlay so text on top stays readable, and live inside a container that already has a fitting background colour (if no clip is found the video is removed and that colour remains). A clip people should watch gets controls and is not autoplayed. Use 1-3 videos when the user asks for video or motion, otherwise 0-2; never put essential content only inside a video.
+
 ${ANTI_SLOP_RULES}
 
 DESIGN STANDARDS — every output must follow these:
@@ -220,15 +222,55 @@ function replacePlaceholder(html, placeholder, url) {
 // Stock photo terms ask for credit; one small line at the end of the footer.
 function addPhotoCredits(html, credits) {
   if (!credits.length) return html;
-  const line = `<p style="font-size:12px;opacity:.7;margin-top:12px">Photos: ${[...new Set(credits)].join(" · ")}</p>`;
+  const label = credits.some((c) => /^Video /.test(c)) ? "Photos & video" : "Photos";
+  const line = `<p style="font-size:12px;opacity:.7;margin-top:12px">${label}: ${[...new Set(credits)].join(" · ")}</p>`;
   const at = html.toLowerCase().lastIndexOf("</footer>");
   if (at !== -1) return html.slice(0, at) + line + html.slice(at);
   return html.replace(/<\/body>/i, `${line}</body>`);
 }
 
+// Stock videos (Pexels) for VID_n placeholders. A found clip gets its
+// poster frame and preload="metadata"; a <video> with no clip is
+// removed whole, so the page never shows a broken player.
+const MAX_VIDEOS_PER_DESIGN = 3;
+
+function removeVideoElement(html, placeholder) {
+  const at = html.search(new RegExp(`\\b${placeholder}\\b`));
+  if (at === -1) return html;
+  const start = html.toLowerCase().lastIndexOf("<video", at);
+  const close = html.toLowerCase().indexOf("</video>", at);
+  if (start === -1 || close === -1) return html;
+  return html.slice(0, start) + html.slice(close + "</video>".length);
+}
+
+async function fulfillVideoRequests(html, videoRequests) {
+  let out = html;
+  const credits = [];
+  const wanted = (videoRequests || []).slice(0, MAX_VIDEOS_PER_DESIGN);
+  const results = await Promise.allSettled(wanted.map((r) => imageBot.searchVideo(r.query)));
+  wanted.forEach((req, i) => {
+    const r = results[i];
+    if (r.status === "fulfilled" && r.value?.url) {
+      out = out.replace(new RegExp(`(<video\\b[^>]*?)\\bsrc=(["'])${req.placeholder}\\2`), (m, open) =>
+        `${open}src="${r.value.url}"${r.value.poster && !/\bposter=/.test(open) ? ` poster="${r.value.poster}"` : ""} preload="metadata"`);
+      out = replacePlaceholder(out, req.placeholder, r.value.url); // a <source src="VID_n"> inside the video
+      credits.push(r.value.credit);
+    } else {
+      if (r.status === "rejected") console.error(`[variant-bot] Stock video search failed for "${req.query}":`, r.reason.message);
+      out = removeVideoElement(out, req.placeholder);
+    }
+  });
+  // Placeholders past the cap, or never listed: no clip, no element.
+  for (const m of out.match(/\bVID_\d+\b/g) || []) out = removeVideoElement(out, m);
+  return { html: out, credits, found: credits.length };
+}
+
 // onImageStart({ gemini, stock }) reports the plan before work starts.
-async function fulfillImageRequests(html, imageRequests, onImageStart) {
-  if (!imageRequests || !imageRequests.length) return stripUnfilledImages(html);
+async function fulfillImageRequests(html, imageRequests, onImageStart, extraCredits = []) {
+  if (!imageRequests || !imageRequests.length) {
+    if (onImageStart) onImageStart({ gemini: 0, stock: 0 });
+    return addPhotoCredits(stripUnfilledImages(html), extraCredits);
+  }
 
   const ordered = [...imageRequests].sort((a, b) => (ROLE_ORDER[a.role] ?? 2) - (ROLE_ORDER[b.role] ?? 2));
   const priority = ordered.filter((r) => r.role === "hero" || r.role === "featured").slice(0, GEMINI_PRIORITY_PER_DESIGN);
@@ -243,7 +285,7 @@ async function fulfillImageRequests(html, imageRequests, onImageStart) {
 
   let finalHtml = html;
   let geminiUsed = priority.length;
-  const credits = [];
+  const credits = [...extraCredits];
   const fallback = [];
   priority.forEach((req, i) => {
     const r = geminiResults[i];
@@ -271,6 +313,13 @@ async function fulfillImageRequests(html, imageRequests, onImageStart) {
   return addPhotoCredits(stripUnfilledImages(finalHtml), credits);
 }
 
+// Videos and images for one parsed design. onStart({ gemini, stock, videos }).
+async function fulfillMedia(parsed, onStart) {
+  const videos = (parsed.videoRequests || []).slice(0, MAX_VIDEOS_PER_DESIGN).length;
+  const v = await fulfillVideoRequests(parsed.html, parsed.videoRequests);
+  return fulfillImageRequests(v.html, parsed.imageRequests, onStart && ((plan) => onStart({ ...plan, videos })), v.credits);
+}
+
 async function generateVariants(prompt, { includeBranding = true, plan } = {}) {
   const design = industryDesignFor(prompt);
   const settled = await Promise.allSettled(
@@ -278,7 +327,7 @@ async function generateVariants(prompt, { includeBranding = true, plan } = {}) {
       generateDesign({ system: systemFor(b.brief, includeBranding, design), content: prompt, plan, variantId: b.id }).then(async (r) => ({
         id: b.id,
         label: b.label,
-        html: await fulfillImageRequests(r.parsed.html, r.parsed.imageRequests),
+        html: await fulfillMedia(r.parsed),
         summary: r.parsed.summary,
         usage: r.usage
       }))
@@ -364,8 +413,8 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
     const system = systemFor(b.brief, includeBranding, design);
     return generateDesign({ system, content: effectivePrompt, plan, variantId: b.id, onStream: live.streamFor(b, system) })
       .then(async (r) => {
-        const html = await fulfillImageRequests(r.parsed.html, r.parsed.imageRequests, ({ gemini, stock }) => {
-          notify("designing", "images-running", { variantId: b.id, label: b.label, count: gemini + stock, gemini, stock });
+        const html = await fulfillMedia(r.parsed, ({ gemini, stock, videos }) => {
+          notify("designing", "images-running", { variantId: b.id, label: b.label, count: gemini + stock, gemini, stock, videos });
         });
 
         // Real, genuine check - a variant only counts as real success
@@ -400,7 +449,7 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
 
 module.exports = { generateVariants, generateVariantsStaged, verifyRealHtml, checkCredibility, BRIEFS };
 // Exposed for tests only.
-module.exports._internal = { fulfillImageRequests, stockQuery, createLivePreview, systemFor, condenseForReview };
+module.exports._internal = { fulfillImageRequests, fulfillVideoRequests, fulfillMedia, stockQuery, createLivePreview, systemFor, condenseForReview };
 
 // Real, genuine Credibility Engine - honestly flags what a completed
 // page might genuinely be missing for real trust (testimonials, a

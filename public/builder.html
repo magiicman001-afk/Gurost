@@ -256,6 +256,7 @@ const BOT_AVATARS = {
   Builder: { emoji: '🔨', color: '#fb923c' },
   Gemini: { emoji: '✨', color: '#a78bfa' },
   'Stock photos': { emoji: '📷', color: '#94a3b8' },
+  'Stock video': { emoji: '🎬', color: '#f472b6' },
   'Guide Bot': { emoji: '🧭', color: '#34d399' },
   Pulse: { emoji: '⚡', color: '#facc15' },
   You: { emoji: '🙂', color: '#e5e7eb' }
@@ -384,6 +385,7 @@ function connectGenerationSocket(id) {
         if (d.gemini === undefined) log('Gemini', `Generating ${plural(d.count, 'image')} for ${label}…`, 'work');
         if (d.gemini) log('Gemini', `Generating ${plural(d.gemini, 'key image')} (hero/featured) for ${label}…`, 'work');
         if (d.stock) log('Stock photos', `Finding ${plural(d.stock, 'supporting photo')} for ${label}…`, 'work');
+        if (d.videos) log('Stock video', `Finding ${plural(d.videos, 'video clip')} for ${label}…`, 'work');
       } else if (msg.status === 'variant-complete') {
         variantsFinished++;
         log('Designer', `${d.label || 'Design'} ready (${variantsFinished}/4).`, 'ok');
