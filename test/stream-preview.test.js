@@ -90,3 +90,9 @@ test("stream: a held-back block appears once the interval passes, without waitin
   assert.equal(checkpoints.length, 2, "hero shown while the menu is still being written");
   assert.deepEqual(checkpoints[1].newBlocks.map((b) => b.label), ["Bread that’s worth getting up for"]);
 });
+
+test("labels from text skip icon-font glyph names", () => {
+  const trust = '<section class="py-8"><span class="material-symbols-outlined text-blue-900">verified</span><p>Regulated by the Solicitors Regulation Authority</p></section>\n';
+  const page = buildPartialPage(HEAD + NAV + trust);
+  assert.equal(page.blocks[1].label, "Regulated by the Solicitors Regulation…");
+});
