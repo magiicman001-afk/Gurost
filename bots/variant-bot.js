@@ -400,7 +400,7 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
 
 module.exports = { generateVariants, generateVariantsStaged, verifyRealHtml, checkCredibility, BRIEFS };
 // Exposed for tests only.
-module.exports._internal = { fulfillImageRequests, stockQuery, createLivePreview, systemFor };
+module.exports._internal = { fulfillImageRequests, stockQuery, createLivePreview, systemFor, condenseForReview };
 
 // Real, genuine Credibility Engine - honestly flags what a completed
 // page might genuinely be missing for real trust (testimonials, a
@@ -419,11 +419,27 @@ Rules:
 - List at most 5 real, genuine gaps - only ones that actually apply, not a maximum-length checklist.
 - If the page genuinely has no real gaps worth mentioning, return an empty missing array - don't invent one to seem thorough.`;
 
+// The page's content without markup noise, for the Guide Bot review.
+// Full sites are 40-55KB; the review used to read only the first 12KB,
+// never saw the footer or contact section, and reported them missing.
+// Scripts, styles, SVG, class/style/data attributes and inline image
+// data carry no content - dropping them keeps a whole page at ~12KB.
+function condenseForReview(html) {
+  return String(html)
+    .replace(/<(script|style|svg)\b[\s\S]*?<\/\1\s*>/gi, "")
+    .replace(/\s(class|style)=("[^"]*"|'[^']*')/gi, "")
+    .replace(/\s(aria-[\w-]+|data-[\w-]+|loading|decoding)=("[^"]*"|'[^']*')/gi, "")
+    .replace(/src="data:[^"]*"/gi, 'src="(inline image)"')
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 async function checkCredibility(html) {
   try {
     const { parsed } = await callClaude({
       system: CREDIBILITY_SYSTEM,
-      messages: [{ role: "user", content: `Real, completed page:\n${html.slice(0, 12000)}` }],
+      messages: [{ role: "user", content: `Real, completed page:\n${condenseForReview(html).slice(0, 30000)}` }],
       maxTokens: 500
     });
     return { missing: parsed.missing || [], strengths: parsed.strengths || [] };

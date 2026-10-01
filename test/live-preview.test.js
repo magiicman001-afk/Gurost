@@ -50,3 +50,16 @@ test("'thinking' is announced once, before any design leads", () => {
   a({ reasoning: "hmm", content: "" }); b({ reasoning: "hmm", content: "" }); a({ reasoning: "more", content: "" });
   assert.equal(events.filter((e) => e.status === "thinking").length, 1);
 });
+
+const { condenseForReview } = require("../bots/variant-bot")._internal;
+
+test("Guide Bot review sees the whole page: footer and contact survive condensing", () => {
+  const filler = `<section class="${"px-6 py-24 md:py-32 bg-gradient-to-br from-amber-50 to-orange-100 ".repeat(20)}"><svg viewBox="0 0 24 24"><path d="${"M12 2L2 7l10 5 10-5-10-5z ".repeat(30)}"/></svg><p>Fresh bread daily.</p></section>`;
+  const page = `<!DOCTYPE html><html><head><style>${"body{margin:0}".repeat(300)}</style><script src="https://cdn.tailwindcss.com"></script></head><body>${filler.repeat(20)}<footer class="bg-stone-900"><a href="tel:+442086920000">020 8692 0000</a> <a href="mailto:hi@crumb.co">hi@crumb.co</a></footer><script>${"console.log(1);".repeat(400)}</script></body></html>`;
+  assert.ok(page.length > 40000, "realistic full-site size");
+  assert.ok(!page.slice(0, 12000).includes("<footer"), "the old 12KB cut never reached the footer");
+  const c = condenseForReview(page);
+  assert.ok(c.length < 12000, `condensed to ${c.length} chars`);
+  assert.match(c, /<footer>.*tel:\+442086920000.*mailto:hi@crumb\.co/);
+  assert.ok(!/class=|<svg|<style|console\.log/.test(c), "markup noise removed");
+});
