@@ -41,3 +41,9 @@ test("lookup returns the palette, fonts and layout guidance", () => {
   assert.ok(d.fonts.heading);
   assert.ok(d.landingPattern && d.style);
 });
+
+test("accented words match: café is a cafe, not a restaurant", () => {
+  const prompt = "A family-run sourdough bakery and café in Bristol. Pre-order bread for collection, see the weekly menu, and book a table for weekend brunch.";
+  assert.equal(getIndustryDesign(prompt).industry, "Bakery/Cafe");
+  assert.equal(getIndustryDesign("A cosy café in Lisbon").industry, "Bakery/Cafe");
+});

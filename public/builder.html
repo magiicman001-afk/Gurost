@@ -325,7 +325,8 @@ function connectGenerationSocket(id) {
   let variantsFinished = 0;
   let liveLeadId = null;
   // Server labels: a heading, "#id", or a tag word ("navigation", "footer").
-  const sectionName = (s) => (s.startsWith('#') ? `the ${s.slice(1).replace(/[-_]/g, ' ')} section` : /^[a-z ]+$/.test(s) ? `the ${s}` : `"${s}"`);
+  const sectionName = (s) => (s.startsWith('#') ? `the ${s.slice(1).replace(/[-_]/g, ' ')} section` : s === 'a section' ? 'another section' : /^[a-z ]+$/.test(s) ? `the ${s}` : `"${s}"`);
+  const liveGenericLogged = new Set();
   const seen = new Set(); // the server replays recent events to late joiners - log each once
 
   generationSocket.addEventListener('message', (event) => {
@@ -365,10 +366,18 @@ function connectGenerationSocket(id) {
         // its line appears here.
         if (d.variantId !== liveLeadId) {
           liveLeadId = d.variantId;
+          liveGenericLogged.clear();
           log('Builder', `Building the ${d.label} design live on the left…`, 'work');
         }
         renderLivePartial(d.html);
-        for (const s of d.sections || []) log('Designer', `Added ${sectionName(s)}`, 'ok');
+        for (const s of d.sections || []) {
+          // Unnamed blocks (desktop + mobile <nav>) share a generic label - say it once.
+          if (/^[a-z ]+$/.test(s)) {
+            if (liveGenericLogged.has(s)) continue;
+            liveGenericLogged.add(s);
+          }
+          log('Designer', `Added ${sectionName(s)}`, 'ok');
+        }
       } else if (msg.status === 'images-running') {
         const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
         const label = d.label || 'a design';
