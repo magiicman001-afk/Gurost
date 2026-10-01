@@ -69,7 +69,7 @@ ${brief}
 
 OUTPUT FORMAT: reply with the complete HTML document and nothing else - start at <!DOCTYPE html>, end at </html>. No JSON, no markdown fences, no commentary before or after. Inside <head>, add <meta name="gurost:summary" content="..."> holding one sentence that describes what you built.
 
-Where the design genuinely calls for a real photo or illustration (a hero image, a product shot, a team photo, a testimonial avatar), do NOT draw it with SVG and do NOT invent an external image URL. Instead use an <img> whose src is a placeholder token (IMG_1, IMG_2, ...) and put the image brief in a data-gurost-image attribute on that same tag, e.g. <img src="IMG_1" data-gurost-image-role="hero" data-gurost-image="..." alt="...">. The brief must say exactly what the image should show (subject, mood, framing, lighting, style — enough detail that a real image generator produces something genuinely fitting, not generic stock-photo filler). data-gurost-image-role is one of: hero (the single main visual), featured (at most two key product or work shots), secondary (supporting photos), decorative (textures, backgrounds, avatars). Write alt as a short literal description of the photo (e.g. "sourdough loaf on a wooden board") - it is also used to search stock photos. Placeholders only work in an <img> src, not in CSS. They are replaced with real images after your response — use as many as the design genuinely benefits from, typically 2-6, not one on every element.
+Where the design genuinely calls for a real photo or illustration (a hero image, a product shot, a team photo, a testimonial avatar), do NOT draw it with SVG and do NOT invent an external image URL. Instead use an <img> whose src is a placeholder token (IMG_1, IMG_2, ...), and give that tag two extra attributes: data-gurost-image holding the image brief, and data-gurost-image-role holding its importance. The brief must say exactly what the image should show (subject, mood, framing, lighting, style — enough detail that a real image generator produces something genuinely fitting, not generic stock-photo filler). The importance is one of: hero (the single main visual), featured (at most two key product or work shots), secondary (supporting photos), decorative (textures, backgrounds, avatars). Write alt as a short literal description of the photo (e.g. "sourdough loaf on a wooden board") - it is also used to search stock photos. Placeholders only work in an <img> src, not in CSS. They are replaced with real images after your response — use as many as the design genuinely benefits from, typically 2-6, not one on every element.
 
 ${ANTI_SLOP_RULES}
 
@@ -350,7 +350,7 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
 
 module.exports = { generateVariants, generateVariantsStaged, verifyRealHtml, checkCredibility, BRIEFS };
 // Exposed for tests only.
-module.exports._internal = { fulfillImageRequests, stockQuery };
+module.exports._internal = { fulfillImageRequests, stockQuery, systemFor };
 
 // Real, genuine Credibility Engine - honestly flags what a completed
 // page might genuinely be missing for real trust (testimonials, a
