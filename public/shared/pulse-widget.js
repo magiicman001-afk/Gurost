@@ -88,7 +88,10 @@
     resumeBtn.classList.toggle('visible', supportsPause && hasProject && currentState === 'paused');
   }
 
-  function logStatus(text) {
+  // Also mirrored into the page's bot activity feed when it has one.
+  // feed: false for lines the page already logs itself (builds, edits).
+  function logStatus(text, { feed = true } = {}) {
+    if (feed) window.gurostBuilder?.logActivity?.(text, /fail|error|couldn't|could not/i.test(text) ? 'fail' : 'ok');
     const log = document.getElementById('pulseStatusLog');
     if (!log) return;
     const line = document.createElement('p');
@@ -148,23 +151,23 @@
         return;
       }
       setState('building');
-      logStatus(`Building: "${text}"`);
+      logStatus(`Building: "${text}"`, { feed: false });
       try {
         await window.gurostBuilder.generate(text);
         correctionHistory.push({ type: 'initial', text });
         setState('done');
-        logStatus('Done!');
+        logStatus('Done!', { feed: false });
         setTimeout(checkForRealSuggestion, 500);
         refreshUndoRedoState();
       } catch (err) {
-        logStatus('Failed: ' + err.message);
+        logStatus('Failed: ' + err.message, { feed: false });
         setState('idle');
       }
       return;
     }
 
     setState('correcting');
-    logStatus(`Correction: "${text}"`);
+    logStatus(`Correction: "${text}"`, { feed: false });
     try {
       // Real, honest memory: recent corrections on this same project
       // get folded in as extra context, so a follow-up correction
@@ -174,11 +177,11 @@
       await window.gurostBuilder.correct(fullInstruction);
       correctionHistory.push({ type: 'correction', text });
       setState('done');
-      logStatus('Done!');
+      logStatus('Done!', { feed: false });
       setTimeout(checkForRealSuggestion, 500);
       refreshUndoRedoState();
     } catch (err) {
-      logStatus('Failed: ' + err.message);
+      logStatus('Failed: ' + err.message, { feed: false });
       setState('idle');
     }
   }
@@ -813,9 +816,17 @@
   // Real, shared wrapper for every action button - disables the
   // button during the call, surfaces a real, honest error in the
   // status log rather than failing silently.
+  // "Started" line for the bot feed; each action logs its own result.
+  const ACTION_START = {
+    save: 'Saving project…', deploy: 'Deploying to Vercel…', github: 'Pushing to GitHub…',
+    image: 'Generating image…', share: 'Creating a share link…', undo: 'Undoing the last change…',
+    redo: 'Redoing the change…', upload: 'Uploading file…', history: 'Opening history…'
+  };
+
   async function runAction(name, fn) {
     const btn = document.getElementById(`act${name[0].toUpperCase()}${name.slice(1)}`);
     if (btn) btn.disabled = true;
+    if (ACTION_START[name]) window.gurostBuilder?.logActivity?.(ACTION_START[name], 'work');
     try {
       await fn();
     } catch (err) {
