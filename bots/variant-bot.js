@@ -3,6 +3,8 @@ const imageBot = require("../image-bot");
 const { modelForTier } = require("../lib/tier-router");
 const { designPromptLines } = require("../lib/industry-design");
 const { parseVariantResponse, VariantParseError } = require("../lib/variant-response");
+const { createStreamPreview } = require("../lib/stream-preview");
+const security = require("../security");
 
 const BRIEFS = [
   {
@@ -119,16 +121,17 @@ function logRawReply(variantId, err) {
 // One design call, parsed by lib/variant-response.js. An unusable reply
 // is logged in full and retried once with the specific problem named;
 // any other error (network, credits, leak check) is not retried here.
-async function generateDesign({ system, content, plan, variantId }) {
-  const call = (userContent) => callClaude({
+async function generateDesign({ system, content, plan, variantId, onStream }) {
+  const call = (userContent, stream) => callClaude({
     system,
     parse: parseVariantResponse,
     messages: [{ role: "user", content: userContent }],
     maxTokens: 32000,
-    model: modelForTier(plan, { complex: true })
+    model: modelForTier(plan, { complex: true }),
+    onStream: stream
   });
   try {
-    return await call(content);
+    return await call(content, onStream); // only the first attempt streams to the live preview
   } catch (err) {
     if (!(err instanceof VariantParseError)) throw err;
     logRawReply(variantId, err);
@@ -139,6 +142,50 @@ async function generateDesign({ system, content, plan, variantId }) {
       throw retryErr;
     }
   }
+}
+
+// Live preview coordination for one staged build. All four designs
+// stream, but the white panel shows one: the first to finish a section
+// becomes the "lead", and only its checkpoints are broadcast (as
+// "designing"/"partial" with the page so far and the new sections'
+// labels). If the lead fails, the next design to finish a section takes
+// over. Streamed text is shown before callClaude's own leak check runs,
+// so every checkpoint is leak-checked first; a design that trips it
+// stops streaming.
+function createLivePreview(notify) {
+  let leadId = null;
+  let thinkingAnnounced = false;
+  const stopped = new Set();
+  return {
+    streamFor(brief, system) {
+      const guarded = security.withGuardrail(system);
+      const preview = createStreamPreview({
+        onCheckpoint: ({ html, blocks, newBlocks, text }) => {
+          if (stopped.has(brief.id)) return;
+          if (security.detectPromptLeak(text, guarded)) { stopped.add(brief.id); if (leadId === brief.id) leadId = null; return; }
+          if (leadId === null) leadId = brief.id;
+          if (leadId !== brief.id) return;
+          notify("designing", "partial", {
+            variantId: brief.id,
+            label: brief.label,
+            html,
+            sections: newBlocks.map((s) => s.label),
+            sectionCount: blocks.length
+          });
+        }
+      });
+      return ({ content, reasoning }) => {
+        if (reasoning && !thinkingAnnounced && leadId === null) {
+          thinkingAnnounced = true;
+          notify("designing", "thinking", { variantId: brief.id, label: brief.label });
+        }
+        preview.append(content);
+      };
+    },
+    release(variantId) {
+      if (leadId === variantId) leadId = null;
+    }
+  };
 }
 
 // Models sometimes write more src="IMG_n" slots than they list in
@@ -311,9 +358,11 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
   notify("designing", "running", design ? { industry: design.industry, fonts: design.fonts, palette: design.palette } : undefined);
   const variants = [];
   const failures = [];
+  const live = createLivePreview(notify);
 
-  const promises = BRIEFS.map((b) =>
-    generateDesign({ system: systemFor(b.brief, includeBranding, design), content: effectivePrompt, plan, variantId: b.id })
+  const promises = BRIEFS.map((b) => {
+    const system = systemFor(b.brief, includeBranding, design);
+    return generateDesign({ system, content: effectivePrompt, plan, variantId: b.id, onStream: live.streamFor(b, system) })
       .then(async (r) => {
         const html = await fulfillImageRequests(r.parsed.html, r.parsed.imageRequests, ({ gemini, stock }) => {
           notify("designing", "images-running", { variantId: b.id, label: b.label, count: gemini + stock, gemini, stock });
@@ -337,9 +386,10 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
       .catch((err) => {
         console.error(`[variant-bot] "${b.id}" failed:`, err.message);
         failures.push({ variant: b.id, error: err.message });
+        live.release(b.id); // another design takes over the live preview
         notify("designing", "variant-failed", { variantId: b.id, label: b.label, error: err.message });
-      })
-  );
+      });
+  });
 
   await Promise.allSettled(promises);
   notify("designing", "complete", { count: variants.length });
@@ -350,7 +400,7 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
 
 module.exports = { generateVariants, generateVariantsStaged, verifyRealHtml, checkCredibility, BRIEFS };
 // Exposed for tests only.
-module.exports._internal = { fulfillImageRequests, stockQuery, systemFor };
+module.exports._internal = { fulfillImageRequests, stockQuery, createLivePreview, systemFor };
 
 // Real, genuine Credibility Engine - honestly flags what a completed
 // page might genuinely be missing for real trust (testimonials, a

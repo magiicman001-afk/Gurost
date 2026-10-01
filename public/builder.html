@@ -148,6 +148,7 @@ function setPreviewStatus(active) {
 }
 
 function renderPreview(html) {
+  clearLivePreview();
   document.getElementById('previewEmptyState').style.display = 'none';
   document.getElementById('previewFrame').srcdoc = injectCodeBoxScript(html);
   // codeEmptyMsg lives inside codeContent, so the textContent write below
@@ -159,7 +160,50 @@ function renderPreview(html) {
   // sat above the preview and swallowed clicks on the site itself.)
 }
 
+// Live build preview: while the designs stream, the lead design's page so
+// far renders here one finished section at a time. Two stacked frames:
+// each new state loads in the hidden one and fades in once loaded and
+// scrolled to its newest section, so the visible page never blanks.
+let liveFrames = null;
+let liveFront = 0;
+
+function renderLivePartial(html) {
+  const wrap = document.getElementById('previewWrap');
+  if (!liveFrames) {
+    wrap.style.position = 'relative';
+    liveFrames = [0, 1].map(() => {
+      const f = document.createElement('iframe');
+      f.setAttribute('sandbox', 'allow-scripts allow-forms');
+      f.title = 'Live build preview';
+      f.className = 'absolute inset-0 w-full h-full border-0 bg-white';
+      f.style.cssText = 'opacity:0; transition:opacity .35s ease; z-index:1;';
+      wrap.appendChild(f);
+      return f;
+    });
+    document.getElementById('previewEmptyState').style.display = 'none';
+  }
+  const back = liveFrames[1 - liveFront];
+  const front = liveFrames[liveFront];
+  back.onload = () => {
+    setTimeout(() => { // after the partial page's own scroll-to-newest (300ms)
+      back.style.zIndex = 2;
+      back.style.opacity = 1;
+      front.style.zIndex = 1;
+      setTimeout(() => { front.style.opacity = 0; }, 350);
+      liveFront = 1 - liveFront;
+    }, 400);
+  };
+  back.srcdoc = injectCodeBoxScript(html);
+}
+
+function clearLivePreview() {
+  liveFrames?.forEach((f) => f.remove());
+  liveFrames = null;
+  liveFront = 0;
+}
+
 function renderVariants(variants) {
+  clearLivePreview();
   const grid = document.getElementById('variantGrid');
   grid.innerHTML = variants.map((v) => `
     <button class="group text-left border border-[var(--line)] rounded-none overflow-hidden hover:border-[var(--gurost-primary)] transition-colors bg-white" data-variant-id="${v.id}">
@@ -279,13 +323,16 @@ function connectGenerationSocket(id) {
   generationSocket = new WebSocket(`${protocol}//${window.location.host}/ws/guide?projectId=${id}&userId=${localStorage.getItem('gurost_user_id') || 'anon'}`);
 
   let variantsFinished = 0;
+  let liveLeadId = null;
+  // Server labels: a heading, "#id", or a tag word ("navigation", "footer").
+  const sectionName = (s) => (s.startsWith('#') ? `the ${s.slice(1).replace(/[-_]/g, ' ')} section` : /^[a-z ]+$/.test(s) ? `the ${s}` : `"${s}"`);
   const seen = new Set(); // the server replays recent events to late joiners - log each once
 
   generationSocket.addEventListener('message', (event) => {
     let msg;
     try { msg = JSON.parse(event.data); } catch { return; }
     if (!['stage_progress', 'error', 'credibility_check'].includes(msg.type)) return;
-    const key = JSON.stringify([msg.type, msg.stage, msg.status, msg.data?.variantId, msg.error, msg.credibility?.missing]);
+    const key = JSON.stringify([msg.type, msg.stage, msg.status, msg.data?.variantId, msg.data?.sectionCount, msg.error, msg.credibility?.missing]);
     if (seen.has(key)) return;
     seen.add(key);
     const log = (bot, text, tone) => logBot(bot, text, tone, msg.at || Date.now());
@@ -311,6 +358,17 @@ function connectGenerationSocket(id) {
           log('Industry', `Matched ${d.industry}${d.fonts ? ` — ${d.fonts}` : ''}${d.palette ? ` · ${d.palette}` : ''}`, 'tip');
         }
         log('Designer', 'Designing 4 directions in parallel…', 'work');
+      } else if (msg.status === 'thinking') {
+        log('Designer', `Sketching ideas for ${d.label || 'the designs'}…`, 'work');
+      } else if (msg.status === 'partial') {
+        // Same moment, both panels: the section appears on the left as
+        // its line appears here.
+        if (d.variantId !== liveLeadId) {
+          liveLeadId = d.variantId;
+          log('Builder', `Building the ${d.label} design live on the left…`, 'work');
+        }
+        renderLivePartial(d.html);
+        for (const s of d.sections || []) log('Designer', `Added ${sectionName(s)}`, 'ok');
       } else if (msg.status === 'images-running') {
         const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
         const label = d.label || 'a design';
@@ -414,6 +472,7 @@ async function generateWebsite(description) {
   setPreviewStatus(true);
   document.getElementById('variantSection').classList.add('hidden');
   clearBotLog();
+  clearLivePreview();
   logBot('Builder', 'Starting a new build…', 'work');
 
   try {

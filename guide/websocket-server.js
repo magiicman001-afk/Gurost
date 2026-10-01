@@ -60,7 +60,10 @@ function broadcastPresence(projectId) {
 function broadcastProjectUpdate(projectId, message) {
   if (message && !message.at) message.at = Date.now(); // replayed events keep their real time
   if (message && (message.type === "stage_progress" || message.type === "error" || message.type === "credibility_check")) {
-    const history = STATUS_HISTORY.get(projectId) || [];
+    // Live-preview partials are whole pages (10-50KB); a late joiner
+    // only needs the newest one, so earlier partials are dropped.
+    const isPartial = message.type === "stage_progress" && message.status === "partial";
+    const history = (STATUS_HISTORY.get(projectId) || []).filter((m) => !(isPartial && m.status === "partial"));
     history.push(message);
     STATUS_HISTORY.set(projectId, history.slice(-30));
   }
