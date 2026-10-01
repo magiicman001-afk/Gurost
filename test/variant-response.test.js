@@ -24,7 +24,7 @@ function throwsParse(raw, re) {
 test("baseline: summary, images and clean HTML", () => {
   const r = parseVariantResponse(page(HERO));
   assert.equal(r.summary, "A warm, full bakery site.");
-  assert.deepEqual(r.imageRequests, [{ placeholder: "IMG_1", description: "Crumb & Co shopfront at dawn, warm light" }]);
+  assert.deepEqual(r.imageRequests, [{ placeholder: "IMG_1", description: "Crumb & Co shopfront at dawn, warm light", role: "secondary", alt: "Shopfront" }]);
   assert.ok(!r.html.includes("data-gurost-image"));
   assert.ok(!r.html.includes("gurost:summary"));
   assert.ok(r.html.includes('<img src="IMG_1" alt="Shopfront">'));
@@ -160,7 +160,7 @@ test("12. metadata in a different order / position", () => {
 test("extra: duplicate and invalid placeholders are dropped", () => {
   const body = '<img src="IMG_1" data-gurost-image="a"><img src="IMG_1" data-gurost-image="dup"><img src="https://x/y.png" data-gurost-image="external"><img src="IMG_3" data-gurost-image="  ">';
   const r = parseVariantResponse(page(body));
-  assert.deepEqual(r.imageRequests, [{ placeholder: "IMG_1", description: "a" }]);
+  assert.deepEqual(r.imageRequests.map((i) => [i.placeholder, i.description]), [["IMG_1", "a"]]);
 });
 
 test("extra: page without <body> -> specific error", () => {
@@ -182,4 +182,18 @@ test("extra: model repeats the whole page -> first complete copy wins", () => {
   const one = page("<p>first</p>");
   const r = parseVariantResponse(one + "\n\nHere it is again:\n" + page("<p>second</p>"));
   assert.ok(r.html.includes("<p>first</p>") && !r.html.includes("<p>second</p>"));
+});
+
+test("image roles: read, defaulted, and stripped from the page", () => {
+  const body = '<img src="IMG_1" data-gurost-image-role="hero" data-gurost-image="storefront" alt="Crumb and Co shopfront">' +
+    '<img data-gurost-image-role="Decorative" src="IMG_2" data-gurost-image="flour texture" alt="">' +
+    '<img src="IMG_3" data-gurost-image="loaf" data-gurost-image-role="banner" alt="Sourdough loaf">';
+  const r = parseVariantResponse(page(body));
+  assert.deepEqual(r.imageRequests.map((i) => [i.placeholder, i.role, i.alt]), [
+    ["IMG_1", "hero", "Crumb and Co shopfront"],
+    ["IMG_2", "decorative", ""],
+    ["IMG_3", "secondary", "Sourdough loaf"], // unknown role -> secondary
+  ]);
+  assert.ok(!r.html.includes("data-gurost"), "working attributes stripped");
+  assert.ok(r.html.includes('<img src="IMG_1" alt="Crumb and Co shopfront">'));
 });

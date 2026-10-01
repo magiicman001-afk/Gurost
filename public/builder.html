@@ -363,7 +363,11 @@ function connectGenerationSocket(id) {
         }
         log('Designer', 'Designing 4 directions in parallel…', 'work');
       } else if (msg.status === 'images-running') {
-        log('Gemini', `Generating ${d.count} image${d.count > 1 ? 's' : ''} for ${d.label || 'a design'}…`, 'work');
+        const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+        const label = d.label || 'a design';
+        if (d.gemini === undefined) log('Gemini', `Generating ${plural(d.count, 'image')} for ${label}…`, 'work');
+        if (d.gemini) log('Gemini', `Generating ${plural(d.gemini, 'key image')} (hero/featured) for ${label}…`, 'work');
+        if (d.stock) log('Stock photos', `Finding ${plural(d.stock, 'supporting photo')} for ${label}…`, 'work');
       } else if (msg.status === 'variant-complete') {
         variantsFinished++;
         log('Designer', `${d.label || 'Design'} ready (${variantsFinished}/4).`, 'ok');

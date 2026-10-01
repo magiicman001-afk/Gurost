@@ -69,7 +69,7 @@ ${brief}
 
 OUTPUT FORMAT: reply with the complete HTML document and nothing else - start at <!DOCTYPE html>, end at </html>. No JSON, no markdown fences, no commentary before or after. Inside <head>, add <meta name="gurost:summary" content="..."> holding one sentence that describes what you built.
 
-Where the design genuinely calls for a real photo or illustration (a hero image, a product shot, a team photo, a testimonial avatar), do NOT draw it with SVG and do NOT invent an external image URL. Instead use an <img> whose src is a placeholder token (IMG_1, IMG_2, ...) and put the image brief in a data-gurost-image attribute on that same tag, e.g. <img src="IMG_1" data-gurost-image="..." alt="...">. The brief must say exactly what the image should show (subject, mood, framing, lighting, style — enough detail that a real image generator produces something genuinely fitting, not generic stock-photo filler). Placeholders only work in an <img> src, not in CSS. They are replaced with real, generated images after your response — use as many as the design genuinely benefits from, typically 1-4, not one on every element.
+Where the design genuinely calls for a real photo or illustration (a hero image, a product shot, a team photo, a testimonial avatar), do NOT draw it with SVG and do NOT invent an external image URL. Instead use an <img> whose src is a placeholder token (IMG_1, IMG_2, ...) and put the image brief in a data-gurost-image attribute on that same tag, e.g. <img src="IMG_1" data-gurost-image-role="hero" data-gurost-image="..." alt="...">. The brief must say exactly what the image should show (subject, mood, framing, lighting, style — enough detail that a real image generator produces something genuinely fitting, not generic stock-photo filler). data-gurost-image-role is one of: hero (the single main visual), featured (at most two key product or work shots), secondary (supporting photos), decorative (textures, backgrounds, avatars). Write alt as a short literal description of the photo (e.g. "sourdough loaf on a wooden board") - it is also used to search stock photos. Placeholders only work in an <img> src, not in CSS. They are replaced with real images after your response — use as many as the design genuinely benefits from, typically 2-6, not one on every element.
 
 ${ANTI_SLOP_RULES}
 
@@ -148,41 +148,80 @@ function stripUnfilledImages(html) {
   return html.replace(/<img\b[^>]*\bsrc=["']IMG_\d+["'][^>]*>/g, "");
 }
 
-// Real, honest step - takes the model's real HTML plus its real image
-// requests, generates each one for real via image-bot's Gemini/OpenAI
-// router, and splices the actual result in. A failure on any single
-// image is caught and logged - it doesn't fail the whole variant,
-// since a page with one missing image is still far better than no
-// page at all.
+// Image routing by importance. Gemini (paid) draws only the images that
+// carry the design - the hero and one featured shot; everything else
+// comes from free stock photo APIs (Unsplash / Pexels / Pixabay, see
+// image-bot.searchImage) when a key is configured. Without a key, or
+// when a search finds nothing, Gemini fills in up to a hard cap per
+// design; images past the cap are dropped rather than left broken.
+const GEMINI_PRIORITY_PER_DESIGN = 2;
+const GEMINI_MAX_PER_DESIGN = 4;
+const ROLE_ORDER = { hero: 0, featured: 1, secondary: 2, decorative: 3 };
+
+// Short stock-photo search query: the alt text when it says something,
+// else the start of the image brief.
+function stockQuery(req) {
+  const words = (s) => String(s || "").replace(/[^\p{L}\p{N}\s'-]/gu, " ").split(/\s+/).filter(Boolean);
+  const alt = words(req.alt);
+  return (alt.length >= 2 ? alt : words(req.description)).slice(0, 6).join(" ");
+}
+
+function replacePlaceholder(html, placeholder, url) {
+  return html.replace(new RegExp(`\\b${placeholder}\\b`, "g"), url); // \b: IMG_1 must not hit IMG_10
+}
+
+// Stock photo terms ask for credit; one small line at the end of the footer.
+function addPhotoCredits(html, credits) {
+  if (!credits.length) return html;
+  const line = `<p style="font-size:12px;opacity:.7;margin-top:12px">Photos: ${[...new Set(credits)].join(" · ")}</p>`;
+  const at = html.toLowerCase().lastIndexOf("</footer>");
+  if (at !== -1) return html.slice(0, at) + line + html.slice(at);
+  return html.replace(/<\/body>/i, `${line}</body>`);
+}
+
+// onImageStart({ gemini, stock }) reports the plan before work starts.
 async function fulfillImageRequests(html, imageRequests, onImageStart) {
   if (!imageRequests || !imageRequests.length) return stripUnfilledImages(html);
 
-  // Real, honest visibility - this genuinely only fires when there
-  // are real images to generate, not decoratively on every variant.
-  if (onImageStart) onImageStart(imageRequests.length);
+  const ordered = [...imageRequests].sort((a, b) => (ROLE_ORDER[a.role] ?? 2) - (ROLE_ORDER[b.role] ?? 2));
+  const priority = ordered.filter((r) => r.role === "hero" || r.role === "featured").slice(0, GEMINI_PRIORITY_PER_DESIGN);
+  const rest = ordered.filter((r) => !priority.includes(r));
+  if (onImageStart) onImageStart({ gemini: priority.length, stock: rest.length });
 
-  // Real, deliberate fix - these used to run one at a time, which
-  // genuinely compounded real generation time badly (4 variants times
-  // up to 4 images each, all sequential). Nothing about generating
-  // one image depends on another finishing first, so this runs them
-  // all at once instead - the real wait becomes the slowest single
-  // image, not the sum of all of them.
-  const results = await Promise.allSettled(imageRequests.map((req) => imageBot.generateImageUrl(req.description)));
+  // Gemini for the priority images and stock searches for the rest, in parallel.
+  const [geminiResults, stockResults] = await Promise.all([
+    Promise.allSettled(priority.map((r) => imageBot.generateImageUrl(r.description))),
+    Promise.allSettled(rest.map((r) => imageBot.searchImage(stockQuery(r))))
+  ]);
 
   let finalHtml = html;
-  results.forEach((result, i) => {
-    const req = imageRequests[i];
-    if (result.status === "fulfilled") {
-      finalHtml = finalHtml.split(req.placeholder).join(result.value);
-    } else {
-      console.error(`[variant-bot] Real image generation failed for "${req.placeholder}":`, result.reason.message);
-      // Real, honest fallback - remove the now-broken placeholder
-      // reference rather than ship a literal "IMG_1" string as a
-      // visible broken image to the real end user.
-      finalHtml = finalHtml.split(req.placeholder).join("");
-    }
+  let geminiUsed = priority.length;
+  const credits = [];
+  const fallback = [];
+  priority.forEach((req, i) => {
+    const r = geminiResults[i];
+    if (r.status === "fulfilled") finalHtml = replacePlaceholder(finalHtml, req.placeholder, r.value);
+    else console.error(`[variant-bot] Gemini image failed for "${req.placeholder}":`, r.reason.message);
   });
-  return stripUnfilledImages(finalHtml);
+  rest.forEach((req, i) => {
+    const r = stockResults[i];
+    if (r.status === "fulfilled" && r.value?.url) {
+      finalHtml = replacePlaceholder(finalHtml, req.placeholder, r.value.url);
+      if (r.value.credit) credits.push(r.value.credit);
+    } else if (geminiUsed < GEMINI_MAX_PER_DESIGN) {
+      geminiUsed++;
+      fallback.push(req);
+    } // past the cap: placeholder stays and stripUnfilledImages drops the <img>
+  });
+
+  const fallbackResults = await Promise.allSettled(fallback.map((r) => imageBot.generateImageUrl(r.description)));
+  fallback.forEach((req, i) => {
+    const r = fallbackResults[i];
+    if (r.status === "fulfilled") finalHtml = replacePlaceholder(finalHtml, req.placeholder, r.value);
+    else console.error(`[variant-bot] Gemini fallback image failed for "${req.placeholder}":`, r.reason.message);
+  });
+
+  return addPhotoCredits(stripUnfilledImages(finalHtml), credits);
 }
 
 async function generateVariants(prompt, { includeBranding = true, plan } = {}) {
@@ -276,8 +315,8 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
   const promises = BRIEFS.map((b) =>
     generateDesign({ system: systemFor(b.brief, includeBranding, design), content: effectivePrompt, plan, variantId: b.id })
       .then(async (r) => {
-        const html = await fulfillImageRequests(r.parsed.html, r.parsed.imageRequests, (count) => {
-          notify("designing", "images-running", { variantId: b.id, label: b.label, count, model: "Gemini" });
+        const html = await fulfillImageRequests(r.parsed.html, r.parsed.imageRequests, ({ gemini, stock }) => {
+          notify("designing", "images-running", { variantId: b.id, label: b.label, count: gemini + stock, gemini, stock });
         });
 
         // Real, genuine check - a variant only counts as real success
@@ -310,6 +349,8 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
 }
 
 module.exports = { generateVariants, generateVariantsStaged, verifyRealHtml, checkCredibility, BRIEFS };
+// Exposed for tests only.
+module.exports._internal = { fulfillImageRequests, stockQuery };
 
 // Real, genuine Credibility Engine - honestly flags what a completed
 // page might genuinely be missing for real trust (testimonials, a
