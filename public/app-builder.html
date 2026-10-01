@@ -82,14 +82,6 @@ Dashboard
     <div class="flex-1 relative overflow-auto min-h-0">
       <div class="w-full h-full relative" id="previewPanel">
         <iframe class="w-full h-full border-0 bg-white" id="previewFrame" sandbox="allow-scripts" title="App preview"></iframe>
-        <div id="codeBoxOverlay" style="position:absolute; top:0; left:0; width:0; height:0; pointer-events:none;"></div>
-        <div id="codeBoxPanel" class="hidden" style="position:fixed; bottom:24px; right:24px; max-width:420px; max-height:320px; overflow:auto; background:#0f172a; color:#fff; border-radius:10px; padding:14px; font-size:12px; font-family:monospace; z-index:1000; box-shadow:0 8px 24px rgba(0,0,0,0.3);">
-          <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-            <strong id="codeBoxPanelTitle" style="color:#FF8C00;">Section</strong>
-            <button id="codeBoxPanelClose" style="background:none; border:none; color:#fff; cursor:pointer; font-size:14px;">✕</button>
-          </div>
-          <pre id="codeBoxPanelContent" style="white-space:pre-wrap; margin:0;"></pre>
-        </div>
         <div class="absolute inset-0 bg-[#FAFAF9] flex flex-col" id="skeletonState">
           <div class="h-16 border-b border-[var(--line)] flex items-center px-6 gap-4 animate-pulse">
             <div class="w-8 h-8 rounded-full bg-[var(--line)]"></div>
@@ -489,7 +481,6 @@ function buildPreviewDocument(frontendFiles) {
 </body></html>`;
 }
 
-let appCodeBoxController = null;
 
 function renderLivePreview(appFiles) {
   showSkeleton(false);
@@ -497,49 +488,10 @@ function renderLivePreview(appFiles) {
   if (emptyState) emptyState.style.display = 'none';
   const iframe = document.getElementById('previewFrame');
   iframe.srcdoc = injectCodeBoxScript(buildPreviewDocument(appFiles.frontend));
-
-  if (!appCodeBoxController) {
-    appCodeBoxController = attachCodeBoxOverlay(
-      iframe,
-      document.getElementById('codeBoxOverlay'),
-      (section) => showAppCodeBoxSnippet(section, appFiles)
-    );
-    document.getElementById('codeBoxOverlay').addEventListener('gurost-code-box-toggle', (e) => {
-      if (!e.detail.isOpen) document.getElementById('codeBoxPanel').classList.add('hidden');
-    });
-  }
+  // No click-to-code overlay: its boxes sat above the preview and
+  // swallowed clicks on the app itself.
 }
 
-/**
- * App-mode's real lookup: uses the exact data-gurost-file attribute
- * app-bot.js's own generation prompt now adds to each top-level
- * section — a real file match, not a reconstruction attempt. JSX has
- * expressions and logic that rendered HTML doesn't preserve, so
- * rebuilding "source" from the DOM the way website mode does would be
- * lossy and often wrong; showing the actual real file content is both
- * simpler and more honest here.
- */
-function showAppCodeBoxSnippet(section, appFiles) {
-  const panel = document.getElementById('codeBoxPanel');
-  const titleEl = document.getElementById('codeBoxPanelTitle');
-  const contentEl = document.getElementById('codeBoxPanelContent');
-
-  if (!section.sourceFile) {
-    titleEl.textContent = 'Section';
-    contentEl.textContent = "This section wasn't tagged with a source file during generation — can't show its exact code.";
-    panel.classList.remove('hidden');
-    return;
-  }
-
-  const file = appFiles.frontend.find((f) => f.path === section.sourceFile || f.path.endsWith(section.sourceFile));
-  titleEl.textContent = section.sourceFile;
-  contentEl.textContent = file ? file.content : `Couldn't find "${section.sourceFile}" in this project's current files.`;
-  panel.classList.remove('hidden');
-}
-document.getElementById('codeBoxPanelClose')?.addEventListener('click', () => {
-  document.getElementById('codeBoxPanel').classList.add('hidden');
-  appCodeBoxController?.closeAll();
-});
 
 // ---------------- Generation ----------------
 

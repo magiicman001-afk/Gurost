@@ -66,18 +66,10 @@
       </div>
       <div class="w-full h-full" id="previewWrap">
         <iframe id="previewFrame" class="w-full h-full border-0 bg-white" sandbox="allow-scripts allow-forms" title="Website preview"></iframe>
-        <div id="codeBoxOverlay" style="position:absolute; top:0; left:0; width:0; height:0; pointer-events:none;"></div>
         <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-8" id="previewEmptyState">
           <span class="material-symbols-outlined text-[48px] mb-3" style="color: var(--line);">web</span>
           <p class="text-sm text-[var(--ink-soft)]">Nothing built yet.</p>
         </div>
-      </div>
-      <div id="codeBoxPanel" class="hidden" style="position:fixed; bottom:24px; left:24px; max-width:420px; max-height:320px; overflow:auto; background:#0f172a; color:#fff; border-radius:10px; padding:14px; font-size:12px; font-family:monospace; z-index:1000; box-shadow:0 8px 24px rgba(0,0,0,0.3);">
-        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-          <strong id="codeBoxPanelTitle" style="color:#FF8C00;">Section</strong>
-          <button id="codeBoxPanelClose" style="background:none; border:none; color:#fff; cursor:pointer; font-size:14px;">✕</button>
-        </div>
-        <pre id="codeBoxPanelContent" style="white-space:pre-wrap; margin:0;"></pre>
       </div>
     </div>
   </section>
@@ -148,8 +140,6 @@
 
 let projectId = null;
 let currentHtml = null;
-let lastRenderedHtml = null;
-let codeBoxController = null;
 
 function setPreviewStatus(active) {
   const dot = document.getElementById('previewStatusDot');
@@ -159,56 +149,15 @@ function setPreviewStatus(active) {
 
 function renderPreview(html) {
   document.getElementById('previewEmptyState').style.display = 'none';
-  lastRenderedHtml = html;
   document.getElementById('previewFrame').srcdoc = injectCodeBoxScript(html);
   // codeEmptyMsg lives inside codeContent, so the textContent write below
   // deletes it - it only exists on the first render.
   document.getElementById('codeEmptyMsg')?.remove();
   document.getElementById('codeContent').textContent = html;
-
-  if (!codeBoxController) {
-    codeBoxController = attachCodeBoxOverlay(
-      document.getElementById('previewFrame'),
-      document.getElementById('codeBoxOverlay'),
-      showCodeBoxSnippet
-    );
-    document.getElementById('codeBoxOverlay').addEventListener('gurost-code-box-toggle', (e) => {
-      if (!e.detail.isOpen) document.getElementById('codeBoxPanel').classList.add('hidden');
-    });
-  }
+  // No click-to-code overlay here: the white panel shows only the site,
+  // and code opens solely from Pulse's View Code. (The overlay's boxes
+  // sat above the preview and swallowed clicks on the site itself.)
 }
-
-function showCodeBoxSnippet(section) {
-  if (!lastRenderedHtml) return;
-  const panel = document.getElementById('codeBoxPanel');
-  const titleEl = document.getElementById('codeBoxPanelTitle');
-  const contentEl = document.getElementById('codeBoxPanelContent');
-  try {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(lastRenderedHtml, 'text/html');
-    let el = doc.body;
-    if (section.domPath) {
-      const steps = section.domPath.split('>');
-      for (const step of steps) {
-        const idx = parseInt(step.match(/\[(\d+)\]/)?.[1] ?? '-1', 10);
-        if (idx < 0 || !el.children[idx]) { el = null; break; }
-        el = el.children[idx];
-      }
-    }
-    if (!el) throw new Error('Could not locate this section in the source.');
-    titleEl.textContent = `<${section.tag}>`;
-    contentEl.textContent = el.outerHTML;
-    panel.classList.remove('hidden');
-  } catch (err) {
-    titleEl.textContent = 'Section';
-    contentEl.textContent = `Couldn't extract this section's code: ${err.message}`;
-    panel.classList.remove('hidden');
-  }
-}
-document.getElementById('codeBoxPanelClose')?.addEventListener('click', () => {
-  document.getElementById('codeBoxPanel').classList.add('hidden');
-  codeBoxController?.closeAll();
-});
 
 function renderVariants(variants) {
   const grid = document.getElementById('variantGrid');
