@@ -66,9 +66,36 @@ const CODE_BOX_INJECTION_SCRIPT = `
   if (document.readyState === 'complete') reportSections();
   else window.addEventListener('load', reportSections);
   window.addEventListener('resize', reportSections);
+
+  // Keep the preview on the generated page. A srcdoc frame resolves
+  // relative URLs - even "#menu" - against the PARENT page's URL, so an
+  // unhandled in-page link or form submit loaded the builder itself
+  // inside the preview. These run last (window, bubble phase) and only
+  // act when the site's own handler didn't already, so its smooth
+  // scrolling and form success messages are left alone.
+  window.addEventListener('click', function(e) {
+    if (e.defaultPrevented) return;
+    var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+    if (!a) return;
+    var href = a.getAttribute('href') || '';
+    if (/^(mailto|tel):/i.test(href)) return;
+    e.preventDefault();
+    if (href.charAt(0) !== '#') return; // leaves the page: works on the published site, not in the preview
+    var id = decodeURIComponent(href.slice(1));
+    var target = id ? document.getElementById(id) : null;
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    else window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  window.addEventListener('submit', function(e) {
+    if (!e.defaultPrevented) e.preventDefault();
+  });
 })();
-<\\/script>
+</script>
 `;
+// ^ A plain </script>: this file is loaded via <script src>, so the tag
+// can't close an outer script. The old "<\\/script>" reached the page
+// as "<\/script>", which isn't a closing tag - the script ran on into
+// </body></html>, failed to parse, and none of it ever executed.
 
 /**
  * Injects the reporting script right before </body> — website mode's

@@ -1,4 +1,4 @@
-// Run: node --test test/
+// Run: node --test test/variant-response.test.js
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { parseVariantResponse, VariantParseError } = require("../lib/variant-response");
