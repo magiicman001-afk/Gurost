@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 
 <html class="light" lang="en"><head>
+<script>
+// A builder never runs inside a frame. If a generated site in the preview
+// navigates to a relative URL, the preview frame loads this page - a
+// second header, preview and Bot conversation squeezed into the left
+// panel. Stop and show nothing instead.
+if (window.self !== window.top) { window.stop(); document.documentElement.innerHTML = ''; }
+</script>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Build App - Gurost</title>

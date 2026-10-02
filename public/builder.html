@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+// A builder never runs inside a frame. If a generated site in the preview
+// navigates to a relative URL, the preview frame loads this page - a
+// second header, preview and Bot conversation squeezed into the left
+// panel. Stop and show nothing instead.
+if (window.self !== window.top) { window.stop(); document.documentElement.innerHTML = ''; }
+</script>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Build Website - Gurost</title>
@@ -148,10 +155,22 @@ function setPreviewStatus(active) {
   dot.classList.toggle('status-live', active);
 }
 
-function renderPreview(html) {
+// Where the visitor is in the preview, so an edit re-render opens at the
+// same place instead of jumping back to the top.
+let previewScrollY = 0;
+window.addEventListener('message', (e) => {
+  if (e.source === document.getElementById('previewFrame')?.contentWindow && e.data?.type === 'gurost-preview-scroll') {
+    previewScrollY = Number(e.data.y) || 0;
+  }
+});
+
+// keepScroll: true for edits of the same page (Pulse edit, undo, redo,
+// history restore); a newly picked or loaded design opens at the top.
+function renderPreview(html, { keepScroll = false } = {}) {
   clearLivePreview();
   document.getElementById('previewEmptyState').style.display = 'none';
-  document.getElementById('previewFrame').srcdoc = injectCodeBoxScript(html);
+  if (!keepScroll) previewScrollY = 0;
+  document.getElementById('previewFrame').srcdoc = injectCodeBoxScript(html, { scrollY: previewScrollY });
   // codeEmptyMsg lives inside codeContent, so the textContent write below
   // deletes it - it only exists on the first render.
   document.getElementById('codeEmptyMsg')?.remove();
@@ -209,7 +228,7 @@ function renderVariants(variants) {
   grid.innerHTML = variants.map((v) => `
     <button class="group text-left border border-[var(--line)] rounded-none overflow-hidden hover:border-[var(--gurost-primary)] transition-colors bg-white" data-variant-id="${v.id}">
       <div class="aspect-video bg-white overflow-hidden pointer-events-none">
-        <iframe class="w-full h-full border-0" srcdoc="${v.html.replace(/"/g, '&quot;')}" sandbox="allow-scripts" tabindex="-1" title="${v.label} preview"></iframe>
+        <iframe class="w-full h-full border-0" srcdoc="${injectCodeBoxScript(v.html).replace(/&/g, '&amp;').replace(/"/g, '&quot;')}" sandbox="allow-scripts" tabindex="-1" title="${v.label} preview"></iframe>
       </div>
       <div class="p-2">
         <p class="text-xs font-semibold group-hover:text-[var(--gurost-primary)] transition-colors">${v.label}</p>
@@ -503,7 +522,7 @@ async function sendCorrection(instruction) {
   try {
     const result = await GurostAPI.call('/api/pulse', { method: 'POST', body: { projectId, action: 'correct', instruction } });
     currentHtml = result.html;
-    renderPreview(currentHtml);
+    renderPreview(currentHtml, { keepScroll: true });
     logBot('Pulse', result.summary || 'Change applied.', 'ok');
   } catch (err) {
     logBot('Pulse', err.message, 'fail');
@@ -540,7 +559,7 @@ async function undoChange() {
   try {
     const result = await GurostAPI.call(`/api/project/${projectId}/undo`, { method: 'POST' });
     currentHtml = result.html;
-    renderPreview(currentHtml);
+    renderPreview(currentHtml, { keepScroll: true });
     return result;
   } catch (err) {
     console.error('[builder] undo failed:', err.message);
@@ -552,7 +571,7 @@ async function redoChange() {
   try {
     const result = await GurostAPI.call(`/api/project/${projectId}/redo`, { method: 'POST' });
     currentHtml = result.html;
-    renderPreview(currentHtml);
+    renderPreview(currentHtml, { keepScroll: true });
     return result;
   } catch (err) {
     console.error('[builder] redo failed:', err.message);
@@ -573,7 +592,7 @@ async function shareProject() {
 }
 function applyHistoryRestore(restoreData) {
   currentHtml = restoreData.html;
-  renderPreview(currentHtml);
+  renderPreview(currentHtml, { keepScroll: true });
 }
 
 window.gurostBuilder = {

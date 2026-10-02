@@ -89,9 +89,33 @@ const CODE_BOX_INJECTION_SCRIPT = `
   window.addEventListener('submit', function(e) {
     if (!e.defaultPrevented) e.preventDefault();
   });
+
+  // Edits re-render the preview; report where the visitor is so the
+  // next render can open at the same place instead of jumping to the top.
+  var scrollTimer = null;
+  window.addEventListener('scroll', function() {
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(function() {
+      window.parent.postMessage({ type: 'gurost-preview-scroll', y: window.scrollY }, '*');
+    }, 120);
+  }, { passive: true });
+  var restoreY = window.__gurostRestoreY;
+  if (restoreY > 0) {
+    var restore = function() { window.scrollTo({ top: restoreY, behavior: 'instant' }); };
+    restore();
+    window.addEventListener('load', restore); // again once images and fonts have moved the layout
+  }
 })();
 </script>
 `;
+
+// Relative URLs in a srcdoc frame resolve against the PARENT page's URL,
+// so "#booking" - from a link the click guard never sees (a handler that
+// stops propagation) or from a script (location.href = '#booking') -
+// loaded the whole builder inside the preview: a second header, preview
+// and Bot conversation panel squeezed into the left panel. With this
+// base, "#booking" is "about:srcdoc#booking": a jump within the page.
+const PREVIEW_BASE_TAG = '<base href="about:srcdoc">';
 // ^ A plain </script>: this file is loaded via <script src>, so the tag
 // can't close an outer script. The old "<\\/script>" reached the page
 // as "<\/script>", which isn't a closing tag - the script ran on into
@@ -103,11 +127,15 @@ const CODE_BOX_INJECTION_SCRIPT = `
  * app-builder.html's buildPreviewDocument) does too, since it's a
  * real HTML document with a #root mount point, not raw JSX.
  */
-function injectCodeBoxScript(htmlDocument) {
-  if (htmlDocument.includes('</body>')) {
-    return htmlDocument.replace('</body>', CODE_BOX_INJECTION_SCRIPT + '</body>');
-  }
-  return htmlDocument + CODE_BOX_INJECTION_SCRIPT; // honest fallback if a document genuinely has no </body>, rather than silently doing nothing
+function injectCodeBoxScript(htmlDocument, { scrollY = 0 } = {}) {
+  // The page's own <base> (rare) would undo the fix above.
+  let doc = String(htmlDocument).replace(/<base\b[^>]*>/gi, '');
+  const head = PREVIEW_BASE_TAG + (scrollY > 0 ? `<script>window.__gurostRestoreY = ${Math.round(scrollY)};</script>` : '');
+  doc = /<head\b[^>]*>/i.test(doc) ? doc.replace(/<head\b[^>]*>/i, (m) => m + head) : head + doc;
+  // Before the LAST </body>: an earlier one can sit inside a script string.
+  const at = doc.toLowerCase().lastIndexOf('</body>');
+  if (at !== -1) return doc.slice(0, at) + CODE_BOX_INJECTION_SCRIPT + doc.slice(at);
+  return doc + CODE_BOX_INJECTION_SCRIPT; // honest fallback if a document genuinely has no </body>, rather than silently doing nothing
 }
 
 /**
