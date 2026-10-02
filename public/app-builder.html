@@ -32,7 +32,7 @@
 </style>
 <link href="shared/pulse-widget.css" rel="stylesheet"/>
 </head>
-<body class="bg-[#FAFAF9] text-on-background font-body-md min-h-screen flex flex-col">
+<body class="bg-[#FAFAF9] text-on-background font-body-md h-screen flex flex-col overflow-y-auto overflow-x-hidden">
 <!-- Top bar - real, properly proportioned, matching Website Builder -->
 <header class="w-full h-14 flex items-center justify-between px-5 bg-white border-b border-[var(--line)] flex-shrink-0" style="box-shadow: 0 1px 3px rgba(26,26,46,0.04);">
 <div class="flex items-center gap-3 min-w-0">
@@ -48,7 +48,7 @@ Dashboard
 </a>
 </header>
 <!-- Main Content -->
-<main class="flex-grow flex flex-col items-center pt-24 pb-32 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto w-full gap-20">
+<main class="flex-1 flex flex-col w-full min-h-0">
 
 <!-- Real, visible error banner - this was genuinely missing entirely.
      showGenerateError() used to only console.error() - a real build
@@ -61,10 +61,10 @@ Dashboard
 </div>
 
 <!-- Two clean screens - same real, proven pattern as Website Builder -->
-<div class="w-full flex-1 grid grid-cols-1 lg:grid-cols-2 gap-3 p-3 min-h-0" style="min-height: calc(100vh - 56px);">
+<div class="w-full flex-1 grid grid-cols-1 md:grid-cols-2 gap-3 p-3 min-h-0">
 
   <!-- LEFT: Live Preview -->
-  <section class="screen-panel flex flex-col bg-white border border-[var(--line)] rounded-none min-h-[300px] lg:min-h-0 overflow-hidden">
+  <section class="screen-panel flex flex-col bg-white border border-[var(--line)] rounded-none min-h-[300px] md:min-h-0 overflow-hidden">
     <div class="px-4 py-2.5 border-b border-[var(--line)] flex items-center justify-between flex-shrink-0">
       <h2 class="font-semibold text-xs uppercase tracking-wide text-[var(--ink-soft)]">Live Preview</h2>
       <div class="flex items-center gap-3">
@@ -125,27 +125,36 @@ Dashboard
     </div>
   </section>
 
-  <!-- RIGHT: Code -->
-  <section class="screen-panel flex flex-col bg-[#0f172a] border border-[var(--line)] rounded-none min-h-[300px] lg:min-h-0 overflow-hidden" style="animation-delay: 0.1s;">
+  <!-- RIGHT: the bot conversation only. The generated code is a drawer
+       over this panel, opened solely by Pulse's View Code button. -->
+  <section class="screen-panel relative flex flex-col bg-[#0f172a] border border-[var(--line)] rounded-none min-h-[300px] md:min-h-0 overflow-hidden" style="animation-delay: 0.1s;">
     <div class="px-4 py-2.5 border-b border-white/10 flex items-center justify-between flex-shrink-0">
-      <h2 class="font-semibold text-xs uppercase tracking-wide text-white/60">Code</h2>
+      <h2 class="font-semibold text-xs uppercase tracking-wide text-white/60">Bot conversation</h2>
       <div class="flex gap-1.5">
         <div class="w-2 h-2 rounded-full bg-white/20"></div>
         <div class="w-2 h-2 rounded-full bg-white/20"></div>
         <div class="w-2 h-2 rounded-full bg-white/20"></div>
       </div>
     </div>
-    <div class="w-full flex-1 overflow-auto min-h-0" id="codePanel">
-      <div class="flex gap-2 p-3 border-b border-white/10 overflow-x-auto" id="codeFileTabs"></div>
-      <pre class="p-4 text-xs text-white leading-relaxed" id="codeContent" style="font-family: 'SF Mono', Menlo, monospace; white-space: pre-wrap;"><span class="text-white/40" id="codeEmptyMsg">// Nothing generated yet.</span></pre>
+    <div class="flex-1 min-h-0 overflow-y-auto px-4 py-3" id="botLog" aria-live="polite">
+      <p class="text-xs text-white/40" id="botLogEmpty" style="font-family: 'SF Mono', Menlo, monospace;">// The bots will talk here once a build starts.</p>
+      <ol class="flex flex-col gap-2 text-xs" id="botLogList"></ol>
+    </div>
+    <div class="hidden absolute inset-0 z-20 flex-col bg-[#0b1220]" id="codePane">
+      <div class="px-4 py-2.5 border-b border-white/10 flex items-center justify-between flex-shrink-0">
+        <h2 class="font-semibold text-xs uppercase tracking-wide text-white/60">Code</h2>
+        <button class="text-white/60 hover:text-white text-xs flex items-center gap-1" id="codePaneClose" aria-label="Close code view"><span class="material-symbols-outlined text-[16px]">close</span>Close</button>
+      </div>
+      <div class="w-full flex-1 overflow-auto min-h-0" id="codePanel">
+        <div class="flex gap-2 p-3 border-b border-white/10 overflow-x-auto" id="codeFileTabs"></div>
+        <pre class="p-4 text-xs text-white leading-relaxed" id="codeContent" style="font-family: 'SF Mono', Menlo, monospace; white-space: pre-wrap;"><span class="text-white/40" id="codeEmptyMsg">// Nothing generated yet.</span></pre>
+      </div>
     </div>
   </section>
 </div>
 <button class="hidden" id="codeToggleBtn" type="button"><span id="codeToggleLabel"></span></button>
 <a class="hidden" href="assistant.html" id="businessAssistantLink"></a>
 
-     original prompt, not a silent patch — said plainly in the UI, not
-     just in code comments. -->
 </main>
 <!-- Footer (Shared Component Style) -->
 <footer class="w-full flex-shrink-0 bg-white border-t border-[var(--line)] px-4 py-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
@@ -190,6 +199,7 @@ Dashboard
 <script src="shared/checkpoint-ui.js"></script>
 <script src="shared/pulse-voice.js"></script>
 <script src="shared/code-boxes.js"></script>
+<script src="shared/bot-conversation.js"></script>
 <script>
 /**
  * App Builder — real generation + a genuine best-effort live preview.
@@ -255,7 +265,7 @@ let isGenerating = false;
 function setStatus(icon, text, show) {
   document.getElementById('statusIcon').textContent = icon;
   document.getElementById('statusText').textContent = text;
-  document.getElementById('statusOverlay').style.display = show ? 'flex' : 'none';
+  document.getElementById('statusOverlay').style.display = 'none'; // progress lives in the bot conversation
 }
 
 function showSkeleton(show) {
@@ -537,6 +547,28 @@ function renderStageChecklist() {
     .join('');
 }
 
+// Which bot speaks for each App Builder stage.
+const STAGE_BOTS = {
+  schema: 'Schema', backend: 'Backend', frontend: 'Frontend',
+  reviewing: 'Reviewer', fixing: 'Reviewer', verifying: 'Verifier', done: 'Builder'
+};
+const loggedStages = new Set(); // the server replays recent events to late joiners - log each once
+
+function logStage(msg) {
+  const key = `${msg.stage}:${msg.status}`;
+  if (loggedStages.has(key)) return;
+  loggedStages.add(key);
+  const bot = STAGE_BOTS[msg.stage] || 'Builder';
+  const label = STAGE_LABELS[msg.stage] || msg.stage;
+  const model = msg.data?.model ? ` (${msg.data.model})` : '';
+  if (msg.stage === 'paused') logBot('Builder', 'Paused.', 'info', msg.at);
+  else if (msg.stage === 'resumed') logBot('Builder', 'Resuming…', 'work', msg.at);
+  else if (msg.stage === 'done' && msg.status === 'complete') logBot('Builder', 'Done — your app is in the preview on the left.', 'ok', msg.at);
+  else if (msg.status === 'running') logBot(bot, `${label}…${model}`, 'work', msg.at);
+  else if (msg.status === 'complete') logBot(bot, `${label} — done.`, 'ok', msg.at);
+  else if (msg.status === 'failed' || msg.status === 'error') logBot(bot, `${label} failed${msg.data?.error ? `: ${msg.data.error}` : '.'}`, 'fail', msg.at);
+}
+
 function connectGenerationSocket(id) {
   if (generationSocket) generationSocket.close();
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -547,8 +579,10 @@ function connectGenerationSocket(id) {
     try { msg = JSON.parse(event.data); } catch { return; }
 
     if (msg.type === 'stage_progress') {
+      logStage(msg);
       handleStageProgress(msg);
     } else if (msg.type === 'error') {
+      logBot('Builder', msg.error, 'fail', msg.at);
       showGenerateError(msg.error);
       setGenerating(false);
     }
@@ -661,6 +695,10 @@ async function generateApp(promptText) {
   if (emptyStateOnStart) emptyStateOnStart.style.display = 'none';
   resetStageChecklist();
   setStatus('bolt', 'Starting build…', true);
+  clearBotLog();
+  loggedStages.clear();
+  logBot('You', trimmed);
+  logBot('Builder', 'Starting a new build…', 'work');
 
   try {
     // Real streaming start: returns immediately with a projectId, then
@@ -679,6 +717,7 @@ async function generateApp(promptText) {
   } catch (err) {
     showSkeleton(true);
     setStatus('error', 'Generation failed.', true);
+    logBot('Builder', `Generation failed: ${err.message}`, 'fail');
     showGenerateError(err.message);
     setGenerating(false);
   }
@@ -770,6 +809,7 @@ async function applyCorrection(instruction) {
   // throws honestly.
   const correction = (instruction || '').trim();
   if (!correction) throw new Error("No instruction given.");
+  logBot('Pulse', `Applying edit: "${correction.split(' (earlier changes this session:')[0]}"…`, 'work');
 
   if (isGenerating && projectId) {
     await GurostAPI.call('/api/app-builder/correct', { method: 'POST', body: { projectId, instruction: correction } });
@@ -850,6 +890,8 @@ window.gurostBuilder = {
   deploy: () => attemptDeploy(),
   share: shareProject,
   applyHistoryRestore,
+  logActivity,
+  toggleCode,
 };
 
 async function attemptDeploy() {

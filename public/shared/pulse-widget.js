@@ -748,14 +748,19 @@
     }));
 
     document.getElementById('actViewCode').addEventListener('click', () => {
-      if (typeof gb.toggleCode === 'function') { gb.toggleCode(); return; }
-      // Real, honest fallback - Website/App Builder already show code
-      // permanently side by side, so there's nothing to toggle; just
-      // bring it into view, genuinely useful on a small screen.
+      if (typeof gb.toggleCode === 'function') {
+        // Builders: the code is a drawer over the bot conversation.
+        const open = document.getElementById('codePane')?.classList.contains('hidden');
+        gb.toggleCode();
+        gb.logActivity?.(open ? 'Showing the code — close it to return to the conversation.' : 'Code closed.', 'ok');
+        return;
+      }
+      // Pages without a drawer: bring the code into view.
       document.getElementById('codeContent')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
 
     document.getElementById('actPreview').addEventListener('click', () => {
+      gb.logActivity?.('Showing the live preview.', 'ok');
       const frame = document.getElementById('previewFrame') || document.getElementById('previewFrameAfter');
       frame?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
