@@ -29,8 +29,17 @@ const SCHEMA_AGENT_MODEL = process.env.SCHEMA_AGENT_MODEL || undefined;
 // real file's content for each requested placeholder and replaces it
 // with an actual, generated image. A failure on any single image is
 // caught and logged - it doesn't fail the whole build.
+// A placeholder nothing filled (generation failed, or the model used one
+// it never listed) would make the browser fetch "<page url>/IMG_3" - a
+// console error and a broken image. A transparent pixel instead.
+const BLANK_PIXEL = "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+
+function sweepPlaceholders(files) {
+  return files.map((f) => ({ ...f, content: String(f.content).replace(/\b(IMG|VID)_\d+\b/g, BLANK_PIXEL) }));
+}
+
 async function fulfillImageRequestsMultiFile(files, imageRequests) {
-  if (!imageRequests || !imageRequests.length) return files;
+  if (!imageRequests || !imageRequests.length) return sweepPlaceholders(files);
 
   // Real, same fix as variant-bot.js - generate every real image at
   // once rather than one at a time, since none of them depend on
@@ -41,14 +50,15 @@ async function fulfillImageRequestsMultiFile(files, imageRequests) {
       return { placeholder: imageRequests[i].placeholder, dataUrl: result.value };
     }
     console.error(`[app-bot] Real image generation failed for "${imageRequests[i].placeholder}":`, result.reason.message);
-    return { placeholder: imageRequests[i].placeholder, dataUrl: "" }; // real, honest fallback - empty rather than a visibly broken placeholder string
+    return { placeholder: imageRequests[i].placeholder, dataUrl: BLANK_PIXEL };
   });
 
-  return files.map((f) => {
+  return sweepPlaceholders(files.map((f) => {
     let content = f.content;
-    for (const r of replacements) content = content.split(r.placeholder).join(r.dataUrl);
+    // \b so IMG_1 doesn't also rewrite the start of IMG_10.
+    for (const r of replacements) content = content.replace(new RegExp(`\\b${r.placeholder}\\b`, "g"), () => r.dataUrl);
     return { ...f, content };
-  });
+  }));
 }
 
 /**
@@ -240,3 +250,5 @@ async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStag
 }
 
 module.exports = { buildApp, buildAppStaged };
+// Exposed for tests only.
+module.exports._internal = { fulfillImageRequestsMultiFile };

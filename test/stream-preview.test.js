@@ -96,3 +96,11 @@ test("labels from text skip icon-font glyph names", () => {
   const page = buildPartialPage(HEAD + NAV + trust);
   assert.equal(page.blocks[1].label, "Regulated by the Solicitors Regulation…");
 });
+
+test("live preview never fetches placeholders: VID_ src dropped, stray IMG_/VID_ replaced", () => {
+  const hero = '<section class="bg-stone-900"><video src="VID_1" autoplay muted loop playsinline></video><video autoplay muted><source src="VID_2" type="video/mp4"></video><img src="IMG_1" srcset="IMG_2 2x" alt="x"><h1>Stay</h1></section>\n';
+  const page = buildPartialPage(HEAD + NAV + hero);
+  assert.ok(!/\b(IMG|VID)_\d+\b/.test(page.html), "no placeholder left to fetch");
+  assert.match(page.html, /<video autoplay muted loop playsinline><\/video>/);
+  assert.match(page.html, /<source type="video\/mp4">/);
+});
