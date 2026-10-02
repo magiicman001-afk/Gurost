@@ -3,6 +3,7 @@ process.env.OPENROUTER_API_KEY ||= "test"; // claude-client refuses to load with
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const imageBot = require("../image-bot");
+const realSearchVideo = imageBot.searchVideo; // later tests stub it
 const { parseVariantResponse } = require("../lib/variant-response");
 const { fulfillVideoRequests, fulfillMedia } = require("../bots/variant-bot")._internal;
 
@@ -14,7 +15,7 @@ function stubVideos(found) {
   const asked = [];
   imageBot.searchVideo = async (q) => {
     asked.push(q);
-    return found(q) ? { url: `https://videos.pexels.com/${q.replace(/\W+/g, "-")}.mp4`, poster: `https://images.pexels.com/${q.replace(/\W+/g, "-")}.jpg`, credit: `Video by B on Pexels` } : null;
+    return found(q) ? { url: `https://cdn.pixabay.com/video/${q.replace(/\W+/g, "-")}.mp4`, poster: `https://cdn.pixabay.com/poster/${q.replace(/\W+/g, "-")}.jpg`, credit: `Video by B on Pixabay` } : null;
   };
   return asked;
 }
@@ -31,8 +32,8 @@ test("found clips: src, poster and preload set; credit returned", async () => {
   const { html } = parseVariantResponse(DOC(HERO + BAND));
   const v = await fulfillVideoRequests(html, [{ placeholder: "VID_1", query: "baker kneading dough" }, { placeholder: "VID_2", query: "bread oven fire" }]);
   assert.deepEqual(asked, ["baker kneading dough", "bread oven fire"]);
-  assert.match(v.html, /<video src="https:\/\/videos\.pexels\.com\/baker-kneading-dough\.mp4" poster="https:\/\/images\.pexels\.com\/baker-kneading-dough\.jpg" preload="metadata" autoplay/);
-  assert.match(v.html, /<source src="https:\/\/videos\.pexels\.com\/bread-oven-fire\.mp4"/);
+  assert.match(v.html, /<video src="https:\/\/cdn\.pixabay\.com\/video\/baker-kneading-dough\.mp4" poster="https:\/\/cdn\.pixabay\.com\/poster\/baker-kneading-dough\.jpg" preload="metadata" autoplay/);
+  assert.match(v.html, /<source src="https:\/\/cdn\.pixabay\.com\/video\/bread-oven-fire\.mp4"/);
   assert.ok(!/VID_\d/.test(v.html));
   assert.equal(v.found, 2);
 });
@@ -59,22 +60,35 @@ test("more than 3 videos: only 3 searched, the rest removed", async () => {
 test("fulfillMedia: videos and photos share one credit line; videos counted in the plan", async () => {
   stubVideos(() => true);
   imageBot.generateImageUrl = async () => "https://cdn/gem.png";
-  imageBot.searchImage = async () => ({ url: "https://cdn/stock.jpg", credit: "Photo by A on Pexels" });
+  imageBot.searchImage = async () => ({ url: "https://cdn/stock.jpg", credit: "Photo by A on Pixabay" });
   const parsed = parseVariantResponse(DOC(HERO + '<img src="IMG_1" data-gurost-image="loaf" data-gurost-image-role="secondary" alt="sourdough loaf">'));
   let plan;
   const html = await fulfillMedia(parsed, (p) => { plan = p; });
   assert.deepEqual(plan, { gemini: 0, stock: 1, videos: 1 });
-  assert.match(html, /Photos &amp; video: Video by B on Pexels · Photo by A on Pexels<\/p><footer>|Photos & video: Video by B on Pexels · Photo by A on Pexels/);
+  assert.match(html, /Photos &amp; video: Video by B on Pixabay · Photo by A on Pixabay<\/p><footer>|Photos & video: Video by B on Pixabay · Photo by A on Pixabay/);
 });
 
-test("pickVideoFile: smallest MP4 at least 1280 wide, else the largest smaller one", () => {
-  const files = [
-    { link: "a", file_type: "video/mp4", width: 3840 },
-    { link: "b", file_type: "video/mp4", width: 1920 },
-    { link: "c", file_type: "video/mp4", width: 1280 },
-    { link: "d", file_type: "video/mp4", width: 640 },
-  ];
-  assert.equal(imageBot.pickVideoFile(files).link, "c");
-  assert.equal(imageBot.pickVideoFile(files.filter((f) => f.width < 1280)).link, "d");
-  assert.equal(imageBot.pickVideoFile([{ link: "e", file_type: "video/webm", width: 1280 }]), null);
+test("pickVideoFile (Pixabay renditions): smallest MP4 at least 1280 wide, else the largest smaller one", () => {
+  const r = (w) => ({ url: `https://cdn.pixabay.com/video/${w}.mp4`, width: w, height: Math.round(w * 9 / 16), thumbnail: `t${w}.jpg` });
+  const videos = { large: r(3840), medium: r(1920), small: r(1280), tiny: r(640) };
+  assert.equal(imageBot.pickVideoFile(videos).width, 1280);
+  assert.equal(imageBot.pickVideoFile({ tiny: r(640), small: r(960) }).width, 960);
+  assert.equal(imageBot.pickVideoFile({ large: { url: "", width: 1920 } }), null, "Pixabay leaves url empty for missing renditions");
+});
+
+test("searchVideo: Pixabay hit -> landscape clip, poster and credit; no key -> null", async () => {
+  const realFetch = global.fetch;
+  const asked = [];
+  global.fetch = async (url) => { asked.push(url); return { ok: true, json: async () => ({ hits: [
+    { duration: 90, user: "long", videos: { tiny: { url: "https://cdn.pixabay.com/video/long.mp4", width: 1280, height: 720, thumbnail: "long.jpg" } } },
+    { duration: 12, user: "portrait", videos: { tiny: { url: "https://cdn.pixabay.com/video/tall.mp4", width: 720, height: 1280, thumbnail: "tall.jpg" } } },
+    { duration: 10, user: "nuwaus", videos: { tiny: { url: "https://cdn.pixabay.com/video/pool.mp4", width: 1280, height: 720, thumbnail: "https://cdn.pixabay.com/video/pool.jpg" } } },
+  ] }) }; };
+  try {
+    process.env.PIXABAY_API_KEY = "k";
+    assert.deepEqual(await realSearchVideo("resort pool"), { url: "https://cdn.pixabay.com/video/pool.mp4", poster: "https://cdn.pixabay.com/video/pool.jpg", credit: "Video by nuwaus on Pixabay", provider: "pixabay" });
+    assert.match(asked[0], /^https:\/\/pixabay\.com\/api\/videos\/\?key=k&q=resort%20pool/);
+    delete process.env.PIXABAY_API_KEY;
+    assert.equal(await realSearchVideo("resort pool"), null);
+  } finally { global.fetch = realFetch; }
 });

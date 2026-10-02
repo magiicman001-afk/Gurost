@@ -1,8 +1,8 @@
 /**
  * Image Bot — sources real stock photography and inserts it into
- * generated pages. Three providers, tried in order (first configured
- * key wins): Unsplash, Pexels, Pixabay — all free tiers, all confirmed
- * current REST APIs as of writing.
+ * generated pages. Two providers, tried in order (first configured key
+ * wins): Pixabay, then Unsplash — both free tiers. Stock video comes
+ * from Pixabay too (searchVideo).
  *
  * "Make this page look professional" is handled as: Claude picks 2-4
  * search queries appropriate to the page's content (not literally the
@@ -48,36 +48,48 @@ async function searchUnsplash(query) {
   return photo ? { url: photo.urls.regular, credit: `Photo by ${photo.user.name} on Unsplash`, provider: "unsplash" } : null;
 }
 
-async function searchPexels(query) {
-  const key = process.env.PEXELS_API_KEY;
-  if (!key) return null;
-  const res = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=1`, {
-    headers: { Authorization: key }
-  });
-  if (!res.ok) return null;
-  const data = await res.json();
-  const photo = data.photos?.[0];
-  return photo ? { url: photo.src.large, credit: `Photo by ${photo.photographer} on Pexels`, provider: "pexels" } : null;
+// Pixabay hands out photo links (pixabay.com/get/...) that expire and
+// must not be hotlinked, so a found photo is downloaded and stored in
+// the project-assets bucket like a generated image. If that fails the
+// photo is skipped (the caller falls back) rather than shipping a link
+// that breaks later.
+async function storeRemoteImage(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`download failed (${res.status})`);
+  const type = res.headers.get("content-type") || "image/jpeg";
+  const ext = { "image/png": "png", "image/webp": "webp" }[type] || "jpg";
+  const { supabase } = require("./lib/db");
+  const path = `stock/${require("crypto").randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from("project-assets").upload(path, Buffer.from(await res.arrayBuffer()), { contentType: type });
+  if (error) throw error;
+  return supabase.storage.from("project-assets").getPublicUrl(path).data.publicUrl;
 }
 
 async function searchPixabay(query) {
   const key = process.env.PIXABAY_API_KEY;
-  if (!key) return null;
-  const res = await fetch(`https://pixabay.com/api/?key=${key}&q=${encodeURIComponent(query)}&per_page=3&image_type=photo`);
+  if (!key || !String(query || "").trim()) return null;
+  const q = encodeURIComponent(String(query).slice(0, 100)); // Pixabay's limit
+  const res = await fetch(`https://pixabay.com/api/?key=${key}&q=${q}&per_page=3&image_type=photo&orientation=horizontal&safesearch=true`);
   if (!res.ok) return null;
   const data = await res.json();
   const photo = data.hits?.[0];
-  return photo ? { url: photo.largeImageURL, credit: `Image by ${photo.user} on Pixabay`, provider: "pixabay" } : null;
+  if (!photo) return null;
+  try {
+    return { url: await storeRemoteImage(photo.largeImageURL), credit: `Photo by ${photo.user} on Pixabay`, provider: "pixabay" };
+  } catch (err) {
+    console.error("[image-bot] Storing Pixabay photo failed, skipping it:", err.message);
+    return null;
+  }
 }
 
 /**
  * Tries providers in order until one returns a result. Set
- * IMAGE_PROVIDER_ORDER (comma-separated: unsplash,pexels,pixabay) to
- * change priority — defaults to that order.
+ * IMAGE_PROVIDER_ORDER (comma-separated: pixabay,unsplash) to change
+ * priority — defaults to that order.
  */
 async function searchImage(query) {
-  const order = (process.env.IMAGE_PROVIDER_ORDER || "unsplash,pexels,pixabay").split(",").map((s) => s.trim());
-  const providers = { unsplash: searchUnsplash, pexels: searchPexels, pixabay: searchPixabay };
+  const order = (process.env.IMAGE_PROVIDER_ORDER || "pixabay,unsplash").split(",").map((s) => s.trim());
+  const providers = { unsplash: searchUnsplash, pixabay: searchPixabay };
   for (const name of order) {
     const fn = providers[name];
     if (!fn) continue;
@@ -274,34 +286,42 @@ async function generateImageUrl(description, options = {}) {
   }
 }
 
-// The MP4 rendition to embed: the smallest one at least 1280px wide
-// (sharp on a desktop hero without a 4K download), else the largest
-// one that is smaller.
-function pickVideoFile(files) {
-  const mp4 = (files || []).filter((f) => f && f.link && /mp4/i.test(f.file_type || "") && f.width);
-  const big = mp4.filter((f) => f.width >= 1280 && f.width <= 2560).sort((a, b) => a.width - b.width);
+// The MP4 rendition to embed from a Pixabay hit's `videos` object
+// ({ large, medium, small, tiny }, each { url, width, height, size,
+// thumbnail }): the smallest one at least 1280px wide (sharp on a
+// desktop hero without a 4K download), else the largest smaller one.
+// Pixabay leaves url empty for renditions it doesn't have.
+function pickVideoFile(videos) {
+  const files = Object.values(videos || {}).filter((f) => f && f.url && f.width);
+  const big = files.filter((f) => f.width >= 1280 && f.width <= 2560).sort((a, b) => a.width - b.width);
   if (big.length) return big[0];
-  return mp4.filter((f) => f.width < 1280).sort((a, b) => b.width - a.width)[0] || null;
+  return files.filter((f) => f.width < 1280).sort((a, b) => b.width - a.width)[0] || null;
 }
 
 /**
- * Free stock video from Pexels (same PEXELS_API_KEY as photos).
+ * Free stock video from Pixabay (same PIXABAY_API_KEY as photos).
  * Returns { url, poster, credit, provider } or null when there is no
- * key, no result or no usable MP4.
+ * key, no result or no usable MP4. Video files live on Pixabay's CDN
+ * (cdn.pixabay.com/video/...) and are linked, not copied - a clip is
+ * 5-20MB.
  */
 async function searchVideo(query, { orientation = "landscape" } = {}) {
-  const key = process.env.PEXELS_API_KEY;
+  const key = process.env.PIXABAY_API_KEY;
   if (!key || !String(query || "").trim()) return null;
-  const res = await fetch(`https://api.pexels.com/videos/search?query=${encodeURIComponent(query)}&per_page=5&orientation=${orientation}&size=medium`, {
-    headers: { Authorization: key }
-  });
+  const q = encodeURIComponent(String(query).slice(0, 100));
+  const res = await fetch(`https://pixabay.com/api/videos/?key=${key}&q=${q}&per_page=10&video_type=film&safesearch=true`);
   if (!res.ok) return null;
   const data = await res.json();
-  // Short clips loop better and download faster.
-  const videos = (data.videos || []).filter((v) => !v.duration || v.duration <= 40);
-  for (const v of videos.length ? videos : data.videos || []) {
-    const file = pickVideoFile(v.video_files);
-    if (file) return { url: file.link, poster: v.image || "", credit: `Video by ${v.user?.name || "a Pexels creator"} on Pexels`, provider: "pexels" };
+  const hits = data.hits || [];
+  // Background loops: landscape, short (loop well, download fast).
+  const shaped = (h) => {
+    const f = pickVideoFile(h.videos);
+    return f && (orientation !== "landscape" || f.width > f.height) ? f : null;
+  };
+  const preferred = hits.filter((h) => !h.duration || h.duration <= 40);
+  for (const h of [...preferred, ...hits.filter((h) => !preferred.includes(h))]) {
+    const file = shaped(h);
+    if (file) return { url: file.url, poster: file.thumbnail || "", credit: `Video by ${h.user || "a Pixabay creator"} on Pixabay`, provider: "pixabay" };
   }
   return null;
 }

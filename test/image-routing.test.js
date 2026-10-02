@@ -19,7 +19,7 @@ const PAGE = "<html><body>" + REQS.map((r) => `<img src="${r.placeholder}" alt="
 async function run({ stock }) {
   const calls = { gemini: [], stock: [] };
   imageBot.generateImageUrl = async (d) => { calls.gemini.push(d); return `https://cdn/gem/${d.replace(/\W+/g, "-")}.png`; };
-  imageBot.searchImage = async (q) => { calls.stock.push(q); return stock ? { url: `https://cdn/stock/${q.replace(/\W+/g, "-")}.jpg`, credit: "Photo by A on Pexels" } : null; };
+  imageBot.searchImage = async (q) => { calls.stock.push(q); return stock ? { url: `https://cdn/stock/${q.replace(/\W+/g, "-")}.jpg`, credit: "Photo by A on Pixabay" } : null; };
   let plan;
   const html = await fulfillImageRequests(PAGE, REQS, (p) => { plan = p; });
   const srcs = [...html.matchAll(/<img src="([^"]+)"/g)].map((m) => m[1]);
@@ -32,7 +32,7 @@ test("with a stock key: Gemini only for the hero + 1 featured, the rest stock", 
   assert.deepEqual(r.calls.gemini, ["shopfront at dawn", "croissant close-up"]);
   assert.equal(r.calls.stock.length, 5);
   assert.equal(r.srcs.length, 7, "every image filled");
-  assert.match(r.html, /Photos: Photo by A on Pexels<\/p><\/footer>/, "one deduplicated credit line inside the footer");
+  assert.match(r.html, /Photos: Photo by A on Pixabay<\/p><\/footer>/, "one deduplicated credit line inside the footer");
 });
 
 test("without a stock key: Gemini fallback capped at 4 per design; extras dropped, not broken", async () => {

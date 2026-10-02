@@ -199,7 +199,7 @@ function stripUnfilledImages(html) {
 
 // Image routing by importance. Gemini (paid) draws only the images that
 // carry the design - the hero and one featured shot; everything else
-// comes from free stock photo APIs (Unsplash / Pexels / Pixabay, see
+// comes from free stock photo APIs (Pixabay / Unsplash, see
 // image-bot.searchImage) when a key is configured. Without a key, or
 // when a search finds nothing, Gemini fills in up to a hard cap per
 // design; images past the cap are dropped rather than left broken.
@@ -229,7 +229,7 @@ function addPhotoCredits(html, credits) {
   return html.replace(/<\/body>/i, `${line}</body>`);
 }
 
-// Stock videos (Pexels) for VID_n placeholders. A found clip gets its
+// Stock videos (Pixabay) for VID_n placeholders. A found clip gets its
 // poster frame and preload="metadata"; a <video> with no clip is
 // removed whole, so the page never shows a broken player.
 const MAX_VIDEOS_PER_DESIGN = 3;
