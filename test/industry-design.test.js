@@ -47,3 +47,28 @@ test("accented words match: café is a cafe, not a restaurant", () => {
   assert.equal(getIndustryDesign(prompt).industry, "Bakery/Cafe");
   assert.equal(getIndustryDesign("A cosy café in Lisbon").industry, "Bakery/Cafe");
 });
+
+test("common business names match their industry (resort is a hotel, not a spa)", () => {
+  const cases = {
+    "Build a luxury resort website with a video hero, room gallery, spa section, dining, and booking form": "Hotel/Hospitality",
+    "A spa resort in Bali": "Hotel/Hospitality",
+    "A beach resort in the Maldives": "Hotel/Hospitality",
+    "A mountain resort in the Alps": "Hotel/Hospitality",
+    "A boutique hotel in Lisbon": "Hotel/Hospitality",
+    "A country inn with six rooms": "Hotel/Hospitality",
+    "A bed and breakfast in Cornwall": "Hotel/Hospitality",
+    "A roadside motel on Route 66": "Hotel/Hospitality",
+    "A coffee shop in Leeds": "Bakery/Cafe",
+    "A French bistro with a set menu": "Restaurant/Food Service",
+    "A 24-hour diner serving burgers and shakes": "Restaurant/Food Service",
+    "A barrister's chambers": "Legal Services",
+    "A legal practice for immigration cases": "Legal Services",
+    "A family dentist": "Dental Practice",
+    "An orthodontist offering Invisalign": "Dental Practice",
+    "A pilates studio with reformer classes": "Fitness/Gym App",
+    "A fitness studio for HIIT classes": "Fitness/Gym App",
+    "A barber shop for fades": "Beauty/Spa/Wellness Service",
+    "A wellness centre with massage and meditation": "Beauty/Spa/Wellness Service",
+  };
+  for (const [prompt, industry] of Object.entries(cases)) assert.equal(getIndustryDesign(prompt)?.industry, industry, prompt);
+});
