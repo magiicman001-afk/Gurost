@@ -123,7 +123,11 @@ function logRawReply(variantId, err) {
 // One design call, parsed by lib/variant-response.js. An unusable reply
 // is logged in full and retried once with the specific problem named;
 // any other error (network, credits, leak check) is not retried here.
-async function generateDesign({ system, content, plan, variantId, onStream }) {
+// Retries stream into nothing: the live preview already holds the first
+// attempt's partial page, and streaming keeps the inactivity timeout on.
+const DISCARD_STREAM = () => {};
+
+async function generateDesign({ system, content, plan, variantId, onStream, onRetry }) {
   const call = (userContent, stream) => callClaude({
     system,
     parse: parseVariantResponse,
@@ -135,6 +139,14 @@ async function generateDesign({ system, content, plan, variantId, onStream }) {
   try {
     return await call(content, onStream); // only the first attempt streams to the live preview
   } catch (err) {
+    if (err.idleTimeout) {
+      // Stalled (no output for 90s): one fresh attempt. If that stalls or
+      // fails too, the error reaches the caller and the build finishes
+      // with the other designs.
+      console.warn(`[variant-bot] "${variantId}" stalled, retrying:`, err.message);
+      if (onRetry) onRetry(err);
+      return await call(content, DISCARD_STREAM);
+    }
     if (!(err instanceof VariantParseError)) throw err;
     logRawReply(variantId, err);
     try {
@@ -411,7 +423,11 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
 
   const promises = BRIEFS.map((b) => {
     const system = systemFor(b.brief, includeBranding, design);
-    return generateDesign({ system, content: effectivePrompt, plan, variantId: b.id, onStream: live.streamFor(b, system) })
+    const onRetry = () => {
+      live.release(b.id); // its half-built page stops leading the preview
+      notify("designing", "variant-retrying", { variantId: b.id, label: b.label, reason: "no response for 90s" });
+    };
+    return generateDesign({ system, content: effectivePrompt, plan, variantId: b.id, onStream: live.streamFor(b, system), onRetry })
       .then(async (r) => {
         const html = await fulfillMedia(r.parsed, ({ gemini, stock, videos }) => {
           notify("designing", "images-running", { variantId: b.id, label: b.label, count: gemini + stock, gemini, stock, videos });
@@ -449,7 +465,7 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
 
 module.exports = { generateVariants, generateVariantsStaged, verifyRealHtml, checkCredibility, BRIEFS };
 // Exposed for tests only.
-module.exports._internal = { fulfillImageRequests, fulfillVideoRequests, fulfillMedia, stockQuery, createLivePreview, systemFor, condenseForReview };
+module.exports._internal = { generateDesign, fulfillImageRequests, fulfillVideoRequests, fulfillMedia, stockQuery, createLivePreview, systemFor, condenseForReview };
 
 // Real, genuine Credibility Engine - honestly flags what a completed
 // page might genuinely be missing for real trust (testimonials, a

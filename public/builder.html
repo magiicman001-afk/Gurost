@@ -340,6 +340,8 @@ function connectGenerationSocket(id) {
       } else if (msg.status === 'variant-complete') {
         variantsFinished++;
         log('Designer', `${d.label || 'Design'} ready (${variantsFinished}/4).`, 'ok');
+      } else if (msg.status === 'variant-retrying') {
+        log('Designer', `${d.label || 'A design'} went quiet (${d.reason || 'no response'}) — retrying it once…`, 'work');
       } else if (msg.status === 'variant-failed') {
         variantsFinished++;
         // The real reason, minus the raw model response the server appends.
