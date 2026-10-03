@@ -38,6 +38,20 @@ if (window.self !== window.top) { window.stop(); document.documentElement.innerH
     border: none; cursor: pointer;
   }
   ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 8px; }
+  /* The two-panel split without waiting for Tailwind's CDN script: if it
+     is slow or blocked (ad-blocker, network filter), the page used to
+     collapse - panels stacked, the hidden code pane shown, the logo huge.
+     Same values as the Tailwind classes, which take over once loaded. */
+  html, body { width: 100%; margin: 0; }
+  body { height: 100vh; display: flex; flex-direction: column; }
+  body > header, body > footer { flex-shrink: 0; }
+  body > header img, body > footer img { height: 20px; width: auto; }
+  .gurost-split { flex: 1 1 auto; min-height: 0; width: 100%; max-width: none; margin: 0; box-sizing: border-box;
+    display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 8px; }
+  @media (min-width: 768px) { .gurost-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+  .gurost-split > .screen-panel { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; }
+  .hidden { display: none; }
+  body > main { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; width: 100%; }
 </style>
 <link href="shared/pulse-widget.css" rel="stylesheet"/>
 </head>
@@ -70,7 +84,7 @@ Dashboard
 </div>
 
 <!-- Two clean screens - same real, proven pattern as Website Builder -->
-<div class="w-full flex-1 grid grid-cols-1 md:grid-cols-2 gap-2 p-2 min-h-0">
+<div class="gurost-split w-full flex-1 grid grid-cols-1 md:grid-cols-2 gap-2 p-2 min-h-0">
 
   <!-- LEFT: Live Preview -->
   <section class="screen-panel flex flex-col bg-white border border-[var(--line)] rounded-none min-h-[300px] md:min-h-0 overflow-hidden">
