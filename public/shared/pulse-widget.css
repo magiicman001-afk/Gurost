@@ -15,16 +15,16 @@
 
 #gurostPulseWidget {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  bottom: 16px;
+  right: 16px;
   z-index: 9999;
   font-family: 'Inter', sans-serif;
 }
 
 /* The ball itself - round, smooth, premium, per spec */
 #pulseBall {
-  width: 64px;
-  height: 64px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--pulse-gold), var(--pulse-orange));
   display: flex;
@@ -39,11 +39,11 @@
   position: relative;
 }
 #pulseBall:hover { box-shadow: 0 10px 30px rgba(255, 140, 0, 0.45); }
-#pulseBall.expanded { width: 80px; height: 80px; }
+#pulseBall.expanded { width: 56px; height: 56px; }
 
 #pulseBall .material-symbols-outlined {
   color: white;
-  font-size: 28px;
+  font-size: 24px;
   transition: transform 0.25s ease;
 }
 
@@ -95,13 +95,14 @@
 /* ============ Expanded panel ============ */
 #pulsePanel {
   position: absolute;
-  bottom: 80px;
+  bottom: 64px;
   right: 0;
-  width: 420px;
-  max-width: calc(100vw - 48px);
-  max-height: 70vh;
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  /* Never taller than the space above the ball. */
+  max-height: min(70vh, calc(100vh - 100px));
   background: white;
-  border-radius: 20px;
+  border-radius: 14px;
   box-shadow: 0 20px 60px -12px rgba(26, 26, 46, 0.25);
   border: 1px solid #E9E9EF;
   display: none;
@@ -111,7 +112,7 @@
 #pulsePanel.open { display: flex; }
 
 #pulsePanelHeader {
-  padding: 16px 20px;
+  padding: 10px 14px;
   border-bottom: 1px solid #E9E9EF;
   display: flex;
   align-items: center;
@@ -122,7 +123,7 @@
 #pulsePanelStatusText { font-size: 12px; color: #6B7280; }
 #pulsePanelClose { background: none; border: none; cursor: pointer; color: #6B7280; display: flex; align-items: center; }
 
-#pulsePanelBody { flex: 1; overflow-y: auto; padding: 16px 20px; }
+#pulsePanelBody { flex: 1; overflow-y: auto; padding: 10px 14px; }
 
 #pulseProgressTrack { width: 100%; height: 5px; background: #F3F4F6; border-radius: 3px; overflow: hidden; margin-bottom: 14px; display: none; }
 #pulseProgressTrack.visible { display: block; }
@@ -151,7 +152,7 @@
 #pulseInputArea { display: flex; flex-direction: column; gap: 10px; }
 #pulseTextArea {
   width: 100%;
-  min-height: 64px;
+  min-height: 48px;
   resize: vertical;
   border: 1px solid #E9E9EF;
   border-radius: 12px;
@@ -163,7 +164,7 @@
 
 #pulseActionRow { display: flex; gap: 8px; align-items: center; }
 #pulseMicButton {
-  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
   background: linear-gradient(135deg, var(--pulse-gold), var(--pulse-orange));
   border: none; color: white; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
@@ -171,7 +172,7 @@
 #pulseMicButton.listening { background: linear-gradient(135deg, var(--pulse-red), #DC2626); }
 #pulseSendButton {
   flex: 1; background: var(--pulse-ink); color: white; border: none;
-  border-radius: 10px; padding: 10px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+  border-radius: 10px; padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer;
 }
 #pulseSendButton:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -185,19 +186,19 @@
 /* ============ Real action button grid ============ */
 #pulseActionGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-top: 14px;
-  padding-top: 14px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
   border-top: 1px solid #E9E9EF;
 }
 .pulse-action-btn {
   display: none; /* real, deliberate default - JS shows only the ones each page actually supports */
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 10px 4px;
-  border-radius: 10px;
+  gap: 2px;
+  padding: 6px 2px;
+  border-radius: 8px;
   border: 1px solid #E9E9EF;
   background: white;
   cursor: pointer;
@@ -210,7 +211,7 @@
 .pulse-action-btn:hover { border-color: var(--pulse-orange); background: #FFF8F0; }
 .pulse-action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .pulse-action-btn:disabled:hover { border-color: #E9E9EF; background: white; }
-.pulse-action-btn .material-symbols-outlined { font-size: 20px; color: var(--pulse-orange); }
+.pulse-action-btn .material-symbols-outlined { font-size: 18px; color: var(--pulse-orange); }
 
 #pulseImagePanel, #pulseHistoryPanel { display: none; margin-top: 10px; padding: 12px; border-radius: 12px; border: 1px solid #E9E9EF; background: #FAFAF9; }
 #pulseImagePanel.visible, #pulseHistoryPanel.visible { display: block; }
