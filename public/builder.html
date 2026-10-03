@@ -354,6 +354,11 @@ function connectGenerationSocket(id) {
         if (d.gemini) log('Gemini', `Generating ${plural(d.gemini, 'key image')} (hero/featured) for ${label}…`, 'work');
         if (d.stock) log('Stock photos', `Finding ${plural(d.stock, 'supporting photo')} for ${label}…`, 'work');
         if (d.videos) log('Stock video', `Finding ${plural(d.videos, 'video clip')} for ${label}…`, 'work');
+      } else if (msg.status === 'images-note') {
+        const label = d.label || 'a design';
+        const n = d.count === 1 ? 'photo' : `${d.count} photos`;
+        if (d.kind === 'gemini-fallback') log('Gemini', `Gemini unavailable (${d.reason}) — using Pixabay ${n} instead for ${label}.`, 'ok');
+        else if (d.kind === 'image-dropped') log('Stock photos', `No image found for ${d.count === 1 ? 'a key image' : `${d.count} key images`} in ${label} (${d.reason}) — left out.`, 'fail');
       } else if (msg.status === 'variant-complete') {
         variantsFinished++;
         log('Designer', `${d.label || 'Design'} ready (${variantsFinished}/4).`, 'ok');

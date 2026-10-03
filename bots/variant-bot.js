@@ -209,6 +209,17 @@ function stripUnfilledImages(html) {
   return html.replace(/<img\b[^>]*\bsrc=["']IMG_\d+["'][^>]*>/g, "");
 }
 
+// Last pass over a finished page: no IMG_n / VID_n may survive anywhere -
+// the browser would request "<page url>/IMG_1" (a console error and a
+// broken image). Covers <img> slots, a video poster="IMG_1" (seen when
+// its image failed), srcset/data-src, CSS url(IMG_1) and stray text.
+function stripLeftoverPlaceholders(html) {
+  return stripUnfilledImages(html)
+    .replace(/\s(?:poster|src|srcset|data-src|data-bg|href)=(["'])[^"']*\b(?:IMG|VID)_\d+\b[^"']*\1/g, "")
+    .replace(/url\(\s*(["']?)(?:IMG|VID)_\d+\1\s*\)/g, "none")
+    .replace(/\b(?:IMG|VID)_\d+\b/g, "");
+}
+
 // Image routing by importance. Gemini (paid) draws only the images that
 // carry the design - the hero and one featured shot; everything else
 // comes from free stock photo APIs (Pixabay / Unsplash, see
@@ -216,6 +227,22 @@ function stripUnfilledImages(html) {
 // when a search finds nothing, Gemini fills in up to a hard cap per
 // design; images past the cap are dropped rather than left broken.
 const GEMINI_PRIORITY_PER_DESIGN = 2;
+// After a payment or quota failure (402 / quota / billing), Gemini is not
+// called again for a while: the other designs go straight to Pixabay
+// instead of each waiting for the same 402.
+const GEMINI_PAUSE_MS = 10 * 60 * 1000;
+let geminiPausedUntil = 0;
+const isGeminiOutOfCredit = (err) => /\b402\b|quota|billing|payment|RESOURCE_EXHAUSTED|No real image generation provider/i.test(String(err?.message || err));
+
+async function geminiImage(description) {
+  if (Date.now() < geminiPausedUntil) throw new Error("Gemini paused after a payment/quota error");
+  try {
+    return await imageBot.generateImageUrl(description);
+  } catch (err) {
+    if (isGeminiOutOfCredit(err)) geminiPausedUntil = Date.now() + GEMINI_PAUSE_MS;
+    throw err;
+  }
+}
 const GEMINI_MAX_PER_DESIGN = 4;
 const ROLE_ORDER = { hero: 0, featured: 1, secondary: 2, decorative: 3 };
 
@@ -263,6 +290,8 @@ async function fulfillVideoRequests(html, videoRequests) {
   wanted.forEach((req, i) => {
     const r = results[i];
     if (r.status === "fulfilled" && r.value?.url) {
+      // poster="IMG_n" counts as no poster - the image behind it may fail.
+      out = out.replace(new RegExp(`<video\\b[^>]*\\b${req.placeholder}\\b[^>]*>`), (tag) => tag.replace(/\s+poster=(["'])(?:IMG|VID)_\d+\1/, ""));
       out = out.replace(new RegExp(`(<video\\b[^>]*?)\\bsrc=(["'])${req.placeholder}\\2`), (m, open) =>
         `${open}src="${r.value.url}"${r.value.poster && !/\bposter=/.test(open) ? ` poster="${r.value.poster}"` : ""} preload="metadata"`);
       out = replacePlaceholder(out, req.placeholder, r.value.url); // a <source src="VID_n"> inside the video
@@ -278,10 +307,13 @@ async function fulfillVideoRequests(html, videoRequests) {
 }
 
 // onImageStart({ gemini, stock }) reports the plan before work starts.
-async function fulfillImageRequests(html, imageRequests, onImageStart, extraCredits = []) {
+// onNote({ kind, count, reason }) reports what changed on the way:
+// "gemini-fallback" (Gemini failed, Pixabay used) and "image-dropped"
+// (a hero/featured image nobody could supply).
+async function fulfillImageRequests(html, imageRequests, onImageStart, extraCredits = [], onNote = () => {}) {
   if (!imageRequests || !imageRequests.length) {
     if (onImageStart) onImageStart({ gemini: 0, stock: 0 });
-    return addPhotoCredits(stripUnfilledImages(html), extraCredits);
+    return addPhotoCredits(stripLeftoverPlaceholders(html), extraCredits);
   }
 
   const ordered = [...imageRequests].sort((a, b) => (ROLE_ORDER[a.role] ?? 2) - (ROLE_ORDER[b.role] ?? 2));
@@ -291,7 +323,7 @@ async function fulfillImageRequests(html, imageRequests, onImageStart, extraCred
 
   // Gemini for the priority images and stock searches for the rest, in parallel.
   const [geminiResults, stockResults] = await Promise.all([
-    Promise.allSettled(priority.map((r) => imageBot.generateImageUrl(r.description))),
+    Promise.allSettled(priority.map((r) => geminiImage(r.description))),
     Promise.allSettled(rest.map((r) => imageBot.searchImage(stockQuery(r))))
   ]);
 
@@ -299,37 +331,61 @@ async function fulfillImageRequests(html, imageRequests, onImageStart, extraCred
   let geminiUsed = priority.length;
   const credits = [...extraCredits];
   const fallback = [];
+  const geminiFailed = [];
   priority.forEach((req, i) => {
     const r = geminiResults[i];
     if (r.status === "fulfilled") finalHtml = replacePlaceholder(finalHtml, req.placeholder, r.value);
-    else console.error(`[variant-bot] Gemini image failed for "${req.placeholder}":`, r.reason.message);
+    else {
+      console.error(`[variant-bot] Gemini image failed for "${req.placeholder}":`, r.reason.message);
+      geminiFailed.push({ req, reason: r.reason });
+    }
   });
+
+  // A hero or featured image is never dropped just because Gemini failed:
+  // it gets the best Pixabay match instead.
+  if (geminiFailed.length) {
+    const stock = await Promise.allSettled(geminiFailed.map(({ req }) => imageBot.searchImage(stockQuery(req))));
+    let used = 0;
+    const dropped = [];
+    geminiFailed.forEach(({ req }, i) => {
+      const r = stock[i];
+      if (r.status === "fulfilled" && r.value?.url) {
+        finalHtml = replacePlaceholder(finalHtml, req.placeholder, r.value.url);
+        if (r.value.credit) credits.push(r.value.credit);
+        used++;
+      } else dropped.push(req);
+    });
+    const reason = isGeminiOutOfCredit(geminiFailed[0].reason) ? "payment or quota limit" : "error";
+    if (used) onNote({ kind: "gemini-fallback", count: used, reason });
+    if (dropped.length) onNote({ kind: "image-dropped", count: dropped.length, reason: "no Gemini image and no Pixabay match" });
+  }
   rest.forEach((req, i) => {
     const r = stockResults[i];
     if (r.status === "fulfilled" && r.value?.url) {
       finalHtml = replacePlaceholder(finalHtml, req.placeholder, r.value.url);
       if (r.value.credit) credits.push(r.value.credit);
-    } else if (geminiUsed < GEMINI_MAX_PER_DESIGN) {
+    } else if (geminiUsed < GEMINI_MAX_PER_DESIGN && Date.now() >= geminiPausedUntil) {
       geminiUsed++;
       fallback.push(req);
     } // past the cap: placeholder stays and stripUnfilledImages drops the <img>
   });
 
-  const fallbackResults = await Promise.allSettled(fallback.map((r) => imageBot.generateImageUrl(r.description)));
+  const fallbackResults = await Promise.allSettled(fallback.map((r) => geminiImage(r.description)));
   fallback.forEach((req, i) => {
     const r = fallbackResults[i];
     if (r.status === "fulfilled") finalHtml = replacePlaceholder(finalHtml, req.placeholder, r.value);
     else console.error(`[variant-bot] Gemini fallback image failed for "${req.placeholder}":`, r.reason.message);
   });
 
-  return addPhotoCredits(stripUnfilledImages(finalHtml), credits);
+  return addPhotoCredits(stripLeftoverPlaceholders(finalHtml), credits);
 }
 
-// Videos and images for one parsed design. onStart({ gemini, stock, videos }).
-async function fulfillMedia(parsed, onStart) {
+// Videos and images for one parsed design. onStart({ gemini, stock, videos });
+// onNote - see fulfillImageRequests.
+async function fulfillMedia(parsed, onStart, onNote) {
   const videos = (parsed.videoRequests || []).slice(0, MAX_VIDEOS_PER_DESIGN).length;
   const v = await fulfillVideoRequests(parsed.html, parsed.videoRequests);
-  return fulfillImageRequests(v.html, parsed.imageRequests, onStart && ((plan) => onStart({ ...plan, videos })), v.credits);
+  return fulfillImageRequests(v.html, parsed.imageRequests, onStart && ((plan) => onStart({ ...plan, videos })), v.credits, onNote);
 }
 
 async function generateVariants(prompt, { includeBranding = true, plan } = {}) {
@@ -431,7 +487,7 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
       .then(async (r) => {
         const html = await fulfillMedia(r.parsed, ({ gemini, stock, videos }) => {
           notify("designing", "images-running", { variantId: b.id, label: b.label, count: gemini + stock, gemini, stock, videos });
-        });
+        }, (note) => notify("designing", "images-note", { variantId: b.id, label: b.label, ...note }));
 
         // Real, genuine check - a variant only counts as real success
         // if this actually passes, not just because nothing crashed.
@@ -465,7 +521,7 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
 
 module.exports = { generateVariants, generateVariantsStaged, verifyRealHtml, checkCredibility, BRIEFS };
 // Exposed for tests only.
-module.exports._internal = { generateDesign, fulfillImageRequests, fulfillVideoRequests, fulfillMedia, stockQuery, createLivePreview, systemFor, condenseForReview };
+module.exports._internal = { generateDesign, stripLeftoverPlaceholders, resetGeminiPause: () => { geminiPausedUntil = 0; }, fulfillImageRequests, fulfillVideoRequests, fulfillMedia, stockQuery, createLivePreview, systemFor, condenseForReview };
 
 // Real, genuine Credibility Engine - honestly flags what a completed
 // page might genuinely be missing for real trust (testimonials, a
