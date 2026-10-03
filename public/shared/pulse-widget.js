@@ -192,6 +192,25 @@
     isExpanded = forceState !== undefined ? forceState : !isExpanded;
     panel.classList.toggle('open', isExpanded);
     ball.classList.toggle('expanded', isExpanded);
+    if (isExpanded) placePanel();
+  }
+
+  // The panel opens toward the roomier side of wherever the ball has been
+  // dragged - above or below it, lined up with its left or right edge -
+  // and is never taller than the space on that side.
+  function placePanel() {
+    const widget = document.getElementById('gurostPulseWidget');
+    const panel = document.getElementById('pulsePanel');
+    if (!widget || !panel) return;
+    const r = widget.getBoundingClientRect();
+    const below = r.top + r.height / 2 < window.innerHeight / 2;
+    const alignLeft = r.left + r.width / 2 < window.innerWidth / 2;
+    panel.style.top = below ? `${r.height + 12}px` : 'auto';
+    panel.style.bottom = below ? 'auto' : `${r.height + 12}px`;
+    panel.style.left = alignLeft ? '0' : 'auto';
+    panel.style.right = alignLeft ? 'auto' : '0';
+    const room = (below ? window.innerHeight - r.bottom : r.top) - 24;
+    panel.style.maxHeight = `${Math.max(220, Math.min(room, window.innerHeight * 0.7))}px`;
   }
 
   function init() {
@@ -289,6 +308,7 @@
     const ball = document.getElementById('pulseBall');
     let holdTimer = null;
     let isHolding = false;
+    let dragJustEnded = false; // a drag's release must not open the panel
 
     ball.addEventListener('mousedown', () => {
       isHolding = false;
@@ -345,6 +365,7 @@
 
     async function releaseBall() {
       clearTimeout(holdTimer);
+      if (dragJustEnded) { dragJustEnded = false; return; }
       if (!isHolding) {
         // Real, genuine quick tap - toggle the panel.
         togglePanel();
@@ -375,6 +396,72 @@
     ball.addEventListener('mouseup', releaseBall);
     ball.addEventListener('mouseleave', () => { if (isHolding) releaseBall(); });
     ball.addEventListener('touchend', releaseBall);
+
+    // Drag the ball anywhere (pointer events: mouse and touch). Moving more
+    // than 6px makes it a drag - hold-to-talk is cancelled and the release
+    // doesn't open the panel. On release it snaps to the nearer side edge
+    // and the spot is remembered (side + height as a share of the screen,
+    // so it survives a resize).
+    const POS_KEY = 'gurost.pulse.position';
+    const MARGIN = 16;
+    let savedPos = null;
+    const applyPosition = (pos) => {
+      const size = ball.offsetWidth || 52;
+      const top = Math.min(Math.max(MARGIN, pos.topPct * window.innerHeight), window.innerHeight - size - MARGIN);
+      widget.style.top = `${top}px`;
+      widget.style.bottom = 'auto';
+      widget.style.left = pos.side === 'left' ? `${MARGIN}px` : 'auto';
+      widget.style.right = pos.side === 'left' ? 'auto' : `${MARGIN}px`;
+    };
+    try {
+      const p = JSON.parse(localStorage.getItem(POS_KEY));
+      if (p && (p.side === 'left' || p.side === 'right') && p.topPct >= 0 && p.topPct <= 1) savedPos = p;
+    } catch { /* storage unavailable - default corner */ }
+    if (savedPos) applyPosition(savedPos);
+    window.addEventListener('resize', () => {
+      if (savedPos) applyPosition(savedPos);
+      if (isExpanded) placePanel();
+    });
+
+    let drag = null;
+    ball.addEventListener('pointerdown', (e) => {
+      if (e.button) return; // left button / touch / pen only
+      const r = widget.getBoundingClientRect();
+      drag = { id: e.pointerId, x: e.clientX, y: e.clientY, dx: e.clientX - r.left, dy: e.clientY - r.top, moved: false };
+    });
+    window.addEventListener('pointermove', (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      if (!drag.moved) {
+        if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 6) return;
+        drag.moved = true;
+        clearTimeout(holdTimer);
+        isHolding = false;
+        widget.classList.add('dragging');
+        try { ball.setPointerCapture(e.pointerId); } catch { /* not supported */ }
+      }
+      const size = ball.offsetWidth;
+      widget.style.left = `${Math.min(Math.max(0, e.clientX - drag.dx), window.innerWidth - size)}px`;
+      widget.style.top = `${Math.min(Math.max(0, e.clientY - drag.dy), window.innerHeight - size)}px`;
+      widget.style.right = 'auto';
+      widget.style.bottom = 'auto';
+      if (isExpanded) placePanel();
+    });
+    const endDrag = (e) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const moved = drag.moved;
+      drag = null;
+      if (!moved) return;
+      widget.classList.remove('dragging');
+      dragJustEnded = true;
+      setTimeout(() => { dragJustEnded = false; }, 400); // touch: no mouseup follows
+      const r = widget.getBoundingClientRect();
+      savedPos = { side: r.left + r.width / 2 < window.innerWidth / 2 ? 'left' : 'right', topPct: r.top / window.innerHeight };
+      applyPosition(savedPos);
+      try { localStorage.setItem(POS_KEY, JSON.stringify(savedPos)); } catch { /* not saved - still works */ }
+      if (isExpanded) placePanel();
+    };
+    window.addEventListener('pointerup', endDrag);
+    window.addEventListener('pointercancel', endDrag);
 
     document.getElementById('pulsePanelClose').addEventListener('click', () => togglePanel(false));
 

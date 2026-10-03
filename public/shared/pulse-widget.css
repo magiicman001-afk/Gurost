@@ -39,6 +39,10 @@
   position: relative;
 }
 #pulseBall:hover { box-shadow: 0 10px 30px rgba(255, 140, 0, 0.45); }
+/* Draggable: no page scroll/zoom while dragging on touch; grab cursor. */
+#pulseBall { touch-action: none; }
+#gurostPulseWidget.dragging #pulseBall { cursor: grabbing; animation: none; transform: scale(1.06); }
+#gurostPulseWidget.dragging #pulsePanel { pointer-events: none; }
 #pulseBall.expanded { width: 56px; height: 56px; }
 
 #pulseBall .material-symbols-outlined {
