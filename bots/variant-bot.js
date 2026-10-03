@@ -445,7 +445,7 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
         // Real, genuine progress - this fires the exact moment THIS
         // specific variant actually finishes AND is genuinely
         // verified, not on a fixed timer, not on hope.
-        notify("designing", "variant-complete", { variantId: b.id, label: b.label, summary: r.parsed.summary });
+        notify("designing", "variant-complete", { variantId: b.id, label: b.label, summary: r.parsed.summary, variant });
         return variant;
       })
       .catch((err) => {

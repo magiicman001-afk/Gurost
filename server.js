@@ -4682,6 +4682,12 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt"]),
       userId: req.user.id,
       plan: req.user.plan,
       onStage: (stage, status, data) => {
+        if (status === "variant-complete" && data?.variant) {
+          // Pickable now, not only when all four are done.
+          const { variant, ...rest } = data;
+          project.variants = [...(project.variants || []).filter((v) => v.id !== variant.id), variant];
+          data = rest;
+        }
         broadcastProjectUpdate(projectId, { type: "stage_progress", stage, status, data: data || null });
       }
     });

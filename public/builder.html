@@ -222,10 +222,20 @@ function clearLivePreview() {
   liveFront = 0;
 }
 
-function renderVariants(variants) {
+function pickerVisible() {
+  return !document.getElementById('variantSection').classList.contains('hidden');
+}
+
+// Adds designs that aren't on the picker yet - cards already showing are
+// left alone, so their previews don't reload - plus `pending` "Still
+// designing" cards for the ones still being built.
+function renderVariants(variants, pending = 0) {
   clearLivePreview();
   const grid = document.getElementById('variantGrid');
-  grid.innerHTML = variants.map((v) => `
+  grid.querySelectorAll('[data-variant-pending]').forEach((el) => el.remove());
+  const shown = new Set([...grid.querySelectorAll('[data-variant-id]')].map((el) => el.dataset.variantId));
+  if (!shown.size) grid.innerHTML = '';
+  grid.insertAdjacentHTML('beforeend', variants.filter((v) => !shown.has(v.id)).map((v) => `
     <button class="group text-left border border-[var(--line)] rounded-none overflow-hidden hover:border-[var(--gurost-primary)] transition-colors bg-white" data-variant-id="${v.id}">
       <div class="aspect-video bg-white overflow-hidden pointer-events-none">
         <iframe class="w-full h-full border-0" srcdoc="${injectCodeBoxScript(v.html).replace(/&/g, '&amp;').replace(/"/g, '&quot;')}" sandbox="allow-scripts" tabindex="-1" title="${v.label} preview"></iframe>
@@ -234,8 +244,15 @@ function renderVariants(variants) {
         <p class="text-xs font-semibold group-hover:text-[var(--gurost-primary)] transition-colors">${v.label}</p>
       </div>
     </button>
-  `).join('');
-  grid.querySelectorAll('[data-variant-id]').forEach((card) => {
+  `).join('') + Array.from({ length: Math.max(0, pending) }, () => `
+    <div class="border border-dashed border-[var(--line)] bg-white flex flex-col" data-variant-pending>
+      <div class="aspect-video flex items-center justify-center gap-2 text-xs text-[var(--ink-soft)] animate-pulse">
+        <span class="material-symbols-outlined text-[16px]">autorenew</span>Still designing…
+      </div>
+      <div class="p-2"><p class="text-xs text-[var(--ink-soft)]">Another direction</p></div>
+    </div>`).join(''));
+  grid.querySelectorAll('[data-variant-id]:not([data-bound])').forEach((card) => {
+    card.dataset.bound = '1';
     card.addEventListener('click', () => selectVariant(card.dataset.variantId));
   });
   document.getElementById('variantSection').classList.remove('hidden');
@@ -321,7 +338,7 @@ function connectGenerationSocket(id) {
           liveGenericLogged.clear();
           log('Builder', `Building the ${d.label} design live on the left…`, 'work');
         }
-        renderLivePartial(d.html);
+        if (!pickerVisible()) renderLivePartial(d.html); // once the picker is up, the log keeps going but the left panel stays on it
         for (const s of d.sections || []) {
           // Unnamed blocks (desktop + mobile <nav>) share a generic label - say it once.
           if (/^[a-z ]+$/.test(s)) {
@@ -340,6 +357,11 @@ function connectGenerationSocket(id) {
       } else if (msg.status === 'variant-complete') {
         variantsFinished++;
         log('Designer', `${d.label || 'Design'} ready (${variantsFinished}/4).`, 'ok');
+        // Pickable as soon as it exists - the rest join the picker as they finish.
+        if (!currentHtml) {
+          if (!pickerVisible() && variantsFinished < 4) log('Builder', 'You can pick it now on the left — the others will appear as they finish.', 'ok');
+          fetchAndRenderGeneratedVariants(id, 4 - variantsFinished);
+        }
       } else if (msg.status === 'variant-retrying') {
         log('Designer', `${d.label || 'A design'} went quiet (${d.reason || 'no response'}) — retrying it once…`, 'work');
       } else if (msg.status === 'variant-failed') {
@@ -347,6 +369,7 @@ function connectGenerationSocket(id) {
         // The real reason, minus the raw model response the server appends.
         const reason = String(d.error || 'unknown error').split(' Raw:')[0].slice(0, 220);
         log('Designer', `${d.label || 'A design'} failed (${variantsFinished}/4): ${reason}`, 'fail');
+        if (!currentHtml && pickerVisible()) fetchAndRenderGeneratedVariants(id, 4 - variantsFinished);
       } else if (msg.status === 'complete') {
         log('Designer', `${d.count} of 4 designs ready.`, d.count ? 'ok' : 'fail');
       }
@@ -362,12 +385,13 @@ function connectGenerationSocket(id) {
   generationSocket.addEventListener('close', () => { generationSocket = null; });
 }
 
-async function fetchAndRenderGeneratedVariants(id) {
+async function fetchAndRenderGeneratedVariants(id, pending = 0) {
   try {
     const project = await GurostAPI.call(`/api/project/${id}`);
-    setPreviewStatus(false);
+    if (currentHtml) return; // picked while this was loading
+    if (!pending) setPreviewStatus(false);
     if (project.variants && project.variants.length) {
-      renderVariants(project.variants);
+      renderVariants(project.variants, pending);
     }
   } catch (err) {
     showCreditOrErrorBanner(err.message);
@@ -435,6 +459,8 @@ async function generateWebsite(description) {
 
   setPreviewStatus(true);
   document.getElementById('variantSection').classList.add('hidden');
+  document.getElementById('variantGrid').innerHTML = ''; // the last build's cards share these design ids
+  currentHtml = null; // a design picked in an earlier build would keep this build's picker from showing
   clearBotLog();
   clearLivePreview();
   logBot('Builder', 'Starting a new build…', 'work');
