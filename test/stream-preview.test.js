@@ -104,3 +104,11 @@ test("live preview never fetches placeholders: VID_ src dropped, stray IMG_/VID_
   assert.match(page.html, /<video autoplay muted loop playsinline><\/video>/);
   assert.match(page.html, /<source type="video\/mp4">/);
 });
+
+test("newest section is re-shown after fonts, images and layout changes, until the visitor scrolls", () => {
+  const { html } = buildPartialPage(HEAD + NAV + HERO);
+  const tail = html.slice(html.lastIndexOf("<script data-gurost-preview>"));
+  for (const hook of ["addEventListener('load'", "document.fonts.ready", "'loadeddata'", "ResizeObserver", "behavior:'instant'"]) assert.ok(tail.includes(hook), hook);
+  assert.match(tail, /\['wheel','touchstart','keydown','mousedown'\][\s\S]*user=true/, "stops once the visitor scrolls");
+  assert.ok(tail.endsWith("</script>"));
+});
