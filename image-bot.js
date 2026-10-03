@@ -269,6 +269,39 @@ async function generateImage(description, options = {}) {
  * share/download. If the upload fails the image is still inlined, so a
  * storage problem never costs the build its image.
  */
+/**
+ * FLUX.2 Klein through OpenRouter's Image API (same OPENROUTER_API_KEY as
+ * every model call; ~$0.015 per 16:9 image vs ~$0.039 for Gemini).
+ * The image is stored in project-assets like a Gemini one; if storing
+ * fails this throws instead of inlining ~1MB of base64 into the page, so
+ * the caller falls through to its next source.
+ * Returns { url, cost } - cost in USD as OpenRouter reports it.
+ */
+const FLUX_MODEL = process.env.FLUX_MODEL || "black-forest-labs/flux.2-klein-4b";
+
+async function generateFluxImageUrl(description, { aspectRatio = "16:9" } = {}) {
+  const { OPENROUTER_BASE_URL } = require("./lib/openrouter-client");
+  const res = await fetch(`${OPENROUTER_BASE_URL}/images`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+      "HTTP-Referer": "https://gurost.onrender.com",
+      "X-Title": "Gurost"
+    },
+    body: JSON.stringify({ model: FLUX_MODEL, prompt: String(description).slice(0, 2000), aspect_ratio: aspectRatio, output_format: "jpeg", n: 1 })
+  });
+  const data = await res.json().catch(() => ({}));
+  const b64 = data?.data?.[0]?.b64_json;
+  if (!res.ok || !b64) throw new Error(`FLUX image failed (${res.status}): ${JSON.stringify(data?.error || data).slice(0, 200)}`);
+  const type = data.data[0].media_type || "image/jpeg";
+  const { supabase } = require("./lib/db");
+  const path = `generated/flux-${require("crypto").randomUUID()}.${type === "image/png" ? "png" : "jpg"}`;
+  const { error } = await supabase.storage.from("project-assets").upload(path, Buffer.from(b64, "base64"), { contentType: type });
+  if (error) throw new Error(`Storing FLUX image failed: ${error.message}`);
+  return { url: supabase.storage.from("project-assets").getPublicUrl(path).data.publicUrl, cost: Number(data.usage?.cost) || 0.015 };
+}
+
 async function generateImageUrl(description, options = {}) {
   const img = await generateImage(description, options);
   try {
@@ -326,5 +359,5 @@ async function searchVideo(query, { orientation = "landscape" } = {}) {
   return null;
 }
 
-module.exports = { enhanceWithImages, searchImage, searchVideo, pickVideoFile, generateCustomImage, generateImageWithGemini, generateImage, generateImageUrl };
+module.exports = { enhanceWithImages, searchImage, searchVideo, pickVideoFile, generateFluxImageUrl, generateCustomImage, generateImageWithGemini, generateImage, generateImageUrl };
 

@@ -296,6 +296,7 @@ function connectGenerationSocket(id) {
   // Server labels: a heading, "#id", or a tag word ("navigation", "footer").
   const sectionName = (s) => (s.startsWith('#') ? `the ${s.slice(1).replace(/[-_]/g, ' ')} section` : s === 'a section' ? 'another section' : /^[a-z ]+$/.test(s) ? `the ${s}` : `"${s}"`);
   const liveGenericLogged = new Set();
+  let pickHintLogged = false; // "you can pick it now" - once per build
   const seen = new Set(); // the server replays recent events to late joiners - log each once
 
   generationSocket.addEventListener('message', (event) => {
@@ -352,19 +353,29 @@ function connectGenerationSocket(id) {
         const label = d.label || 'a design';
         if (d.gemini === undefined) log('Gemini', `Generating ${plural(d.count, 'image')} for ${label}…`, 'work');
         if (d.gemini) log('Gemini', `Generating ${plural(d.gemini, 'key image')} (hero/featured) for ${label}…`, 'work');
-        if (d.stock) log('Stock photos', `Finding ${plural(d.stock, 'supporting photo')} for ${label}…`, 'work');
+        if (d.stock) log('Stock photos', `Finding ${plural(d.stock, 'photo')} on Pixabay for ${label} — FLUX fills any gaps…`, 'work');
         if (d.videos) log('Stock video', `Finding ${plural(d.videos, 'video clip')} for ${label}…`, 'work');
       } else if (msg.status === 'images-note') {
         const label = d.label || 'a design';
-        const n = d.count === 1 ? 'photo' : `${d.count} photos`;
-        if (d.kind === 'gemini-fallback') log('Gemini', `Gemini unavailable (${d.reason}) — using Pixabay ${n} instead for ${label}.`, 'ok');
-        else if (d.kind === 'image-dropped') log('Stock photos', `No image found for ${d.count === 1 ? 'a key image' : `${d.count} key images`} in ${label} (${d.reason}) — left out.`, 'fail');
+        if (d.kind === 'image-sources') {
+          const parts = [`${d.pixabay} Pixabay`, `${d.flux} FLUX`, `${d.gemini} Gemini`].concat(d.dropped ? [`${d.dropped} left out`] : []);
+          log('Stock photos', `${label}: ${parts.join(' · ')} — $${d.cost.toFixed(3)} (all-Gemini: $${d.allGeminiCost.toFixed(3)}).`, 'ok');
+        } else if (d.kind === 'gemini-fallback') {
+          log('Gemini', `Gemini unavailable (${d.reason}) — using Pixabay ${d.count === 1 ? 'photo' : `${d.count} photos`} instead for ${label}.`, 'ok');
+        } else if (d.kind === 'image-dropped') {
+          log('Stock photos', `No image found for ${d.count === 1 ? 'a key image' : `${d.count} key images`} in ${label} (${d.reason}) — left out.`, 'fail');
+        }
+      } else if (msg.status === 'media-summary') {
+        log('Builder', `Images this build: ${d.pixabay} Pixabay (free), ${d.flux} FLUX, ${d.gemini} Gemini — $${d.cost.toFixed(3)} vs $${d.allGeminiCost.toFixed(3)} all-Gemini (${d.savedPct}% saved).`, 'ok');
       } else if (msg.status === 'variant-complete') {
         variantsFinished++;
         log('Designer', `${d.label || 'Design'} ready (${variantsFinished}/4).`, 'ok');
         // Pickable as soon as it exists - the rest join the picker as they finish.
         if (!currentHtml) {
-          if (!pickerVisible() && variantsFinished < 4) log('Builder', 'You can pick it now on the left — the others will appear as they finish.', 'ok');
+          if (!pickHintLogged && variantsFinished < 4) {
+            pickHintLogged = true;
+            log('Builder', 'You can pick it now on the left — the others will appear as they finish.', 'ok');
+          }
           fetchAndRenderGeneratedVariants(id, 4 - variantsFinished);
         }
       } else if (msg.status === 'variant-retrying') {
@@ -379,7 +390,8 @@ function connectGenerationSocket(id) {
         log('Designer', `${d.count} of 4 designs ready.`, d.count ? 'ok' : 'fail');
       }
     } else if (msg.stage === 'done' && msg.status === 'complete') {
-      if (d.variants?.length) log('Builder', 'Done — pick a direction on the left.', 'ok');
+      // Already picked one early? Then there's nothing left to pick.
+      if (d.variants?.length) log('Builder', currentHtml ? `All ${d.variants.length} designs finished — you're working on the one you picked.` : 'Done — pick a direction on the left.', 'ok');
       else log('Builder', 'Finished with no usable designs — see the errors above.', 'fail');
       // A replay to a reopened, already-chosen project must not swap the
       // live preview back to the direction picker.

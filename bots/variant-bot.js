@@ -1,5 +1,6 @@
 const { callClaude } = require("../lib/claude-client");
 const imageBot = require("../image-bot");
+const { repairInlineScripts } = require("../lib/script-repair");
 const { modelForTier } = require("../lib/tier-router");
 const { designPromptLines } = require("../lib/industry-design");
 const { parseVariantResponse, VariantParseError } = require("../lib/variant-response");
@@ -220,16 +221,21 @@ function stripLeftoverPlaceholders(html) {
     .replace(/\b(?:IMG|VID)_\d+\b/g, "");
 }
 
-// Image routing by importance. Gemini (paid) draws only the images that
-// carry the design - the hero and one featured shot; everything else
-// comes from free stock photo APIs (Pixabay / Unsplash, see
-// image-bot.searchImage) when a key is configured. Without a key, or
-// when a search finds nothing, Gemini fills in up to a hard cap per
-// design; images past the cap are dropped rather than left broken.
-const GEMINI_PRIORITY_PER_DESIGN = 2;
+// Image routing, cheapest first (per image, in this order):
+//   1. Pixabay stock photo - free (image-bot.searchImage; stored in
+//      project-assets, never hotlinked).
+//   2. FLUX.2 Klein via OpenRouter - ~$0.015, for anything Pixabay has no
+//      match for (image-bot.generateFluxImageUrl).
+//   3. Gemini - ~$0.039, only when FLUX fails, and not while paused.
+// Generated images (FLUX + Gemini) are capped per design; images past
+// the cap, or that no source could supply, are dropped rather than left
+// broken - and reported. Each design reports which source made each
+// image and what it cost against an all-Gemini build.
+const GENERATED_MAX_PER_DESIGN = 4;
+const COST_USD = { pixabay: 0, flux: 0.015, gemini: 0.039 };
 // After a payment or quota failure (402 / quota / billing), Gemini is not
-// called again for a while: the other designs go straight to Pixabay
-// instead of each waiting for the same 402.
+// called again for a while: every design skips straight past it instead
+// of each waiting for the same 402.
 const GEMINI_PAUSE_MS = 10 * 60 * 1000;
 let geminiPausedUntil = 0;
 const isGeminiOutOfCredit = (err) => /\b402\b|quota|billing|payment|RESOURCE_EXHAUSTED|No real image generation provider/i.test(String(err?.message || err));
@@ -243,8 +249,9 @@ async function geminiImage(description) {
     throw err;
   }
 }
-const GEMINI_MAX_PER_DESIGN = 4;
 const ROLE_ORDER = { hero: 0, featured: 1, secondary: 2, decorative: 3 };
+// FLUX frames wide shots for heroes and backgrounds, 4:3 for the rest.
+const fluxAspect = (role) => (role === "hero" || role === "decorative" ? "16:9" : "4:3");
 
 // Short stock-photo search query: the alt text when it says something,
 // else the start of the image brief.
@@ -306,10 +313,11 @@ async function fulfillVideoRequests(html, videoRequests) {
   return { html: out, credits, found: credits.length };
 }
 
-// onImageStart({ gemini, stock }) reports the plan before work starts.
-// onNote({ kind, count, reason }) reports what changed on the way:
-// "gemini-fallback" (Gemini failed, Pixabay used) and "image-dropped"
-// (a hero/featured image nobody could supply).
+// onImageStart({ gemini, stock }) reports the plan before work starts
+// (every image starts on Pixabay now, so gemini is 0).
+// onNote({ kind, ... }) reports what happened:
+//   "image-sources" { pixabay, flux, gemini, dropped, cost, allGeminiCost }
+//   "image-dropped" { count, reason } - hero/featured images nobody could supply.
 async function fulfillImageRequests(html, imageRequests, onImageStart, extraCredits = [], onNote = () => {}) {
   if (!imageRequests || !imageRequests.length) {
     if (onImageStart) onImageStart({ gemini: 0, stock: 0 });
@@ -317,65 +325,61 @@ async function fulfillImageRequests(html, imageRequests, onImageStart, extraCred
   }
 
   const ordered = [...imageRequests].sort((a, b) => (ROLE_ORDER[a.role] ?? 2) - (ROLE_ORDER[b.role] ?? 2));
-  const priority = ordered.filter((r) => r.role === "hero" || r.role === "featured").slice(0, GEMINI_PRIORITY_PER_DESIGN);
-  const rest = ordered.filter((r) => !priority.includes(r));
-  if (onImageStart) onImageStart({ gemini: priority.length, stock: rest.length });
-
-  // Gemini for the priority images and stock searches for the rest, in parallel.
-  const [geminiResults, stockResults] = await Promise.all([
-    Promise.allSettled(priority.map((r) => geminiImage(r.description))),
-    Promise.allSettled(rest.map((r) => imageBot.searchImage(stockQuery(r))))
-  ]);
+  if (onImageStart) onImageStart({ gemini: 0, stock: ordered.length });
 
   let finalHtml = html;
-  let geminiUsed = priority.length;
   const credits = [...extraCredits];
-  const fallback = [];
-  const geminiFailed = [];
-  priority.forEach((req, i) => {
-    const r = geminiResults[i];
-    if (r.status === "fulfilled") finalHtml = replacePlaceholder(finalHtml, req.placeholder, r.value);
-    else {
-      console.error(`[variant-bot] Gemini image failed for "${req.placeholder}":`, r.reason.message);
-      geminiFailed.push({ req, reason: r.reason });
-    }
-  });
+  const tally = { pixabay: 0, flux: 0, gemini: 0, dropped: 0, cost: 0 };
 
-  // A hero or featured image is never dropped just because Gemini failed:
-  // it gets the best Pixabay match instead.
-  if (geminiFailed.length) {
-    const stock = await Promise.allSettled(geminiFailed.map(({ req }) => imageBot.searchImage(stockQuery(req))));
-    let used = 0;
-    const dropped = [];
-    geminiFailed.forEach(({ req }, i) => {
-      const r = stock[i];
-      if (r.status === "fulfilled" && r.value?.url) {
-        finalHtml = replacePlaceholder(finalHtml, req.placeholder, r.value.url);
-        if (r.value.credit) credits.push(r.value.credit);
-        used++;
-      } else dropped.push(req);
-    });
-    const reason = isGeminiOutOfCredit(geminiFailed[0].reason) ? "payment or quota limit" : "error";
-    if (used) onNote({ kind: "gemini-fallback", count: used, reason });
-    if (dropped.length) onNote({ kind: "image-dropped", count: dropped.length, reason: "no Gemini image and no Pixabay match" });
-  }
-  rest.forEach((req, i) => {
-    const r = stockResults[i];
+  // 1. Pixabay for every image, in parallel.
+  const stock = await Promise.allSettled(ordered.map((r) => imageBot.searchImage(stockQuery(r))));
+  const missing = [];
+  ordered.forEach((req, i) => {
+    const r = stock[i];
     if (r.status === "fulfilled" && r.value?.url) {
       finalHtml = replacePlaceholder(finalHtml, req.placeholder, r.value.url);
       if (r.value.credit) credits.push(r.value.credit);
-    } else if (geminiUsed < GEMINI_MAX_PER_DESIGN && Date.now() >= geminiPausedUntil) {
-      geminiUsed++;
-      fallback.push(req);
-    } // past the cap: placeholder stays and stripUnfilledImages drops the <img>
+      tally.pixabay++;
+    } else missing.push(req);
   });
 
-  const fallbackResults = await Promise.allSettled(fallback.map((r) => geminiImage(r.description)));
-  fallback.forEach((req, i) => {
-    const r = fallbackResults[i];
-    if (r.status === "fulfilled") finalHtml = replacePlaceholder(finalHtml, req.placeholder, r.value);
-    else console.error(`[variant-bot] Gemini fallback image failed for "${req.placeholder}":`, r.reason.message);
+  // 2. FLUX for what Pixabay couldn't supply (most important first, capped).
+  const toGenerate = missing.slice(0, GENERATED_MAX_PER_DESIGN);
+  const overCap = missing.slice(GENERATED_MAX_PER_DESIGN);
+  const flux = await Promise.allSettled(toGenerate.map((r) => imageBot.generateFluxImageUrl(r.description, { aspectRatio: fluxAspect(r.role) })));
+  const fluxFailed = [];
+  toGenerate.forEach((req, i) => {
+    const r = flux[i];
+    if (r.status === "fulfilled" && r.value?.url) {
+      finalHtml = replacePlaceholder(finalHtml, req.placeholder, r.value.url);
+      tally.flux++;
+      tally.cost += r.value.cost || COST_USD.flux;
+    } else {
+      console.error(`[variant-bot] FLUX image failed for "${req.placeholder}":`, r.reason?.message);
+      fluxFailed.push(req);
+    }
   });
+
+  // 3. Gemini, last resort (skipped while paused after a 402).
+  const gemini = await Promise.allSettled(fluxFailed.map((r) => geminiImage(r.description)));
+  const unfilled = [...overCap];
+  fluxFailed.forEach((req, i) => {
+    const r = gemini[i];
+    if (r.status === "fulfilled") {
+      finalHtml = replacePlaceholder(finalHtml, req.placeholder, r.value);
+      tally.gemini++;
+      tally.cost += COST_USD.gemini;
+    } else {
+      console.error(`[variant-bot] Gemini image failed for "${req.placeholder}":`, r.reason.message);
+      unfilled.push(req);
+    }
+  });
+
+  tally.dropped = unfilled.length;
+  tally.cost = Math.round(tally.cost * 1000) / 1000;
+  onNote({ kind: "image-sources", ...tally, allGeminiCost: Math.round(ordered.length * COST_USD.gemini * 1000) / 1000 });
+  const droppedKey = unfilled.filter((r) => r.role === "hero" || r.role === "featured").length;
+  if (droppedKey) onNote({ kind: "image-dropped", count: droppedKey, reason: "no Pixabay match and image generation failed" });
 
   return addPhotoCredits(stripLeftoverPlaceholders(finalHtml), credits);
 }
@@ -385,7 +389,12 @@ async function fulfillImageRequests(html, imageRequests, onImageStart, extraCred
 async function fulfillMedia(parsed, onStart, onNote) {
   const videos = (parsed.videoRequests || []).slice(0, MAX_VIDEOS_PER_DESIGN).length;
   const v = await fulfillVideoRequests(parsed.html, parsed.videoRequests);
-  return fulfillImageRequests(v.html, parsed.imageRequests, onStart && ((plan) => onStart({ ...plan, videos })), v.credits, onNote);
+  const html = await fulfillImageRequests(v.html, parsed.imageRequests, onStart && ((plan) => onStart({ ...plan, videos })), v.credits, onNote);
+  // An apostrophe in a single-quoted JS string ("Couldn't...") breaks a
+  // site's whole script - its form and menu stop working.
+  const scripts = repairInlineScripts(html);
+  if (scripts.repaired || scripts.broken) console.warn(`[variant-bot] Inline scripts: ${scripts.repaired} repaired, ${scripts.broken} still invalid`);
+  return scripts.html;
 }
 
 async function generateVariants(prompt, { includeBranding = true, plan } = {}) {
@@ -476,6 +485,8 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
   const variants = [];
   const failures = [];
   const live = createLivePreview(notify);
+  // Image sources across the whole build, for the cost summary at the end.
+  const media = { pixabay: 0, flux: 0, gemini: 0, dropped: 0, cost: 0, allGeminiCost: 0 };
 
   const promises = BRIEFS.map((b) => {
     const system = systemFor(b.brief, includeBranding, design);
@@ -487,7 +498,10 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
       .then(async (r) => {
         const html = await fulfillMedia(r.parsed, ({ gemini, stock, videos }) => {
           notify("designing", "images-running", { variantId: b.id, label: b.label, count: gemini + stock, gemini, stock, videos });
-        }, (note) => notify("designing", "images-note", { variantId: b.id, label: b.label, ...note }));
+        }, (note) => {
+          if (note.kind === "image-sources") for (const k of Object.keys(media)) media[k] += note[k] || 0;
+          notify("designing", "images-note", { variantId: b.id, label: b.label, ...note });
+        });
 
         // Real, genuine check - a variant only counts as real success
         // if this actually passes, not just because nothing crashed.
@@ -513,6 +527,11 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
   });
 
   await Promise.allSettled(promises);
+  const round = (n) => Math.round(n * 1000) / 1000;
+  const summary = { ...media, cost: round(media.cost), allGeminiCost: round(media.allGeminiCost) };
+  summary.savedPct = summary.allGeminiCost ? Math.round((1 - summary.cost / summary.allGeminiCost) * 100) : 0;
+  console.log("[variant-bot] Image sources this build:", JSON.stringify(summary));
+  notify("designing", "media-summary", summary);
   notify("designing", "complete", { count: variants.length });
 
   notify("done", "complete", { variants, failures });

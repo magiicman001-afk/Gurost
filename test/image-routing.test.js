@@ -3,7 +3,7 @@ process.env.OPENROUTER_API_KEY ||= "test"; // claude-client refuses to load with
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const imageBot = require("../image-bot");
-const { fulfillImageRequests, stockQuery } = require("../bots/variant-bot")._internal;
+const { fulfillImageRequests, stockQuery, stripLeftoverPlaceholders, resetGeminiPause, fulfillVideoRequests } = require("../bots/variant-bot")._internal;
 
 const REQS = [
   { placeholder: "IMG_1", role: "hero", description: "shopfront at dawn", alt: "Crumb and Co shopfront" },
@@ -15,75 +15,69 @@ const REQS = [
   { placeholder: "IMG_10", role: "decorative", description: "wheat stalks", alt: "Wheat stalks" },
 ];
 const PAGE = "<html><body>" + REQS.map((r) => `<img src="${r.placeholder}" alt="x">`).join("") + "<footer><p>f</p></footer></body></html>";
+const slug = (x) => x.replace(/\W+/g, "-");
 
-async function run({ stock }) {
-  const calls = { gemini: [], stock: [] };
-  imageBot.generateImageUrl = async (d) => { calls.gemini.push(d); return `https://cdn/gem/${d.replace(/\W+/g, "-")}.png`; };
-  imageBot.searchImage = async (q) => { calls.stock.push(q); return stock ? { url: `https://cdn/stock/${q.replace(/\W+/g, "-")}.jpg`, credit: "Photo by A on Pixabay" } : null; };
-  let plan;
-  const html = await fulfillImageRequests(PAGE, REQS, (p) => { plan = p; });
+// stockHits: which alt/brief queries Pixabay finds (true = all, false = none).
+async function run({ stockHits = true, flux = "ok", gemini = "ok" } = {}) {
+  resetGeminiPause();
+  const calls = { stock: [], flux: [], gemini: [] };
+  imageBot.searchImage = async (q) => { calls.stock.push(q); const hit = stockHits === true || (Array.isArray(stockHits) && stockHits.includes(q)); return hit ? { url: `https://cdn/stock/${slug(q)}.jpg`, credit: "Photo by A on Pixabay" } : null; };
+  imageBot.generateFluxImageUrl = async (d, o) => { calls.flux.push([d, o.aspectRatio]); if (flux !== "ok") throw new Error("FLUX image failed (500)"); return { url: `https://cdn/flux/${slug(d)}.jpg`, cost: 0.015 }; };
+  imageBot.generateImageUrl = async (d) => { calls.gemini.push(d); if (gemini === "402") throw new Error("Gemini image generation failed (402): payment required"); return `https://cdn/gem/${slug(d)}.png`; };
+  let plan; const notes = [];
+  const html = await fulfillImageRequests(PAGE, REQS, (p) => { plan = p; }, [], (n) => notes.push(n));
   const srcs = [...html.matchAll(/<img src="([^"]+)"/g)].map((m) => m[1]);
-  return { calls, plan, html, srcs };
+  return { calls, plan, html, srcs, notes, sources: notes.find((n) => n.kind === "image-sources") };
 }
 
-test("with a stock key: Gemini only for the hero + 1 featured, the rest stock", async () => {
-  const r = await run({ stock: true });
-  assert.deepEqual(r.plan, { gemini: 2, stock: 5 });
-  assert.deepEqual(r.calls.gemini, ["shopfront at dawn", "croissant close-up"]);
-  assert.equal(r.calls.stock.length, 5);
-  assert.equal(r.srcs.length, 7, "every image filled");
+test("Pixabay first: every image found there - no FLUX, no Gemini, $0", async () => {
+  const r = await run();
+  assert.deepEqual(r.plan, { gemini: 0, stock: 7 });
+  assert.equal(r.calls.stock.length, 7);
+  assert.equal(r.calls.flux.length + r.calls.gemini.length, 0);
+  assert.equal(r.srcs.length, 7);
+  assert.deepEqual(r.sources, { kind: "image-sources", pixabay: 7, flux: 0, gemini: 0, dropped: 0, cost: 0, allGeminiCost: 0.273 });
   assert.match(r.html, /Photos: Photo by A on Pixabay<\/p><\/footer>/, "one deduplicated credit line inside the footer");
 });
 
-test("without a stock key: Gemini fallback capped at 4 per design; extras dropped, not broken", async () => {
-  const r = await run({ stock: false });
+test("Pixabay misses -> FLUX, hero first, 16:9 for heroes and backgrounds; capped at 4", async () => {
+  const r = await run({ stockHits: ["Celebration cake", "Flat white coffee"] });
+  assert.deepEqual(r.calls.flux.map(([d]) => d), ["shopfront at dawn", "croissant close-up", "baker kneading dough in morning light", "flour texture"]);
+  assert.deepEqual(r.calls.flux.map(([, a]) => a), ["16:9", "4:3", "4:3", "16:9"]);
+  assert.equal(r.calls.gemini.length, 0);
+  assert.ok(r.srcs.includes("https://cdn/flux/shopfront-at-dawn.jpg"), "hero from FLUX");
+  assert.deepEqual(r.sources, { kind: "image-sources", pixabay: 2, flux: 4, gemini: 0, dropped: 1, cost: 0.06, allGeminiCost: 0.273 });
+  assert.ok(!/IMG_\d/.test(r.html), "the 5th miss is dropped, not left broken");
+});
+
+test("FLUX fails -> Gemini is the last resort", async () => {
+  const r = await run({ stockHits: false, flux: "fail" });
+  assert.equal(r.calls.flux.length, 4);
   assert.equal(r.calls.gemini.length, 4);
-  assert.equal(r.srcs.length, 4, "3 images over the cap removed");
-  assert.ok(!/IMG_\d/.test(r.html), "no placeholder or broken image left");
-  assert.ok(!r.html.includes("Photos:"), "no credit line without stock photos");
+  assert.equal(r.sources.gemini, 4);
+  assert.equal(r.sources.cost, 0.156);
+});
+
+test("FLUX fails and Gemini 402: key images reported as left out; Gemini paused for the next design", async () => {
+  const r = await run({ stockHits: false, flux: "fail", gemini: "402" });
+  assert.equal(r.calls.gemini.length, 4);
+  assert.ok(r.notes.some((n) => n.kind === "image-dropped" && n.count === 3), "hero + 2 featured");
+  assert.ok(!/IMG_\d/.test(r.html));
+  // Same build, next design: Gemini is skipped while paused.
+  const before = r.calls.gemini.length;
+  await fulfillImageRequests(PAGE, REQS, null, [], () => {});
+  assert.equal(r.calls.gemini.length, before);
+  resetGeminiPause();
 });
 
 test("IMG_1 replacement does not touch IMG_10", async () => {
-  const r = await run({ stock: true });
+  const r = await run();
   assert.ok(r.srcs.some((s) => s.includes("Wheat-stalks")), "IMG_10 got its own image");
-  assert.ok(!r.srcs.some((s) => /gem\/shopfront.*0$/.test(s)));
 });
 
 test("stock queries come from alt text, else the brief", () => {
   assert.equal(stockQuery({ alt: "Flat white coffee", description: "long brief" }), "Flat white coffee");
   assert.equal(stockQuery({ alt: "", description: "baker kneading dough in morning light, warm tones" }), "baker kneading dough in morning light");
-});
-
-const { stripLeftoverPlaceholders, resetGeminiPause, fulfillVideoRequests } = require("../bots/variant-bot")._internal;
-
-test("Gemini 402: hero/featured fall back to Pixabay, and Gemini is paused for the next design", async () => {
-  resetGeminiPause();
-  const gemini = [];
-  imageBot.generateImageUrl = async (d) => { gemini.push(d); throw new Error("Gemini image generation failed (402): payment required"); };
-  imageBot.searchImage = async (q) => ({ url: `https://cdn/stock/${q.replace(/\W+/g, "-")}.jpg`, credit: "Photo by A on Pixabay" });
-  const notes = [];
-  const html = await fulfillImageRequests(PAGE, REQS, null, [], (n) => notes.push(n));
-  const srcs = [...html.matchAll(/<img src="([^"]+)"/g)].map((m) => m[1]);
-  assert.equal(srcs.length, 7, "hero and featured not dropped");
-  assert.ok(srcs.includes("https://cdn/stock/Crumb-and-Co-shopfront.jpg"), "hero from Pixabay");
-  assert.deepEqual(notes, [{ kind: "gemini-fallback", count: 2, reason: "payment or quota limit" }]);
-  assert.equal(gemini.length, 2, "no Gemini fallback for the rest once it is out of credit");
-  // Next design: Gemini is not called at all while paused.
-  gemini.length = 0;
-  await fulfillImageRequests(PAGE, REQS, null, [], () => {});
-  assert.equal(gemini.length, 0);
-  resetGeminiPause();
-});
-
-test("Gemini and Pixabay both fail for a key image: reported, never left broken", async () => {
-  resetGeminiPause();
-  imageBot.generateImageUrl = async () => { throw new Error("timeout"); };
-  imageBot.searchImage = async () => null;
-  const notes = [];
-  const html = await fulfillImageRequests(PAGE, REQS, null, [], (n) => notes.push(n));
-  assert.ok(notes.some((n) => n.kind === "image-dropped" && n.count === 2));
-  assert.ok(!/IMG_\d/.test(html));
-  resetGeminiPause();
 });
 
 test("leftover sweep: posters, srcset, CSS url() and stray tokens", () => {
