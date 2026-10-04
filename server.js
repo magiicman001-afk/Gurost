@@ -42,6 +42,7 @@ const { packageProject } = require("./wrapper");
 
 const webBot = require("./bots/web-bot");
 const variantBot = require("./bots/variant-bot");
+const pulseBrain = require("./bots/pulse-brain");
 const appBot = require("./bots/app-bot");
 const revampBot = require("./bots/revamp-bot");
 const industryRag = require("./industry-rag");
@@ -1505,6 +1506,28 @@ app.post("/api/select", security.rejectUnknownFields(["projectId", "variantId"])
 // PULSE — hold / speak-correction / resume, single endpoint per the spec
 // body: { projectId, action: "pause" | "correct" | "resume", instruction? }
 // ---------------------------------------------------------------------------
+
+// Pulse Analyze: the browser measures the rendered page (shared/
+// pulse-inspector.js) and sends the facts; the page itself is read from
+// the project, never taken from the request. Returns prioritised issues
+// with fix prompts (bots/pulse-brain.js).
+const MAX_PULSE_FACTS_CHARS = 80000;
+app.post("/api/pulse/analyze", security.rejectUnknownFields(["projectId", "facts"]), async (req, res) => {
+  const { projectId, facts } = req.body;
+  const project = getProject(projectId, req, res);
+  if (!project) return;
+  if (!project.currentHtml) return res.status(400).json({ error: "Pick a design first - there's nothing to analyze yet." });
+  if (!facts || typeof facts !== "object" || !facts.desktop) return res.status(400).json({ error: "Missing measured facts." });
+  if (JSON.stringify(facts).length > MAX_PULSE_FACTS_CHARS) return res.status(413).json({ error: "Measured facts are too large." });
+  try {
+    const result = await pulseBrain.analyzePage({ html: project.currentHtml, facts, plan: req.user.plan });
+    project.lastPulseAnalysis = { at: Date.now(), ...result };
+    res.json(result);
+  } catch (err) {
+    console.error("[pulse-analyze] failed:", err.message);
+    res.status(500).json({ error: "Pulse couldn't finish the analysis - try again." });
+  }
+});
 
 app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "instruction"]), async (req, res) => {
   const { projectId, action } = req.body;

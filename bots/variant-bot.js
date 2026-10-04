@@ -1,6 +1,7 @@
 const { callClaude } = require("../lib/claude-client");
 const imageBot = require("../image-bot");
 const { repairInlineScripts } = require("../lib/script-repair");
+const { condenseForReview } = require("../lib/page-condense");
 const { modelForTier } = require("../lib/tier-router");
 const { designPromptLines } = require("../lib/industry-design");
 const { parseVariantResponse, VariantParseError } = require("../lib/variant-response");
@@ -558,22 +559,6 @@ Rules:
 - Real, common things worth checking: a genuine privacy policy or terms link, real contact information beyond just a form, a clear value proposition in the first screen, real social proof (testimonials, real client names, a case study), clear next steps (a real, obvious call to action).
 - List at most 5 real, genuine gaps - only ones that actually apply, not a maximum-length checklist.
 - If the page genuinely has no real gaps worth mentioning, return an empty missing array - don't invent one to seem thorough.`;
-
-// The page's content without markup noise, for the Guide Bot review.
-// Full sites are 40-55KB; the review used to read only the first 12KB,
-// never saw the footer or contact section, and reported them missing.
-// Scripts, styles, SVG, class/style/data attributes and inline image
-// data carry no content - dropping them keeps a whole page at ~12KB.
-function condenseForReview(html) {
-  return String(html)
-    .replace(/<(script|style|svg)\b[\s\S]*?<\/\1\s*>/gi, "")
-    .replace(/\s(class|style)=("[^"]*"|'[^']*')/gi, "")
-    .replace(/\s(aria-[\w-]+|data-[\w-]+|loading|decoding)=("[^"]*"|'[^']*')/gi, "")
-    .replace(/src="data:[^"]*"/gi, 'src="(inline image)"')
-    .replace(/<!--[\s\S]*?-->/g, "")
-    .replace(/\s{2,}/g, " ")
-    .trim();
-}
 
 async function checkCredibility(html) {
   try {

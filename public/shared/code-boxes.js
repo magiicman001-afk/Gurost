@@ -132,10 +132,12 @@ function injectCodeBoxScript(htmlDocument, { scrollY = 0 } = {}) {
   let doc = String(htmlDocument).replace(/<base\b[^>]*>/gi, '');
   const head = PREVIEW_BASE_TAG + (scrollY > 0 ? `<script>window.__gurostRestoreY = ${Math.round(scrollY)};</script>` : '');
   doc = /<head\b[^>]*>/i.test(doc) ? doc.replace(/<head\b[^>]*>/i, (m) => m + head) : head + doc;
+  // Pulse's inspector rides along when the page has loaded it.
+  const scripts = CODE_BOX_INJECTION_SCRIPT + (typeof PULSE_INSPECTOR_SCRIPT === 'string' ? PULSE_INSPECTOR_SCRIPT : '');
   // Before the LAST </body>: an earlier one can sit inside a script string.
   const at = doc.toLowerCase().lastIndexOf('</body>');
-  if (at !== -1) return doc.slice(0, at) + CODE_BOX_INJECTION_SCRIPT + doc.slice(at);
-  return doc + CODE_BOX_INJECTION_SCRIPT; // honest fallback if a document genuinely has no </body>, rather than silently doing nothing
+  if (at !== -1) return doc.slice(0, at) + scripts + doc.slice(at);
+  return doc + scripts; // honest fallback if a document genuinely has no </body>, rather than silently doing nothing
 }
 
 /**
