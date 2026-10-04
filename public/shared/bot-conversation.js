@@ -85,3 +85,77 @@ function toggleCode(force) {
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('codePaneClose')?.addEventListener('click', () => toggleCode(false));
 });
+
+// Before a build: should the site use the user's real business details?
+// Asked inside the conversation. Resolves with the details entered, or
+// null for "Skip, use placeholders" (the site then shows obvious
+// placeholders, not invented details). The last details entered are
+// offered again next time - this browser only.
+const BUSINESS_INFO_KEY = 'gurost.businessInfo';
+const BUSINESS_FIELDS = [
+  ['name', 'Business name', 'text', 'Crumb & Co.'],
+  ['phone', 'Phone', 'tel', '0117 496 0000'],
+  ['email', 'Email', 'email', 'hello@yourbusiness.com'],
+  ['address', 'Address', 'text', '42 Stokes Croft, Bristol BS1'],
+  ['website', 'Website', 'url', 'yourbusiness.com'],
+  ['instagram', 'Instagram', 'url', 'instagram.com/yourbusiness'],
+  ['facebook', 'Facebook', 'url', 'facebook.com/yourbusiness']
+];
+
+function askBusinessInfo() {
+  return new Promise((resolve) => {
+    logBot('Planner', 'Should I include your business info? (name, phone, email, address, social links)', 'info');
+    const list = document.getElementById('botLogList');
+    const wrap = document.getElementById('botLog');
+    const li = document.createElement('li');
+    li.className = 'flex items-start gap-2.5';
+    li.innerHTML = `<span class="w-6 flex-shrink-0"></span>
+      <div class="min-w-0 flex-1 flex flex-wrap gap-2" data-ask>
+        <button type="button" data-yes class="px-3 py-1.5 rounded-md text-[12px] font-semibold bg-[var(--gurost-primary)] text-white">Yes, let me add</button>
+        <button type="button" data-skip class="px-3 py-1.5 rounded-md text-[12px] font-semibold border border-white/20 text-white/80 hover:text-white">Skip, use placeholders</button>
+      </div>`;
+    list.appendChild(li);
+    document.getElementById('botLogEmpty')?.remove();
+    wrap.scrollTop = wrap.scrollHeight;
+
+    const finish = (info, said) => {
+      li.remove();
+      logBot('You', said);
+      resolve(info);
+    };
+    li.querySelector('[data-skip]').addEventListener('click', () => finish(null, 'Skip - use placeholders for now.'));
+    li.querySelector('[data-yes]').addEventListener('click', () => {
+      let saved = {};
+      try { saved = JSON.parse(localStorage.getItem(BUSINESS_INFO_KEY)) || {}; } catch { /* nothing saved */ }
+      const inputCls = 'w-full rounded-md bg-white/5 border border-white/15 px-2.5 py-1.5 text-[12.5px] text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--gurost-primary)]';
+      li.querySelector('[data-ask]').outerHTML = `<form class="min-w-0 flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2" data-form novalidate>
+        ${BUSINESS_FIELDS.map(([k, label, type, ph]) => `<label class="flex flex-col gap-1 text-[11px] text-white/60${k === 'address' ? ' sm:col-span-2' : ''}">${label}
+          <input name="${k}" type="${type === 'url' ? 'text' : type}" placeholder="${ph}" class="${inputCls}" maxlength="200" value="${escapeLogText(saved[k] || '')}"></label>`).join('')}
+        <div class="sm:col-span-2 flex gap-2 pt-1">
+          <button type="submit" class="px-3 py-1.5 rounded-md text-[12px] font-semibold bg-[var(--gurost-primary)] text-white">Use these details</button>
+          <button type="button" data-skip2 class="px-3 py-1.5 rounded-md text-[12px] font-semibold border border-white/20 text-white/80 hover:text-white">Skip</button>
+        </div>
+        <p class="sm:col-span-2 text-[11px] text-red-300 hidden" data-error></p>
+      </form>`;
+      const form = li.querySelector('[data-form]');
+      form.querySelector('input').focus();
+      wrap.scrollTop = wrap.scrollHeight;
+      form.querySelector('[data-skip2]').addEventListener('click', () => finish(null, 'Skip - use placeholders for now.'));
+      form.addEventListener('input', () => form.querySelector('[data-error]').classList.add('hidden'));
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const info = {};
+        for (const [k] of BUSINESS_FIELDS) { const v = form.elements[k].value.trim(); if (v) info[k] = v; }
+        const err = form.querySelector('[data-error]');
+        if (info.email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(info.email)) {
+          err.textContent = 'That email doesn\'t look right.';
+          err.classList.remove('hidden');
+          return;
+        }
+        if (!Object.keys(info).length) return finish(null, 'Skip - use placeholders for now.');
+        try { localStorage.setItem(BUSINESS_INFO_KEY, JSON.stringify(info)); } catch { /* not remembered - still used */ }
+        finish(info, `Use my details: ${[info.name, info.phone, info.email].filter(Boolean).join(' · ') || 'added'}.`);
+      });
+    });
+  });
+}

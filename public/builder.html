@@ -467,7 +467,9 @@ async function checkCreditWarningBeforeBuild() {
   }
 }
 
-async function generateWebsite(description) {
+// options.businessInfo: pass details (or null to skip) to build without
+// asking - otherwise the conversation asks first.
+async function generateWebsite(description, options = {}) {
   const trimmed = (description || '').trim();
   if (!trimmed) return;
   if (!GurostAPI.requireLogin()) return;
@@ -476,16 +478,19 @@ async function generateWebsite(description) {
   hideCreditBanner();
   await checkCreditWarningBeforeBuild();
 
-  setPreviewStatus(true);
   document.getElementById('variantSection').classList.add('hidden');
   document.getElementById('variantGrid').innerHTML = ''; // the last build's cards share these design ids
   currentHtml = null; // a design picked in an earlier build would keep this build's picker from showing
   clearBotLog();
   clearLivePreview();
+  logBot('You', trimmed);
+  const businessInfo = 'businessInfo' in options ? options.businessInfo : await askBusinessInfo();
+
+  setPreviewStatus(true);
   logBot('Builder', 'Starting a new build…', 'work');
 
   try {
-    const result = await GurostAPI.call('/api/website-builder/start', { method: 'POST', body: { prompt: trimmed } });
+    const result = await GurostAPI.call('/api/website-builder/start', { method: 'POST', body: { prompt: trimmed, businessInfo } });
     projectId = result.projectId;
     window.history.replaceState({}, '', `builder.html?projectId=${projectId}`);
     connectGenerationSocket(projectId);

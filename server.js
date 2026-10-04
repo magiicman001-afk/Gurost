@@ -43,6 +43,7 @@ const { packageProject } = require("./wrapper");
 const webBot = require("./bots/web-bot");
 const variantBot = require("./bots/variant-bot");
 const pulseBrain = require("./bots/pulse-brain");
+const { normalizeBusinessInfo } = require("./lib/business-info");
 const appBot = require("./bots/app-bot");
 const revampBot = require("./bots/revamp-bot");
 const industryRag = require("./industry-rag");
@@ -4669,8 +4670,9 @@ app.post("/api/project/:id/history/:index/restore", async (req, res) => {
  * ============================================================
  */
 
-app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt"]), auth.enforcePlanLimit, async (req, res) => {
+app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt", "businessInfo"]), auth.enforcePlanLimit, async (req, res) => {
   const prompt = security.sanitizeText(req.body.prompt, 2000);
+  const businessInfo = normalizeBusinessInfo(req.body.businessInfo);
   if (!prompt) return res.status(400).json({ error: "Missing 'prompt'." });
 
   const maxProjects = auth.isAdmin(req.user.email) ? Infinity : (PLANS[req.user.plan]?.maxProjects ?? 1);
@@ -4700,7 +4702,9 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt"]),
     transition(project, "PLANNING");
     transition(project, "BUILDING");
 
+    project.businessInfo = businessInfo;
     const result = await variantBot.generateVariantsStaged(prompt, {
+      businessInfo,
       includeBranding: !PLANS[req.user.plan]?.whiteLabel,
       userId: req.user.id,
       plan: req.user.plan,

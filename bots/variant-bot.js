@@ -2,6 +2,7 @@ const { callClaude } = require("../lib/claude-client");
 const imageBot = require("../image-bot");
 const { repairInlineScripts } = require("../lib/script-repair");
 const { condenseForReview } = require("../lib/page-condense");
+const { businessInfoPrompt } = require("../lib/business-info");
 const { modelForTier } = require("../lib/tier-router");
 const { designPromptLines } = require("../lib/industry-design");
 const { parseVariantResponse, VariantParseError } = require("../lib/variant-response");
@@ -450,7 +451,9 @@ function verifyRealHtml(html) {
   return { ok: true };
 }
 
-async function generateVariantsStaged(prompt, { includeBranding = true, onStage, userId, plan } = {}) {
+// businessInfo: normalized by lib/business-info (null = the user skipped -
+// placeholders, not invented details).
+async function generateVariantsStaged(prompt, { includeBranding = true, onStage, userId, plan, businessInfo = null } = {}) {
   const notify = (stage, status, data) => onStage && onStage(stage, status, data);
 
   notify("understanding", "running");
@@ -495,7 +498,8 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
       live.release(b.id); // its half-built page stops leading the preview
       notify("designing", "variant-retrying", { variantId: b.id, label: b.label, reason: "no response for 90s" });
     };
-    return generateDesign({ system, content: effectivePrompt, plan, variantId: b.id, onStream: live.streamFor(b, system), onRetry })
+    const content = `${effectivePrompt}\n\n${businessInfoPrompt(businessInfo)}`;
+    return generateDesign({ system, content, plan, variantId: b.id, onStream: live.streamFor(b, system), onRetry })
       .then(async (r) => {
         const html = await fulfillMedia(r.parsed, ({ gemini, stock, videos }) => {
           notify("designing", "images-running", { variantId: b.id, label: b.label, count: gemini + stock, gemini, stock, videos });
