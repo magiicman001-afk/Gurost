@@ -1,0 +1,57 @@
+/*
+ * Builder page layout - the ONLY rules that size the Website Builder and
+ * App Builder pages. Both pages use the same skeleton:
+ *
+ *   body.builder-shell
+ *     header.builder-header
+ *     .builder-banner          (credit / error banner, usually hidden)
+ *     main.builder-panels
+ *       section.builder-preview   left  - live preview
+ *       section.builder-chat      right - bot conversation
+ *     footer.builder-footer
+ *
+ * Plain CSS, no Tailwind: it holds even if the Tailwind CDN script is slow
+ * or blocked. Width is the page's own 100%, not 100vw - 100vw includes the
+ * scrollbar and made the page wider than the window. minmax(0, 1fr) keeps
+ * the columns exactly 50/50 even when content (a long URL, a wide preview)
+ * tries to stretch one side.
+ */
+html, body { margin: 0; padding: 0; height: 100%; }
+body.builder-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  height: 100vh;
+  overflow: hidden;
+}
+.builder-header { grid-row: 1; }
+.builder-banner { grid-row: 2; margin: 8px 8px 0; } /* same inset as the panels */
+.builder-panels {
+  grid-row: 3;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px;
+  min-height: 0;
+  box-sizing: border-box;
+}
+.builder-footer { grid-row: 4; }
+.builder-preview, .builder-chat {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden; /* each panel's own content area scrolls inside it */
+}
+.builder-header img, .builder-footer img { height: 20px; width: auto; }
+.hidden { display: none; }
+
+/* Short screens (a laptop at 125-150% scaling): the panels get the room. */
+@media (max-height: 650px) { .builder-footer { display: none !important; } }
+
+/* Phones: the two panels stack and the page scrolls. */
+@media (max-width: 767px) {
+  body.builder-shell { height: auto; min-height: 100vh; overflow: auto; }
+  .builder-panels { grid-template-columns: minmax(0, 1fr); }
+  .builder-preview, .builder-chat { height: 70vh; }
+}
