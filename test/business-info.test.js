@@ -59,6 +59,9 @@ test("all 10 company fields; @handles become profile URLs, pasted URLs are kept"
   assert.match(p, /- TikTok: https:\/\/www\.tiktok\.com\/@crumb\.and\.co/);
   assert.match(p, /social icon \(inline SVG\) for exactly these profiles - Instagram, TikTok, YouTube, X \(Twitter\), Facebook/);
   assert.match(p, /"sameAs"/);
+  // Live build 2026-10-04: the model put an invented https://www.crumbandco.co.uk in the schema.
+  assert.match(p, /no "url" field .* never invent a domain/);
+  assert.ok(!/never invent a domain/.test(businessInfoPrompt({ ...info, website: "https://crumbandco.co.uk" })));
   assert.match(businessInfoPrompt({ name: "A" }), /Show no social icons/);
   assert.equal(normalizeBusinessInfo({ instagram: "crumb.and.co" }).instagram, "https://www.instagram.com/crumb.and.co");
   assert.equal(normalizeBusinessInfo({ instagram: "instagram.com" }), null, "a bare platform domain is not a profile");

@@ -707,6 +707,11 @@ async function generateApp(promptText) {
   clearBotLog();
   loggedStages.clear();
   logBot('You', trimmed);
+  // Same company details modal as the Website Builder (shared/bot-conversation.js).
+  const businessInfo = await askBusinessInfo(trimmed);
+  // A Dashboard hand-off is kept until the details are answered, so a
+  // refresh while the modal is open asks again instead of losing the prompt.
+  localStorage.removeItem('gurost_pending_generate');
   logBot('Builder', 'Starting a new build…', 'work');
 
   try {
@@ -715,8 +720,11 @@ async function generateApp(promptText) {
     // over the WebSocket connected right after, not simulated here.
     const result = await GurostAPI.call('/api/app-builder/start', {
       method: 'POST',
-      body: { prompt: trimmed }
+      body: { prompt: trimmed, businessInfo }
     });
+    // What the server kept (cleaned) - not just what was typed.
+    if (result.businessInfoSummary) logBot('Builder', `Company details saved: ${result.businessInfoSummary}.`, 'ok');
+    else logBot('Builder', businessInfo ? "Those details didn't look valid - building with placeholders you can replace later." : 'No company details - building with placeholders you can replace later.', 'info');
 
     projectId = result.projectId;
     originalPrompt = trimmed;
@@ -742,6 +750,10 @@ async function loadExistingProject(id) {
     setStatus('', '', false);
     renderLivePreview(currentAppFiles);
     renderCodeView(currentAppFiles);
+    if (project.businessInfo) {
+      const details = await GurostAPI.call(`/api/project/${id}/company-details`);
+      logBot('Builder', `Company details on file: ${details.summary}.`, 'info');
+    }
   } catch (err) {
     showGenerateError(`Couldn't load project: ${err.message}`);
   }
@@ -763,10 +775,8 @@ document.addEventListener('DOMContentLoaded', () => {
       // to pre-fill and wait in anymore; Pulse (added later) becomes
       // the way to describe a NEW build once one is already running.
       const pending = JSON.parse(localStorage.getItem('gurost_pending_generate') || 'null');
-      if (pending && pending.mode === 'app' && pending.prompt) {
-        localStorage.removeItem('gurost_pending_generate');
-        generateApp(pending.prompt);
-      }
+      // Removed by generateApp once the details modal is answered.
+      if (pending && pending.mode === 'app' && pending.prompt) generateApp(pending.prompt);
     }
   } catch (err) {
     console.error('[app-builder] Project handoff/restore setup failed, continuing without it:', err.message);

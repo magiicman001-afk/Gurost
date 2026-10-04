@@ -3,6 +3,7 @@ const stageGate = require("../lib/stage-gate");
 const imageBot = require("../image-bot");
 const { modelForTier } = require("../lib/tier-router");
 const { designPromptLines } = require("../lib/industry-design");
+const { businessInfoPrompt } = require("../lib/business-info");
 
 // Real, specialized model per stage - genuine, Perplexity-Computer-
 // style choice, not one model doing everything. Schema design is
@@ -210,7 +211,9 @@ async function buildApp(prompt, { dbEngine = "postgres", onSchemaComplete, plan 
  * this file's module-level comment for why that's the real boundary,
  * not an in-progress completion).
  */
-async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStage, getPendingCorrection, clearPendingCorrection, plan } = {}) {
+// businessInfo: the user's company details (lib/business-info), or null
+// when skipped - the frontend then uses obvious placeholders.
+async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStage, getPendingCorrection, clearPendingCorrection, plan, businessInfo = null } = {}) {
   const notify = (stage, status, data) => onStage && onStage(stage, status, data);
   const foldCorrection = async (baseContent) => {
     await stageGate.awaitGate(projectId);
@@ -234,7 +237,7 @@ async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStag
 
   const endpointList = backendRes.parsed.files.map((f) => f.path).join(", ");
   notify("frontend", "running", { model: "Claude" });
-  const frontendContent = await foldCorrection(`Business: ${prompt}\n\nBackend files (for reference on what's available): ${endpointList}`);
+  const frontendContent = await foldCorrection(`Business: ${prompt}\n\nBackend files (for reference on what's available): ${endpointList}\n\n${businessInfoPrompt(businessInfo)}`);
   const frontendRes = await callClaude({ system: frontendSystemFor(prompt), messages: [{ role: "user", content: frontendContent }], maxTokens: 8000, model: modelForTier(plan, { complex: true }) });
   const frontendFiles = await fulfillImageRequestsMultiFile(frontendRes.parsed.files, frontendRes.parsed.imageRequests);
   notify("frontend", "complete", { files: frontendFiles, summary: frontendRes.parsed.summary });

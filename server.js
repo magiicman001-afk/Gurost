@@ -1336,15 +1336,18 @@ app.post(
 
 const PENDING_CORRECTIONS = new Map(); // projectId -> string | null
 
-app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEngine"]), async (req, res) => {
+app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEngine", "businessInfo"]), async (req, res) => {
   const { prompt, dbEngine } = req.body;
   if (!prompt || !prompt.trim()) return res.status(400).json({ error: "Missing 'prompt'." });
+  const businessInfo = normalizeBusinessInfo(req.body.businessInfo);
 
   const projectId = crypto.randomUUID();
   const project = newProject(prompt, req.user.id);
   project.type = "app";
+  project.businessInfo = businessInfo; // same as the Website Builder: saved with the project from the start
   PROJECTS.set(projectId, project);
   PENDING_CORRECTIONS.set(projectId, null);
+  persistInBackground(projectId, project);
 
   // Real, honest logging - same real pattern as /api/generate above.
   logPulseInteraction(req.user.id, projectId, "generate-app", prompt);
@@ -1353,7 +1356,7 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
   // broadcasting real progress. The client is expected to already be
   // connected (or connect right after this response) to this
   // project's /ws/guide room to receive those events.
-  res.json({ projectId, state: "GENERATING" });
+  res.json({ projectId, state: "GENERATING", businessInfoSummary: describeBusinessInfo(businessInfo) });
 
   try {
     // Real, deliberate fix - confirmed live that this build call could
@@ -1367,6 +1370,7 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
       appBot.buildAppStaged(projectId, prompt, {
         dbEngine,
         plan: req.user.plan,
+        businessInfo,
         onStage: (stage, status, data) => {
           broadcastProjectUpdate(projectId, { type: "stage_progress", stage, status, data: data || null });
         },
@@ -4761,8 +4765,8 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt", "
   // generation and broadcasting continue in the background. The
   // client is expected to already be connected (or connect right
   // after this response) to this project's /ws/guide room.
-  // businessInfo is echoed as saved (cleaned), so the page reports what was kept.
-  res.json({ projectId, state: "GENERATING", businessInfo, businessInfoSummary: describeBusinessInfo(businessInfo) });
+  // A summary of the details as saved (cleaned), so the page reports what was kept.
+  res.json({ projectId, state: "GENERATING", businessInfoSummary: describeBusinessInfo(businessInfo) });
 
   try {
     transition(project, "PLANNING");
