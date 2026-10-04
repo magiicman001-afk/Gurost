@@ -63,3 +63,25 @@ test("Guide Bot review sees the whole page: footer and contact survive condensin
   assert.match(c, /<footer>.*tel:\+442086920000.*mailto:hi@crumb\.co/);
   assert.ok(!/class=|<svg|<style|console\.log/.test(c), "markup noise removed");
 });
+
+test("the panel updates at most every 10s; the design's end shows the rest at once (100%)", () => {
+  let t = 0;
+  const events = [];
+  const live = createLivePreview((stage, status, data) => events.push({ status, ...data }), { minIntervalMs: 10000, now: () => t });
+  const partials = () => events.filter((e) => e.status === "partial");
+  const a = live.streamFor({ id: "bold", label: "Bold" }, SYSTEM_A);
+  a({ content: HEAD + section("hero") });           // t=0: first section shows immediately
+  t = 3000; a({ content: section("menu") });        // inside the interval: held back
+  t = 6000; a({ content: section("story") });       // still held back
+  assert.equal(partials().length, 1);
+  t = 10500; a({ content: section("reviews") });    // interval over: one swap with everything new
+  assert.equal(partials().length, 2);
+  assert.deepEqual(partials()[1].sections, ["#menu", "#story", "#reviews"]);
+  t = 12000; a({ content: section("contact") + "<footer><p>f</p></footer>" });
+  assert.equal(partials().length, 2);
+  live.finish("bold");                              // stream complete -> flush
+  assert.equal(partials().length, 3);
+  assert.deepEqual(partials()[2].sections, ["#contact", "footer"]);
+  assert.equal(partials()[2].progress, 100);
+  assert.ok(partials()[0].progress < 100 && partials()[1].progress <= 95);
+});

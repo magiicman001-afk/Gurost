@@ -169,15 +169,26 @@ async function generateDesign({ system, content, plan, variantId, onStream, onRe
 // over. Streamed text is shown before callClaude's own leak check runs,
 // so every checkpoint is leak-checked first; a design that trips it
 // stops streaming.
-function createLivePreview(notify) {
+// The white panel updates at most this often: one clean swap per update
+// instead of a redraw per finished section (that flickered). The first
+// section still shows as soon as it exists.
+const LIVE_PREVIEW_INTERVAL_MS = Number(process.env.LIVE_PREVIEW_INTERVAL_MS) || 10000;
+// A finished site is typically 40-55KB; streamed size against this gives
+// the "% complete" shown while building (held at 95 until it's done).
+const TYPICAL_SITE_CHARS = 48000;
+
+function createLivePreview(notify, { minIntervalMs = LIVE_PREVIEW_INTERVAL_MS, now = Date.now } = {}) {
   let leadId = null;
   let thinkingAnnounced = false;
   const stopped = new Set();
+  const previews = new Map();
   return {
     streamFor(brief, system) {
       const guarded = security.withGuardrail(system);
       const preview = createStreamPreview({
-        onCheckpoint: ({ html, blocks, newBlocks, text }) => {
+        minIntervalMs,
+        now,
+        onCheckpoint: ({ html, blocks, newBlocks, text, final }) => {
           if (stopped.has(brief.id)) return;
           if (security.detectPromptLeak(text, guarded)) { stopped.add(brief.id); if (leadId === brief.id) leadId = null; return; }
           if (leadId === null) leadId = brief.id;
@@ -187,10 +198,12 @@ function createLivePreview(notify) {
             label: brief.label,
             html,
             sections: newBlocks.map((s) => s.label),
-            sectionCount: blocks.length
+            sectionCount: blocks.length,
+            progress: final ? 100 : Math.min(95, Math.round((text.length / TYPICAL_SITE_CHARS) * 100))
           });
         }
       });
+      previews.set(brief.id, preview);
       return ({ content, reasoning }) => {
         if (reasoning && !thinkingAnnounced && leadId === null) {
           thinkingAnnounced = true;
@@ -201,6 +214,12 @@ function createLivePreview(notify) {
     },
     release(variantId) {
       if (leadId === variantId) leadId = null;
+      previews.delete(variantId);
+    },
+    // The design's stream is complete: its last sections show now.
+    finish(variantId) {
+      previews.get(variantId)?.flush();
+      previews.delete(variantId);
     }
   };
 }
@@ -501,6 +520,7 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
     const content = `${effectivePrompt}\n\n${businessInfoPrompt(businessInfo)}`;
     return generateDesign({ system, content, plan, variantId: b.id, onStream: live.streamFor(b, system), onRetry })
       .then(async (r) => {
+        live.finish(b.id);
         const html = await fulfillMedia(r.parsed, ({ gemini, stock, videos }) => {
           notify("designing", "images-running", { variantId: b.id, label: b.label, count: gemini + stock, gemini, stock, videos });
         }, (note) => {

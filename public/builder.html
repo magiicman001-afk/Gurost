@@ -65,7 +65,10 @@ if (window.self !== window.top) { window.stop(); document.documentElement.innerH
   <section class="screen-panel builder-preview bg-white border border-[var(--line)]">
     <div class="px-3 py-1.5 border-b border-[var(--line)] flex items-center justify-between flex-shrink-0">
       <h2 class="font-display font-semibold text-xs uppercase tracking-wide text-[var(--ink-soft)]">Live Preview</h2>
-      <div class="w-2 h-2 rounded-full" id="previewStatusDot" style="background: var(--line);"></div>
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="hidden text-[11px] text-[var(--ink-soft)] truncate" id="previewProgress" aria-live="polite"></span>
+        <div class="w-2 h-2 rounded-full flex-shrink-0" id="previewStatusDot" style="background: var(--line);"></div>
+      </div>
     </div>
     <div class="flex-1 relative bg-[#FAFAF9] overflow-auto min-h-0">
       <div class="hidden p-4" id="variantSection">
@@ -155,6 +158,18 @@ function setPreviewStatus(active) {
   const dot = document.getElementById('previewStatusDot');
   dot.style.background = active ? 'var(--gurost-primary)' : 'var(--line)';
   dot.classList.toggle('status-live', active);
+  if (!active) setBuildProgress(null);
+}
+
+// "Building... 14:32:05 | 62% complete" beside the preview title: the
+// time of the last update and how far the design is. null hides it.
+function setBuildProgress(percent) {
+  const el = document.getElementById('previewProgress');
+  if (!el) return;
+  el.classList.toggle('hidden', percent == null);
+  if (percent == null) return;
+  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  el.textContent = `Building… ${time} | ${percent}% complete`;
 }
 
 // Where the visitor is in the preview, so an edit re-render opens at the
@@ -233,6 +248,7 @@ function pickerVisible() {
 // designing" cards for the ones still being built.
 function renderVariants(variants, pending = 0) {
   clearLivePreview();
+  setBuildProgress(null);
   const grid = document.getElementById('variantGrid');
   grid.querySelectorAll('[data-variant-pending]').forEach((el) => el.remove());
   const shown = new Set([...grid.querySelectorAll('[data-variant-id]')].map((el) => el.dataset.variantId));
@@ -341,7 +357,10 @@ function connectGenerationSocket(id) {
           liveGenericLogged.clear();
           log('Builder', `Building the ${d.label} design live on the left…`, 'work');
         }
-        if (!pickerVisible()) renderLivePartial(d.html); // once the picker is up, the log keeps going but the left panel stays on it
+        if (!pickerVisible()) {
+          renderLivePartial(d.html); // once the picker is up, the log keeps going but the left panel stays on it
+          if (typeof d.progress === 'number') setBuildProgress(d.progress);
+        }
         for (const s of d.sections || []) {
           // Unnamed blocks (desktop + mobile <nav>) share a generic label - say it once.
           if (/^[a-z ]+$/.test(s)) {
