@@ -86,76 +86,105 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('codePaneClose')?.addEventListener('click', () => toggleCode(false));
 });
 
-// Before a build: should the site use the user's real business details?
-// Asked inside the conversation. Resolves with the details entered, or
-// null for "Skip, use placeholders" (the site then shows obvious
-// placeholders, not invented details). The last details entered are
-// offered again next time - this browser only.
+// Before a build: a modal asking for the user's company details, so the
+// site is built with them in the right places (header, contact section,
+// footer, social icons, schema) instead of placeholders. Resolves with
+// the details entered, or null for Skip (the site then shows obvious
+// placeholders, never invented details). The last details entered are
+// offered again next time - this browser only; the server keeps the
+// project's own copy.
 const BUSINESS_INFO_KEY = 'gurost.businessInfo';
 const BUSINESS_FIELDS = [
-  ['name', 'Business name', 'text', 'Crumb & Co.'],
+  ['name', 'Business name', 'text', 'Crumb & Co'],
+  ['tagline', 'Tagline (1 line)', 'text', 'Slow bread, baked daily'],
   ['phone', 'Phone', 'tel', '0117 496 0000'],
   ['email', 'Email', 'email', 'hello@yourbusiness.com'],
-  ['address', 'Address', 'text', '42 Stokes Croft, Bristol BS1'],
-  ['website', 'Website', 'url', 'yourbusiness.com'],
-  ['instagram', 'Instagram', 'url', 'instagram.com/yourbusiness'],
-  ['facebook', 'Facebook', 'url', 'facebook.com/yourbusiness']
+  ['address', 'Address', 'text', '42 Stokes Croft, Bristol BS1', 'wide'],
+  ['instagram', 'Instagram', 'text', '@yourbusiness'],
+  ['tiktok', 'TikTok', 'text', '@yourbusiness'],
+  ['youtube', 'YouTube', 'text', 'youtube.com/@yourchannel'],
+  ['x', 'X (Twitter)', 'text', '@yourbusiness'],
+  ['facebook', 'Facebook', 'text', 'facebook.com/yourbusiness']
 ];
 
-function askBusinessInfo() {
-  return new Promise((resolve) => {
-    logBot('Planner', 'Should I include your business info? (name, phone, email, address, social links)', 'info');
-    const list = document.getElementById('botLogList');
-    const wrap = document.getElementById('botLog');
-    const li = document.createElement('li');
-    li.className = 'flex items-start gap-2.5';
-    li.innerHTML = `<span class="w-6 flex-shrink-0"></span>
-      <div class="min-w-0 flex-1 flex flex-wrap gap-2" data-ask>
-        <button type="button" data-yes class="px-3 py-1.5 rounded-md text-[12px] font-semibold bg-[var(--gurost-primary)] text-white">Yes, let me add</button>
-        <button type="button" data-skip class="px-3 py-1.5 rounded-md text-[12px] font-semibold border border-white/20 text-white/80 hover:text-white">Skip, use placeholders</button>
-      </div>`;
-    list.appendChild(li);
-    document.getElementById('botLogEmpty')?.remove();
-    wrap.scrollTop = wrap.scrollHeight;
+// Plain CSS (not Tailwind) so the modal holds even if the CDN is slow.
+// Above the Pulse widget (z 9999/10000) - the build waits on this answer.
+const BUSINESS_MODAL_CSS = `
+.gcd-backdrop{position:fixed;inset:0;z-index:10050;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:16px;}
+.gcd-card{background:#fff;color:#1A1A2E;width:100%;max-width:580px;max-height:calc(100vh - 32px);overflow:auto;border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.3);padding:22px 22px 18px;font-family:Inter,system-ui,sans-serif;}
+.gcd-card h2{font-family:Montserrat,Inter,sans-serif;font-weight:700;font-size:19px;margin:0 0 4px;}
+.gcd-sub{font-size:13px;color:#6B7280;margin:0 0 4px;}
+.gcd-for{font-size:12px;color:#6B7280;margin:0 0 14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gcd-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;}
+.gcd-grid label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:#374151;}
+.gcd-grid .gcd-wide{grid-column:1/-1;}
+.gcd-grid input{border:1px solid #E5E7EB;border-radius:8px;padding:8px 10px;font:inherit;font-size:13.5px;font-weight:400;color:#1A1A2E;background:#fff;}
+.gcd-grid input:focus{outline:none;border-color:#FF8C00;box-shadow:0 0 0 3px rgba(255,140,0,.15);}
+.gcd-section{grid-column:1/-1;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#9CA3AF;margin-top:6px;}
+.gcd-error{color:#B91C1C;font-size:12px;margin:10px 0 0;}
+.gcd-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;}
+.gcd-actions button{font:inherit;font-size:14px;font-weight:600;border-radius:999px;padding:9px 18px;cursor:pointer;}
+.gcd-skip{background:#fff;border:1px solid #E5E7EB;color:#374151;}
+.gcd-save{background:linear-gradient(135deg,#FEB246,#FF8C00);border:0;color:#fff;}
+@media (max-width:560px){.gcd-grid{grid-template-columns:1fr;}}`;
 
-    const finish = (info, said) => {
-      li.remove();
-      logBot('You', said);
+function askBusinessInfo(prompt = '') {
+  return new Promise((resolve) => {
+    if (!document.getElementById('gcdStyle')) {
+      const style = document.createElement('style');
+      style.id = 'gcdStyle';
+      style.textContent = BUSINESS_MODAL_CSS;
+      document.head.appendChild(style);
+    }
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem(BUSINESS_INFO_KEY)) || {}; } catch { /* nothing saved */ }
+    const field = ([k, label, type, ph, wide]) => `<label class="${wide ? 'gcd-wide' : ''}">${label}
+      <input name="${k}" type="${type}" placeholder="${ph}" maxlength="200" autocomplete="off" value="${escapeLogText(saved[k] || '')}"></label>`;
+    const backdrop = document.createElement('div');
+    backdrop.className = 'gcd-backdrop';
+    backdrop.id = 'companyDetailsModal';
+    backdrop.innerHTML = `<form class="gcd-card" role="dialog" aria-modal="true" aria-labelledby="gcdTitle" novalidate>
+      <h2 id="gcdTitle">Let's get your details right first</h2>
+      <p class="gcd-sub">Optional - skip if you want placeholders. These go in your header, contact section, footer, social icons and Google listing.</p>
+      <p class="gcd-for">${prompt ? `For: ${escapeLogText(prompt)}` : ''}</p>
+      <div class="gcd-grid">
+        ${BUSINESS_FIELDS.slice(0, 5).map(field).join('')}
+        <div class="gcd-section">Social profiles - @handle or link</div>
+        ${BUSINESS_FIELDS.slice(5).map(field).join('')}
+      </div>
+      <p class="gcd-error" hidden></p>
+      <div class="gcd-actions">
+        <button type="button" class="gcd-skip">Skip</button>
+        <button type="submit" class="gcd-save">Save &amp; Build</button>
+      </div>
+    </form>`;
+    document.body.appendChild(backdrop);
+    const form = backdrop.querySelector('form');
+    const error = form.querySelector('.gcd-error');
+    form.elements.name.focus();
+
+    const finish = (info) => {
+      document.removeEventListener('keydown', onKey);
+      backdrop.remove();
       resolve(info);
     };
-    li.querySelector('[data-skip]').addEventListener('click', () => finish(null, 'Skip - use placeholders for now.'));
-    li.querySelector('[data-yes]').addEventListener('click', () => {
-      let saved = {};
-      try { saved = JSON.parse(localStorage.getItem(BUSINESS_INFO_KEY)) || {}; } catch { /* nothing saved */ }
-      const inputCls = 'w-full rounded-md bg-white/5 border border-white/15 px-2.5 py-1.5 text-[12.5px] text-white placeholder:text-white/30 focus:outline-none focus:border-[var(--gurost-primary)]';
-      li.querySelector('[data-ask]').outerHTML = `<form class="min-w-0 flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2" data-form novalidate>
-        ${BUSINESS_FIELDS.map(([k, label, type, ph]) => `<label class="flex flex-col gap-1 text-[11px] text-white/60${k === 'address' ? ' sm:col-span-2' : ''}">${label}
-          <input name="${k}" type="${type === 'url' ? 'text' : type}" placeholder="${ph}" class="${inputCls}" maxlength="200" value="${escapeLogText(saved[k] || '')}"></label>`).join('')}
-        <div class="sm:col-span-2 flex gap-2 pt-1">
-          <button type="submit" class="px-3 py-1.5 rounded-md text-[12px] font-semibold bg-[var(--gurost-primary)] text-white">Use these details</button>
-          <button type="button" data-skip2 class="px-3 py-1.5 rounded-md text-[12px] font-semibold border border-white/20 text-white/80 hover:text-white">Skip</button>
-        </div>
-        <p class="sm:col-span-2 text-[11px] text-red-300 hidden" data-error></p>
-      </form>`;
-      const form = li.querySelector('[data-form]');
-      form.querySelector('input').focus();
-      wrap.scrollTop = wrap.scrollHeight;
-      form.querySelector('[data-skip2]').addEventListener('click', () => finish(null, 'Skip - use placeholders for now.'));
-      form.addEventListener('input', () => form.querySelector('[data-error]').classList.add('hidden'));
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const info = {};
-        for (const [k] of BUSINESS_FIELDS) { const v = form.elements[k].value.trim(); if (v) info[k] = v; }
-        const err = form.querySelector('[data-error]');
-        if (info.email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(info.email)) {
-          err.textContent = 'That email doesn\'t look right.';
-          err.classList.remove('hidden');
-          return;
-        }
-        if (!Object.keys(info).length) return finish(null, 'Skip - use placeholders for now.');
-        try { localStorage.setItem(BUSINESS_INFO_KEY, JSON.stringify(info)); } catch { /* not remembered - still used */ }
-        finish(info, `Use my details: ${[info.name, info.phone, info.email].filter(Boolean).join(' · ') || 'added'}.`);
-      });
+    const onKey = (e) => { if (e.key === 'Escape') finish(null); };
+    document.addEventListener('keydown', onKey);
+    form.querySelector('.gcd-skip').addEventListener('click', () => finish(null));
+    form.addEventListener('input', () => { error.hidden = true; });
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const info = {};
+      for (const [k] of BUSINESS_FIELDS) { const v = form.elements[k].value.trim(); if (v) info[k] = v; }
+      if (info.email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(info.email)) {
+        error.textContent = "That email doesn't look right.";
+        error.hidden = false;
+        form.elements.email.focus();
+        return;
+      }
+      if (!Object.keys(info).length) return finish(null);
+      try { localStorage.setItem(BUSINESS_INFO_KEY, JSON.stringify(info)); } catch { /* not remembered - still used */ }
+      finish(info);
     });
   });
 }

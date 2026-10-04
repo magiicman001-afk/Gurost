@@ -567,7 +567,7 @@ async function checkCreditWarningBeforeBuild() {
 }
 
 // options.businessInfo: pass details (or null to skip) to build without
-// asking - otherwise the conversation asks first.
+// asking - otherwise the company details modal asks first.
 async function generateWebsite(description, options = {}) {
   const trimmed = (description || '').trim();
   if (!trimmed) return;
@@ -586,13 +586,19 @@ async function generateWebsite(description, options = {}) {
   clearBotLog();
   clearLivePreview();
   logBot('You', trimmed);
-  const businessInfo = 'businessInfo' in options ? options.businessInfo : await askBusinessInfo();
+  const businessInfo = 'businessInfo' in options ? options.businessInfo : await askBusinessInfo(trimmed);
+  // A Dashboard hand-off is kept until the details are answered, so a
+  // refresh while the modal is open asks again instead of losing the prompt.
+  localStorage.removeItem('gurost_pending_generate');
 
   setPreviewStatus(true);
   logBot('Builder', 'Starting a new build…', 'work');
 
   try {
     const result = await GurostAPI.call('/api/website-builder/start', { method: 'POST', body: { prompt: trimmed, businessInfo } });
+    // What the server kept (cleaned) - not just what was typed.
+    if (result.businessInfoSummary) logBot('Builder', `Company details saved: ${result.businessInfoSummary}.`, 'ok');
+    else logBot('Builder', businessInfo ? "Those details didn't look valid - building with placeholders you can replace later." : 'No company details - building with placeholders you can replace later.', 'info');
     projectId = result.projectId;
     window.history.replaceState({}, '', `builder.html?projectId=${projectId}`);
     connectGenerationSocket(projectId);
@@ -699,6 +705,10 @@ async function loadExistingProject(id) {
     } else if (project.variants && project.variants.length) {
       renderVariants(project.variants);
     }
+    if (project.businessInfo) {
+      const details = await GurostAPI.call(`/api/project/${id}/company-details`);
+      logBot('Builder', `Company details on file: ${details.summary}.`, 'info');
+    }
   } catch (err) {
     console.error('[builder] loadExistingProject failed:', err.message);
   }
@@ -773,10 +783,8 @@ document.addEventListener('DOMContentLoaded', () => {
       loadExistingProject(urlProjectId);
     } else {
       const pending = JSON.parse(localStorage.getItem('gurost_pending_generate') || 'null');
-      if (pending && pending.mode === 'website') {
-        localStorage.removeItem('gurost_pending_generate');
-        generateWebsite(pending.prompt);
-      }
+      // Removed by generateWebsite once the details modal is answered.
+      if (pending && pending.mode === 'website') generateWebsite(pending.prompt);
     }
   } catch (err) {
     console.error('[builder] Project handoff/restore setup failed, continuing without it:', err.message);

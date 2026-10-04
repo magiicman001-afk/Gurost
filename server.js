@@ -43,7 +43,7 @@ const { packageProject } = require("./wrapper");
 const webBot = require("./bots/web-bot");
 const variantBot = require("./bots/variant-bot");
 const pulseBrain = require("./bots/pulse-brain");
-const { normalizeBusinessInfo } = require("./lib/business-info");
+const { normalizeBusinessInfo, describeBusinessInfo, applyBusinessInfoUpdate } = require("./lib/business-info");
 const { finalizeSite } = require("./lib/finalize-site");
 const appBot = require("./bots/app-bot");
 const revampBot = require("./bots/revamp-bot");
@@ -4214,6 +4214,37 @@ app.post("/api/project/:id/finalize", security.rejectUnknownFields([]), (req, re
   res.json({ html: project.currentHtml, added: result.added });
 });
 
+// The company details stored with a project (asked before the build).
+app.get("/api/project/:id/company-details", (req, res) => {
+  const project = getProject(req.params.id, req, res);
+  if (!project) return;
+  res.json({ businessInfo: project.businessInfo || null, summary: describeBusinessInfo(project.businessInfo) });
+});
+
+// Changes the stored details; on a built site every old value becomes
+// the new one ("update my phone everywhere") - no AI, undoable. A field
+// the site never had can't be placed by text swap: it's reported in
+// `notOnPage` so the caller can ask Pulse to add it.
+app.post("/api/project/:id/company-details", security.rejectUnknownFields(["businessInfo"]), (req, res) => {
+  const project = getProject(req.params.id, req, res);
+  if (!project) return;
+  const next = normalizeBusinessInfo(req.body.businessInfo);
+  const prev = project.businessInfo || null;
+  let replaced = 0;
+  if (project.currentHtml && prev && next) {
+    const result = applyBusinessInfoUpdate(project.currentHtml, prev, next);
+    if (result.replaced) {
+      pushUndoSnapshot(project, "company-details");
+      project.currentHtml = result.html;
+      replaced = result.replaced;
+    }
+  }
+  const notOnPage = project.currentHtml && next ? Object.keys(next).filter((k) => !prev?.[k]) : [];
+  project.businessInfo = next;
+  persistInBackground(req.params.id, project);
+  res.json({ businessInfo: next, summary: describeBusinessInfo(next), replaced, notOnPage, html: project.currentHtml || null });
+});
+
 app.post("/api/project/:id/undo", async (req, res) => {
   const project = getProject(req.params.id, req, res);
   if (!project) return;
@@ -4720,7 +4751,9 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt", "
   const projectId = crypto.randomUUID();
   const project = newProject(prompt, req.user.id);
   project.type = "website";
+  project.businessInfo = businessInfo; // saved with the project from the start - a reload mid-build keeps it
   PROJECTS.set(projectId, project);
+  persistInBackground(projectId, project);
 
   logPulseInteraction(req.user.id, projectId, "generate-website-staged", prompt);
 
@@ -4728,13 +4761,13 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt", "
   // generation and broadcasting continue in the background. The
   // client is expected to already be connected (or connect right
   // after this response) to this project's /ws/guide room.
-  res.json({ projectId, state: "GENERATING" });
+  // businessInfo is echoed as saved (cleaned), so the page reports what was kept.
+  res.json({ projectId, state: "GENERATING", businessInfo, businessInfoSummary: describeBusinessInfo(businessInfo) });
 
   try {
     transition(project, "PLANNING");
     transition(project, "BUILDING");
 
-    project.businessInfo = businessInfo;
     const result = await variantBot.generateVariantsStaged(prompt, {
       businessInfo,
       includeBranding: !PLANS[req.user.plan]?.whiteLabel,

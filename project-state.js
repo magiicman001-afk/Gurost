@@ -57,6 +57,8 @@ function toRow(projectId, userId, project) {
       stateHistory: project.stateHistory,
       assistantHistory: project.assistantHistory,
       deployUrl: project.deployUrl,
+      // The user's company details - Pulse and later edits rely on them.
+      businessInfo: project.businessInfo || null,
     },
     updated_at: new Date().toISOString(),
   };
@@ -84,6 +86,7 @@ function fromRow(row) {
     history: ctx.history || [],
     stateHistory: ctx.stateHistory || [],
     deployUrl: ctx.deployUrl,
+    businessInfo: ctx.businessInfo || null,
     assistantHistory: ctx.assistantHistory || [],
     pendingAssistantSuggestion: null,
     codeReview: null,
