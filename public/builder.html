@@ -70,6 +70,13 @@ if (window.self !== window.top) { window.stop(); document.documentElement.innerH
         <div class="w-2 h-2 rounded-full flex-shrink-0" id="previewStatusDot" style="background: var(--line);"></div>
       </div>
     </div>
+    <!-- Shown while looking at one design from the picker: a strip above
+         the preview, so it never covers the site's own header. -->
+    <div class="hidden flex-shrink-0 items-center justify-between gap-2 border-b border-[var(--line)] bg-white px-2 py-1.5" id="designChoiceBar">
+      <button type="button" class="text-xs font-semibold px-2.5 py-1 rounded-md hover:bg-black/5" id="designBackBtn">← All designs</button>
+      <span class="text-xs text-[var(--ink-soft)] truncate" id="designChoiceLabel"></span>
+      <button type="button" class="text-xs font-semibold px-3 py-1.5 rounded-md bg-[var(--gurost-primary)] text-white disabled:opacity-60" id="designUseBtn">Use this design →</button>
+    </div>
     <div class="flex-1 relative bg-[#FAFAF9] overflow-auto min-h-0">
       <div class="hidden p-4" id="variantSection">
         <p class="text-xs font-semibold mb-3 text-center text-[var(--ink-soft)]">Choose a direction</p>
@@ -187,7 +194,13 @@ function renderPreview(html, { keepScroll = false } = {}) {
   clearLivePreview();
   document.getElementById('previewEmptyState').style.display = 'none';
   if (!keepScroll) previewScrollY = 0;
-  document.getElementById('previewFrame').srcdoc = injectCodeBoxScript(html, { scrollY: previewScrollY });
+  const frame = document.getElementById('previewFrame');
+  // Callers often un-hide the preview (display:none -> shown) in the same
+  // task. A srcdoc load that starts before the frame is laid out keeps a
+  // 0x0 viewport in Chromium and the page paints blank for good - reading
+  // offsetWidth lays the frame out at its real size first.
+  void frame.offsetWidth;
+  frame.srcdoc = injectCodeBoxScript(html, { scrollY: previewScrollY });
   // codeEmptyMsg lives inside codeContent, so the textContent write below
   // deletes it - it only exists on the first render.
   document.getElementById('codeEmptyMsg')?.remove();
@@ -269,22 +282,89 @@ function renderVariants(variants, pending = 0) {
       </div>
       <div class="p-2"><p class="text-xs text-[var(--ink-soft)]">Another direction</p></div>
     </div>`).join(''));
+  for (const v of variants) pickerVariants.set(v.id, v);
   grid.querySelectorAll('[data-variant-id]:not([data-bound])').forEach((card) => {
     card.dataset.bound = '1';
-    card.addEventListener('click', () => selectVariant(card.dataset.variantId));
+    card.addEventListener('click', () => previewDesign(card.dataset.variantId));
   });
+  // A design arriving while one is open full-size joins the picker quietly.
+  if (previewingVariantId) return;
   document.getElementById('variantSection').classList.remove('hidden');
   document.getElementById('previewWrap').classList.add('hidden');
 }
 
-async function selectVariant(variantId) {
+// Picker -> one design full-size, with "Use this design ->" and "All designs".
+// Nothing is committed until Use: the user can compare freely.
+const pickerVariants = new Map();
+let previewingVariantId = null;
+
+function previewDesign(variantId) {
+  const v = pickerVariants.get(variantId);
+  if (!v) return;
+  previewingVariantId = variantId;
+  document.getElementById('variantSection').classList.add('hidden');
+  document.getElementById('previewWrap').classList.remove('hidden');
+  renderPreview(v.html);
+  document.getElementById('designChoiceLabel').textContent = v.label || variantId;
+  const bar = document.getElementById('designChoiceBar');
+  bar.classList.remove('hidden');
+  bar.classList.add('flex');
+}
+
+function hideDesignChoiceBar() {
+  const bar = document.getElementById('designChoiceBar');
+  bar.classList.add('hidden');
+  bar.classList.remove('flex');
+}
+
+function backToDesigns() {
+  previewingVariantId = null;
+  hideDesignChoiceBar();
+  document.getElementById('previewWrap').classList.add('hidden');
+  document.getElementById('variantSection').classList.remove('hidden');
+}
+
+// "Use this design": select it, then finalise it (meta, Open Graph,
+// business schema) - seconds, no rebuild.
+async function useDesign() {
+  const variantId = previewingVariantId;
+  if (!variantId) return;
+  const btn = document.getElementById('designUseBtn');
+  btn.disabled = true;
+  try {
+    // The design is already on screen; it re-renders once, finalised.
+    const picked = await selectVariant(variantId, { render: false });
+    if (!picked) return;
+    previewingVariantId = null;
+    hideDesignChoiceBar();
+    logBot('Builder', 'Finalising your site…', 'work');
+    const result = await GurostAPI.call(`/api/project/${projectId}/finalize`, { method: 'POST', body: {} });
+    currentHtml = result.html;
+    renderPreview(currentHtml, { keepScroll: true });
+    if (result.added?.length) logBot('Builder', `Added: ${result.added.join(', ')}.`, 'ok');
+    logBot('Builder', 'Your site is ready. Refine with Pulse or launch.', 'ok');
+  } catch (err) {
+    logBot('Builder', `Couldn't finalise the site: ${err.message}`, 'fail');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('designBackBtn').addEventListener('click', backToDesigns);
+  document.getElementById('designUseBtn').addEventListener('click', useDesign);
+});
+
+// Returns true once the design is selected on the server.
+async function selectVariant(variantId, { render = true } = {}) {
   try {
     const result = await GurostAPI.call('/api/select', { method: 'POST', body: { projectId, variantId } });
     logBot('You', `Picked the ${variantId} direction — Guide Bot is reviewing it…`, 'info');
     currentHtml = result.html;
     document.getElementById('variantSection').classList.add('hidden');
     document.getElementById('previewWrap').classList.remove('hidden');
-    renderPreview(currentHtml);
+    if (render) renderPreview(currentHtml);
+    return true;
   } catch (err) {
     console.error('[builder] selectVariant failed:', err.message);
     // Real, deliberate fix - this used to fail silently, leaving the
@@ -500,6 +580,9 @@ async function generateWebsite(description, options = {}) {
   document.getElementById('variantSection').classList.add('hidden');
   document.getElementById('variantGrid').innerHTML = ''; // the last build's cards share these design ids
   currentHtml = null; // a design picked in an earlier build would keep this build's picker from showing
+  previewingVariantId = null;
+  pickerVariants.clear();
+  hideDesignChoiceBar();
   clearBotLog();
   clearLivePreview();
   logBot('You', trimmed);

@@ -503,6 +503,9 @@ function renderLivePreview(appFiles) {
   const emptyState = document.getElementById('previewEmptyState');
   if (emptyState) emptyState.style.display = 'none';
   const iframe = document.getElementById('previewFrame');
+  // showSkeleton(false) may have just un-hidden the frame: lay it out
+  // before loading, or Chromium keeps a 0x0 viewport and paints blank.
+  void iframe.offsetWidth;
   iframe.srcdoc = injectCodeBoxScript(buildPreviewDocument(appFiles.frontend));
   // No click-to-code overlay: its boxes sat above the preview and
   // swallowed clicks on the app itself.

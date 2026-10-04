@@ -31,7 +31,7 @@ const helmet = require("helmet");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 
-const { transition } = require("./lib/state-machine");
+const { transition, canTransition } = require("./lib/state-machine");
 const { deployToVercel, deployApp } = require("./lib/deploy");
 const { createCheckoutSession, createTopUpCheckout, createBillingPortalSession, verifyWebhook, getBalance, addCredits, PLANS, TOPUPS, LOW_CREDIT_THRESHOLD, BUSINESS_ASSISTANT, createBusinessAssistantSubscription, updateBotSeatQuantity } = require("./lib/billing");
 const creditSystem = require("./credit-system");
@@ -44,6 +44,7 @@ const webBot = require("./bots/web-bot");
 const variantBot = require("./bots/variant-bot");
 const pulseBrain = require("./bots/pulse-brain");
 const { normalizeBusinessInfo } = require("./lib/business-info");
+const { finalizeSite } = require("./lib/finalize-site");
 const appBot = require("./bots/app-bot");
 const revampBot = require("./bots/revamp-bot");
 const industryRag = require("./industry-rag");
@@ -1481,10 +1482,17 @@ app.post("/api/select", security.rejectUnknownFields(["projectId", "variantId"])
   const project = getProject(projectId, req, res);
   if (!project) return;
 
+  // Switching to another design on a finished project is a normal edit
+  // (it stays DONE). Checked BEFORE anything changes - this used to swap
+  // the page in and then fail the DONE -> DONE transition, half-applied.
+  if (project.state !== "DONE" && !canTransition(project.state, "DONE")) {
+    return res.status(409).json({ error: `Can't pick a design while the project is ${String(project.state).toLowerCase()}.` });
+  }
+  if (!(project.variants || []).some((v) => v.id === variantId)) return res.status(400).json({ error: "Variant not found on this project." });
   try {
     pushUndoSnapshot(project, "select-design");
     integrator.integrateSelection(project, variantId);
-    transition(project, "DONE");
+    if (project.state !== "DONE") transition(project, "DONE");
     persistInBackground(projectId, project);
     res.json({ projectId, html: project.currentHtml, state: project.state });
 
@@ -4181,6 +4189,23 @@ function pushUndoSnapshot(project, actionType) {
   project.contentSnapshots.future = []; // real, standard undo/redo rule - a new change clears the redo stack
   if (project.contentSnapshots.past.length > MAX_UNDO_HISTORY) project.contentSnapshots.past.shift(); // real, bounded - not unlimited memory growth
 }
+
+// "Use this design": finalises the picked design (meta description, Open
+// Graph, LocalBusiness schema from the user's details) - no AI, no
+// rebuild. Undoable like any other change.
+app.post("/api/project/:id/finalize", security.rejectUnknownFields([]), (req, res) => {
+  const project = getProject(req.params.id, req, res);
+  if (!project) return;
+  if (!project.currentHtml) return res.status(400).json({ error: "Pick a design first." });
+  const variant = (project.variants || []).find((v) => v.id === project.selectedVariantId);
+  const result = finalizeSite(project.currentHtml, { businessInfo: project.businessInfo || null, summary: variant?.summary || "" });
+  if (result.added.length) {
+    pushUndoSnapshot(project, "finalize-site");
+    project.currentHtml = result.html;
+    persistInBackground(req.params.id, project);
+  }
+  res.json({ html: project.currentHtml, added: result.added });
+});
 
 app.post("/api/project/:id/undo", async (req, res) => {
   const project = getProject(req.params.id, req, res);
