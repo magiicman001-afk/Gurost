@@ -828,8 +828,15 @@ app.post("/api/templates/:id/use", (req, res) => {
   const project = newProject(template.description, req.user.id);
   project.type = "website";
   project.currentHtml = template.html;
-  project.state = "READY";
+  // A template is a finished site, so it enters DONE the way a build
+  // does - through the state machine. (It used to be set to "READY", a
+  // state the machine doesn't know: no transitions out, so every Pulse
+  // edit, deploy or design switch on a template failed.)
+  transition(project, "PLANNING");
+  transition(project, "BUILDING");
+  transition(project, "DONE");
   PROJECTS.set(projectId, project);
+  persistInBackground(projectId, project);
 
   res.json({ projectId });
 });
