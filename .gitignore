@@ -6,3 +6,6 @@ screenshots/
 *.log
 __auth-state.json
 CLAUDE.local.md
+
+# DeepSeek review outputs (scripts/deepseek-review.js)
+reviews/
