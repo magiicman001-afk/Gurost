@@ -4,6 +4,31 @@ const imageBot = require("../image-bot");
 const { modelForTier } = require("../lib/tier-router");
 const { designPromptLines } = require("../lib/industry-design");
 const { businessInfoPrompt } = require("../lib/business-info");
+const { parseFileBlocks, fileBlocksFormat, createRepeatDetector, completedFilePaths } = require("../lib/file-blocks");
+
+// Streams a file-block stage: every chunk is progress (the server's
+// no-progress watchdog), each newly finished file is reported (the live
+// preview), and a model that starts rewriting a file it already wrote is
+// stopped there - its answer was complete.
+function streamedFileStage(stage, notify) {
+  let text = "";
+  let reported = 0;
+  return {
+    parse: parseFileBlocks,
+    stopWhen: createRepeatDetector(),
+    onStream: ({ content }) => {
+      if (!content) { notify(stage, "progress", null); return; }
+      text += content;
+      if (!/END[ _]FILE/.test(text.slice(-content.length - 20))) { notify(stage, "progress", null); return; }
+      const files = completedFilePaths(text);
+      const unique = [...new Set(files)];
+      if (unique.length > reported) {
+        reported = unique.length;
+        notify(stage, "progress", { files: unique });
+      }
+    }
+  };
+}
 
 // Real, specialized model per stage - genuine, Perplexity-Computer-
 // style choice, not one model doing everything. Schema design is
@@ -85,8 +110,8 @@ const SCHEMA_SYSTEM = `You are a database architect. Given a business descriptio
 {"engine": "postgres"|"mongo", "schema": "<SQL DDL or Mongo schema definition>", "rationale": "one sentence"}
 Infer entities from the business description. Keep the schema minimal — only what's actually needed.`;
 
-const BACKEND_SYSTEM = `You are a backend engineer. Given a business description and a database schema, output ONLY JSON:
-{"files": [{"path": "...", "content": "..."}], "summary": "one sentence"}
+const BACKEND_SYSTEM = `You are a backend engineer. Given a business description and a database schema, output the backend source files.
+${fileBlocksFormat()}
 Framework: FastAPI (Python) or Express (Node) — infer the better fit from the schema/business, default Express.
 Generate only the endpoints the frontend will realistically need (CRUD on the core entities). Include basic input validation. No auth scaffolding unless the business obviously requires it (e.g. user accounts).
 If using Express: always listen on process.env.PORT, falling back to 3000 if it isn't set (e.g. app.listen(process.env.PORT || 3000)). This is a hard requirement, not a style preference — the sandbox preview step needs a predictable port to expose, and a hardcoded or different port will make preview unreliable.`;
@@ -117,8 +142,8 @@ function frontendSystemFor(prompt) {
   return frontendSystem(design);
 }
 
-const frontendSystem = (design) => `You are a senior frontend engineer at a professional design agency. Given a business description and a list of backend API endpoints, output ONLY JSON:
-{"files": [{"path": "...", "content": "..."}], "summary": "one sentence", "imageRequests": [{"placeholder": "IMG_1", "description": "detailed, specific description of the image to generate"}]}
+const frontendSystem = (design) => `You are a senior frontend engineer at a professional design agency. Given a business description and a list of backend API endpoints, output the frontend source files.
+${fileBlocksFormat("imageRequests - a list with one entry per IMG_n token you used, each having placeholder (the token) and description (exactly what that image should show)")}
 Build a React app (functional components, hooks) that calls the given endpoints. Keep it to the minimum set of files needed for a working prototype (App.jsx, a couple of page/component files, an api client module) — plus a real, correct package.json listing every real dependency actually used (this sandbox genuinely runs npm install before starting the app, so listed dependencies must be real, published packages with correct version numbers, not invented).
 
 ${ANTI_SLOP_RULES}
@@ -168,7 +193,8 @@ async function buildApp(prompt, { dbEngine = "postgres", onSchemaComplete, plan 
       content: `Business: ${prompt}\n\nDatabase schema:\n${schemaRes.parsed.schema}`
     }],
     maxTokens: 6000,
-    model: modelForTier(plan, { complex: true })
+    model: modelForTier(plan, { complex: true }),
+    parse: parseFileBlocks
   });
 
   const endpointList = backendRes.parsed.files.map((f) => f.path).join(", ");
@@ -179,7 +205,8 @@ async function buildApp(prompt, { dbEngine = "postgres", onSchemaComplete, plan 
       content: `Business: ${prompt}\n\nBackend files (for reference on what's available): ${endpointList}`
     }],
     maxTokens: 8000,
-    model: modelForTier(plan, { complex: true })
+    model: modelForTier(plan, { complex: true }),
+    parse: parseFileBlocks
   });
 
   const frontendFiles = await fulfillImageRequestsMultiFile(frontendRes.parsed.files, frontendRes.parsed.imageRequests);
@@ -232,13 +259,13 @@ async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStag
 
   notify("backend", "running", { model: "Claude" });
   const backendContent = await foldCorrection(`Business: ${prompt}\n\nDatabase schema:\n${schemaRes.parsed.schema}`);
-  const backendRes = await callClaude({ system: BACKEND_SYSTEM, messages: [{ role: "user", content: backendContent }], maxTokens: 6000, model: modelForTier(plan, { complex: true }) });
+  const backendRes = await callClaude({ system: BACKEND_SYSTEM, messages: [{ role: "user", content: backendContent }], maxTokens: 6000, model: modelForTier(plan, { complex: true }), ...streamedFileStage("backend", notify) });
   notify("backend", "complete", { files: backendRes.parsed.files, summary: backendRes.parsed.summary });
 
   const endpointList = backendRes.parsed.files.map((f) => f.path).join(", ");
   notify("frontend", "running", { model: "Claude" });
   const frontendContent = await foldCorrection(`Business: ${prompt}\n\nBackend files (for reference on what's available): ${endpointList}\n\n${businessInfoPrompt(businessInfo)}`);
-  const frontendRes = await callClaude({ system: frontendSystemFor(prompt), messages: [{ role: "user", content: frontendContent }], maxTokens: 8000, model: modelForTier(plan, { complex: true }) });
+  const frontendRes = await callClaude({ system: frontendSystemFor(prompt), messages: [{ role: "user", content: frontendContent }], maxTokens: 14000, model: modelForTier(plan, { complex: true }), ...streamedFileStage("frontend", notify) });
   const frontendFiles = await fulfillImageRequestsMultiFile(frontendRes.parsed.files, frontendRes.parsed.imageRequests);
   notify("frontend", "complete", { files: frontendFiles, summary: frontendRes.parsed.summary });
 
@@ -254,4 +281,4 @@ async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStag
 
 module.exports = { buildApp, buildAppStaged };
 // Exposed for tests only.
-module.exports._internal = { fulfillImageRequestsMultiFile };
+module.exports._internal = { fulfillImageRequestsMultiFile, frontendSystemFor };

@@ -1365,22 +1365,36 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
     // honest ceiling - if nothing comes back in time, it fails
     // cleanly, with a real, visible reason logged and broadcast,
     // rather than leaving the user staring at a frozen screen forever.
-    const BUILD_TIMEOUT_MS = parseInt(process.env.APP_BUILD_TIMEOUT_MS || "90000", 10);
+    // "No progress" means exactly that: the clock restarts every time a
+    // stage starts or finishes, so a slow but advancing build (Free-plan
+    // models, a model fallback) isn't killed for its total length - only
+    // a stage that hangs is. (It used to be a fixed 90s for the whole
+    // build, which three Free-plan stages couldn't fit.)
+    const BUILD_TIMEOUT_MS = parseInt(process.env.APP_BUILD_TIMEOUT_MS || "150000", 10);
+    let stallTimer = null;
+    let rejectStall = null;
+    const stalled = new Promise((_, reject) => { rejectStall = reject; });
+    const touchProgress = () => {
+      clearTimeout(stallTimer);
+      stallTimer = setTimeout(() => rejectStall(new Error(`Build timed out after ${BUILD_TIMEOUT_MS / 1000}s with no progress.`)), BUILD_TIMEOUT_MS);
+    };
+    touchProgress();
     const result = await Promise.race([
       appBot.buildAppStaged(projectId, prompt, {
         dbEngine,
         plan: req.user.plan,
         businessInfo,
         onStage: (stage, status, data) => {
+          touchProgress();
+          // Streamed chunks only feed the watchdog; a finished file is news.
+          if (status === "progress" && !data) return;
           broadcastProjectUpdate(projectId, { type: "stage_progress", stage, status, data: data || null });
         },
         getPendingCorrection: () => PENDING_CORRECTIONS.get(projectId),
         clearPendingCorrection: () => PENDING_CORRECTIONS.set(projectId, null)
       }),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`Build timed out after ${BUILD_TIMEOUT_MS / 1000}s with no progress.`)), BUILD_TIMEOUT_MS)
-      )
-    ]);
+      stalled
+    ]).finally(() => clearTimeout(stallTimer));
 
     integrator.integrateApp(project, result);
 

@@ -137,7 +137,10 @@ async function generateDesign({ system, content, plan, variantId, onStream, onRe
     messages: [{ role: "user", content: userContent }],
     maxTokens: 32000,
     model: modelForTier(plan, { complex: true }),
-    onStream: stream
+    onStream: stream,
+    // A page cut short at 32k tokens is still a page (its parser and
+    // stripLeftoverPlaceholders cope) - kept rather than thrown away.
+    allowTruncated: true
   });
   try {
     return await call(content, onStream); // only the first attempt streams to the live preview

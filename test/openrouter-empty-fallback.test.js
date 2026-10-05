@@ -77,3 +77,45 @@ test("a custom parser's failure is not retried", async () => {
   await assert.rejects(callClaude({ system: "s", messages: [], model: "m", parse: () => { throw new Error("no page"); } }), /no page/);
   assert.equal(calls, 1);
 });
+
+// 2026-10-05: every free text model is a reasoning model; the Free chain
+// is sent with reasoning off, and a cut-off reply counts as a failure.
+test("a chain led by a :free model is sent with reasoning off; a paid-led chain is not", async () => {
+  const bodies = [];
+  globalThis.fetch = async (url, init) => { bodies.push(JSON.parse(init.body)); return { ok: true, json: async () => ok("m", "fine") }; };
+  await callOpenRouter({ model: "nvidia/nemotron-3-super-120b-a12b:free,qwen/qwen3-coder", messages: [] });
+  await callOpenRouter({ model: "z-ai/glm-5.2,google/gemma-4-31b-it:free", messages: [] });
+  assert.deepEqual(bodies[0].reasoning, { enabled: false });
+  assert.equal(bodies[1].reasoning, undefined);
+});
+
+test("cut off at the token limit (finish=length, partial text) -> the next model; allowTruncated keeps it", async () => {
+  const cut = (model) => ({ model, choices: [{ finish_reason: "length", message: { content: "<<<FILE a.js>>>\nconst x =" } }] });
+  const sent = mockFetch([cut("nvidia/nemotron-3-super-120b-a12b:free"), ok("qwen/qwen3-coder", "whole answer")]);
+  const r = await callOpenRouter({ model: "nvidia/nemotron-3-super-120b-a12b:free,qwen/qwen3-coder", messages: [] });
+  assert.equal(r.text, "whole answer");
+  assert.deepEqual(sent[1], ["qwen/qwen3-coder"]);
+  mockFetch([cut("z-ai/glm-5.2")]);
+  const kept = await callOpenRouter({ model: "z-ai/glm-5.2", messages: [], allowTruncated: true });
+  assert.match(kept.text, /const x =/);
+});
+
+test("callClaude + file blocks: code with quotes arrives intact as files", async () => {
+  const { parseFileBlocks } = require("../lib/file-blocks");
+  const reply = '<<<META>>>\n{"summary": "API"}\n<<<END META>>>\n<<<FILE server.js>>>\nres.json({ msg: "it\'s \\"fresh\\"" });\n<<<END FILE>>>';
+  globalThis.fetch = async () => ({ ok: true, json: async () => ok("qwen/qwen3-coder", reply) });
+  const r = await callClaude({ system: "s", messages: [{ role: "user", content: "u" }], model: "qwen/qwen3-coder", parse: parseFileBlocks });
+  assert.equal(r.parsed.files[0].path, "server.js");
+  assert.equal(r.parsed.files[0].content, 'res.json({ msg: "it\'s \\"fresh\\"" });');
+  assert.equal(r.parsed.summary, "API");
+});
+
+test("stopWhen ends a streamed reply early and keeps it as complete", async () => {
+  const chunks = ["a", "b", "STOP", "never"].map((t) => `data: ${JSON.stringify({ model: "m", choices: [{ delta: { content: t } }] })}\n`);
+  let cancelled = false;
+  const body = { getReader: () => ({ read: async () => (chunks.length ? { value: new TextEncoder().encode(chunks.shift()), done: false } : { done: true }), cancel: async () => { cancelled = true; } }) };
+  globalThis.fetch = async () => ({ ok: true, body });
+  const r = await callOpenRouter({ model: "m", messages: [], onDelta: () => {}, stopWhen: (c) => c.includes("STOP") });
+  assert.equal(r.text, "abSTOP");
+  assert.ok(cancelled);
+});

@@ -352,8 +352,11 @@ function findEntryFile(frontendFiles) {
 
 function buildPreviewDocument(frontendFiles) {
   const entry = findEntryFile(frontendFiles);
-  const filesJson = JSON.stringify(frontendFiles);
-  const entryPath = JSON.stringify(entry ? entry.path : '');
+  // Embedded in a script tag: "<" as <, so a generated file holding a
+  // closing script tag (an index.html, say) can't end the script early and
+  // spill the preview's own code onto the page (seen 2026-10-05).
+  const filesJson = JSON.stringify(frontendFiles).replace(/</g, '\\u003c');
+  const entryPath = JSON.stringify(entry ? entry.path : '').replace(/</g, '\\u003c');
 
   // Everything below runs INSIDE the iframe, isolated from this page.
   // Tailwind CDN is used here deliberately, not as an oversight — the
@@ -498,7 +501,133 @@ function buildPreviewDocument(frontendFiles) {
 }
 
 
+// ---------------- Stage preview ----------------
+// While the app builds, the white panel shows each stage as it lands -
+// the tables the Schema stage designed, the API the Backend stage wrote,
+// the files the Frontend stage is writing - then the running app. Same
+// double-buffered crossfade as the Website Builder's live preview: a new
+// state loads in the hidden frame and fades in once loaded, so the panel
+// never blanks. A failed build keeps what was built and says why.
+let stageFrames = null;
+let stageFront = 0;
+let stageView = { schema: null, engine: '', backend: null, frontendFiles: [], frontendDone: false, error: '' };
+
+function resetStagePreview() {
+  stageFrames?.forEach((f) => f.remove());
+  stageFrames = null;
+  stageFront = 0;
+  stageView = { schema: null, engine: '', backend: null, frontendFiles: [], frontendDone: false, error: '' };
+}
+
+function showStageDocument(html) {
+  const panel = document.getElementById('previewPanel');
+  if (!stageFrames) {
+    stageFrames = [0, 1].map(() => {
+      const f = document.createElement('iframe');
+      f.setAttribute('sandbox', '');
+      f.title = 'App build progress';
+      f.className = 'absolute inset-0 w-full h-full border-0 bg-white';
+      f.style.cssText = 'opacity:0; transition:opacity .35s ease; z-index:1;';
+      panel.appendChild(f);
+      return f;
+    });
+  }
+  const back = stageFrames[1 - stageFront];
+  const front = stageFrames[stageFront];
+  back.onload = () => {
+    back.style.zIndex = 2;
+    back.style.opacity = 1;
+    front.style.zIndex = 1;
+    setTimeout(() => { front.style.opacity = 0; }, 350);
+    stageFront = 1 - stageFront;
+  };
+  void back.offsetWidth; // laid out before loading (see renderLivePreview)
+  back.srcdoc = html;
+}
+
+const escStage = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// "CREATE TABLE orders (...)" -> [{ name, columns: [{ name, type }] }].
+// Anything that isn't Postgres DDL (a Mongo schema) is shown as text.
+function tablesFromSchema(schema) {
+  const tables = [];
+  const re = /create\s+table\s+(?:if\s+not\s+exists\s+)?["`]?([\w.]+)["`]?\s*\(([\s\S]*?)\)\s*;/gi;
+  let m;
+  while ((m = re.exec(schema || ''))) {
+    const columns = m[2].split(/,\s*\n|,(?![^(]*\))/).map((l) => l.trim()).filter(Boolean)
+      .filter((l) => !/^(primary|foreign|constraint|unique|check|index)\b/i.test(l))
+      .map((l) => { const [name, ...rest] = l.replace(/["`]/g, '').split(/\s+/); return { name, type: rest.join(' ').replace(/\s+/g, ' ').slice(0, 60) }; });
+    tables.push({ name: m[1], columns });
+  }
+  return tables;
+}
+
+// "app.get('/api/orders'" / "router.post(\"/:id\"" -> GET /api/orders ...
+function endpointsFromFiles(files) {
+  const out = [];
+  for (const f of files || []) {
+    for (const m of String(f.content).matchAll(/\b(?:app|router)\.(get|post|put|patch|delete)\(\s*['"`]([^'"`]+)['"`]/gi)) out.push({ method: m[1].toUpperCase(), path: m[2], file: f.path });
+  }
+  return out.slice(0, 40);
+}
+
+function renderStagePreview() {
+  const v = stageView;
+  const step = (label, state) => `<span class="step ${state}">${state === 'done' ? '✓' : state === 'now' ? '●' : '○'} ${label}</span>`;
+  const schemaState = v.schema !== null ? 'done' : 'now';
+  const backendState = v.backend ? 'done' : v.schema !== null ? 'now' : 'todo';
+  const frontendState = v.frontendDone ? 'done' : v.backend ? 'now' : 'todo';
+  const tables = tablesFromSchema(v.schema);
+  const schemaHtml = v.schema === null ? '' : `<section><h2>Database <small>${escStage(v.engine)}</small></h2>${tables.length
+    ? `<div class="tables">${tables.map((t) => `<div class="table"><h3>${escStage(t.name)}</h3>${t.columns.map((c) => `<div class="col"><b>${escStage(c.name)}</b><span>${escStage(c.type)}</span></div>`).join('')}</div>`).join('')}</div>`
+    : `<pre>${escStage(String(v.schema).slice(0, 3000))}</pre>`}</section>`;
+  const endpoints = v.backend ? endpointsFromFiles(v.backend) : [];
+  const backendHtml = !v.backend ? '' : `<section><h2>API <small>${v.backend.length} file${v.backend.length === 1 ? '' : 's'}</small></h2>${endpoints.length
+    ? `<div class="eps">${endpoints.map((e) => `<div class="ep"><span class="m m-${e.method}">${e.method}</span><code>${escStage(e.path)}</code></div>`).join('')}</div>`
+    : `<p class="muted">${v.backend.map((f) => escStage(f.path)).join(' · ')}</p>`}</section>`;
+  const frontendHtml = !v.backend ? '' : `<section><h2>App screens <small>${v.frontendDone ? 'done - starting the preview…' : 'writing…'}</small></h2>${v.frontendFiles.length
+    ? `<div class="files">${v.frontendFiles.map((p) => `<div class="file">✓ ${escStage(p)}</div>`).join('')}${v.frontendDone ? '' : '<div class="file pending">…</div>'}</div>`
+    : '<p class="muted">The first file is on its way.</p>'}</section>`;
+  const errorHtml = v.error ? `<div class="error">Stopped: ${escStage(v.error)}</div>` : '';
+  showStageDocument(`<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+    body{margin:0;font-family:Inter,system-ui,sans-serif;color:#1A1A2E;background:#FAFAF9;}
+    .wrap{padding:22px 24px 32px;max-width:980px;}
+    .steps{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+    .step{font-size:12px;font-weight:600;padding:5px 11px;border-radius:999px;border:1px solid #E5E7EB;background:#fff;color:#9CA3AF;}
+    .step.done{color:#15803D;border-color:#BBF7D0;background:#F0FDF4;} .step.now{color:#C2410C;border-color:#FED7AA;background:#FFF7ED;}
+    section{margin-bottom:20px;} h2{font-size:14px;margin:0 0 10px;} h2 small{font-weight:500;color:#6B7280;margin-left:6px;}
+    .tables{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;}
+    .table{background:#fff;border:1px solid #E5E7EB;border-radius:10px;overflow:hidden;} .table h3{margin:0;font-size:13px;padding:8px 10px;background:#1A1A2E;color:#fff;}
+    .col{display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:5px 10px;border-top:1px solid #F3F4F6;} .col span{color:#6B7280;text-align:right;}
+    .eps{display:grid;gap:5px;} .ep{display:flex;align-items:center;gap:8px;font-size:12.5px;background:#fff;border:1px solid #E5E7EB;border-radius:8px;padding:6px 10px;}
+    .m{font-size:10.5px;font-weight:700;padding:2px 6px;border-radius:5px;min-width:44px;text-align:center;background:#E5E7EB;}
+    .m-GET{background:#DBEAFE;color:#1D4ED8;} .m-POST{background:#DCFCE7;color:#15803D;} .m-PUT,.m-PATCH{background:#FEF3C7;color:#B45309;} .m-DELETE{background:#FEE2E2;color:#B91C1C;}
+    .files{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px;} .file{font-size:12px;background:#fff;border:1px solid #E5E7EB;border-radius:8px;padding:6px 10px;color:#15803D;font-family:ui-monospace,monospace;}
+    .file.pending{color:#9CA3AF;animation:p 1.2s ease-in-out infinite;} @keyframes p{50%{opacity:.4}}
+    pre{font-size:11.5px;background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:10px;white-space:pre-wrap;} .muted{font-size:12.5px;color:#6B7280;}
+    .error{margin-bottom:16px;padding:10px 12px;border-radius:10px;background:#FEF2F2;color:#B91C1C;font-size:13px;border:1px solid #FECACA;}
+  </style></head><body><div class="wrap">
+    ${errorHtml}
+    <div class="steps">${step('Database', schemaState)}${step('API', backendState)}${step('App screens', frontendState)}</div>
+    ${v.schema === null ? '<p class="muted">Designing the database for your app…</p>' : ''}
+    ${schemaHtml}${backendHtml}${frontendHtml}
+  </div></body></html>`);
+}
+
+// Called for every stage event. Returns nothing; draws when something changed.
+function updateStagePreview(msg) {
+  const d = msg.data || {};
+  if (msg.stage === 'schema' && msg.status === 'running' && !stageFrames) renderStagePreview();
+  else if (msg.stage === 'schema' && msg.status === 'complete') { stageView.schema = d.schema || ''; stageView.engine = d.engine || ''; renderStagePreview(); }
+  else if (msg.stage === 'backend' && msg.status === 'complete') { stageView.backend = d.files || []; renderStagePreview(); }
+  else if (msg.stage === 'frontend' && msg.status === 'progress' && d.files) { stageView.frontendFiles = d.files; renderStagePreview(); }
+  else if (msg.stage === 'frontend' && msg.status === 'complete') { stageView.frontendFiles = (d.files || []).map((f) => f.path); stageView.frontendDone = true; renderStagePreview(); }
+}
+
 function renderLivePreview(appFiles) {
+  // The running app replaces the build progress.
+  stageFrames?.forEach((f) => f.remove());
+  stageFrames = null;
   showSkeleton(false);
   const emptyState = document.getElementById('previewEmptyState');
   if (emptyState) emptyState.style.display = 'none';
@@ -592,6 +721,7 @@ function connectGenerationSocket(id) {
       handleStageProgress(msg);
     } else if (msg.type === 'error') {
       logBot('Builder', msg.error, 'fail', msg.at);
+      if (stageFrames) { stageView.error = msg.error; renderStagePreview(); } // keep what was built, say why it stopped
       showGenerateError(msg.error);
       setGenerating(false);
     }
@@ -656,6 +786,10 @@ function handleStageProgress(msg) {
     return;
   }
 
+  updateStagePreview(msg);
+  // Files finished so far in a streaming stage - not a stage status.
+  if (msg.status === 'progress') return;
+
   if (STAGE_ORDER.includes(msg.stage)) {
     stageStatuses[msg.stage] = msg.status;
     if (msg.data?.model) stageModels[msg.stage] = msg.data.model;
@@ -703,6 +837,7 @@ async function generateApp(promptText) {
   const emptyStateOnStart = document.getElementById('previewEmptyState');
   if (emptyStateOnStart) emptyStateOnStart.style.display = 'none';
   resetStageChecklist();
+  resetStagePreview();
   setStatus('bolt', 'Starting build…', true);
   clearBotLog();
   loggedStages.clear();
