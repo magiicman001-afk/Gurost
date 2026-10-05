@@ -78,6 +78,7 @@ const meetingBot = require("./meeting-bot");
 const { attachMeetingSocket } = require("./video-client");
 const botOrchestrator = require("./bot-orchestrator");
 const imageBot = require("./image-bot");
+const premiumImages = require("./bots/premium-images");
 const router = require("./router");
 const smartRouter = require("./smart-router");
 const { OPENROUTER_BASE_URL } = require("./lib/openrouter-client");
@@ -4446,6 +4447,34 @@ app.post("/api/project/:id/finalize", security.rejectUnknownFields([]), (req, re
     persistInBackground(req.params.id, project);
   }
   res.json({ html: project.currentHtml, added: result.added });
+});
+
+// "Use this design", paid plans: the picked design's hero is regenerated
+// with FLUX Pro and up to 3 key images with FLUX Dev (fal.ai) - see
+// bots/premium-images.js. Free plans and an unavailable fal (no key, no
+// credit) answer { skipped } and the page keeps its images. Undoable;
+// the spend is kept on the project and logged.
+app.post("/api/project/:id/premium-images", security.rejectUnknownFields([]), async (req, res) => {
+  const project = getProject(req.params.id, req, res);
+  if (!project) return;
+  if (!project.currentHtml) return res.status(400).json({ error: "Pick a design first." });
+  if (!req.user.plan || req.user.plan === "free") return res.json({ skipped: "free-plan", html: project.currentHtml });
+  if (!imageBot.falAvailable()) return res.json({ skipped: "fal-unavailable", html: project.currentHtml });
+  try {
+    const before = project.currentHtml;
+    const result = await withProjectLock(req.params.id, () => premiumImages.upgradeImages(before));
+    if (result.upgraded.length) {
+      pushUndoSnapshot(project, "premium-images");
+      project.currentHtml = result.html;
+      project.premiumImageCost = Math.round(((project.premiumImageCost || 0) + result.cost) * 1000) / 1000;
+      persistInBackground(req.params.id, project);
+    }
+    console.log(`[premium-images] project ${req.params.id}: ${result.upgraded.map((u) => `${u.role}=${u.model} $${u.cost}`).join(", ") || "nothing upgraded"}${result.failed ? `, ${result.failed} kept stock` : ""} - $${result.cost}`);
+    res.json({ html: project.currentHtml, upgraded: result.upgraded, failed: result.failed, cost: result.cost });
+  } catch (err) {
+    console.error("[premium-images] failed:", err.message);
+    res.status(500).json({ error: "Couldn't upgrade the images - the site keeps its current ones." });
+  }
 });
 
 // The company details stored with a project (asked before the build).

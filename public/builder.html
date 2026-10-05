@@ -342,11 +342,37 @@ async function useDesign() {
     currentHtml = result.html;
     renderPreview(currentHtml, { keepScroll: true });
     if (result.added?.length) logBot('Builder', `Added: ${result.added.join(', ')}.`, 'ok');
+    await upgradePickedImages();
     logBot('Builder', 'Your site is ready. Refine with Pulse or launch.', 'ok');
   } catch (err) {
     logBot('Builder', `Couldn't finalise the site: ${err.message}`, 'fail');
   } finally {
     btn.disabled = false;
+  }
+}
+
+// Paid plans: the kept design's hero becomes FLUX Pro and its key images
+// FLUX Dev (server: /api/project/:id/premium-images). Free plans skip it.
+// A failure only means the stock images stay - the site is already done.
+async function upgradePickedImages() {
+  const plan = await GurostAPI.getMyPlan();
+  if (!plan || plan === 'free') return;
+  logBot('Designer', 'Upgrading your images with FLUX — the hero with FLUX Pro, key sections with FLUX Dev…', 'work');
+  try {
+    const result = await GurostAPI.call(`/api/project/${projectId}/premium-images`, { method: 'POST', body: {} });
+    if (result.skipped) {
+      logBot('Designer', 'Premium images are unavailable right now — your site keeps its current images.', 'info');
+      return;
+    }
+    if (result.upgraded?.length) {
+      currentHtml = result.html;
+      renderPreview(currentHtml, { keepScroll: true });
+      const parts = result.upgraded.map((u) => `${u.role} (${u.model})`).join(', ');
+      logBot('Designer', `Upgraded ${result.upgraded.length} image${result.upgraded.length === 1 ? '' : 's'}: ${parts} — $${result.cost.toFixed(3)}.`, 'ok');
+    }
+    if (result.failed) logBot('Designer', `${result.failed} image${result.failed === 1 ? '' : 's'} kept the stock photo (generation failed).`, 'info');
+  } catch (err) {
+    logBot('Designer', `Couldn't upgrade the images: ${err.message}`, 'fail');
   }
 }
 
@@ -459,7 +485,7 @@ function connectGenerationSocket(id) {
       } else if (msg.status === 'images-note') {
         const label = d.label || 'a design';
         if (d.kind === 'image-sources') {
-          const parts = [`${d.pixabay} Pixabay`, `${d.flux} FLUX`, `${d.gemini} Gemini`].concat(d.dropped ? [`${d.dropped} left out`] : []);
+          const parts = [`${d.pixabay} Pixabay`].concat(d.openverse ? [`${d.openverse} Openverse`] : [], [`${d.flux} FLUX`, `${d.gemini} Gemini`]).concat(d.dropped ? [`${d.dropped} left out`] : []);
           log('Stock photos', `${label}: ${parts.join(' · ')} — $${d.cost.toFixed(3)} (all-Gemini: $${d.allGeminiCost.toFixed(3)}).`, 'ok');
         } else if (d.kind === 'gemini-fallback') {
           log('Gemini', `Gemini unavailable (${d.reason}) — using Pixabay ${d.count === 1 ? 'photo' : `${d.count} photos`} instead for ${label}.`, 'ok');
@@ -467,7 +493,7 @@ function connectGenerationSocket(id) {
           log('Stock photos', `No image found for ${d.count === 1 ? 'a key image' : `${d.count} key images`} in ${label} (${d.reason}) — left out.`, 'fail');
         }
       } else if (msg.status === 'media-summary') {
-        log('Builder', `Images this build: ${d.pixabay} Pixabay (free), ${d.flux} FLUX, ${d.gemini} Gemini — $${d.cost.toFixed(3)} vs $${d.allGeminiCost.toFixed(3)} all-Gemini (${d.savedPct}% saved).`, 'ok');
+        log('Builder', `Images this build: ${d.pixabay} Pixabay${d.openverse ? ` + ${d.openverse} Openverse` : ''} (free), ${d.flux} FLUX, ${d.gemini} Gemini — $${d.cost.toFixed(3)} vs $${d.allGeminiCost.toFixed(3)} all-Gemini (${d.savedPct}% saved).`, 'ok');
       } else if (msg.status === 'variant-complete') {
         variantsFinished++;
         log('Designer', `${d.label || 'Design'} ready (${variantsFinished}/4).`, 'ok');

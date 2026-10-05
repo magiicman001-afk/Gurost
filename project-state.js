@@ -59,6 +59,7 @@ function toRow(projectId, userId, project) {
       deployUrl: project.deployUrl,
       // The user's company details - Pulse and later edits rely on them.
       businessInfo: project.businessInfo || null,
+      premiumImageCost: project.premiumImageCost || 0, // FLUX Pro/Dev spend on the picked design (USD)
     },
     updated_at: new Date().toISOString(),
   };
@@ -87,6 +88,7 @@ function fromRow(row) {
     stateHistory: ctx.stateHistory || [],
     deployUrl: ctx.deployUrl,
     businessInfo: ctx.businessInfo || null,
+    premiumImageCost: ctx.premiumImageCost || 0,
     assistantHistory: ctx.assistantHistory || [],
     pendingAssistantSuggestion: null,
     codeReview: null,
