@@ -249,17 +249,21 @@ function stripLeftoverPlaceholders(html) {
 }
 
 // Image routing, cheapest first (per image, in this order):
-//   1. Pixabay stock photo - free (image-bot.searchImage; stored in
-//      project-assets, never hotlinked).
-//   2. FLUX.2 Klein via OpenRouter - ~$0.015, for anything Pixabay has no
-//      match for (image-bot.generateFluxImageUrl).
+//   1. Stock photo - free: Pixabay, then Openverse (openly licensed,
+//      credited) - image-bot.searchImage; stored, never hotlinked.
+//   2. For anything Pixabay has no match for:
+//      paid plans - FLUX Schnell via fal.ai (~$0.003), then FLUX.2 Klein;
+//      free plan  - FLUX.2 Klein via OpenRouter (~$0.015).
 //   3. Gemini - ~$0.039, only when FLUX fails, and not while paused.
+// Premium images (FLUX Pro hero, FLUX Dev sections) are never made during
+// the 4-design build - only for the design a paid user picks
+// (bots/premium-images.js, after "Use this design").
 // Generated images (FLUX + Gemini) are capped per design; images past
 // the cap, or that no source could supply, are dropped rather than left
 // broken - and reported. Each design reports which source made each
 // image and what it cost against an all-Gemini build.
 const GENERATED_MAX_PER_DESIGN = 4;
-const COST_USD = { pixabay: 0, flux: 0.015, gemini: 0.039 };
+const COST_USD = { pixabay: 0, openverse: 0, flux: 0.015, gemini: 0.039 };
 // After a payment or quota failure (402 / quota / billing), Gemini is not
 // called again for a while: every design skips straight past it instead
 // of each waiting for the same 402.
@@ -277,6 +281,20 @@ async function geminiImage(description) {
   }
 }
 const ROLE_ORDER = { hero: 0, featured: 1, secondary: 2, decorative: 3 };
+const isPaidPlan = (plan) => Boolean(plan) && plan !== "free";
+
+// Build-time generator for one image: fal's FLUX Schnell on paid plans
+// (falling back to Klein if fal fails), Klein otherwise.
+function generateFill(req, plan) {
+  const aspectRatio = fluxAspect(req.role);
+  if (isPaidPlan(plan) && imageBot.falAvailable()) {
+    return imageBot.generateFalImageUrl(req.description, { model: "schnell", aspectRatio }).catch((err) => {
+      console.error(`[variant-bot] FLUX Schnell failed for "${req.placeholder}", using Klein:`, err.message);
+      return imageBot.generateFluxImageUrl(req.description, { aspectRatio });
+    });
+  }
+  return imageBot.generateFluxImageUrl(req.description, { aspectRatio });
+}
 // FLUX frames wide shots for heroes and backgrounds, 4:3 for the rest.
 const fluxAspect = (role) => (role === "hero" || role === "decorative" ? "16:9" : "4:3");
 
@@ -343,9 +361,9 @@ async function fulfillVideoRequests(html, videoRequests) {
 // onImageStart({ gemini, stock }) reports the plan before work starts
 // (every image starts on Pixabay now, so gemini is 0).
 // onNote({ kind, ... }) reports what happened:
-//   "image-sources" { pixabay, flux, gemini, dropped, cost, allGeminiCost }
+//   "image-sources" { pixabay, openverse, flux, gemini, dropped, cost, allGeminiCost }
 //   "image-dropped" { count, reason } - hero/featured images nobody could supply.
-async function fulfillImageRequests(html, imageRequests, onImageStart, extraCredits = [], onNote = () => {}) {
+async function fulfillImageRequests(html, imageRequests, onImageStart, extraCredits = [], onNote = () => {}, { plan } = {}) {
   if (!imageRequests || !imageRequests.length) {
     if (onImageStart) onImageStart({ gemini: 0, stock: 0 });
     return addPhotoCredits(stripLeftoverPlaceholders(html), extraCredits);
@@ -356,7 +374,7 @@ async function fulfillImageRequests(html, imageRequests, onImageStart, extraCred
 
   let finalHtml = html;
   const credits = [...extraCredits];
-  const tally = { pixabay: 0, flux: 0, gemini: 0, dropped: 0, cost: 0 };
+  const tally = { pixabay: 0, openverse: 0, flux: 0, gemini: 0, dropped: 0, cost: 0 };
 
   // 1. Pixabay for every image, in parallel.
   const stock = await Promise.allSettled(ordered.map((r) => imageBot.searchImage(stockQuery(r))));
@@ -366,14 +384,15 @@ async function fulfillImageRequests(html, imageRequests, onImageStart, extraCred
     if (r.status === "fulfilled" && r.value?.url) {
       finalHtml = replacePlaceholder(finalHtml, req.placeholder, r.value.url);
       if (r.value.credit) credits.push(r.value.credit);
-      tally.pixabay++;
+      const source = r.value.provider || "pixabay"; // pixabay, openverse or unsplash
+      tally[source] = (tally[source] || 0) + 1;
     } else missing.push(req);
   });
 
   // 2. FLUX for what Pixabay couldn't supply (most important first, capped).
   const toGenerate = missing.slice(0, GENERATED_MAX_PER_DESIGN);
   const overCap = missing.slice(GENERATED_MAX_PER_DESIGN);
-  const flux = await Promise.allSettled(toGenerate.map((r) => imageBot.generateFluxImageUrl(r.description, { aspectRatio: fluxAspect(r.role) })));
+  const flux = await Promise.allSettled(toGenerate.map((r) => generateFill(r, plan)));
   const fluxFailed = [];
   toGenerate.forEach((req, i) => {
     const r = flux[i];
@@ -413,10 +432,10 @@ async function fulfillImageRequests(html, imageRequests, onImageStart, extraCred
 
 // Videos and images for one parsed design. onStart({ gemini, stock, videos });
 // onNote - see fulfillImageRequests.
-async function fulfillMedia(parsed, onStart, onNote) {
+async function fulfillMedia(parsed, onStart, onNote, { plan } = {}) {
   const videos = (parsed.videoRequests || []).slice(0, MAX_VIDEOS_PER_DESIGN).length;
   const v = await fulfillVideoRequests(parsed.html, parsed.videoRequests);
-  const html = await fulfillImageRequests(v.html, parsed.imageRequests, onStart && ((plan) => onStart({ ...plan, videos })), v.credits, onNote);
+  const html = await fulfillImageRequests(v.html, parsed.imageRequests, onStart && ((work) => onStart({ ...work, videos })), v.credits, onNote, { plan });
   // An apostrophe in a single-quoted JS string ("Couldn't...") breaks a
   // site's whole script - its form and menu stop working.
   const scripts = repairInlineScripts(html);
@@ -431,7 +450,7 @@ async function generateVariants(prompt, { includeBranding = true, plan } = {}) {
       generateDesign({ system: systemFor(b.brief, includeBranding, design), content: prompt, plan, variantId: b.id }).then(async (r) => ({
         id: b.id,
         label: b.label,
-        html: await fulfillMedia(r.parsed),
+        html: await fulfillMedia(r.parsed, undefined, undefined, { plan }),
         summary: r.parsed.summary,
         usage: r.usage
       }))
@@ -515,7 +534,7 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
   const failures = [];
   const live = createLivePreview(notify);
   // Image sources across the whole build, for the cost summary at the end.
-  const media = { pixabay: 0, flux: 0, gemini: 0, dropped: 0, cost: 0, allGeminiCost: 0 };
+  const media = { pixabay: 0, openverse: 0, flux: 0, gemini: 0, dropped: 0, cost: 0, allGeminiCost: 0 };
 
   const promises = BRIEFS.map((b) => {
     const system = systemFor(b.brief, includeBranding, design);
@@ -532,7 +551,7 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
         }, (note) => {
           if (note.kind === "image-sources") for (const k of Object.keys(media)) media[k] += note[k] || 0;
           notify("designing", "images-note", { variantId: b.id, label: b.label, ...note });
-        });
+        }, { plan });
 
         // Buttons and forms made real, no AI: dead links retargeted, an
         // order form / contact form / map added when the design left them

@@ -36,7 +36,7 @@ test("Pixabay first: every image found there - no FLUX, no Gemini, $0", async ()
   assert.equal(r.calls.stock.length, 7);
   assert.equal(r.calls.flux.length + r.calls.gemini.length, 0);
   assert.equal(r.srcs.length, 7);
-  assert.deepEqual(r.sources, { kind: "image-sources", pixabay: 7, flux: 0, gemini: 0, dropped: 0, cost: 0, allGeminiCost: 0.273 });
+  assert.deepEqual(r.sources, { kind: "image-sources", pixabay: 7, openverse: 0, flux: 0, gemini: 0, dropped: 0, cost: 0, allGeminiCost: 0.273 });
   assert.match(r.html, /Photos: Photo by A on Pixabay<\/p><\/footer>/, "one deduplicated credit line inside the footer");
 });
 
@@ -46,7 +46,7 @@ test("Pixabay misses -> FLUX, hero first, 16:9 for heroes and backgrounds; cappe
   assert.deepEqual(r.calls.flux.map(([, a]) => a), ["16:9", "4:3", "4:3", "16:9"]);
   assert.equal(r.calls.gemini.length, 0);
   assert.ok(r.srcs.includes("https://cdn/flux/shopfront-at-dawn.jpg"), "hero from FLUX");
-  assert.deepEqual(r.sources, { kind: "image-sources", pixabay: 2, flux: 4, gemini: 0, dropped: 1, cost: 0.06, allGeminiCost: 0.273 });
+  assert.deepEqual(r.sources, { kind: "image-sources", pixabay: 2, openverse: 0, flux: 4, gemini: 0, dropped: 1, cost: 0.06, allGeminiCost: 0.273 });
   assert.ok(!/IMG_\d/.test(r.html), "the 5th miss is dropped, not left broken");
 });
 
@@ -93,4 +93,29 @@ test("a video's poster=\"IMG_n\" gives way to the clip's own poster", async () =
   imageBot.searchVideo = async () => ({ url: "https://cdn.pixabay.com/video/pool.mp4", poster: "https://cdn.pixabay.com/video/pool.jpg", credit: "Video by B on Pixabay" });
   const v = await fulfillVideoRequests('<video class="x" autoplay muted poster="IMG_1" src="VID_1"></video>', [{ placeholder: "VID_1", query: "pool" }]);
   assert.match(v.html, /<video class="x" autoplay muted src="https:\/\/cdn.pixabay.com\/video\/pool.mp4" poster="https:\/\/cdn.pixabay.com\/video\/pool.jpg" preload="metadata"><\/video>/);
+});
+
+// 2026-10-05 tier split: on Pixabay misses, paid plans fill with FLUX Schnell
+// via fal (~$0.003), falling back to Klein; the free plan uses Klein only.
+test("paid plan: Pixabay misses are filled by fal FLUX Schnell; free plan stays on Klein; fal failure falls back to Klein", async () => {
+  const realAvailable = imageBot.falAvailable;
+  const fal = [];
+  imageBot.searchImage = async () => null;
+  imageBot.generateFluxImageUrl = async (d) => ({ url: `https://cdn/klein/${slug(d)}.jpg`, cost: 0.015 });
+  imageBot.generateImageUrl = async () => { throw new Error("no gemini in this test"); };
+  imageBot.falAvailable = () => true;
+  imageBot.generateFalImageUrl = async (d, o) => { fal.push(o.model); return { url: `https://cdn/schnell/${slug(d)}.jpg`, cost: 0.003, model: "FLUX Schnell" }; };
+  const two = REQS.slice(0, 2);
+  const page = two.map((r) => `<img src="${r.placeholder}">`).join("");
+  const paid = await fulfillImageRequests(page, two, null, [], () => {}, { plan: "pro" });
+  assert.deepEqual(fal, ["schnell", "schnell"]);
+  assert.match(paid, /cdn\/schnell\//);
+  fal.length = 0;
+  const free = await fulfillImageRequests(page, two, null, [], () => {}, { plan: "free" });
+  assert.equal(fal.length, 0);
+  assert.match(free, /cdn\/klein\//);
+  imageBot.generateFalImageUrl = async () => { throw new Error("fal.ai FLUX Schnell failed (403)"); };
+  const fellBack = await fulfillImageRequests(page, two, null, [], () => {}, { plan: "pro" });
+  assert.match(fellBack, /cdn\/klein\//);
+  imageBot.falAvailable = realAvailable;
 });

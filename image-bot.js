@@ -53,13 +53,13 @@ async function searchUnsplash(query) {
 // the project-assets bucket like a generated image. If that fails the
 // photo is skipped (the caller falls back) rather than shipping a link
 // that breaks later.
-async function storeRemoteImage(url) {
+async function storeRemoteImage(url, folder = "stock") {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`download failed (${res.status})`);
   const type = res.headers.get("content-type") || "image/jpeg";
   const ext = { "image/png": "png", "image/webp": "webp" }[type] || "jpg";
   const { supabase } = require("./lib/db");
-  const path = `stock/${require("crypto").randomUUID()}.${ext}`;
+  const path = `${folder}/${require("crypto").randomUUID()}.${ext}`;
   const { error } = await supabase.storage.from("project-assets").upload(path, Buffer.from(await res.arrayBuffer()), { contentType: type });
   if (error) throw error;
   return supabase.storage.from("project-assets").getPublicUrl(path).data.publicUrl;
@@ -83,13 +83,42 @@ async function searchPixabay(query) {
 }
 
 /**
+ * Openverse (api.openverse.org) - openly licensed photos (Flickr,
+ * Wikimedia and more), no key. The fallback after Pixabay, before any
+ * paid generation. Only licences that allow commercial use; only large
+ * photos (results are often 500px thumbnails). CC licences require
+ * credit, so the credit names the title, creator and licence; it goes in
+ * the footer credits line with the Pixabay ones. Stored in project-assets
+ * like a Pixabay photo, never hotlinked.
+ */
+const OPENVERSE_MIN_WIDTH = 1000;
+
+async function searchOpenverse(query) {
+  if (!String(query || "").trim()) return null;
+  const q = encodeURIComponent(String(query).slice(0, 100));
+  const res = await fetch(`https://api.openverse.org/v1/images/?q=${q}&license_type=commercial&size=large&mature=false&page_size=8`).catch(() => null);
+  if (!res || !res.ok) return null;
+  const data = await res.json().catch(() => ({}));
+  const photo = (data.results || []).find((p) => p.url && (p.width || 0) >= OPENVERSE_MIN_WIDTH);
+  if (!photo) return null;
+  const license = `CC ${String(photo.license || "").toUpperCase()} ${photo.license_version || ""}`.trim().replace(/^CC (CC0|PDM)/, "$1");
+  const credit = `${photo.title ? `"${String(photo.title).slice(0, 60)}" ` : "Photo "}by ${photo.creator || "unknown"} (${license}, via Openverse)`;
+  try {
+    return { url: await storeRemoteImage(photo.url), credit, provider: "openverse" };
+  } catch (err) {
+    console.error("[image-bot] Storing Openverse photo failed, skipping it:", err.message);
+    return null;
+  }
+}
+
+/**
  * Tries providers in order until one returns a result. Set
- * IMAGE_PROVIDER_ORDER (comma-separated: pixabay,unsplash) to change
- * priority — defaults to that order.
+ * IMAGE_PROVIDER_ORDER (comma-separated: pixabay,openverse,unsplash) to
+ * change priority — defaults to that order.
  */
 async function searchImage(query) {
-  const order = (process.env.IMAGE_PROVIDER_ORDER || "pixabay,unsplash").split(",").map((s) => s.trim());
-  const providers = { unsplash: searchUnsplash, pixabay: searchPixabay };
+  const order = (process.env.IMAGE_PROVIDER_ORDER || "pixabay,openverse,unsplash").split(",").map((s) => s.trim());
+  const providers = { unsplash: searchUnsplash, pixabay: searchPixabay, openverse: searchOpenverse };
   for (const name of order) {
     const fn = providers[name];
     if (!fn) continue;
@@ -359,5 +388,52 @@ async function searchVideo(query, { orientation = "landscape" } = {}) {
   return null;
 }
 
-module.exports = { enhanceWithImages, searchImage, searchVideo, pickVideoFile, generateFluxImageUrl, generateCustomImage, generateImageWithGemini, generateImage, generateImageUrl };
+/**
+ * FLUX through fal.ai (FAL_API_KEY - fal's own docs call it FAL_KEY, both
+ * work). Paid plans only - see bots/premium-images.js and variant-bot.
+ *   pro      fal-ai/flux-pro/v1.1  $0.04 per megapixel  (hero, on the picked design)
+ *   dev      fal-ai/flux/dev       $0.025 per megapixel (key section images)
+ *   schnell  fal-ai/flux/schnell   $0.003 per megapixel (build-time fill-in)
+ * fal bills each image rounded UP to the next megapixel, so sizes stay
+ * just under 1MP (1280x720 = 0.92MP). The image is copied into
+ * project-assets - fal's media links aren't promised to last.
+ * After a 401/402/403 (no credit, bad key - seen: 403 "User is locked.
+ * Reason: TOP_UP") fal is skipped for 10 minutes, so builds fall straight
+ * through to the next source instead of each waiting on the same error.
+ * Returns { url, cost, model }.
+ */
+const FAL_MODELS = {
+  pro: { id: "fal-ai/flux-pro/v1.1", perMegapixel: 0.04, label: "FLUX Pro" },
+  dev: { id: "fal-ai/flux/dev", perMegapixel: 0.025, label: "FLUX Dev" },
+  schnell: { id: "fal-ai/flux/schnell", perMegapixel: 0.003, label: "FLUX Schnell" }
+};
+const FAL_SIZES = { "16:9": { width: 1280, height: 720 }, "4:3": { width: 1024, height: 768 } };
+const FAL_PAUSE_MS = 10 * 60 * 1000;
+let falPausedUntil = 0;
+const falKey = () => process.env.FAL_API_KEY || process.env.FAL_KEY || "";
+const falAvailable = () => Boolean(falKey()) && Date.now() >= falPausedUntil;
+
+async function generateFalImageUrl(description, { model = "dev", aspectRatio = "16:9" } = {}) {
+  const m = FAL_MODELS[model];
+  if (!m) throw new Error(`Unknown fal model "${model}"`);
+  if (!falKey()) throw new Error("FAL_API_KEY not configured");
+  if (Date.now() < falPausedUntil) throw new Error("fal.ai paused after a billing/auth error");
+  const size = FAL_SIZES[aspectRatio] || FAL_SIZES["16:9"];
+  const res = await fetch(`https://fal.run/${m.id}`, {
+    method: "POST",
+    headers: { Authorization: `Key ${falKey()}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt: String(description).slice(0, 2000), image_size: size, num_images: 1, output_format: "jpeg", enable_safety_checker: true })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    if ([401, 402, 403].includes(res.status)) falPausedUntil = Date.now() + FAL_PAUSE_MS;
+    throw new Error(`fal.ai ${m.label} failed (${res.status}): ${JSON.stringify(data.detail || data).slice(0, 200)}`);
+  }
+  const image = data.images?.[0];
+  if (!image?.url) throw new Error(`fal.ai ${m.label} returned no image`);
+  const megapixels = Math.ceil(((image.width || size.width) * (image.height || size.height)) / 1e6);
+  return { url: await storeRemoteImage(image.url, "generated"), cost: Math.round(megapixels * m.perMegapixel * 1000) / 1000, model: m.label };
+}
+
+module.exports = { enhanceWithImages, searchImage, searchOpenverse, searchVideo, pickVideoFile, generateFluxImageUrl, generateFalImageUrl, falAvailable, FAL_MODELS, generateCustomImage, generateImageWithGemini, generateImage, generateImageUrl, _resetFalPause: () => { falPausedUntil = 0; } };
 
