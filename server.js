@@ -2019,6 +2019,52 @@ app.put("/api/company-profile", security.rejectUnknownFields(["name", "website",
   }
 });
 
+// Findings: what the research said to improve (research_data.findings, written by the
+// research step). Each one comes back with the button it gets ("Fix now", "Fix this",
+// "Write a post") and, for website fixes, what Amend Website is handed.
+const fixIt = require("./lib/fix-it");
+const loadProfileWithResearch = async (userId) => {
+  const { data, error } = await companyProfilesTable().select("name, website, industry, socials, type, target, research_data, updated_at").eq("user_id", userId).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data;
+};
+
+app.get("/api/company-profile/findings", async (req, res) => {
+  try {
+    const row = await loadProfileWithResearch(req.user.id);
+    if (!row) return res.json({ hasProfile: false, researched: false, findings: [], passed: 0 });
+    res.json({ hasProfile: true, ...fixIt.presentFindings(row.research_data, profileFromRow(row)), amendKey: fixIt.AMEND_KEY });
+  } catch (err) {
+    console.error("[company-profile] findings failed:", err.message);
+    res.status(500).json({ error: "Could not load your findings." });
+  }
+});
+
+app.post("/api/company-profile/findings/:id/social-draft", security.rejectUnknownFields([]), async (req, res) => {
+  if (!/^[a-z0-9_]{1,60}$/.test(req.params.id)) return res.status(404).json({ error: "Finding not found." });
+  try {
+    const row = await loadProfileWithResearch(req.user.id);
+    const finding = (Array.isArray(row?.research_data?.findings) ? row.research_data.findings : []).find((f) => f && f.id === req.params.id && f.area === "social");
+    if (!finding) return res.status(404).json({ error: "Finding not found." });
+    const prompt = fixIt.buildSocialPrompt(finding, profileFromRow(row));
+    const result = await claudeClient.callClaude({
+      system: prompt.system,
+      messages: [{ role: "user", content: prompt.user }],
+      maxTokens: 700,
+      model: modelForTier(req.user.plan, { complex: false }),
+      parse: (t) => String(t || "").trim(),
+      context: { userId: req.user.id, ip: req.ip }
+    });
+    const { reply, draft } = fixIt.parseSocialReply(result.parsed);
+    if (!draft) throw new Error("The AI did not return a post.");
+    res.json({ platform: prompt.platform, note: reply, draft });
+  } catch (err) {
+    console.error("[company-profile] social draft failed:", err.message);
+    const credits = /OPENROUTER|credit|402/i.test(err.message);
+    res.status(credits ? 503 : 500).json({ error: credits ? "Writing posts needs AI credits, which are not available right now. Try again later." : "Could not write the post just now. Please try again.", needsCredits: credits });
+  }
+});
+
 // ---------------------------------------------------------------------------
 // BUSINESS ASSISTANT
 // ---------------------------------------------------------------------------

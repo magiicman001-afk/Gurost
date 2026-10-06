@@ -49,6 +49,7 @@
       var r = await GurostAPI.call('/api/company-profile', { method: 'PUT', body: body });
       show(r.profile); // shows the cleaned values the server kept
       msg('Saved.');
+      window.dispatchEvent(new Event('gurost:company-saved'));
     } catch (err) { msg(err.message, true); }
     btn.disabled = false;
   });

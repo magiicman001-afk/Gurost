@@ -69,6 +69,13 @@
     </div>
   </section>
 
+  <!-- What to improve: findings from the company research, each with a Fix button -->
+  <section id="companyFindings" class="mb-10 reveal border border-[var(--line)] rounded-2xl p-6" hidden>
+    <h2 class="font-display font-bold text-lg mb-1">What to improve</h2>
+    <p id="cfIntro" class="text-sm text-[var(--muted)] mb-4"></p>
+    <div id="cfList" class="grid gap-3"></div>
+  </section>
+
   <!-- Department bots: chat-only helpers (Sales, HR, Finance, Payroll, Support, Custom) -->
   <section id="deptBots" class="mb-10 reveal border border-[var(--line)] rounded-2xl p-6">
     <h2 class="font-display font-bold text-lg mb-1">Department bots</h2>
@@ -181,6 +188,7 @@
 <script src="shared/api-client.js"></script>
 <script src="shared/pulse-voice.js"></script>
 <script src="shared/company-profile.js"></script>
+<script src="shared/company-findings.js"></script>
 <script src="shared/department-bots.js"></script>
 <script>
 // Real, deliberate fix: this used to run only after the login and
