@@ -8,6 +8,7 @@ const { designPromptLines } = require("../lib/industry-design");
 const { parseVariantResponse, VariantParseError } = require("../lib/variant-response");
 const { createStreamPreview } = require("../lib/stream-preview");
 const security = require("../security");
+const { hardenSite, findDeadLinks } = require("../lib/site-links");
 
 const BRIEFS = [
   {
@@ -101,7 +102,9 @@ COMPLETE WEBSITE - this must be a finished, launch-ready site, never a hero-only
 - These sections, each with real, specific content for this business: a hero with a primary and a secondary call to action; services or features; about / our story; the core offering (menu, products, pricing, practice areas - whatever fits the business); testimonials or other social proof; a contact section; a footer.
 - Contact form with labelled name, email and message fields, required-field validation, and an inline success message shown by JS on submit without a page reload. Add address, opening hours and phone where they fit the business.
 - Footer with section links, contact details, social links and a copyright line.
-- Every button and link must do something real: scroll to a section, focus the form, or submit it. No dead "#" links.
+- Ordering or booking: include a section with id="order" holding a real form (name, email, phone, item, quantity, pickup or booking time). Every "Order", "Place Order", "Book Now" or "Reserve" button or link goes to #order. The contact section has id="contact" and every "Contact" or "Get in touch" button goes there.
+- Social icons: link only the profiles given in the company details, opening in a new tab. If a network has no profile, leave its icon out.
+- Every button and link must do something real: scroll to a section, focus the form, or submit it. No dead "#" links, and no link to a "#id" that is not on the page.
 ${design?.mustHaves ? `- Industry must-haves for this business: ${design.mustHaves}\n` : ""}
 Technical checklist: load Tailwind from its CDN script tag, and load the Google Fonts and Material Symbols stylesheets you use, all in <head> - icons and styling break without them.
 
@@ -475,7 +478,7 @@ function verifyRealHtml(html) {
 
 // businessInfo: normalized by lib/business-info (null = the user skipped -
 // placeholders, not invented details).
-async function generateVariantsStaged(prompt, { includeBranding = true, onStage, userId, plan, businessInfo = null } = {}) {
+async function generateVariantsStaged(prompt, { includeBranding = true, onStage, userId, plan, businessInfo = null, projectId = null } = {}) {
   const notify = (stage, status, data) => onStage && onStage(stage, status, data);
 
   notify("understanding", "running");
@@ -524,12 +527,20 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
     return generateDesign({ system, content, plan, variantId: b.id, onStream: live.streamFor(b, system), onRetry })
       .then(async (r) => {
         live.finish(b.id);
-        const html = await fulfillMedia(r.parsed, ({ gemini, stock, videos }) => {
+        let html = await fulfillMedia(r.parsed, ({ gemini, stock, videos }) => {
           notify("designing", "images-running", { variantId: b.id, label: b.label, count: gemini + stock, gemini, stock, videos });
         }, (note) => {
           if (note.kind === "image-sources") for (const k of Object.keys(media)) media[k] += note[k] || 0;
           notify("designing", "images-note", { variantId: b.id, label: b.label, ...note });
         });
+
+        // Buttons and forms made real, no AI: dead links retargeted, an
+        // order form / contact form / map added when the design left them
+        // out, forms wired to the Gurost form endpoint.
+        const hardened = hardenSite(html, { businessInfo, formEndpoint: projectId ? `${process.env.PUBLIC_URL || "https://gurost.onrender.com"}/api/site-forms/${projectId}` : null });
+        html = hardened.html;
+        const dead = findDeadLinks(html);
+        console.log(`[variant-bot] "${b.id}" links: fixed ${hardened.report.fixed.length}, removed ${hardened.report.removed.length}, added [${hardened.report.added.join(", ")}], dead left ${dead.length}`);
 
         // Real, genuine check - a variant only counts as real success
         // if this actually passes, not just because nothing crashed.

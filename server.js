@@ -407,6 +407,47 @@ app.post("/api/contact", security.rejectUnknownFields(["fullName", "email", "sub
 });
 
 
+// Contact and order forms on generated sites post here. Public on purpose
+// (visitors of a customer's site are logged out), so it is rate limited,
+// shape-checked, and has a honeypot. Success is returned only after the row
+// is saved. Must stay above app.use("/api", auth.requireAuth).
+const siteFormLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false,
+  message: { error: "Too many submissions. Please wait a few minutes and try again." } });
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+app.post("/api/site-forms/:projectId", siteFormLimiter, async (req, res) => {
+  const { projectId } = req.params;
+  const { kind, fields, website } = req.body || {};
+  if (!UUID_RE.test(projectId)) return res.status(400).json({ error: "Invalid form." });
+  if (kind !== "contact" && kind !== "order") return res.status(400).json({ error: "Invalid form." });
+  if (website) return res.json({ ok: true }); // honeypot filled: a bot. Pretend success, save nothing.
+  if (!fields || typeof fields !== "object" || Array.isArray(fields)) return res.status(400).json({ error: "Invalid form." });
+
+  const clean = {};
+  for (const [k, v] of Object.entries(fields).slice(0, 20)) {
+    if (!/^[A-Za-z0-9_ -]{1,40}$/.test(k)) continue;
+    const text = String(v ?? "").replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "").trim().slice(0, 2000);
+    if (text) clean[k] = text;
+  }
+  if (!Object.keys(clean).length) return res.status(400).json({ error: "Please fill in the form." });
+  if (clean.email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(clean.email)) return res.status(400).json({ error: "Please enter a valid email." });
+
+  try {
+    const { error } = await require("./lib/db").supabase.from("site_form_submissions").insert({
+      project_id: projectId,
+      user_id: PROJECTS.get(projectId)?.userId ?? null,
+      kind,
+      fields: clean
+    });
+    if (error) throw new Error(error.message);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[site-forms] save failed:", err.message);
+    res.status(500).json({ error: "Could not save your message. Please try again." });
+  }
+});
+
+
 // ==== REAL ADMIN AUTHENTICATION SYSTEM ====
 /**
  * REAL ADMIN AUTHENTICATION SYSTEM
@@ -4788,6 +4829,7 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt", "
 
     const result = await variantBot.generateVariantsStaged(prompt, {
       businessInfo,
+      projectId,
       includeBranding: !PLANS[req.user.plan]?.whiteLabel,
       userId: req.user.id,
       plan: req.user.plan,
