@@ -159,7 +159,9 @@ ${ANTI_SLOP_RULES}
 
 DESIGN STANDARDS — this must look like it was designed by a real agency, not generic AI output:
 
-Components: use Radix UI primitives (@radix-ui/react-*) styled with Tailwind to match the shadcn/ui visual language — genuine, accessible, premium-feeling buttons, dialogs, dropdowns, tabs, and form controls, not bare unstyled HTML elements. Include the real Radix packages you use in package.json.
+Components: hand-build every button, card, dialog, dropdown, tab and form control from plain elements styled with Tailwind classes - considered padding, soft shadows, deliberate corner radii, visible focus states - so they feel like a premium component library without importing one.
+
+NO EXTERNAL PACKAGES - this is a hard requirement. The live preview can only load React and the app's own files. The only import from a package that you may write is react (and react-dom if you need it). Never import react-router-dom, Radix UI, axios, framer-motion, an icon library or anything else from npm. Instead: keep the current page in React state in App.jsx and mirror it in location.hash so the back button works; use fetch for the backend; use inline SVG or Material Symbols for icons; use Tailwind classes and src/styles/main.css for styling. The package.json lists only react and react-dom as dependencies. JavaScript files never import CSS; index.html links the stylesheet.
 
 ${design?.typography || DEFAULT_TYPOGRAPHY}
 
@@ -171,7 +173,7 @@ Layout: avoid generic centered-single-column layouts — use real, considered co
 
 Responsive: genuinely well-composed from 320px mobile through large desktop, not just "doesn't break."
 
-Dark mode: implement Tailwind's real dark: variant with a working toggle that persists via localStorage.
+Dark mode: implement Tailwind's real dark: variant with a working toggle that persists via localStorage. The page is previewed in a sandboxed frame where localStorage throws, so wrap every localStorage read and write in try/catch and carry on without it.
 
 On each top-level rendered section within a component (the outermost divs/sections a component returns, not every nested element), add a real data-gurost-file="ComponentFileName.jsx" attribute matching the actual file path that component lives in. This is real, load-bearing metadata — the live preview's Clickable Code Boxes feature reads this attribute directly to map a clicked section back to its real source file, so it needs to be accurate, not decorative. Don't add it to every element, just the top-level structural ones a user would reasonably click on.
 

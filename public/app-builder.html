@@ -448,6 +448,16 @@ function buildPreviewDocument(frontendFiles) {
 
   var cache = {};
 
+  // Stylesheets the app ships (src/styles/main.css and the like) apply to the preview.
+  FILES.forEach(function (f) {
+    if (/\\.css$/i.test(f.path)) {
+      var st = document.createElement('style');
+      st.setAttribute('data-from', f.path);
+      st.textContent = f.content;
+      document.head.appendChild(st);
+    }
+  });
+
   function requireModule(path) {
     if (cache[path]) return cache[path].exports;
 
@@ -455,6 +465,9 @@ function buildPreviewDocument(frontendFiles) {
     if (source === undefined) {
       throw new Error('Cannot resolve import "' + path + '" — no generated file matches it.');
     }
+
+    // A stylesheet imported from JS: already applied above, nothing to run.
+    if (/\\.css$/i.test(path)) { cache[path] = { exports: {} }; return {}; }
 
     var transpiled;
     try {
@@ -470,8 +483,12 @@ function buildPreviewDocument(frontendFiles) {
     cache[path] = module;
 
     var localRequire = function (importPath) {
-      if ((new RegExp('^https?://', 'i')).test(importPath)) {
-        throw new Error('External package "' + importPath + '" is not available in this preview (only React and the files generated for this app are).');
+      // React comes from the page itself.
+      if (importPath === 'react') return window.React;
+      if (importPath === 'react-dom' || importPath === 'react-dom/client') return window.ReactDOM;
+      var isRelative = importPath.charAt(0) === '.' || importPath.charAt(0) === '/';
+      if (!isRelative) {
+        throw new Error('This app imports "' + importPath + '", a package the preview cannot load. Apps here can use only React and their own files - rebuild it, or remove that import.');
       }
       var resolved = normalizePath(dirname(path), importPath);
       return requireModule(resolved);

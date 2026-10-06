@@ -16,3 +16,12 @@ test("backend prompt asks for entry, per-entity routes and endpoint docs", () =>
   for (const bit of ["package.json", "server.js", "routes/", "README.md"]) assert.ok(BACKEND_SYSTEM.includes(bit), `missing ${bit}`);
   assert.match(BACKEND_SYSTEM, /process\.env\.PORT/);
 });
+
+test("frontend prompt forbids external packages and keeps the preview-safe rules", () => {
+  const p = frontendSystemFor("A pre-order app for my bakery");
+  assert.match(p, /NO EXTERNAL PACKAGES/);
+  assert.match(p, /react-router-dom/); // named only to forbid it
+  assert.doesNotMatch(p, /use Radix UI primitives|@radix-ui\/react-\*/);
+  assert.match(p, /location\.hash/);
+  assert.match(p, /try\/catch/); // localStorage throws in the sandboxed preview
+});
