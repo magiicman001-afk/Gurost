@@ -84,7 +84,7 @@ async function login(email, password) {
   if (error || !data || !data.password_hash) {
     throw new Error("Invalid email or password.");
   }
-  if (data.revoked) throw new Error("This account has been deactivated.");
+  if (data.revoked) throw new Error("Invalid email or password.");
   if (!verifyPassword(password, data.password_hash, data.password_salt)) {
     throw new Error("Invalid email or password.");
   }

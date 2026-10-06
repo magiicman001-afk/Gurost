@@ -269,6 +269,7 @@
             <button class="pulse-action-btn" id="actShare" data-action="share"><span class="material-symbols-outlined">share</span>Share</button>
             <button class="pulse-action-btn" id="actImage" data-action="image"><span class="material-symbols-outlined">image</span>Image</button>
             <button class="pulse-action-btn" id="actHistory" data-action="history"><span class="material-symbols-outlined">history</span>History</button>
+            <button class="pulse-action-btn" id="actSubmissions" data-action="submissions"><span class="material-symbols-outlined">inbox</span>Submissions</button>
             <button class="pulse-action-btn" id="actDesignMode" data-action="designMode"><span class="material-symbols-outlined">ads_click</span>Design</button>
           </div>
           <div id="pulseImagePanel" class="hidden">
@@ -284,6 +285,7 @@
       </div>
       <button id="pulseBall" class="state-idle" aria-label="Open Pulse">
         <span class="material-symbols-outlined">graphic_eq</span>
+        <span id="pulseBadge" class="pulse-badge" hidden></span>
       </button>
     `;
     document.body.appendChild(widget);
@@ -712,6 +714,19 @@
   // Download and GitHub aren't gurostBuilder methods (they call their
   // real routes directly, needing only the projectId), so they're
   // shown whenever a project genuinely exists instead.
+  // Unread-submission count on the Pulse ball. Silent on any failure: a badge
+  // that can't load simply doesn't show.
+  async function refreshSubmissionBadge() {
+    const badge = document.getElementById('pulseBadge');
+    const projectId = window.gurostBuilder?.getProjectId?.();
+    if (!badge || !projectId || !/\/(builder|amend_website)(\.html)?$/.test(location.pathname)) return;
+    try {
+      const r = await window.GurostAPI.call(`/api/project/${projectId}/submissions/summary`);
+      badge.textContent = r.unread > 99 ? '99+' : String(r.unread);
+      badge.hidden = !r.unread;
+    } catch { badge.hidden = true; }
+  }
+
   function setupActionButtons() {
     const gb = window.gurostBuilder;
     const show = (id, condition) => {
@@ -731,6 +746,16 @@
     show('actImage', true); // real route, works on every page - Gemini's real free tier makes this always available
     show('actHistory', typeof gb.undo === 'function' || typeof gb.redo === 'function'); // real, same real projects that support undo/redo have real history to browse
     show('actDesignMode', !!getPreviewIframe()); // real - only where a genuine preview iframe exists to click into
+
+    // Submissions: website projects only (forms live on generated websites).
+    show('actSubmissions', /\/(builder|amend_website)(\.html)?$/.test(location.pathname));
+    document.getElementById('actSubmissions').addEventListener('click', () => {
+      const projectId = gb.getProjectId?.();
+      if (!projectId) { logStatus('Start a build first - submissions belong to a site.'); return; }
+      window.location.href = `submissions.html?projectId=${encodeURIComponent(projectId)}`;
+    });
+    refreshSubmissionBadge();
+    setInterval(refreshSubmissionBadge, 60000);
 
     document.getElementById('actSave').addEventListener('click', () => runAction('save', async () => {
       await gb.save();

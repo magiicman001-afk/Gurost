@@ -256,3 +256,8 @@
 
 #actDesignMode.active { background: var(--pulse-orange); }
 #actDesignMode.active .material-symbols-outlined { color: white; }
+
+/* Unread-submission count on the ball. */
+#pulseBall { position: relative; }
+.pulse-badge { position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: #b91c1c; color: #fff; font: 700 11px/20px Inter, system-ui, sans-serif; text-align: center; box-shadow: 0 0 0 2px #fff; pointer-events: none; }
+.pulse-badge[hidden] { display: none; }

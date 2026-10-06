@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Submissions - Gurost</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#1A1A2E; --muted:#6B7280; --line:#E9E9EF; --orange:#FF8C00; --gold:#FEB246; --soft:#F7F7FA; --ok:#15803d; --bad:#b91c1c; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:'Inter',system-ui,sans-serif; color:var(--ink); background:#fff; }
+  .wrap { max-width:1100px; margin:0 auto; padding:20px 16px 80px; }
+  .top { display:flex; flex-wrap:wrap; align-items:center; gap:12px; justify-content:space-between; margin-bottom:16px; }
+  h1 { font-size:26px; margin:0; }
+  .back { color:var(--muted); text-decoration:none; font-size:14px; }
+  .sub { color:var(--muted); font-size:14px; margin:4px 0 0; }
+  .bar { display:flex; flex-wrap:wrap; gap:8px; align-items:end; padding:12px; background:var(--soft); border:1px solid var(--line); border-radius:12px; margin-bottom:16px; }
+  .bar label { display:flex; flex-direction:column; font-size:12px; color:var(--muted); gap:4px; }
+  select, input[type=date] { font:inherit; font-size:14px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); }
+  button { font:inherit; font-size:14px; font-weight:600; padding:9px 14px; border-radius:8px; border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; }
+  button:hover { border-color:var(--orange); }
+  button.primary { background:linear-gradient(135deg,var(--gold),var(--orange)); border:0; color:#1A1A2E; }
+  button.danger { color:var(--bad); }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+  .spacer { flex:1; }
+  #msg { min-height:20px; font-size:14px; margin-bottom:8px; }
+  #msg.err { color:var(--bad); }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th { text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); padding:8px 10px; border-bottom:1px solid var(--line); }
+  td { padding:12px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr.row { cursor:pointer; }
+  tr.row:hover td { background:var(--soft); }
+  tr.unread td { font-weight:600; }
+  .dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--orange); margin-right:6px; }
+  .pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; background:var(--soft); border:1px solid var(--line); }
+  .pill.order { background:#FFF3E0; border-color:#FFD9A0; }
+  .prev { max-width:280px; color:var(--muted); font-weight:400; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  tr.detail td { background:var(--soft); }
+  dl { display:grid; grid-template-columns:140px 1fr; gap:6px 16px; margin:0 0 12px; }
+  dt { color:var(--muted); font-size:13px; }
+  dd { margin:0; white-space:pre-wrap; word-break:break-word; }
+  .actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .empty { text-align:center; padding:48px 16px; color:var(--muted); }
+  @media (max-width:760px) {
+    table, thead, tbody, tr, td { display:block; }
+    thead { display:none; }
+    tr.row { border:1px solid var(--line); border-radius:12px; margin-bottom:10px; padding:6px 4px; }
+    td { border:0; padding:4px 10px; }
+    td[data-l]::before { content:attr(data-l) ": "; color:var(--muted); font-weight:400; font-size:12px; }
+    .prev { max-width:none; white-space:normal; }
+    tr.detail { margin:-6px 0 10px; }
+    dl { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <a class="back" id="backLink" href="dashboard.html">&larr; Back</a>
+      <h1>Submissions</h1>
+      <p class="sub" id="sub">Orders and messages from your website.</p>
+    </div>
+    <div class="actions">
+      <button id="markAll">Mark all read</button>
+      <button id="exportCsv" class="primary">Export CSV</button>
+    </div>
+  </div>
+
+  <div class="bar">
+    <label>Type<select id="fType"><option value="">All</option><option value="order">Orders</option><option value="contact">Contact</option></select></label>
+    <label>Status<select id="fStatus"><option value="">All</option><option value="new">New</option><option value="read">Read</option></select></label>
+    <label>From<input type="date" id="fFrom"></label>
+    <label>To<input type="date" id="fTo"></label>
+    <label>Sort<select id="fSort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="name">Name A-Z</option></select></label>
+    <button id="reset">Reset</button>
+  </div>
+
+  <div id="msg" role="status"></div>
+  <div id="list"></div>
+</div>
+
+<script src="shared/api-client.js"></script>
+<script>
+(function () {
+  if (!GurostAPI.requireLogin()) return;
+  var projectId = new URLSearchParams(location.search).get('projectId');
+  var $ = function (id) { return document.getElementById(id); };
+  var rows = [];
+  var openId = null;
+
+  if (!projectId) { setMsg('No project selected. Open this page from your project.', true); return; }
+  $('backLink').href = 'builder.html?projectId=' + encodeURIComponent(projectId);
+
+  function setMsg(t, err) { $('msg').textContent = t || ''; $('msg').className = err ? 'err' : ''; }
+  function qs() {
+    var p = new URLSearchParams();
+    [['type', 'fType'], ['status', 'fStatus'], ['from', 'fFrom'], ['to', 'fTo'], ['sort', 'fSort']].forEach(function (m) {
+      var v = $(m[1]).value; if (v) p.set(m[0], v);
+    });
+    return p.toString();
+  }
+  function el(tag, props, text) {
+    var e = document.createElement(tag);
+    if (props) Object.keys(props).forEach(function (k) { e[k] = props[k]; });
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function when(iso) { var d = new Date(iso); return isNaN(d) ? '' : d.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }); }
+
+  async function load() {
+    setMsg('Loading...');
+    try {
+      var data = await GurostAPI.call('/api/project/' + encodeURIComponent(projectId) + '/submissions?' + qs());
+      rows = data.submissions || [];
+      $('sub').textContent = rows.length + ' shown, ' + data.unread + ' new';
+      setMsg('');
+      render();
+    } catch (err) {
+      setMsg("Couldn't load submissions: " + err.message, true);
+    }
+  }
+
+  function render() {
+    var list = $('list');
+    list.textContent = '';
+    if (!rows.length) {
+      list.appendChild(el('div', { className: 'empty' }, 'No submissions yet. When someone fills in a form on your site, it shows up here.'));
+      return;
+    }
+    var table = el('table');
+    var thead = el('thead'), hr = el('tr');
+    ['Received', 'Name', 'Email', 'Phone', 'Type', 'Details', 'Status', ''].forEach(function (h) { hr.appendChild(el('th', null, h)); });
+    thead.appendChild(hr); table.appendChild(thead);
+    var tb = el('tbody');
+    rows.forEach(function (r) {
+      var tr = el('tr', { className: 'row' + (r.read ? '' : ' unread') });
+      var c1 = el('td'); c1.dataset.l = 'Received';
+      if (!r.read) c1.appendChild(el('span', { className: 'dot' }));
+      c1.appendChild(document.createTextNode(when(r.received)));
+      tr.appendChild(c1);
+      [['Name', r.name], ['Email', r.email], ['Phone', r.phone]].forEach(function (p) { var td = el('td', null, p[1] || '-'); td.dataset.l = p[0]; tr.appendChild(td); });
+      var tt = el('td'); tt.dataset.l = 'Type'; tt.appendChild(el('span', { className: 'pill ' + r.type }, r.type)); tr.appendChild(tt);
+      var tp = el('td', { className: 'prev' }, r.preview || '-'); tp.dataset.l = 'Details'; tr.appendChild(tp);
+      var ts = el('td', null, r.read ? 'Read' : 'New'); ts.dataset.l = 'Status'; tr.appendChild(ts);
+      var ta = el('td'); ta.appendChild(el('span', { className: 'pill' }, openId === r.id ? 'Hide' : 'Open')); tr.appendChild(ta);
+      tr.addEventListener('click', function () { toggle(r); });
+      tb.appendChild(tr);
+      if (openId === r.id) tb.appendChild(detail(r));
+    });
+    table.appendChild(tb);
+    list.appendChild(table);
+  }
+
+  function detail(r) {
+    var tr = el('tr', { className: 'detail' });
+    var td = el('td'); td.colSpan = 8;
+    var dl = el('dl');
+    Object.keys(r.fields).forEach(function (k) {
+      dl.appendChild(el('dt', null, k.replace(/_/g, ' ')));
+      dl.appendChild(el('dd', null, r.fields[k]));
+    });
+    td.appendChild(dl);
+    var a = el('div', { className: 'actions' });
+    var rb = el('button', null, r.read ? 'Mark unread' : 'Mark read');
+    rb.addEventListener('click', function (e) { e.stopPropagation(); setRead(r, !r.read); });
+    var db = el('button', { className: 'danger' }, 'Delete');
+    db.addEventListener('click', function (e) { e.stopPropagation(); del(r); });
+    a.appendChild(rb);
+    if (r.email) { var m = el('a', { href: 'mailto:' + r.email }); m.appendChild(el('button', null, 'Reply by email')); a.appendChild(m); }
+    a.appendChild(db);
+    td.appendChild(a); tr.appendChild(td);
+    return tr;
+  }
+
+  async function setRead(r, read) {
+    try {
+      await GurostAPI.call('/api/project/' + encodeURIComponent(projectId) + '/submissions/' + r.id, { method: 'PATCH', body: { read: read } });
+      r.read = read; refreshSub(); render();
+    } catch (err) { setMsg("Couldn't update: " + err.message, true); }
+  }
+  function toggle(r) {
+    openId = openId === r.id ? null : r.id;
+    if (openId && !r.read) setRead(r, true); else render();
+  }
+  async function del(r) {
+    if (!confirm('Delete this submission? This cannot be undone.')) return;
+    try {
+      await GurostAPI.call('/api/project/' + encodeURIComponent(projectId) + '/submissions/' + r.id, { method: 'DELETE' });
+      rows = rows.filter(function (x) { return x.id !== r.id; }); openId = null; refreshSub(); render();
+    } catch (err) { setMsg("Couldn't delete: " + err.message, true); }
+  }
+  function refreshSub() {
+    $('sub').textContent = rows.length + ' shown, ' + rows.filter(function (x) { return !x.read; }).length + ' new';
+  }
+
+  $('markAll').addEventListener('click', async function () {
+    try {
+      await GurostAPI.call('/api/project/' + encodeURIComponent(projectId) + '/submissions/mark-all-read', { method: 'POST', body: {} });
+      load();
+    } catch (err) { setMsg("Couldn't update: " + err.message, true); }
+  });
+  $('exportCsv').addEventListener('click', async function () {
+    try {
+      var res = await fetch(location.origin + '/api/project/' + encodeURIComponent(projectId) + '/submissions.csv?' + qs(), { headers: GurostAPI.authHeaders ? GurostAPI.authHeaders() : {} });
+      if (!res.ok) throw new Error('export failed (' + res.status + ')');
+      var url = URL.createObjectURL(await res.blob());
+      var a = el('a', { href: url, download: 'submissions.csv' });
+      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    } catch (err) { setMsg("Couldn't export: " + err.message, true); }
+  });
+  $('reset').addEventListener('click', function () {
+    ['fType', 'fStatus', 'fFrom', 'fTo'].forEach(function (id) { $(id).value = ''; });
+    $('fSort').value = 'newest'; load();
+  });
+  ['fType', 'fStatus', 'fFrom', 'fTo', 'fSort'].forEach(function (id) { $(id).addEventListener('change', load); });
+  load();
+})();
+</script>
+</body>
+</html>

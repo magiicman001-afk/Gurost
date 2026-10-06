@@ -433,9 +433,12 @@ app.post("/api/site-forms/:projectId", siteFormLimiter, async (req, res) => {
   if (clean.email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(clean.email)) return res.status(400).json({ error: "Please enter a valid email." });
 
   try {
+    // The owner, for the submissions page: from memory, else the saved project.
+    let owner = PROJECTS.get(projectId)?.userId ?? null;
+    if (!owner) owner = (await projectState.hydrateProjectIfMissing(projectId).catch(() => null))?.userId ?? null;
     const { error } = await require("./lib/db").supabase.from("site_form_submissions").insert({
       project_id: projectId,
-      user_id: PROJECTS.get(projectId)?.userId ?? null,
+      user_id: owner,
       kind,
       fields: clean
     });
@@ -4950,6 +4953,124 @@ app.get("/api/me", async (req, res) => {
 // Also missing — GET /api/project/:id existed but nothing listed a
 // user's own projects, which the Dashboard needs. Returns a summary
 // per project, not the full object.
+// ---- Form submissions from the owner's generated sites ----
+// All of these are behind auth. The /api/project/:id/* ones are also behind
+// requireProjectOwnership; getProject() is the second check.
+const submissionsLib = require("./lib/submissions");
+const subsTable = () => require("./lib/db").supabase.from("site_form_submissions");
+
+// Unread counts for every project the user owns (dashboard cards).
+app.get("/api/submissions/summary", async (req, res) => {
+  try {
+    const { data, error } = await subsTable().select("project_id, read_at").eq("user_id", req.user.id).limit(5000);
+    if (error) throw new Error(error.message);
+    const byProject = {};
+    for (const r of data || []) {
+      const c = (byProject[r.project_id] ||= { total: 0, unread: 0 });
+      c.total++;
+      if (!r.read_at) c.unread++;
+    }
+    res.json({ projects: byProject });
+  } catch (err) {
+    console.error("[submissions] summary failed:", err.message);
+    res.status(500).json({ error: "Could not load submissions." });
+  }
+});
+
+app.get("/api/project/:id/submissions/summary", async (req, res) => {
+  if (!getProject(req.params.id, req, res)) return;
+  try {
+    const base = () => subsTable().select("id", { count: "exact", head: true }).eq("project_id", req.params.id);
+    const [all, unread] = await Promise.all([base(), base().is("read_at", null)]);
+    if (all.error || unread.error) throw new Error((all.error || unread.error).message);
+    res.json({ total: all.count || 0, unread: unread.count || 0 });
+  } catch (err) {
+    console.error("[submissions] project summary failed:", err.message);
+    res.status(500).json({ error: "Could not load submissions." });
+  }
+});
+
+async function querySubmissions(projectId, query) {
+  const f = submissionsLib.parseListQuery(query);
+  let q = subsTable().select("*").eq("project_id", projectId);
+  if (f.type) q = q.eq("kind", f.type);
+  if (f.status === "new") q = q.is("read_at", null);
+  if (f.status === "read") q = q.not("read_at", "is", null);
+  if (f.from) q = q.gte("created_at", f.from.toISOString());
+  if (f.to) q = q.lte("created_at", f.to.toISOString());
+  const { data, error } = await q.order(f.order.column, { ascending: f.order.ascending }).limit(1000);
+  if (error) throw new Error(error.message);
+  return (data || []).map(submissionsLib.shapeRow);
+}
+
+app.get("/api/project/:id/submissions", async (req, res) => {
+  if (!getProject(req.params.id, req, res)) return;
+  try {
+    const rows = await querySubmissions(req.params.id, req.query);
+    res.json({ submissions: rows, count: rows.length, unread: rows.filter((r) => !r.read).length });
+  } catch (err) {
+    console.error("[submissions] list failed:", err.message);
+    res.status(500).json({ error: "Could not load submissions." });
+  }
+});
+
+// The same filters as the list, as a CSV download.
+app.get("/api/project/:id/submissions.csv", async (req, res) => {
+  if (!getProject(req.params.id, req, res)) return;
+  try {
+    const rows = await querySubmissions(req.params.id, req.query);
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", 'attachment; filename="submissions.csv"');
+    res.send("\uFEFF" + submissionsLib.buildCsv(rows));
+  } catch (err) {
+    console.error("[submissions] csv failed:", err.message);
+    res.status(500).json({ error: "Could not export submissions." });
+  }
+});
+
+// Mark one read/unread: body { read: true|false }.
+app.patch("/api/project/:id/submissions/:sid", security.rejectUnknownFields(["read"]), async (req, res) => {
+  if (!getProject(req.params.id, req, res)) return;
+  if (!UUID_RE.test(req.params.sid)) return res.status(404).json({ error: "Submission not found." });
+  if (typeof req.body.read !== "boolean") return res.status(400).json({ error: "Send read: true or false." });
+  try {
+    const { data, error } = await subsTable().update({ read_at: req.body.read ? new Date().toISOString() : null })
+      .eq("id", req.params.sid).eq("project_id", req.params.id).select("id");
+    if (error) throw new Error(error.message);
+    if (!data?.length) return res.status(404).json({ error: "Submission not found." });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[submissions] update failed:", err.message);
+    res.status(500).json({ error: "Could not update the submission." });
+  }
+});
+
+app.post("/api/project/:id/submissions/mark-all-read", async (req, res) => {
+  if (!getProject(req.params.id, req, res)) return;
+  try {
+    const { error } = await subsTable().update({ read_at: new Date().toISOString() }).eq("project_id", req.params.id).is("read_at", null);
+    if (error) throw new Error(error.message);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[submissions] mark-all failed:", err.message);
+    res.status(500).json({ error: "Could not update submissions." });
+  }
+});
+
+app.delete("/api/project/:id/submissions/:sid", async (req, res) => {
+  if (!getProject(req.params.id, req, res)) return;
+  if (!UUID_RE.test(req.params.sid)) return res.status(404).json({ error: "Submission not found." });
+  try {
+    const { data, error } = await subsTable().delete().eq("id", req.params.sid).eq("project_id", req.params.id).select("id");
+    if (error) throw new Error(error.message);
+    if (!data?.length) return res.status(404).json({ error: "Submission not found." });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[submissions] delete failed:", err.message);
+    res.status(500).json({ error: "Could not delete the submission." });
+  }
+});
+
 app.get("/api/projects", async (req, res) => {
   const inMemory = [...PROJECTS.entries()]
     .filter(([, p]) => p.userId === req.user.id)
