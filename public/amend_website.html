@@ -183,6 +183,10 @@ Dashboard
  */
 
 let projectId = null;
+// A fix handed over from the Business Assistant ("Fix this" on a company finding):
+// { text, severity, auto }. It is put first in the issues list after the audit, and
+// with auto set it is applied straight away. Used once, then cleared.
+let pendingFix = null;
 let currentIssues = [];
 let originalHtml = null;
 let fixedHtml = null;
@@ -283,6 +287,8 @@ async function runAudit(url) {
     const result = await GurostAPI.call('/api/revamp/audit', { method: 'POST', body: { url: trimmed } });
     projectId = result.projectId;
     currentIssues = result.issues || [];
+    const queuedFix = pendingFix; pendingFix = null;
+    if (queuedFix) currentIssues = [{ category: 'custom', severity: queuedFix.severity, description: queuedFix.text, fix_summary: queuedFix.text }, ...currentIssues];
     window.history.replaceState({}, '', `amend_website.html?projectId=${projectId}`);
     if (result.modelUsed) {
       const tag = document.getElementById('auditModelTag');
@@ -299,6 +305,7 @@ async function runAudit(url) {
     const project = await GurostAPI.call(`/api/project/${projectId}`);
     originalHtml = project.currentHtml;
     if (originalHtml) showBeforePreview(originalHtml);
+    if (queuedFix && queuedFix.auto) await applyCorrection(queuedFix.text);
   } catch (err) {
     showError(err.message);
   } finally {
@@ -466,6 +473,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (pending && pending.url) {
         document.getElementById('siteUrl').value = pending.url;
         localStorage.removeItem('gurost_pending_amend');
+        // From the Business Assistant: a fix to queue. Start the audit for the person.
+        const f = pending.fix;
+        if (f && typeof f.text === 'string' && f.text.trim()) {
+          pendingFix = { text: f.text.replace(/[<>]/g, ' ').slice(0, 600), severity: f.severity === 'high' ? 'high' : 'medium', auto: f.auto === true };
+          runAudit(pending.url);
+        }
       }
     }
   } catch (err) {
