@@ -111,6 +111,9 @@
     </div>
   </section>
 
+  <!-- Max / Custom only: the project assistant below. Company profile,
+       findings and department bots above are open to every plan. -->
+  <div id="assistantMaxOnly">
   <!-- Real project selector - the Assistant genuinely operates on one of your existing projects -->
   <div class="mb-8 reveal">
     <label class="text-sm font-semibold block mb-2" for="assistantProjectSelect">Which project?</label>
@@ -183,6 +186,7 @@
       <div id="guardianResultBody" class="rounded-xl bg-[#FFF8F0] border border-[#FDE4C4] p-5 text-sm leading-relaxed"></div>
     </div>
   </div>
+  </div>
 </main>
 
 <script src="shared/api-client.js"></script>
@@ -208,15 +212,17 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('DOMContentLoaded', async () => {
   if (!GurostAPI.requireLogin()) return;
 
-  // Real, honest gate check - Business Assistant is Max/Custom only,
-  // same real plan restriction the backend itself enforces.
+  // The project assistant (tasks, suggestions, briefings) is Max/Custom
+  // only, the same restriction the backend enforces. Only that part is
+  // locked: company profile and department bots are open to every plan
+  // (their routes are), so they stay usable above the lock.
   try {
     const me = await GurostAPI.call('/api/me');
     if (me.plan !== 'unlimited' && me.plan !== 'ultimate') {
-      document.querySelector('main').innerHTML = `
-        <div class="text-center py-20">
+      document.getElementById('assistantMaxOnly').innerHTML = `
+        <div class="text-center py-12 border border-[var(--line)] rounded-2xl">
           <span class="material-symbols-outlined text-[40px] mb-4" style="color: var(--orange);">lock</span>
-          <h1 class="font-display font-bold text-2xl mb-3">Business Assistant is included with Max and Custom</h1>
+          <h2 class="font-display font-bold text-2xl mb-3">The project assistant is included with Max and Custom</h2>
           <p class="text-[var(--muted)] mb-6">Upgrade your plan to unlock a dedicated AI assistant for your business.</p>
           <a href="pricing.html" class="gold-gradient text-white font-semibold px-8 py-4 rounded-full inline-block">View Plans</a>
         </div>

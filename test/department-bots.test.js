@@ -58,3 +58,13 @@ test("reply parsing splits the sendable draft from the notes", () => {
   assert.deepEqual(d.parseReply("Which price list should I use?"), { reply: "Which price list should I use?", draft: null });
   assert.equal(d.parseReply("--- DRAFT ---\nOnly a draft\n--- END DRAFT ---").reply, "");
 });
+
+// Seen live 2026-10-06: the model wrote the reply as a normal message and
+// then again between the markers, so the page showed it twice.
+test("parseReply: a copy of the draft outside the markers is dropped; real notes stay", () => {
+  const body = "Hi there - thanks for your interest!\n\nOur pricing depends on the scope.\n\nBest regards,\nAlex";
+  const twice = `${body}\n\n--- DRAFT ---\n${body.replace(/\n\n/g, "\n\n")}\n--- END DRAFT ---`;
+  assert.deepEqual(d.parseReply(twice), { reply: "", draft: body });
+  const withNote = `Check the price list before sending.\n\n--- DRAFT ---\n${body}\n--- END DRAFT ---`;
+  assert.deepEqual(d.parseReply(withNote), { reply: "Check the price list before sending.", draft: body });
+});

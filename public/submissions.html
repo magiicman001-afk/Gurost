@@ -125,7 +125,11 @@
     var list = $('list');
     list.textContent = '';
     if (!rows.length) {
-      list.appendChild(el('div', { className: 'empty' }, 'No submissions yet. When someone fills in a form on your site, it shows up here.'));
+      // With a filter on, "no submissions yet" would be wrong - there may be plenty.
+      var filtered = ['fType', 'fStatus', 'fFrom', 'fTo'].some(function (id) { return $(id).value; });
+      list.appendChild(el('div', { className: 'empty' }, filtered
+        ? 'No submissions match these filters. Press Reset to see them all.'
+        : 'No submissions yet. When someone fills in a form on your site, it shows up here.'));
       return;
     }
     var table = el('table');
