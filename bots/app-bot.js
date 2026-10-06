@@ -112,8 +112,9 @@ Infer entities from the business description. Keep the schema minimal — only w
 
 const BACKEND_SYSTEM = `You are a backend engineer. Given a business description and a database schema, output the backend source files.
 ${fileBlocksFormat()}
-Framework: FastAPI (Python) or Express (Node) — infer the better fit from the schema/business, default Express.
+Framework: FastAPI (Python) or Express (Node) - infer the better fit from the schema/business, default Express.
 Generate only the endpoints the frontend will realistically need (CRUD on the core entities). Include basic input validation. No auth scaffolding unless the business obviously requires it (e.g. user accounts).
+Structure it like a real project, every file complete with real content (no placeholders, no "TODO"): for Express, a package.json (main set to server.js, listing only real published packages with real version numbers), server.js (creates the app, enables JSON bodies, mounts every route file, listens), a routes/ folder with one file per entity (for example routes/orders.js, routes/products.js), and a README.md that documents every endpoint: method, path, request body, and response. Keep each file focused and short.
 If using Express: always listen on process.env.PORT, falling back to 3000 if it isn't set (e.g. app.listen(process.env.PORT || 3000)). This is a hard requirement, not a style preference — the sandbox preview step needs a predictable port to expose, and a hardcoded or different port will make preview unreliable.`;
 
 const ANTI_SLOP_RULES = `
@@ -144,7 +145,15 @@ function frontendSystemFor(prompt) {
 
 const frontendSystem = (design) => `You are a senior frontend engineer at a professional design agency. Given a business description and a list of backend API endpoints, output the frontend source files.
 ${fileBlocksFormat("imageRequests - a list with one entry per IMG_n token you used, each having placeholder (the token) and description (exactly what that image should show)")}
-Build a React app (functional components, hooks) that calls the given endpoints. Keep it to the minimum set of files needed for a working prototype (App.jsx, a couple of page/component files, an api client module) — plus a real, correct package.json listing every real dependency actually used (this sandbox genuinely runs npm install before starting the app, so listed dependencies must be real, published packages with correct version numbers, not invented).
+Build a React app (functional components, hooks) that calls the given endpoints. Structure it like a real project, every file complete with real content (no placeholders, no "TODO"), each one focused and short:
+- index.html: the page shell with a div id="root", the Tailwind CDN script and the Google Fonts links in the head.
+- src/App.jsx: the entry. It default-exports the root component and switches between the pages.
+- src/components/: the reusable pieces this app actually uses (for example Header, Hero, FeatureGrid, ContactForm, Footer; name and choose them for this business).
+- src/pages/: one file per page (for example Home, About, Contact, plus the pages this business needs, such as Order or Menu).
+- src/styles/main.css: the shared styles.
+- src/api/client.js: the one module that calls the backend endpoints.
+- package.json: a real, correct package.json listing every real dependency actually used (this sandbox genuinely runs npm install before starting the app, so listed dependencies must be real, published packages with correct version numbers, not invented).
+Files import each other with relative paths.
 
 ${ANTI_SLOP_RULES}
 
@@ -281,4 +290,4 @@ async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStag
 
 module.exports = { buildApp, buildAppStaged };
 // Exposed for tests only.
-module.exports._internal = { fulfillImageRequestsMultiFile, frontendSystemFor };
+module.exports._internal = { fulfillImageRequestsMultiFile, frontendSystemFor, BACKEND_SYSTEM };
