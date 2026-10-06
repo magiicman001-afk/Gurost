@@ -106,3 +106,14 @@ test("previews carry the inspector when the page has loaded it", () => {
   assert.match(out, /gurost-inspect-result/);
   assert.ok(out.trimEnd().endsWith("</script></body></html>"));
 });
+
+// 2026-10-07: Pulse checks the page while it builds; "Nav is missing on mobile".
+test("rule: no visible nav and no menu button at 375px -> 'Navigation disappears on phones' (high)", () => {
+  const base = { desktop: { links: { total: 8 }, headings: { h1: 1 }, meta: { description: "x" } } };
+  const hidden = rulesFromFacts({ ...base, mobile: { layout: { horizontalOverflow: 0 }, mobile: { visibleNavLinks: 0, menuButton: false } } });
+  const nav = hidden.find((i) => i.issue === "Navigation disappears on phones");
+  assert.ok(nav);
+  assert.equal(nav.severity, "high");
+  const withMenu = rulesFromFacts({ ...base, mobile: { layout: { horizontalOverflow: 0 }, mobile: { visibleNavLinks: 0, menuButton: true } } });
+  assert.ok(!withMenu.some((i) => i.issue === "Navigation disappears on phones"));
+});

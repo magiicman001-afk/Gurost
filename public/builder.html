@@ -147,6 +147,7 @@ if (window.self !== window.top) { window.stop(); document.documentElement.innerH
 <script src="shared/api-client.js"></script>
 <script src="shared/pulse-voice.js"></script>
 <script src="shared/pulse-inspector.js"></script>
+<script src="shared/pulse-build-brain.js"></script>
 <script src="shared/code-boxes.js"></script>
 <script src="shared/brand-config.js"></script>
 <script src="shared/ai-brand.js"></script>
@@ -294,7 +295,13 @@ function renderPreview(html, { keepScroll = false, variantId = null } = {}) {
 let liveFrames = null;
 let liveFront = 0;
 
+// The page built so far and the frame showing it - what Pulse measures
+// every 30s during a build (shared/pulse-build-brain.js).
+let lastPartialHtml = null;
+const currentLiveFrame = () => (liveFrames ? liveFrames[liveFront] : null);
+
 function renderLivePartial(html) {
+  lastPartialHtml = html;
   const wrap = document.getElementById('previewWrap');
   if (!liveFrames) {
     wrap.style.position = 'relative';
@@ -423,11 +430,26 @@ async function useDesign() {
     logBot('Builder', `${GurostAI.VOICE.ready} Refine it with Pulse any time.`, 'ok');
     // Pulse: the site exists now (generate() returns when the build starts).
     window.dispatchEvent(new CustomEvent('gurost:site-ready', { detail: { projectId } }));
+    // Pulse checks the page you kept and offers fixes (plus anything you
+    // said yes to during the build). Measured once the preview has loaded.
+    await frameLoaded(document.getElementById('previewFrame'));
+    await PulseBuildBrain.reviewPicked({ projectId, frame: document.getElementById('previewFrame'), html: () => currentHtml, applyFix: sendCorrection });
   } catch (err) {
     logBot('Builder', `Couldn't finalise the site: ${err.message}`, 'fail');
   } finally {
     btn.disabled = false;
   }
+}
+
+// Resolves when the frame's current page has loaded (or after 5s, so a
+// missed load event can't hang the flow).
+function frameLoaded(frame) {
+  return new Promise((resolve) => {
+    if (!frame) return resolve();
+    const done = () => { clearTimeout(t); frame.removeEventListener('load', done); resolve(); };
+    const t = setTimeout(done, 5000);
+    frame.addEventListener('load', done);
+  });
 }
 
 // Paid plans: the kept design's hero and its key images are upgraded
@@ -515,6 +537,7 @@ function connectGenerationSocket(id) {
     }
 
     if (msg.type === 'error') {
+      PulseBuildBrain.stop();
       log('Builder', msg.error, 'fail');
       showCreditOrErrorBanner(msg.error);
       setPreviewStatus(false);
@@ -596,6 +619,7 @@ function connectGenerationSocket(id) {
         log('Designer', `${d.count} of 4 designs ready.`, d.count ? 'ok' : 'fail');
       }
     } else if (msg.stage === 'done' && msg.status === 'complete') {
+      PulseBuildBrain.buildFinished();
       // Already picked one early? Then there's nothing left to pick.
       if (d.variants?.length) log('Builder', currentHtml ? `All ${d.variants.length} designs finished — you're working on the one you picked.` : 'Built your site. Pick the direction you like on the left.', 'ok');
       else log('Builder', 'Finished with no usable designs — see the errors above.', 'fail');
@@ -707,6 +731,8 @@ async function generateWebsite(description, options = {}) {
     projectId = result.projectId;
     window.history.replaceState({}, '', `builder.html?projectId=${projectId}`);
     connectGenerationSocket(projectId);
+    lastPartialHtml = null;
+    PulseBuildBrain.start({ projectId, getFrame: currentLiveFrame, getHtml: () => lastPartialHtml });
     startCompletionPollFallback(projectId);
   } catch (err) {
     logBot('Builder', err.message, 'fail');

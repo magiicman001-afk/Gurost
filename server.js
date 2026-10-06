@@ -1655,13 +1655,20 @@ app.post("/api/select", security.rejectUnknownFields(["projectId", "variantId"])
 // the project, never taken from the request. Returns prioritised issues
 // with fix prompts (bots/pulse-brain.js).
 const MAX_PULSE_FACTS_CHARS = 80000;
-app.post("/api/pulse/analyze", security.rejectUnknownFields(["projectId", "facts"]), async (req, res) => {
-  const { projectId, facts } = req.body;
+app.post("/api/pulse/analyze", security.rejectUnknownFields(["projectId", "facts", "mode"]), async (req, res) => {
+  const { projectId, facts, mode } = req.body;
   const project = getProject(projectId, req, res);
   if (!project) return;
-  if (!project.currentHtml) return res.status(400).json({ error: "Pick a design first - there's nothing to analyze yet." });
   if (!facts || typeof facts !== "object" || !facts.desktop) return res.status(400).json({ error: "Missing measured facts." });
   if (JSON.stringify(facts).length > MAX_PULSE_FACTS_CHARS) return res.status(413).json({ error: "Measured facts are too large." });
+  // mode "build": the page is still being written (Pulse checks it every
+  // 30s). Measured rules only - no AI, no cost - minus the checks a
+  // half-built page can't pass yet (SEO: meta description, the one H1).
+  if (mode === "build") {
+    const issues = pulseBrain.rulesFromFacts(facts).filter((i) => i.category !== "seo");
+    return res.json({ summary: "", issues, source: "rules" });
+  }
+  if (!project.currentHtml) return res.status(400).json({ error: "Pick a design first - there's nothing to analyze yet." });
   try {
     const result = await pulseBrain.analyzePage({ html: project.currentHtml, facts, plan: req.user.plan });
     project.lastPulseAnalysis = { at: Date.now(), ...result };
@@ -1691,6 +1698,13 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
       }
       if (!project.currentHtml) {
         return res.status(400).json({ error: "No current build to correct yet." });
+      }
+      // One correction at a time. A second one arriving mid-edit used to
+      // fail its own transition and then, in its error handler, reset the
+      // project to DONE under the first - whose finished edit was then
+      // thrown away ("DONE -> RESUMING"). It now waits its turn instead.
+      if (project.state === "CORRECTING") {
+        return res.status(409).json({ error: "Pulse is still applying the last change - try again in a moment." });
       }
       // Only a live build needs pausing first; DONE -> CORRECTING is a
       // direct transition (DONE -> PAUSED is not, which failed every

@@ -88,6 +88,13 @@ function rulesFromFacts(facts) {
       impact: "The layout wobbles sideways on every phone.",
       fix_prompt: `Fix the horizontal overflow on mobile: make ${(m.layout.overflowing || []).map((o) => o.el).join(", ") || "the widest elements"} fit within the screen width at 375px (max-width:100%, wrapping, smaller fixed widths).` });
   }
+  // A phone sees no navigation at all: no visible links and no menu button.
+  if (m.layout && m.mobile && m.mobile.visibleNavLinks === 0 && !m.mobile.menuButton && (d.links?.total ?? 0) > 1) {
+    add({ issue: "Navigation disappears on phones", severity: "high", category: "ux",
+      evidence: "At 375px no navigation link is visible and there is no menu button",
+      impact: "Visitors on phones can't get to the other sections - most of your traffic.",
+      fix_prompt: "Add a mobile menu: a hamburger button visible below 768px that opens the same navigation links (with aria-expanded on the button and the menu closing after a link is tapped)." });
+  }
   for (const img of (d.images?.heavy || []).slice(0, 2)) {
     add({ issue: "Heavy image", severity: "low", category: "performance",
       evidence: `${img.el}: ${img.natural} source shown at ${img.shown}${img.bytes ? `, ${kb(img.bytes)}` : ""}`,
