@@ -1977,6 +1977,49 @@ app.post("/api/department-bots/:bot/chat", security.rejectUnknownFields(["messag
 });
 
 // ---------------------------------------------------------------------------
+// COMPANY PROFILE (Business Assistant): one saved profile per user.
+// Open to every plan. Research and analysis build on it in later steps.
+// ---------------------------------------------------------------------------
+const companyProfile = require("./lib/company-profile");
+const companyProfilesTable = () => require("./lib/db").supabase.from("company_profiles");
+const profileFromRow = (r) => (r ? { name: r.name, website: r.website, industry: r.industry, socials: r.socials || {}, type: r.type, target: r.target || "", updatedAt: r.updated_at } : null);
+
+app.get("/api/company-profile", async (req, res) => {
+  try {
+    const { data, error } = await companyProfilesTable().select("name, website, industry, socials, type, target, updated_at").eq("user_id", req.user.id).maybeSingle();
+    if (error) throw new Error(error.message);
+    res.json({ profile: profileFromRow(data), industries: companyProfile.INDUSTRIES, types: companyProfile.BUSINESS_TYPES, socialFields: companyProfile.SOCIAL_FIELDS });
+  } catch (err) {
+    console.error("[company-profile] load failed:", err.message);
+    res.status(500).json({ error: "Could not load your company profile." });
+  }
+});
+
+app.put("/api/company-profile", security.rejectUnknownFields(["name", "website", "industry", "socials", "type", "target"]), async (req, res) => {
+  const { profile, problems } = companyProfile.normalizeProfile(req.body);
+  if (problems.length) return res.status(400).json({ error: problems[0], problems });
+  try {
+    const now = new Date().toISOString();
+    // created_at is left out of the upsert so an update keeps the original date.
+    const { error } = await companyProfilesTable().upsert({
+      user_id: req.user.id,
+      name: profile.name,
+      website: profile.website,
+      industry: profile.industry,
+      socials: profile.socials,
+      type: profile.type,
+      target: profile.target,
+      updated_at: now
+    }, { onConflict: "user_id" });
+    if (error) throw new Error(error.message);
+    res.json({ ok: true, profile: { ...profile, updatedAt: now } });
+  } catch (err) {
+    console.error("[company-profile] save failed:", err.message);
+    res.status(500).json({ error: "Could not save your company profile." });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // BUSINESS ASSISTANT
 // ---------------------------------------------------------------------------
 
