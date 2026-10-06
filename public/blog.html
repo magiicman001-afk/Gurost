@@ -72,18 +72,12 @@
   </div>
 
   <div class="mb-14 reveal">
-    <h2 class="font-display font-bold text-lg mb-5">Coming soon</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <article class="border border-[var(--line)] rounded-2xl p-6">
-        <span class="inline-block text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full mb-4" style="background:#FFF4E5;color:var(--orange);">Upcoming</span>
-        <h3 class="font-display font-bold text-lg mb-2">How to build a business website in 10 minutes with Gurost</h3>
-        <p class="text-sm text-[var(--muted)]">A step-by-step guide to launching faster with the voice builder.</p>
-      </article>
-      <article class="border border-[var(--line)] rounded-2xl p-6">
-        <span class="inline-block text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full mb-4" style="background:#FFF4E5;color:var(--orange);">Deep dive</span>
-        <h3 class="font-display font-bold text-lg mb-2">The future of voice-first UI design</h3>
-        <p class="text-sm text-[var(--muted)]">The shift from clicking to conversing, and what it means for the way websites look and work.</p>
-      </article>
+    <h2 class="font-display font-bold text-lg mb-5">Latest posts</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="blogPosts"></div>
+    <div class="hidden text-center border border-dashed border-[var(--line)] rounded-2xl p-10" id="blogEmpty">
+      <span class="material-symbols-outlined text-[36px] mb-2 block" style="color: var(--orange);">edit_note</span>
+      <p class="font-display font-bold text-base mb-1">No posts yet — check back soon</p>
+      <p class="text-sm text-[var(--muted)]">The first articles are being written.</p>
     </div>
   </div>
 
@@ -118,6 +112,36 @@
     entries.forEach((entry) => { if (entry.isIntersecting) entry.target.classList.add('in-view'); });
   }, { threshold: 0.15 });
   document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+
+  // Published posts, newest first: { title, date: 'YYYY-MM-DD', tag, excerpt, url }.
+  // Empty until the first article is written - the page then says so.
+  const POSTS = [];
+  const list = document.getElementById('blogPosts');
+  if (!POSTS.length) {
+    list.classList.add('hidden');
+    document.getElementById('blogEmpty').classList.remove('hidden');
+  } else {
+    for (const post of POSTS) {
+      const card = document.createElement('a');
+      card.href = post.url;
+      card.className = 'block border border-[var(--line)] rounded-2xl p-6 hover:border-[var(--orange)] transition-colors';
+      const tag = document.createElement('span');
+      tag.className = 'inline-block text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full mb-4';
+      tag.style.cssText = 'background:#FFF4E5;color:var(--orange);';
+      tag.textContent = post.tag;
+      const title = document.createElement('h3');
+      title.className = 'font-display font-bold text-lg mb-2';
+      title.textContent = post.title;
+      const excerpt = document.createElement('p');
+      excerpt.className = 'text-sm text-[var(--muted)] mb-3';
+      excerpt.textContent = post.excerpt;
+      const date = document.createElement('p');
+      date.className = 'text-xs text-[var(--muted)]';
+      date.textContent = new Date(post.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+      card.append(tag, title, excerpt, date);
+      list.appendChild(card);
+    }
+  }
 </script>
 </body>
 </html>
