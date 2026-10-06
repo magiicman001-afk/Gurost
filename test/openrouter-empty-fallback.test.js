@@ -5,7 +5,8 @@
 process.env.OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || "test-key";
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { callOpenRouter } = require("../lib/openrouter-client");
+const { callOpenRouter, _resetRateLimitRest } = require("../lib/openrouter-client");
+test.beforeEach(() => _resetRateLimitRest()); // each test starts with no model resting
 
 const FREE = "google/gemma-4-31b-it:free,qwen/qwen3.8-27b:free,z-ai/glm-5.2";
 const empty = (model) => ({ model, choices: [{ finish_reason: "length", message: { content: null } }], usage: { prompt_tokens: 10, completion_tokens: 2000 } });
@@ -45,8 +46,12 @@ test("every model empty -> a plain 'try again' error, not a raw dump", async () 
 test("a single model that returns empty also gets the plain error; other errors pass through unchanged", async () => {
   mockFetch([empty("z-ai/glm-5.2")]);
   await assert.rejects(callOpenRouter({ model: "z-ai/glm-5.2", messages: [] }), /All models are busy/);
+  // A 429 is no longer passed through: the chain moves on, and only when
+  // every model is rate-limited does the caller hear about it.
   globalThis.fetch = async () => ({ ok: false, status: 429, text: async () => "rate limited" });
-  await assert.rejects(callOpenRouter({ model: FREE, messages: [] }), /OpenRouter error \(429\)/);
+  await assert.rejects(callOpenRouter({ model: FREE, messages: [] }), /All free models are busy/);
+  globalThis.fetch = async () => ({ ok: false, status: 400, text: async () => "bad request" });
+  await assert.rejects(callOpenRouter({ model: FREE, messages: [] }), /OpenRouter error \(400\)/, "other errors still pass through");
 });
 
 // Same Free-plan build, next failure: glm-5.2 answered but its JSON had an
@@ -134,4 +139,28 @@ test("402 out of credit on a mixed list -> retried with only its :free models; a
   assert.deepEqual(bodies, [["google/gemma-4-31b-it:free", "qwen/qwen3-coder"], ["google/gemma-4-31b-it:free"]]);
   globalThis.fetch = async () => ({ ok: false, status: 402, text: async () => "no credit" });
   await assert.rejects(callOpenRouter({ model: "z-ai/glm-5.2", messages: [] }), /OpenRouter error \(402\)/);
+});
+
+// 2026-10-07: 429 from a free model reached the user ("OpenRouter error
+// (429) calling google/gemma-4-31b-it:free"). Chains are now walked 3 at a
+// time; a rate-limited / down group rests and the chain moves on.
+test("429: the next models are tried (3 per request at most); a rate-limited model is skipped on the next call", async () => {
+  const sent = [];
+  const chain = "a:free,b:free,c:free,d:free,paid/e";
+  globalThis.fetch = async (url, init) => {
+    const b = JSON.parse(init.body); const list = b.models || [b.model]; sent.push(list);
+    if (list.includes("a:free")) return { ok: false, status: 429, text: async () => "rate limited" };
+    return { ok: true, json: async () => ok(list[0], "answer") };
+  };
+  const r = await callOpenRouter({ model: chain, messages: [] });
+  assert.equal(r.text, "answer");
+  assert.deepEqual(sent, [["a:free", "b:free", "c:free"], ["d:free", "paid/e"]]);
+  sent.length = 0;
+  await callOpenRouter({ model: chain, messages: [] });
+  assert.deepEqual(sent[0], ["d:free", "paid/e"], "the resting group is skipped for a minute");
+});
+
+test("every model rate-limited or down -> 'All free models are busy. Please retry in 30 seconds.'", async () => {
+  globalThis.fetch = async () => ({ ok: true, json: async () => ({ error: { code: 503, message: "upstream down" } }) });
+  await assert.rejects(callOpenRouter({ model: "x:free,y:free", messages: [] }), (e) => e.allModelsBusy && e.message === "All free models are busy. Please retry in 30 seconds.");
 });
