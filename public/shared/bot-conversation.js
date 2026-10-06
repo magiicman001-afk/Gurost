@@ -83,9 +83,18 @@ function logBot(bot, text, tone = 'info', at = Date.now()) {
       ${sameTurn ? '' : `<div class="flex items-center gap-2 leading-5"><span class="font-semibold text-[12px]" style="color:${speakerColor}">${escapeLogText(speaker)}</span>${aiRole ? `<span class="text-[10px] text-white/45">${escapeLogText(aiRole)}</span>` : ''}<span class="text-[10px] text-white/30">${time}</span></div>`}
       <p class="${textClass} text-[12.5px] leading-snug [overflow-wrap:anywhere] flex items-start gap-1.5">${status}<span>${escapeLogText(text)}</span></p>
     </div>`;
+  const follow = isLogAtBottom();
   list.appendChild(li);
   document.getElementById('botLogEmpty')?.remove();
-  wrap.scrollTop = wrap.scrollHeight;
+  if (follow) wrap.scrollTop = wrap.scrollHeight;
+}
+
+// The conversation follows new messages only when you're already at the
+// bottom. Scrolled up to read or click, it stays put - jumping under the
+// cursor made clicks land on a different button (Fix all, Apply).
+function isLogAtBottom() {
+  const wrap = document.getElementById('botLog');
+  return !wrap || wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 80;
 }
 
 function clearBotLog() {
