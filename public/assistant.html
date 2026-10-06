@@ -50,6 +50,25 @@
     <p class="text-[var(--muted)] max-w-lg mx-auto">A dedicated AI assistant for one of your real projects — hand it a task, get real suggestions, or have it brief you every morning.</p>
   </div>
 
+  <!-- Company profile: who the business is (research and analysis build on this) -->
+  <section id="companyProfile" class="mb-10 reveal border border-[var(--line)] rounded-2xl p-6">
+    <h2 class="font-display font-bold text-lg mb-1">Company profile</h2>
+    <p class="text-sm text-[var(--muted)] mb-4">Tell the assistant about your business once. It uses this to research your company and suggest what to improve.</p>
+    <div class="grid gap-3 sm:grid-cols-2">
+      <label class="text-xs font-semibold">Company name<input id="cpName" class="field-input mt-1" maxlength="120" placeholder="e.g. Crumb &amp; Co" autocomplete="organization"></label>
+      <label class="text-xs font-semibold">Website<input id="cpWebsite" class="field-input mt-1" maxlength="300" placeholder="www.yourbusiness.com" inputmode="url" autocapitalize="off" autocomplete="url"></label>
+      <label class="text-xs font-semibold">Industry<select id="cpIndustry" class="field-input mt-1"><option value="">Choose...</option></select></label>
+      <label class="text-xs font-semibold">Business type<select id="cpType" class="field-input mt-1"><option value="">Choose...</option></select></label>
+      <label class="text-xs font-semibold sm:col-span-2">Target customer<textarea id="cpTarget" class="field-input mt-1" rows="2" maxlength="500" placeholder="e.g. Families and office workers within 2 miles who want fresh bread and coffee"></textarea></label>
+    </div>
+    <h3 class="text-xs font-semibold mt-4 mb-2">Social handles <span class="font-normal text-[var(--muted)]">(optional, just the name)</span></h3>
+    <div id="cpSocials" class="grid gap-3 sm:grid-cols-2"></div>
+    <div class="flex flex-wrap items-center gap-3 mt-4">
+      <button id="cpSave" type="button" class="gold-gradient text-white text-sm font-semibold px-5 py-2.5 rounded-full">Save profile</button>
+      <p id="cpMsg" class="text-sm" role="status"></p>
+    </div>
+  </section>
+
   <!-- Department bots: chat-only helpers (Sales, HR, Finance, Payroll, Support, Custom) -->
   <section id="deptBots" class="mb-10 reveal border border-[var(--line)] rounded-2xl p-6">
     <h2 class="font-display font-bold text-lg mb-1">Department bots</h2>
@@ -161,6 +180,7 @@
 
 <script src="shared/api-client.js"></script>
 <script src="shared/pulse-voice.js"></script>
+<script src="shared/company-profile.js"></script>
 <script src="shared/department-bots.js"></script>
 <script>
 // Real, deliberate fix: this used to run only after the login and
