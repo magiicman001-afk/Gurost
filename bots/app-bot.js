@@ -64,7 +64,19 @@ function sweepPlaceholders(files) {
   return files.map((f) => ({ ...f, content: String(f.content).replace(/\b(IMG|VID)_\d+\b/g, BLANK_PIXEL) }));
 }
 
+// A model sometimes writes the data-gurost-file attribute as a tag of its
+// own - <data-gurost-file="App.jsx"> ... </data-gurost-file> - which is
+// never valid JSX, so the whole app fails to compile (seen 2026-10-06,
+// nemotron, src/App.jsx). Those stray tags are removed; the real
+// attribute on elements is untouched.
+function removeStrayFileTags(files) {
+  return (files || []).map((f) => (/\.(jsx|tsx|js|ts)$/i.test(f.path || "")
+    ? { ...f, content: String(f.content).replace(/^[ \t]*<data-gurost-file\s*=\s*(["'])[^"'\n]*\1\s*\/?>[ \t]*\r?\n?/gm, "").replace(/^[ \t]*<\/data-gurost-file>[ \t]*\r?\n?/gm, "") }
+    : f));
+}
+
 async function fulfillImageRequestsMultiFile(files, imageRequests) {
+  files = removeStrayFileTags(files);
   if (!imageRequests || !imageRequests.length) return sweepPlaceholders(files);
 
   // Real, same fix as variant-bot.js - generate every real image at
@@ -175,7 +187,7 @@ Responsive: genuinely well-composed from 320px mobile through large desktop, not
 
 Dark mode: implement Tailwind's real dark: variant with a working toggle that persists via localStorage. The page is previewed in a sandboxed frame where localStorage throws, so wrap every localStorage read and write in try/catch and carry on without it.
 
-On each top-level rendered section within a component (the outermost divs/sections a component returns, not every nested element), add a real data-gurost-file="ComponentFileName.jsx" attribute matching the actual file path that component lives in. This is real, load-bearing metadata — the live preview's Clickable Code Boxes feature reads this attribute directly to map a clicked section back to its real source file, so it needs to be accurate, not decorative. Don't add it to every element, just the top-level structural ones a user would reasonably click on.
+On each top-level rendered section within a component (the outermost divs/sections a component returns, not every nested element), add a real data-gurost-file="ComponentFileName.jsx" attribute (an attribute on that element, e.g. <section data-gurost-file="Hero.jsx"> - never a tag of its own) matching the actual file path that component lives in. This is real, load-bearing metadata — the live preview's Clickable Code Boxes feature reads this attribute directly to map a clicked section back to its real source file, so it needs to be accurate, not decorative. Don't add it to every element, just the top-level structural ones a user would reasonably click on.
 
 Images: where the design genuinely calls for a real photo or illustration (a hero image, a product shot, an avatar), do NOT draw it with SVG and do NOT invent an external image URL. Instead, write a literal placeholder token directly into the JSX's src attribute — e.g. src="IMG_1" — and add a matching entry to imageRequests with a detailed, specific description of exactly what that image should show. Use as many as the design genuinely benefits from, typically 1-4. For anything NOT requested this way (icons, decorative shapes), build a real, self-contained visual using inline SVG, a CSS gradient, or a Material Symbols icon inside a colored shape — never invent an external image URL for those.`;
 
@@ -292,4 +304,4 @@ async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStag
 
 module.exports = { buildApp, buildAppStaged };
 // Exposed for tests only.
-module.exports._internal = { fulfillImageRequestsMultiFile, frontendSystemFor, BACKEND_SYSTEM };
+module.exports._internal = { fulfillImageRequestsMultiFile, frontendSystemFor, BACKEND_SYSTEM, removeStrayFileTags };
