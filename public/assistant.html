@@ -17,6 +17,13 @@
   .reveal.in-view { opacity: 1; transform: translateY(0); }
   .field-input { width: 100%; background: #FAFAF9; border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
   .field-input:focus { outline: none; border-color: var(--orange); }
+  .dept-bubble { border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; font-size: 14px; line-height: 1.5; max-width: 92%; white-space: pre-wrap; word-break: break-word; }
+  .dept-you { background: #F3F4F6; margin-left: auto; }
+  .dept-bot { background: #FFF8F0; border: 1px solid #FDE4C4; }
+  .dept-draft { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin: 8px 0; font: inherit; white-space: pre-wrap; word-break: break-word; }
+  .dept-copy { font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
+  .dept-copy:hover { border-color: var(--orange); }
+  #deptLog { max-height: 420px; overflow-y: auto; margin-bottom: 12px; }
 </style>
 </head>
 <body class="antialiased">
@@ -42,6 +49,41 @@
     <h1 class="font-display font-bold text-3xl mb-3">Business Assistant</h1>
     <p class="text-[var(--muted)] max-w-lg mx-auto">A dedicated AI assistant for one of your real projects — hand it a task, get real suggestions, or have it brief you every morning.</p>
   </div>
+
+  <!-- Department bots: chat-only helpers (Sales, HR, Finance, Payroll, Support, Custom) -->
+  <section id="deptBots" class="mb-10 reveal border border-[var(--line)] rounded-2xl p-6">
+    <h2 class="font-display font-bold text-lg mb-1">Department bots</h2>
+    <p class="text-sm text-[var(--muted)] mb-4">Pick a bot, tell it how you like to work, then paste an email or a question. It drafts the reply and you copy it. It never sends anything.</p>
+    <label class="text-sm font-semibold block mb-2" for="deptSelect">Which department bot?</label>
+    <select id="deptSelect" class="field-input mb-3"><option value="">Choose a bot...</option></select>
+    <p id="deptMsg" class="text-sm mb-2" role="status"></p>
+
+    <div id="deptCal" hidden>
+      <h3 class="font-semibold mb-3" id="deptCalTitle">Set up your bot</h3>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <label class="text-xs font-semibold">Bot name<input id="deptBotName" class="field-input mt-1" maxlength="40" placeholder="e.g. Sam"></label>
+        <label class="text-xs font-semibold">Your name or business<input id="deptUserName" class="field-input mt-1" maxlength="80" placeholder="e.g. Crumb &amp; Co"></label>
+        <label class="text-xs font-semibold">Tone<select id="deptTone" class="field-input mt-1"></select></label>
+        <label class="text-xs font-semibold sm:col-span-2" id="deptFocusWrap" hidden>What should this bot help with?<input id="deptFocus" class="field-input mt-1" maxlength="300" placeholder="e.g. Reply to wholesale enquiries"></label>
+        <label class="text-xs font-semibold sm:col-span-2">Signature<textarea id="deptSignature" class="field-input mt-1" rows="3" maxlength="300" placeholder="Best regards,&#10;Alex"></textarea></label>
+        <label class="text-xs font-semibold sm:col-span-2">Preferences<textarea id="deptPrefs" class="field-input mt-1" rows="3" maxlength="1000" placeholder="e.g. Keep replies under 120 words. Never offer discounts."></textarea></label>
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button id="deptCalSave" type="button" class="gold-gradient text-white text-sm font-semibold px-5 py-2.5 rounded-full">Save and start</button>
+        <button id="deptCalCancel" type="button" class="text-sm font-semibold px-5 py-2.5 rounded-full border border-[var(--line)]">Cancel</button>
+      </div>
+    </div>
+
+    <div id="deptChat" hidden>
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="font-semibold" id="deptChatTitle">Assistant</h3>
+        <button id="deptEdit" type="button" class="text-xs font-semibold px-3 py-1.5 rounded-full border border-[var(--line)] hover:border-[var(--orange)]">Edit setup</button>
+      </div>
+      <div id="deptLog" aria-live="polite"></div>
+      <textarea id="deptInput" rows="4" class="field-input resize-y mb-2" placeholder="Paste an email or ask a question. Ctrl+Enter sends."></textarea>
+      <button id="deptSend" type="button" class="gold-gradient text-white text-sm font-semibold px-5 py-2.5 rounded-full">Draft a reply</button>
+    </div>
+  </section>
 
   <!-- Real project selector - the Assistant genuinely operates on one of your existing projects -->
   <div class="mb-8 reveal">
@@ -119,6 +161,7 @@
 
 <script src="shared/api-client.js"></script>
 <script src="shared/pulse-voice.js"></script>
+<script src="shared/department-bots.js"></script>
 <script>
 // Real, deliberate fix: this used to run only after the login and
 // plan checks below succeeded - if either ever failed or hung, every

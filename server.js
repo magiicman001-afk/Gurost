@@ -58,6 +58,8 @@ const updates = require("./updates");
 const developerOnboarding = require("./developer-onboarding");
 const correctionBot = require("./bots/correction-bot");
 const assistantBot = require("./bots/assistant-bot");
+const claudeClient = require("./lib/claude-client");
+const { modelForTier } = require("./lib/tier-router");
 const guardianBot = require("./bots/guardian-bot");
 const integrator = require("./bots/integrator-bot");
 const reviewBot = require("./bots/review-bot");
@@ -1892,6 +1894,87 @@ app.post(
     }
   }
 );
+
+// ---------------------------------------------------------------------------
+// DEPARTMENT BOTS (Business Assistant, chat-only)
+// Open to every plan on purpose: the model comes from the plan's tier
+// (the free tier uses free models). Drafts only - nothing here sends anything.
+// ---------------------------------------------------------------------------
+const deptBots = require("./lib/department-bots");
+const botPrefsTable = () => require("./lib/db").supabase.from("user_bot_preferences");
+const requireBotId = (req, res) => {
+  if (deptBots.BOT_IDS.includes(req.params.bot)) return true;
+  res.status(404).json({ error: "Unknown department bot." });
+  return false;
+};
+
+// The six bots, plus this user's saved calibration for each.
+app.get("/api/department-bots", async (req, res) => {
+  try {
+    const { data, error } = await botPrefsTable().select("bot_type, tone, signature, profile").eq("user_id", req.user.id);
+    if (error) throw new Error(error.message);
+    const saved = {};
+    for (const r of data || []) saved[r.bot_type] = { ...(r.profile || {}), tone: r.tone || r.profile?.tone, signature: r.signature ?? r.profile?.signature ?? "" };
+    res.json({ bots: deptBots.listDepartments().map((b) => ({ ...b, calibration: saved[b.id] || null })), tones: deptBots.TONES });
+  } catch (err) {
+    console.error("[department-bots] list failed:", err.message);
+    res.status(500).json({ error: "Could not load your department bots." });
+  }
+});
+
+app.put("/api/department-bots/:bot/calibration", security.rejectUnknownFields(["botName", "userName", "tone", "signature", "preferences", "focus"]), async (req, res) => {
+  if (!requireBotId(req, res)) return;
+  const cal = deptBots.normalizeCalibration(req.body, req.params.bot);
+  const problem = deptBots.calibrationProblem(cal, req.params.bot);
+  if (problem) return res.status(400).json({ error: problem });
+  try {
+    const { error } = await botPrefsTable().upsert({
+      user_id: req.user.id,
+      bot_type: req.params.bot,
+      tone: cal.tone,
+      signature: cal.signature,
+      profile: { botName: cal.botName, userName: cal.userName, preferences: cal.preferences, focus: cal.focus },
+      last_updated: new Date().toISOString()
+    }, { onConflict: "user_id,bot_type" });
+    if (error) throw new Error(error.message);
+    res.json({ ok: true, calibration: cal });
+  } catch (err) {
+    console.error("[department-bots] save failed:", err.message);
+    res.status(500).json({ error: "Could not save the calibration." });
+  }
+});
+
+app.post("/api/department-bots/:bot/chat", security.rejectUnknownFields(["message", "history"]), async (req, res) => {
+  if (!requireBotId(req, res)) return;
+  const message = security.sanitizeText(req.body.message, 6000);
+  if (!message) return res.status(400).json({ error: "Write a message first." });
+  const history = (Array.isArray(req.body.history) ? req.body.history : [])
+    .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
+    .slice(-12)
+    .map((m) => ({ role: m.role, content: m.content.slice(0, 6000) }));
+
+  try {
+    const { data, error } = await botPrefsTable().select("tone, signature, profile").eq("user_id", req.user.id).eq("bot_type", req.params.bot).maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data && req.params.bot === "custom") return res.status(400).json({ error: "Tell your custom bot what it should help with first." });
+    const cal = data ? deptBots.normalizeCalibration({ ...(data.profile || {}), tone: data.tone, signature: data.signature }, req.params.bot) : deptBots.normalizeCalibration({}, req.params.bot);
+
+    const result = await claudeClient.callClaude({
+      system: deptBots.buildSystemPrompt(req.params.bot, cal),
+      messages: [...history, { role: "user", content: message }],
+      maxTokens: 1500,
+      model: modelForTier(req.user.plan, { complex: message.length > 1200 }),
+      parse: (t) => String(t || "").trim(),
+      context: { userId: req.user.id, ip: req.ip }
+    });
+    const { reply, draft } = deptBots.parseReply(result.parsed);
+    if (!reply && !draft) throw new Error("The AI sent back an empty answer.");
+    res.json({ reply, draft });
+  } catch (err) {
+    console.error("[department-bots] chat failed:", err.message);
+    res.status(500).json({ error: /OPENROUTER|credit|402/i.test(err.message) ? "The AI service needs credits or a key right now. Please try again later." : "The bot could not answer just now. Please try again." });
+  }
+});
 
 // ---------------------------------------------------------------------------
 // BUSINESS ASSISTANT
