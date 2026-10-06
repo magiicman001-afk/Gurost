@@ -118,20 +118,6 @@
     entries.forEach((entry) => { if (entry.isIntersecting) entry.target.classList.add('in-view'); });
   }, { threshold: 0.15 });
   document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
-
-  document.querySelectorAll('.faq-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const answer = document.getElementById(btn.dataset.target);
-      const icon = btn.querySelector('.faq-icon');
-      const isOpen = !answer.classList.contains('hidden');
-      document.querySelectorAll('#faqList [id^="faq"]').forEach((el) => el.classList.add('hidden'));
-      document.querySelectorAll('.faq-icon').forEach((el) => { el.style.transform = 'rotate(0deg)'; });
-      if (!isOpen) {
-        answer.classList.remove('hidden');
-        icon.style.transform = 'rotate(180deg)';
-      }
-    });
-  });
 </script>
 </body>
 </html>
