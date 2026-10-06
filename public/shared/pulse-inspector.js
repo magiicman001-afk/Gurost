@@ -55,6 +55,28 @@ function inFrameInspector() {
   // Text over a background image or over a positioned image can't be
   // measured from colours alone - flagged instead of guessed.
   function backgroundOf(el) {
+    // What is actually under the text where it is drawn: AI heroes put an
+    // <img>/<video> behind the copy (with an overlay) as a sibling, not a
+    // parent, so walking up the parents alone read "white on white, 1:1"
+    // for every hero headline. The stack at the text's position is checked
+    // first; the first image, video or solid background under it wins.
+    var own = parseColor(getComputedStyle(el).backgroundColor);
+    if (own && own.a > 0.6) return { color: own, overImage: false };
+    var r = el.getBoundingClientRect();
+    var cx = r.left + Math.min(r.width / 2, 24), cy = r.top + r.height / 2;
+    if (document.elementsFromPoint && r.width > 0 && cx >= 0 && cy >= 0 && cx < innerWidth && cy < innerHeight) {
+      var stack = document.elementsFromPoint(cx, cy), under = false;
+      for (var k = 0; k < stack.length; k++) {
+        var s = stack[k];
+        if (s === el) { under = true; continue; }
+        if (!under) continue; // drawn above the text (a child of it, a badge) - not its background
+        if (/^(IMG|VIDEO|PICTURE|CANVAS)$/.test(s.tagName)) return { color: { r: 255, g: 255, b: 255, a: 1 }, overImage: true };
+        var scs = getComputedStyle(s);
+        if (scs.backgroundImage && scs.backgroundImage !== 'none' && !/gradient/.test(scs.backgroundImage)) return { color: { r: 255, g: 255, b: 255, a: 1 }, overImage: true };
+        var sc = parseColor(scs.backgroundColor);
+        if (sc && sc.a > 0.6) return { color: sc, overImage: false };
+      }
+    }
     var overImage = false;
     for (var n = el; n && n.nodeType === 1; n = n.parentElement) {
       var cs = getComputedStyle(n);
