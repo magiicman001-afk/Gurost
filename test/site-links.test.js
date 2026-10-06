@@ -61,3 +61,16 @@ test("business text with $ patterns cannot corrupt the page", () => {
   const { html } = hardenSite(PAGE, { businessInfo: { address: "$& $1 Lane, Bristol" }, formEndpoint: EP });
   assert.match(html, /Open \$&amp; \$1 Lane, Bristol in Google Maps/);
 });
+
+// Evening test 2026-10-06: a design's own order form (in #order, with a
+// "pickup" date and no item/quantity) was saved as "contact"; and the spam
+// trap was named "website", so a real "website" field would drop real leads.
+test("form handler: forms in #order are orders; the spam trap no longer uses a real field name", () => {
+  const { hardenSite } = require("../lib/site-links");
+  const page = '<html><body><section id="order"><form><input name="name"><input name="pickup" type="date"><button type="submit">Send</button></form></section><section id="contact"><form><input name="name"><input name="website"><button type="submit">Send</button></form></section></body></html>';
+  const html = hardenSite(page, { formEndpoint: "https://example.test/api/site-forms/p1" }).html;
+  assert.match(html, /f\.closest\("#order"\)\) return "order"/);
+  assert.match(html, /\[name="pickup"\]/);
+  assert.match(html, /n === "_gurost_hp"/);
+  assert.doesNotMatch(html, /n === "website"/);
+});
