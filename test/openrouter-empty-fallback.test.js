@@ -119,3 +119,19 @@ test("stopWhen ends a streamed reply early and keeps it as complete", async () =
   assert.equal(r.text, "abSTOP");
   assert.ok(cancelled);
 });
+
+// Evening test 2026-10-06: with $0.04 left, OpenRouter refused the whole
+// "gemma-4-31b:free, qwen3-coder" list with 402 - the free model never ran.
+test("402 out of credit on a mixed list -> retried with only its :free models; an all-free 402 still fails", async () => {
+  const bodies = [];
+  globalThis.fetch = async (url, init) => {
+    const b = JSON.parse(init.body); bodies.push(b.models || [b.model]);
+    if ((b.models || [b.model]).some((m) => !/:free$/.test(m))) return { ok: false, status: 402, text: async () => '{"error":{"code":402,"message":"would exceed your available credits"}}' };
+    return { ok: true, json: async () => ok("google/gemma-4-31b-it:free", "free answer") };
+  };
+  const r = await callOpenRouter({ model: "google/gemma-4-31b-it:free,qwen/qwen3-coder", messages: [] });
+  assert.equal(r.text, "free answer");
+  assert.deepEqual(bodies, [["google/gemma-4-31b-it:free", "qwen/qwen3-coder"], ["google/gemma-4-31b-it:free"]]);
+  globalThis.fetch = async () => ({ ok: false, status: 402, text: async () => "no credit" });
+  await assert.rejects(callOpenRouter({ model: "z-ai/glm-5.2", messages: [] }), /OpenRouter error \(402\)/);
+});
