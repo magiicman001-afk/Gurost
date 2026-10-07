@@ -48,6 +48,7 @@ const variantBot = require("./bots/variant-bot");
 const pulseBrain = require("./bots/pulse-brain");
 const { normalizeBusinessInfo, describeBusinessInfo, applyBusinessInfoUpdate } = require("./lib/business-info");
 const { finalizeSite } = require("./lib/finalize-site");
+const { enforceHonestContent, describeReplaced } = require("./lib/honest-content");
 const appBot = require("./bots/app-bot");
 const revampBot = require("./bots/revamp-bot");
 const industryRag = require("./industry-rag");
@@ -1727,9 +1728,20 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
       // can't read the same starting HTML and silently overwrite this
       // one's result — see lib/project-lock.js for the real bug this fixes.
       const result = await withProjectLock(projectId, async () => {
+        const before = project.currentHtml;
         const r = await correctionBot.applyCorrection(project.currentHtml, instruction, { plan: req.user.plan });
         pushUndoSnapshot(project, "correct");
         integrator.integrateCorrection(project, r);
+        // An edit can't invent prices, years, ratings or statistics either: a
+        // figure counts as the owner's if it is in the instruction, the page
+        // as it was, the build prompt or the company details.
+        if (project.type !== "app" && typeof project.currentHtml === "string") {
+          const honest = enforceHonestContent(project.currentHtml, { allowed: [instruction, before, project.prompt, JSON.stringify(project.businessInfo || {})] });
+          if (honest.total) {
+            project.currentHtml = honest.html;
+            console.log(`[pulse] Edit on ${projectId}: replaced ${describeReplaced(honest.replaced)}`);
+          }
+        }
         return r;
       });
 

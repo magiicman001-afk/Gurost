@@ -10,6 +10,7 @@ const { createStreamPreview } = require("../lib/stream-preview");
 const security = require("../security");
 const { hardenSite, findDeadLinks } = require("../lib/site-links");
 const { repairDesign } = require("../lib/design-repair");
+const { enforceHonestContent, describeReplaced } = require("../lib/honest-content");
 
 const BRIEFS = [
   {
@@ -606,6 +607,12 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
         const repaired = repairDesign(html, { prompt });
         html = repaired.html;
         if (repaired.added.length) console.log(`[variant-bot] "${b.id}" design repaired: ${repaired.added.join("; ")}`);
+        // Prices, founding years, ratings and statistics the owner never gave
+        // become marked placeholders - in code, because the model ignores the
+        // prompt rule (UK consumer protection law).
+        const honest = enforceHonestContent(html, { allowed: [prompt, JSON.stringify(businessInfo || {})] });
+        html = honest.html;
+        if (honest.total) console.log(`[variant-bot] "${b.id}" replaced ${describeReplaced(honest.replaced)}`);
         const dead = findDeadLinks(html);
         console.log(`[variant-bot] "${b.id}" links: fixed ${hardened.report.fixed.length}, removed ${hardened.report.removed.length}, added [${hardened.report.added.join(", ")}], dead left ${dead.length}`);
 
