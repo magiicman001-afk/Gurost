@@ -17,19 +17,11 @@ const { callClaude, CLAUDE_MODEL_FAST } = require("../lib/claude-client");
 const userLearning = require("../user-learning");
 const plainEnglishBot = require("../plain-english");
 const { modelForTier } = require("../lib/tier-router");
+const modelRouter = require("../lib/model-router");
 
-// Research keeps its own specialized model - a genuine, deliberate
-// choice based on real, current comparisons (checked before writing
-// this, not assumed): Gemini genuinely leads deep analytical
-// reasoning right now, which is what the Research sub-agent actually
-// needs. NOT tier-routed - this stays true regardless of the user's
-// plan. email/task/code used to default to CLAUDE_MODEL here too, but
-// that was never real per-agent specialization (all three were just
-// "Claude"), so tier routing (see modelFor() in handleTask below) now
-// decides those three instead of this object.
-const AGENT_MODELS = {
-  research: process.env.RESEARCH_AGENT_MODEL || "google/gemini-3.1-pro"
-};
+// Models: lib/model-router.js picks one per agent task and plan (see modelFor()
+// in handleTask). Research goes to Gemini there. The old slug used here,
+// "google/gemini-3.1-pro", is not on OpenRouter's list ("-preview" is).
 
 const TASK_SYSTEM = `You are Gurost Business Assistant. You help users run their business.
 You write emails, blogs, marketing copy, customer response templates, and social media posts.
@@ -169,14 +161,15 @@ async function handleTask(businessContext, task, { industryContext, forcePriorit
   // variants earlier tonight.
   const agentIds = await routeToAgents(task);
 
-  // Research stays on its own specialized model (Gemini, see
-  // AGENT_MODELS above) regardless of tier — deliberate, not
-  // tier-routed. email/task/code are tier-routed instead of using
-  // their AGENT_MODELS default, since that default was always just
-  // CLAUDE_MODEL (no real per-agent specialization for those three,
-  // unlike research) and tier now decides that choice instead.
-  const modelFor = (agentId) =>
-    agentId === "research" ? AGENT_MODELS.research : modelForTier(plan, { complex: isComplexTask(task) });
+  // Each agent now declares what kind of task it does and lib/model-router.js
+  // picks the model for that task and plan (research still goes to Gemini).
+  const AGENT_TASK = { research: "research", email: "draft_writing", code: "complex_reasoning" };
+  const modelFor = (agentId) => {
+    const kind = AGENT_TASK[agentId] || (isComplexTask(task) ? "complex_reasoning" : "simple_reply");
+    const chain = modelRouter.modelFor(kind, plan);
+    modelRouter.recordUse({ task: kind, plan, chain });
+    return chain;
+  };
 
   const results = await Promise.allSettled(
     agentIds.map((agentId) => {

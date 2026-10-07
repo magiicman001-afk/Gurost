@@ -108,7 +108,7 @@ async function audit(url, { plan } = {}) {
 // variable, not fixed in code, since what counts as "large" is a
 // judgment call worth being able to tune.
 const LARGE_DOCUMENT_THRESHOLD = parseInt(process.env.LARGE_DOCUMENT_THRESHOLD || "15000", 10);
-const LARGE_DOCUMENT_MODEL = process.env.LARGE_DOCUMENT_MODEL || "google/gemini-3.1-pro";
+const LARGE_DOCUMENT_MODEL = process.env.LARGE_DOCUMENT_MODEL || "google/gemini-3.1-pro-preview";
 
 async function auditStaticHTML(htmlContent, { plan } = {}) {
   const isLarge = htmlContent.length > LARGE_DOCUMENT_THRESHOLD;

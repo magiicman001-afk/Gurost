@@ -1939,6 +1939,7 @@ app.post(
 const deptBots = require("./lib/department-bots");
 const botMemory = require("./lib/bot-memory");
 const memoryExtract = require("./lib/memory-extract");
+const modelRouter = require("./lib/model-router");
 const botPrefsTable = () => require("./lib/db").supabase.from("user_bot_preferences");
 const requireBotId = (req, res) => {
   if (deptBots.BOT_IDS.includes(req.params.bot)) return true;
@@ -2076,11 +2077,17 @@ app.post("/api/department-bots/:bot/chat", security.rejectUnknownFields(["messag
     const prep = await botMemory.prepareChat(require("./lib/db").supabase, req.user.id, req.params.bot, history);
     const system = deptBots.buildSystemPrompt(req.params.bot, cal) + (prep.memoryBlock ? "\n\n" + prep.memoryBlock : "");
 
+    // The model comes from the kind of task (long document, sums, drafting)
+    // and the plan; see lib/model-router.js.
+    const task = modelRouter.classifyDepartmentMessage(req.params.bot, message);
+    const modelChain = modelRouter.modelFor(task, req.user.plan);
+    modelRouter.recordUse({ task, plan: req.user.plan, chain: modelChain });
+
     const result = await claudeClient.callClaude({
       system,
       messages: [...prep.history, { role: "user", content: message }],
       maxTokens: 1500,
-      model: modelForTier(req.user.plan, { complex: message.length > 1200 }),
+      model: modelChain,
       parse: (t) => String(t || "").trim(),
       context: { userId: req.user.id, ip: req.ip }
     });
