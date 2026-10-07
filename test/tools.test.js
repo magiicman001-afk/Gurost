@@ -97,6 +97,7 @@ test("loop: stops after the call limit and forces a plain answer; tool text in a
   assert.match(lastSystem, /Answer now without a tool/);
   assert.ok(!/TOOL_CALL/.test(out.text), "a leftover tool call is never shown to the user");
   assert.match(out.text, /could not finish/);
+  assert.equal(out.incomplete, true);
 });
 
 test("describeTools lists each tool with its arguments", () => {

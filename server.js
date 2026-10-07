@@ -2058,6 +2058,16 @@ app.delete("/api/department-bots/:bot/history", async (req, res) => {
   }
 });
 
+// One chat turn for a user and bot, shared by the text and voice routes.
+const runDepartmentChat = (req, message, history) => {
+  const chat = require("./lib/department-chat").createDepartmentChat({
+    db: require("./lib/db").supabase,
+    botPrefs: () => botPrefsTable().select("tone, signature, profile").eq("user_id", req.user.id).eq("bot_type", req.params.bot).maybeSingle(),
+    deptBots, botMemory, modelRouter, toolLoop, memoryExtract, claudeClient, freeModel: modelForTier("free")
+  });
+  return chat.run({ userId: req.user.id, plan: req.user.plan, ip: req.ip, botId: req.params.bot, message, history });
+};
+
 app.post("/api/department-bots/:bot/chat", security.rejectUnknownFields(["message", "history"]), async (req, res) => {
   if (!requireBotId(req, res)) return;
   const message = security.sanitizeText(req.body.message, 6000);
@@ -2066,53 +2076,52 @@ app.post("/api/department-bots/:bot/chat", security.rejectUnknownFields(["messag
     .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
     .slice(-12)
     .map((m) => ({ role: m.role, content: m.content.slice(0, 6000) }));
-
-  try {
-    const { data, error } = await botPrefsTable().select("tone, signature, profile").eq("user_id", req.user.id).eq("bot_type", req.params.bot).maybeSingle();
-    if (error) throw new Error(error.message);
-    if (!data && req.params.bot === "custom") return res.status(400).json({ error: "Tell your custom bot what it should help with first." });
-    const cal = data ? deptBots.normalizeCalibration({ ...(data.profile || {}), tone: data.tone, signature: data.signature }, req.params.bot) : deptBots.normalizeCalibration({}, req.params.bot);
-
-    // Saved history and notes (shared by all of this user's bots). If the
-    // database is unavailable the chat carries on with what the page sent.
-    const prep = await botMemory.prepareChat(require("./lib/db").supabase, req.user.id, req.params.bot, history);
-    const system = deptBots.buildSystemPrompt(req.params.bot, cal) + (prep.memoryBlock ? "\n\n" + prep.memoryBlock : "");
-
-    // The model comes from the kind of task (long document, sums, drafting)
-    // and the plan; see lib/model-router.js.
-    const task = modelRouter.classifyDepartmentMessage(req.params.bot, message);
-    const modelChain = modelRouter.modelFor(task, req.user.plan);
-    modelRouter.recordUse({ task, plan: req.user.plan, chain: modelChain });
-
-    // The bot may use tools (calculator, time and date) before it answers.
-    const tooled = await toolLoop.runWithTools({
-      system,
-      messages: [...prep.history, { role: "user", content: message }],
-      ctx: { userId: req.user.id, db: require("./lib/db").supabase },
-      call: (a) => claudeClient.callClaude({
-        ...a, maxTokens: 1500, model: modelChain, parse: (t) => String(t || "").trim(), context: { userId: req.user.id, ip: req.ip }
-      })
-    });
-    const { reply, draft } = deptBots.parseReply(tooled.text);
-    const toolsUsed = [...new Set(tooled.toolsUsed.filter((t) => t.ok).map((t) => t.tool))];
-    if (!reply && !draft) throw new Error("The AI sent back an empty answer.");
-    const stored = prep.stored && await botMemory.recordExchange(require("./lib/db").supabase, req.user.id, req.params.bot, message, (reply ? reply + "\n\n" : "") + (draft ? "--- DRAFT ---\n" + draft + "\n--- END DRAFT ---" : ""));
-    res.json({ reply, draft, toolsUsed, proposals: tooled.proposals });
-    // After the reply is sent: note anything lasting the user said, for all their bots.
-    if (stored) {
-      const db = require("./lib/db").supabase;
-      memoryExtract.learnFromExchange({
-        userText: message, botType: req.params.bot,
-        call: (a) => claudeClient.callClaude({ ...a, model: modelForTier("free"), context: { userId: req.user.id, ip: req.ip } }),
-        list: () => botMemory.listMemory(db, req.user.id),
-        save: (items) => botMemory.rememberItems(db, req.user.id, items)
-      });
-    }
-  } catch (err) {
-    console.error("[department-bots] chat failed:", err.message);
-    res.status(500).json({ error: /OPENROUTER|credit|402/i.test(err.message) ? "The AI service needs credits or a key right now. Please try again later." : "The bot could not answer just now. Please try again." });
-  }
+  const out = await runDepartmentChat(req, message, history);
+  res.status(out.status).json(out.body);
 });
+
+// ---------------------------------------------------------------------------
+// Voice: the user speaks, the bot answers by text AND speech. The recording is
+// turned into text, run through the same chat as a typed message, and the
+// answer is spoken back. Audio is not stored; the typed-out text is saved like
+// any other message. Needs DEEPGRAM_API_KEY; the page asks /api/voice/status
+// first and keeps the microphone off when voice is not set up.
+// ---------------------------------------------------------------------------
+const voiceChat = require("./lib/voice-chat");
+const voiceUpload = require("multer")({ storage: require("multer").memoryStorage(), limits: { fileSize: voiceChat.MAX_AUDIO_BYTES, files: 1 } });
+
+app.get("/api/voice/status", (req, res) => res.json({ available: voiceChat.voiceAvailable() }));
+
+app.post("/api/department-bots/:bot/voice",
+  (req, res, next) => voiceUpload.single("audio")(req, res, (err) => err ? res.status(400).json({ error: "That recording is too long or could not be read. Try a shorter one." }) : next()),
+  async (req, res) => {
+    if (!requireBotId(req, res)) return;
+    if (!voiceChat.voiceAvailable()) return res.status(503).json({ error: "Voice is not set up yet. You can type instead." });
+    if (!req.file || !req.file.buffer.length) return res.status(400).json({ error: "No recording received." });
+    if (!voiceChat.acceptedAudioType(req.file.mimetype)) return res.status(400).json({ error: "That audio format is not supported." });
+
+    let transcript;
+    try {
+      transcript = security.sanitizeText(await require("./guide/voice-client").transcribe(req.file.buffer, req.file.mimetype), 6000);
+    } catch (err) {
+      console.error("[voice] transcription failed:", err.message);
+      return res.status(502).json({ error: "I could not hear that. Please try again." });
+    }
+    // Silence or noise: nothing to answer. The page just keeps listening.
+    if (!transcript) return res.json({ transcript: "", noSpeech: true });
+
+    const out = await runDepartmentChat(req, transcript, []);
+    if (out.status !== 200) return res.status(out.status).json({ ...out.body, transcript });
+
+    let audioBase64 = null;
+    try {
+      const audio = await require("./guide/voice-client").speak(voiceChat.spokenText(out.body));
+      audioBase64 = audio.toString("base64");
+    } catch (err) {
+      console.error("[voice] speech failed:", err.message); // the text answer still goes out
+    }
+    res.json({ transcript, ...out.body, audioBase64 });
+  });
 
 // ---------------------------------------------------------------------------
 // COMPANY PROFILE (Business Assistant): one saved profile per user.
