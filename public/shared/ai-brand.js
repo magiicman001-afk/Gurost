@@ -78,6 +78,23 @@
     retry: "That didn't work. Shall we try again?"
   };
 
+  // The end-of-build report as plain lines for the conversation feed. report comes from the
+  // server (lib/app-build-state.js buildReport) and holds only what was really counted.
+  function buildSummary(report) {
+    var r = report || {};
+    var lines = [];
+    var s = Math.max(0, Math.round(Number(r.seconds) || 0));
+    lines.push("Build complete (" + (s >= 60 ? Math.floor(s / 60) + "m " + (s % 60) + "s" : s + "s") + ").");
+    if (r.found === 0) lines.push("No issues found.");
+    else if (r.found > 0) {
+      var line = r.found + " issue" + (r.found === 1 ? "" : "s") + " found. " + (r.fixed || 0) + " fixed.";
+      if (r.remaining > 0) line += " " + r.remaining + " need" + (r.remaining === 1 ? "s" : "") + " your attention.";
+      lines.push(line);
+    }
+    if (r.verified === false) lines.push("I couldn't confirm the app runs cleanly, so please look over the code panel.");
+    return lines;
+  }
+
   // The honesty rules, added to every prompt on the server (security.withGuardrail).
   // They name no model, and only cover talking about itself, so a site Gurost builds
   // about AI products is unaffected.
@@ -108,5 +125,5 @@
     else fillPage();
   }
 
-  return { NAME: NAME, CANT_SHARE: CANT_SHARE, MODEL_WORDS: MODEL_WORDS, STATUS: STATUS, VOICE: VOICE, IDENTITY_RULE: IDENTITY_RULE, IDENTITY_RULES: IDENTITY_RULES, mentionsModel: mentionsModel, publicText: publicText, avatar: avatar, fillPage: fillPage, AVATAR: AVATAR };
+  return { NAME: NAME, CANT_SHARE: CANT_SHARE, MODEL_WORDS: MODEL_WORDS, STATUS: STATUS, VOICE: VOICE, buildSummary: buildSummary, IDENTITY_RULE: IDENTITY_RULE, IDENTITY_RULES: IDENTITY_RULES, mentionsModel: mentionsModel, publicText: publicText, avatar: avatar, fillPage: fillPage, AVATAR: AVATAR };
 });

@@ -74,3 +74,10 @@ test("saved with the project, and a build cut off by a restart comes back as int
   const site = { ...fresh(), type: "website", state: "BUILDING" };
   assert.equal(b.markInterrupted(site).state, "BUILDING");
 });
+
+test("buildReport counts what the review really found, and claims nothing when the checks did not run", () => {
+  assert.deepEqual(b.buildReport({ startedAt: 1000, now: 135000, found: 5, remaining: 2, verified: true }), { seconds: 134, found: 5, fixed: 3, remaining: 2, verified: true });
+  assert.equal(b.buildReport({ startedAt: 0, now: 1000, found: 2, remaining: 5 }).fixed, 0, "never negative");
+  assert.deepEqual(b.buildReport({ startedAt: 1000, now: 4000, verified: false }), { seconds: 3, found: null, fixed: null, remaining: null, verified: false });
+  assert.equal(b.buildReport({ startedAt: undefined, now: 5 }).seconds, 0);
+});

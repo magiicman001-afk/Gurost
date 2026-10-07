@@ -67,3 +67,15 @@ test("fillPage fills the name and avatar placeholders from the config", () => {
   assert.equal(els[0].textContent, N);
   assert.ok(els[1].innerHTML.includes(C.AVATAR));
 });
+
+test("the end-of-build report: time, what was found and fixed, what needs attention, nothing invented", () => {
+  assert.deepEqual(F.buildSummary({ seconds: 134, found: 5, fixed: 3, remaining: 2, verified: true }), ["Build complete (2m 14s).", "5 issues found. 3 fixed. 2 need your attention."]);
+  assert.deepEqual(F.buildSummary({ seconds: 45, found: 1, fixed: 1, remaining: 0, verified: true }), ["Build complete (45s).", "1 issue found. 1 fixed."]);
+  assert.deepEqual(F.buildSummary({ seconds: 60, found: 0, fixed: 0, remaining: 0 }), ["Build complete (1m 0s).", "No issues found."]);
+  assert.deepEqual(F.buildSummary({ seconds: 20, found: 2, fixed: 1, remaining: 1 }).slice(1), ["2 issues found. 1 fixed. 1 needs your attention."]);
+  const unchecked = F.buildSummary({ seconds: 30, found: null, fixed: null, remaining: null, verified: false });
+  assert.equal(unchecked.length, 2);
+  assert.match(unchecked[1], /couldn't confirm/);
+  assert.equal(unchecked.some((l) => /issue/.test(l)), false, "no issue counts when the checks did not run");
+  assert.deepEqual(F.buildSummary(null), ["Build complete (0s)."]);
+});

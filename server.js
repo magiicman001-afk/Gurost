@@ -1517,6 +1517,7 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
     }
 
     project.verified = sandboxResult.pass === true;
+    project.buildReport = buildState.buildReport({ startedAt: project.buildStartedAt, found: initialReview.allIssues.length, remaining: finalReview.allIssues.length, verified: project.verified });
     broadcastProjectUpdate(projectId, {
       type: "stage_progress",
       stage: "verifying",
@@ -1527,6 +1528,7 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
     } catch (checkErr) {
       console.error(`[app-builder] Checks failed for project ${projectId}, keeping the built app:`, checkErr.message);
       project.verified = false;
+      project.buildReport = buildState.buildReport({ startedAt: project.buildStartedAt, verified: false });
       project.codeReview = project.codeReview || { initialIssueCount: 0, remainingIssues: [], hasCritical: false };
       broadcastProjectUpdate(projectId, { type: "stage_progress", stage: "verifying", status: "complete", data: { verified: false, honestNote: "The app was built, but the final checks could not finish - review the code panel before relying on it." } });
     }
@@ -1535,7 +1537,7 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
     PENDING_CORRECTIONS.delete(projectId);
     buildState.finishBuild(project);
     persistInBackground(projectId, project);
-    broadcastProjectUpdate(projectId, { type: "stage_progress", stage: "done", status: "complete", data: { appFiles: project.appFiles, codeReview: project.codeReview, verified: project.verified } });
+    broadcastProjectUpdate(projectId, { type: "stage_progress", stage: "done", status: "complete", data: { appFiles: project.appFiles, codeReview: project.codeReview, verified: project.verified, report: project.buildReport || buildState.buildReport({ startedAt: project.buildStartedAt }) } });
   } catch (err) {
     // Real, deliberate fix - this used to only broadcast to the
     // frontend, never actually log server-side, which is exactly why
