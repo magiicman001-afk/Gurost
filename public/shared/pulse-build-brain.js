@@ -92,9 +92,9 @@ window.PulseBuildBrain = (function () {
     logActions([
       { label: 'Yes, add them', primary: true, onClick: (b, row) => {
         disableRow(row);
-        queue.push({ label: 'testimonials', text: 'Add a testimonials section with three short, believable customer quotes (first name and a role or neighbourhood, initials in a coloured circle as the avatar - no photos), styled to match the rest of the page, placed before the contact section.' });
+        queue.push({ label: 'testimonials', text: 'Add a testimonials section ready for three real customer quotes, placed before the contact section and styled to match the page: each card holds clearly marked placeholders - "[Customer quote]", "[Customer name]" - and an initials avatar in a coloured circle (no photos). Never invent a review, a name or a rating.' });
         logBot('You', 'Yes, add testimonials.');
-        logBot('Pulse', "Noted — I'll add them as soon as you pick a design.", 'ok');
+        logBot('Pulse', "Noted — once you pick a design I'll add a testimonials section ready for your real customers' words.", 'ok');
       } },
       { label: 'No thanks', onClick: (b, row) => { disableRow(row); logBot('You', 'No testimonials.'); } }
     ]);
