@@ -62,6 +62,7 @@ function toRow(projectId, userId, project) {
       businessInfo: project.businessInfo || null,
       premiumImageCost: project.premiumImageCost || 0, // FLUX Pro/Dev spend on the picked design (USD)
       buildError: project.buildError || null, // App Builder: why a build stopped ({ error, at })
+      suggestionLog: project.suggestionLog || null, // Website Builder suggestion box: what was accepted or put off, and when
     },
     updated_at: new Date().toISOString(),
   };
@@ -92,6 +93,7 @@ function fromRow(row) {
     businessInfo: ctx.businessInfo || null,
     premiumImageCost: ctx.premiumImageCost || 0,
     buildError: ctx.buildError || null,
+    suggestionLog: ctx.suggestionLog || null,
     assistantHistory: ctx.assistantHistory || [],
     pendingAssistantSuggestion: null,
     codeReview: null,

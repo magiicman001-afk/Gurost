@@ -34,6 +34,7 @@ const rateLimit = require("express-rate-limit");
 const { transition, canTransition } = require("./lib/state-machine");
 const { deployToVercel, deployApp } = require("./lib/deploy");
 const { buildSite, previewDocs } = require("./lib/site-pages");
+const siteSuggestions = require("./lib/site-suggestions");
 const { createCheckoutSession, createTopUpCheckout, createBillingPortalSession, verifyWebhook, getBalance, addCredits, PLANS, TOPUPS, LOW_CREDIT_THRESHOLD, BUSINESS_ASSISTANT, createBusinessAssistantSubscription, updateBotSeatQuantity } = require("./lib/billing");
 const creditSystem = require("./credit-system");
 const complexityDetector = require("./complexity-detector");
@@ -4710,6 +4711,23 @@ app.get("/api/project/:id/site", (req, res) => {
     pages: site.pages.map((p) => ({ file: p.file, label: p.label, title: p.title })),
     previews: previewDocs(site.files)
   });
+});
+
+// The suggestion box (Website Builder): up to 3 friendly ideas for the finished site, chosen by plain
+// checks on its HTML (no AI, no cost). Ideas put off or taken are not offered again for 7 days.
+app.get("/api/project/:id/suggestions", (req, res) => {
+  const project = getProject(req.params.id, req, res);
+  if (!project) return;
+  res.json({ suggestions: siteSuggestions.pick(project) });
+});
+
+app.post("/api/project/:id/suggestions/:sid/respond", security.rejectUnknownFields(["action"]), (req, res) => {
+  const project = getProject(req.params.id, req, res);
+  if (!project) return;
+  const result = siteSuggestions.respond(project, req.params.sid, req.body && req.body.action);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+  persistInBackground(req.params.id, project);
+  res.json({ ok: true });
 });
 
 // "Use this design": finalises the picked design (meta description, Open

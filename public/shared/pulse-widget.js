@@ -120,26 +120,62 @@
     bar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
   }
 
-  // Real, rule-based hint - checks the actual, current preview HTML
-  // for a genuine gap, rather than claiming AI-generated insight it
-  // isn't. Honest and still useful.
-  function checkForRealSuggestion() {
-    const iframe = document.querySelector('#previewFrame, #previewFrameAfter');
-    if (!iframe || !iframe.contentDocument) return;
-    const html = iframe.contentDocument.body?.innerHTML || '';
-    const suggestionBox = document.getElementById('pulseSuggestion');
-    const textEl = document.getElementById('pulseSuggestionText');
-    if (!suggestionBox || !textEl) return;
+  // Suggestion box (Website Builder only): up to 3 friendly ideas from the server, which checks the
+  // finished site's own HTML (no AI, no cost). "Add" sends the idea through the normal Pulse edit, so
+  // it is undoable like any edit; "Maybe later" hides it for 7 days. Both answers are recorded.
+  const onWebsiteBuilder = /\/builder(\.html)?$/.test(location.pathname);
 
-    const hasContactForm = /contact|<form/i.test(html);
-    const hasMobileMeta = true; // Tailwind pages are responsive by default across this app
+  function answerSuggestion(projectId, id, action) {
+    if (!window.GurostAPI || !projectId) return;
+    window.GurostAPI.call(`/api/project/${projectId}/suggestions/${encodeURIComponent(id)}/respond`, { method: 'POST', body: { action } })
+      .catch(() => {}); // the answer is a courtesy to the log; the edit itself must never wait on it
+  }
 
-    if (!hasContactForm) {
-      textEl.textContent = "I don't see a contact section — want me to add one?";
-      suggestionBox.classList.add('visible');
-      suggestionBox.dataset.suggestion = 'Add a real contact section with a name, email, and message field.';
-    } else {
-      suggestionBox.classList.remove('visible');
+  function suggestionButton(label, primary) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = label;
+    b.style.cssText = 'font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;cursor:pointer;'
+      + (primary ? 'background:var(--pulse-orange);color:#fff;border:none;' : 'background:#fff;border:1px solid #E9E9EF;');
+    return b;
+  }
+
+  function renderSuggestions(projectId, list) {
+    const box = document.getElementById('pulseSuggestion');
+    const host = document.getElementById('pulseSuggestionList');
+    if (!box || !host) return;
+    host.textContent = '';
+    (list || []).slice(0, 3).forEach((s) => {
+      const card = document.createElement('div');
+      card.className = 'pulse-suggestion-card';
+      card.style.cssText = 'margin-bottom:10px;';
+      const text = document.createElement('p');
+      text.textContent = s.text;
+      text.style.cssText = 'margin:0;';
+      const actions = document.createElement('div');
+      actions.style.cssText = 'display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;';
+      const add = suggestionButton(`Add ${s.title}`, true);
+      const later = suggestionButton('Maybe later', false);
+      const done = () => { card.remove(); if (!host.children.length) box.classList.remove('visible'); };
+      add.addEventListener('click', () => { answerSuggestion(projectId, s.id, 'accepted'); done(); sendCorrection(s.instruction); });
+      later.addEventListener('click', () => { answerSuggestion(projectId, s.id, 'skipped'); done(); });
+      actions.append(add, later);
+      card.append(text, actions);
+      host.appendChild(card);
+    });
+    box.classList.toggle('visible', host.children.length > 0);
+  }
+
+  async function checkForRealSuggestion() {
+    const box = document.getElementById('pulseSuggestion');
+    if (!box) return;
+    const projectId = window.gurostBuilder?.getProjectId?.();
+    if (!onWebsiteBuilder || !projectId || !window.GurostAPI) { box.classList.remove('visible'); return; }
+    try {
+      const r = await window.GurostAPI.call(`/api/project/${projectId}/suggestions`);
+      renderSuggestions(projectId, r && r.suggestions);
+    } catch (err) {
+      box.classList.remove('visible'); // no ideas is always better than a broken box
     }
   }
 
@@ -244,13 +280,7 @@
           <div id="pulseStatusLog"></div>
           <div id="pulseSuggestion">
             <span class="material-symbols-outlined">lightbulb</span>
-            <div>
-              <p id="pulseSuggestionText"></p>
-              <div id="pulseSuggestionActions">
-                <button class="primary" id="pulseSuggestionAccept">Add it</button>
-                <button id="pulseSuggestionDismiss">No thanks</button>
-              </div>
-            </div>
+            <div id="pulseSuggestionList"></div>
           </div>
           <div id="pulseInputArea">
             <textarea id="pulseTextArea" placeholder="Type your idea or a correction…"></textarea>
@@ -531,16 +561,6 @@
     document.getElementById('pulseResumeBtn').addEventListener('click', () => {
       togglePanel(true);
       document.getElementById('pulseTextArea').focus();
-    });
-
-    document.getElementById('pulseSuggestionAccept').addEventListener('click', () => {
-      const box = document.getElementById('pulseSuggestion');
-      const suggestion = box.dataset.suggestion;
-      box.classList.remove('visible');
-      if (suggestion) sendCorrection(suggestion);
-    });
-    document.getElementById('pulseSuggestionDismiss').addEventListener('click', () => {
-      document.getElementById('pulseSuggestion').classList.remove('visible');
     });
 
     updatePauseResumeButtons();
