@@ -184,6 +184,10 @@ Motion: real hover states (subtle scale, shadow, or color shift) and smooth tran
 
 Layout: avoid generic centered-single-column layouts — use real, considered composition (bento-style grids, deliberate asymmetry) suited to the app's actual purpose.
 
+Polish: generous spacing (screen sections padded at least 32-48px, clear gaps between groups); typography with a clear hierarchy (page titles at least 32px, section headings at least 24px, body at least 16px); cards with rounded corners (rounded-2xl), soft shadows and the same internal padding throughout a screen.
+
+Style loading: a class that is never defined renders as nothing. Use Tailwind's own classes - daisyUI is NOT loaded, so never use its names (bg-base-100, text-base-content, btn-primary, card). Every custom colour or font you name in a class must be defined in a tailwind.config script placed directly after the Tailwind CDN script. Every screen gets a background from the palette and real structure (cards, icons, tables) - never plain text on white.
+
 Responsive: genuinely well-composed from 320px mobile through large desktop, not just "doesn't break."
 
 Dark mode: implement Tailwind's real dark: variant with a working toggle that persists via localStorage. The page is previewed in a sandboxed frame where localStorage throws, so wrap every localStorage read and write in try/catch and carry on without it.
