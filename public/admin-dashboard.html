@@ -55,6 +55,7 @@
     <button class="tab-btn" data-tab="health">System Health</button>
     <button class="tab-btn" data-tab="payments">Payments</button>
     <button class="tab-btn" data-tab="bots">Bot Activity</button>
+    <button class="tab-btn" data-tab="audit">Assistant Audit</button>
   </div>
 
   <main class="p-6">
@@ -64,6 +65,7 @@
     <div id="tab-health" class="tab-panel hidden"></div>
     <div id="tab-payments" class="tab-panel hidden"></div>
     <div id="tab-bots" class="tab-panel hidden"></div>
+    <div id="tab-audit" class="tab-panel hidden"></div>
   </main>
 </div>
 
@@ -150,6 +152,7 @@ async function loadTab(tab) {
     else if (tab === 'health') await renderHealth(el);
     else if (tab === 'payments') await renderPayments(el);
     else if (tab === 'bots') await renderBots(el);
+    else if (tab === 'audit') await renderAudit(el);
   } catch (err) {
     el.innerHTML = `<p class="text-sm text-red-600">${err.message}</p>`;
   }
@@ -239,6 +242,58 @@ async function renderBots(el) {
       <tbody>${activity.map((a) => `
         <tr><td>${a.user_id.slice(0, 8)}…</td><td>${a.action_type}</td><td>${(a.prompt || '').slice(0, 60)}</td><td>${new Date(a.created_at).toLocaleString()}</td></tr>`).join('')}</tbody>
     </table>`;
+}
+
+// Business Assistant audit trail: newest first, with filters. Every value is
+// put on the page as text (never HTML). The JSON route is the source of truth.
+async function renderAudit(el) {
+  el.textContent = '';
+  const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const bar = mk('div', 'flex flex-wrap gap-2 mb-3');
+  const event = mk('select', 'field-input'); event.style.width = 'auto';
+  [['', 'All events'], ['chat', 'Chat'], ['tool_call', 'Tool calls'], ['approval', 'Approvals'], ['memory', 'Memory'], ['error', 'Errors']].forEach(([v, t]) => { const o = mk('option', null, t); o.value = v; event.appendChild(o); });
+  const bot = mk('select', 'field-input'); bot.style.width = 'auto';
+  [['', 'All bots'], ['sales', 'Sales'], ['hr', 'HR'], ['finance', 'Finance'], ['payroll', 'Payroll'], ['support', 'Support'], ['custom', 'Custom']].forEach(([v, t]) => { const o = mk('option', null, t); o.value = v; bot.appendChild(o); });
+  const user = mk('input', 'field-input'); user.style.width = '220px'; user.placeholder = 'User id (optional)';
+  const go = mk('button', 'tab-btn active', 'Show');
+  bar.append(event, bot, user, go);
+  const note = mk('p', 'text-xs text-[var(--muted)] mb-3', 'What the assistant did, newest first. Message text, email bodies and secrets are never stored here.');
+  const msg = mk('p', 'text-sm text-red-600 mb-2');
+  const wrap = mk('div', 'overflow-x-auto');
+  const table = mk('table');
+  const head = mk('thead'); const hr = mk('tr');
+  ['When', 'User', 'Bot', 'Event', 'Tool', 'OK', 'Asked for', 'Answered by', 'Approved', 'Input', 'Result', 'IP'].forEach((h) => hr.appendChild(mk('th', null, h)));
+  head.appendChild(hr); table.appendChild(head);
+  const body = mk('tbody'); table.appendChild(body); wrap.appendChild(table);
+  const more = mk('button', 'tab-btn', 'Load older'); more.hidden = true; more.style.marginTop = '12px';
+  el.append(bar, note, msg, wrap, more);
+
+  let oldest = null;
+  async function load(append) {
+    msg.textContent = '';
+    const q = new URLSearchParams({ limit: '50' });
+    if (event.value) q.set('event', event.value);
+    if (bot.value) q.set('bot', bot.value);
+    if (user.value.trim()) q.set('user', user.value.trim());
+    if (append && oldest) q.set('before', oldest);
+    try {
+      const { entries } = await adminCall('/api/admin/audit?' + q.toString());
+      if (!append) { body.textContent = ''; }
+      entries.forEach((r) => {
+        const tr = mk('tr');
+        [new Date(r.created_at).toLocaleString(), (r.user_id || '').slice(0, 8) + '…', r.bot_type || '-', r.event, r.tool_used || '-', r.ok === null ? '-' : r.ok ? 'yes' : 'no',
+          r.model_requested || '-', r.model_used || '-', r.approved_by_user === null ? '-' : r.approved_by_user ? 'approved' : 'cancelled', r.input || '-', r.output || '-', r.ip_address || '-']
+          .forEach((v) => tr.appendChild(mk('td', null, v)));
+        body.appendChild(tr);
+      });
+      if (entries.length) oldest = entries[entries.length - 1].created_at;
+      more.hidden = entries.length < 50;
+      if (!append && !entries.length) msg.textContent = 'Nothing recorded yet for this filter.';
+    } catch (err) { msg.textContent = err.message; }
+  }
+  go.addEventListener('click', () => { oldest = null; load(false); });
+  more.addEventListener('click', () => load(true));
+  await load(false);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
