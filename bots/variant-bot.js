@@ -9,6 +9,7 @@ const { parseVariantResponse, VariantParseError } = require("../lib/variant-resp
 const { createStreamPreview } = require("../lib/stream-preview");
 const security = require("../security");
 const { hardenSite, findDeadLinks } = require("../lib/site-links");
+const { repairDesign } = require("../lib/design-repair");
 
 const BRIEFS = [
   {
@@ -75,7 +76,7 @@ ${brief}
 
 OUTPUT FORMAT: reply with the complete HTML document and nothing else - start at <!DOCTYPE html>, end at </html>. No JSON, no markdown fences, no commentary before or after. Inside <head>, add <meta name="gurost:summary" content="..."> holding one sentence that describes what you built.
 
-Where the design genuinely calls for a real photo or illustration (a hero image, a product shot, a team photo, a testimonial avatar), do NOT draw it with SVG and do NOT invent an external image URL. Instead use an <img> whose src is a placeholder token (IMG_1, IMG_2, ...), and give that tag two extra attributes: data-gurost-image holding the image brief, and data-gurost-image-role holding its importance. The brief must say exactly what the image should show (subject, mood, framing, lighting, style — enough detail that a real image generator produces something genuinely fitting, not generic stock-photo filler). The importance is one of: hero (the single main visual), featured (at most two key product or work shots), secondary (supporting photos), decorative (textures, backgrounds, avatars). Write alt as a short literal description of the photo (e.g. "sourdough loaf on a wooden board") - it is also used to search stock photos. Placeholders only work in an <img> src, not in CSS. They are replaced with real images after your response — use as many as the design genuinely benefits from, typically 2-6, not one on every element.
+Where the design genuinely calls for a real photo or illustration (a hero image, a product shot, a team photo of the real business), do NOT draw it with SVG and do NOT invent an external image URL. Instead use an <img> whose src is a placeholder token (IMG_1, IMG_2, ...), and give that tag two extra attributes: data-gurost-image holding the image brief, and data-gurost-image-role holding its importance. The brief must say exactly what the image should show (subject, mood, framing, lighting, style — enough detail that a real image generator produces something genuinely fitting, not generic stock-photo filler). The importance is one of: hero (the single main visual), featured (at most two key product or work shots), secondary (supporting photos), decorative (textures, backgrounds). Write alt as a short literal description of the photo (e.g. "sourdough loaf on a wooden board") - it is also used to search stock photos. Placeholders only work in an <img> src, not in CSS. They are replaced with real images after your response — use 3-5 real photos per site (a hero image plus real images in the sections), never a hero-only page and never one on every element.
 
 Where moving footage genuinely lifts the design (a full-bleed hero background loop, an atmosphere band between sections, a behind-the-scenes or process clip), use a video placeholder: a <video> element whose own src attribute is a token (VID_1, VID_2, ...), with a data-gurost-video attribute holding 2-5 plain words to search stock footage with (e.g. "baker kneading dough", "city skyline night"). It is replaced with a real stock clip and poster frame after your response. Background and decorative videos must be autoplay, muted, loop and playsinline with no controls, sit behind a dark or brand-coloured overlay so text on top stays readable, and live inside a container that already has a fitting background colour (if no clip is found the video is removed and that colour remains). A clip people should watch gets controls and is not autoplayed. Use 1-3 videos when the user asks for video or motion, otherwise 0-2; never put essential content only inside a video.
 
@@ -92,6 +93,24 @@ Components: hand-build every button, card, form, and nav element with genuine, p
 Motion: real hover states on every interactive element (subtle scale, shadow, or color shift), smooth transitions (0.2-0.3s ease) throughout, and where relevant, a real fade-in/slide-up on page load using CSS animations — genuinely present in the code, not decorative-in-name-only.
 
 Layout: avoid centered-single-column-generic-AI-slop layouts. Use real asymmetry, bento-style grids, overlapping elements, and full-width sections with intention — every design direction should look genuinely distinct from the others, not like variations on one template.
+
+PREMIUM LAYOUT STANDARDS (in your direction's own style):
+- Hero: full-width, with a high-quality photo as the dominant visual (full-bleed background under a readable overlay, or a large edge-to-edge image beside the copy), bold display typography and one clear primary call to action.
+- Features / services: a 3-column grid on desktop (1 column on phones) with a real icon in each card - and one card given more emphasis (larger, highlighted or spanning) so it never reads as a template row.
+- Testimonials: never invent reviews, names or ratings (UK consumer law forbids fake reviews). Build the section as clearly marked placeholders for real customer quotes - e.g. "[Customer quote]" and "[Customer name]" - each with an initials avatar in a coloured circle, never a photo of a stranger presented as a customer. The same goes for numbers: no made-up statistics, awards, ratings or founding years - use a marked placeholder such as "[Year founded]" unless the business details give the real figure.
+- Contact: the form and the location side by side on desktop (stacked on phones). If the business details give an address, the location side is a Google map: an iframe with src "https://maps.google.com/maps?q=" + the URL-encoded address + "&output=embed", title "Map", loading lazy, rounded corners, full width of its column and at least 320px tall. With no address, a styled card with opening hours and how to reach the business instead - never a map of an invented address.
+- Footer: multi-column (brand and one-line pitch; section links; contact details; social icons) on a distinct background, with text that contrasts clearly with it.
+- Spacing: generous - sections at least 80px top and bottom on desktop (py-20 or more), clear gaps between groups, never cramped.
+- Typography: h1 at least 48px on desktop (text-5xl or larger), h2 at least 32px (text-3xl or larger), body text at least 16px with relaxed line height.
+- Cards: rounded corners (rounded-2xl), soft shadows, the same internal padding throughout a section.
+
+STYLE LOADING - a class that is never defined renders as nothing, which is how a page ends up plain white:
+- Tailwind's own classes only. daisyUI is NOT loaded: never use its names (bg-base-100, text-base-content, btn-primary, card, badge).
+- Every custom colour or font you name in a class (bg-brand-500, text-ink, font-heading) must be defined in a tailwind.config script placed directly after the Tailwind CDN script, using this business's palette and fonts.
+- Load the icon font for the exact class you use (material-symbols-outlined needs Material Symbols Outlined).
+- Put each image token in a plain <img>, never inside <picture> or <source>: only that one file exists.
+- White text over a photo sits under a dark overlay, and its section has a dark background colour of its own so the text stays readable while the photo loads.
+- No plain text-only sections: every section gets a background colour or tint from the palette, a photo, icons or cards - and the hero always has a real photo.
 ${design?.layout ? `\n${design.layout}\n` : ""}
 Responsive: real, tested-quality responsiveness from 320px mobile up through large desktop — not just "doesn't break," genuinely well-composed at every real breakpoint.
 
@@ -560,6 +579,12 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
         // out, forms wired to the Gurost form endpoint.
         const hardened = hardenSite(html, { businessInfo, formEndpoint: projectId ? `${process.env.PUBLIC_URL || "https://gurost.onrender.com"}/api/site-forms/${projectId}` : null });
         html = hardened.html;
+        // Styles the page names but never loads (daisyUI colours, custom
+        // fonts, icon fonts, invented <picture> sources) - the plain white
+        // site. Built from the industry palette, no AI.
+        const repaired = repairDesign(html, { prompt });
+        html = repaired.html;
+        if (repaired.added.length) console.log(`[variant-bot] "${b.id}" design repaired: ${repaired.added.join("; ")}`);
         const dead = findDeadLinks(html);
         console.log(`[variant-bot] "${b.id}" links: fixed ${hardened.report.fixed.length}, removed ${hardened.report.removed.length}, added [${hardened.report.added.join(", ")}], dead left ${dead.length}`);
 

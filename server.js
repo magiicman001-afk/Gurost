@@ -4765,7 +4765,7 @@ app.post("/api/project/:id/finalize", security.rejectUnknownFields([]), (req, re
   if (!project) return;
   if (!project.currentHtml) return res.status(400).json({ error: "Pick a design first." });
   const variant = (project.variants || []).find((v) => v.id === project.selectedVariantId);
-  const result = finalizeSite(project.currentHtml, { businessInfo: project.businessInfo || null, summary: variant?.summary || "" });
+  const result = finalizeSite(project.currentHtml, { businessInfo: project.businessInfo || null, summary: variant?.summary || "", prompt: project.prompt || "" });
   if (result.added.length) {
     pushUndoSnapshot(project, "finalize-site");
     project.currentHtml = result.html;
