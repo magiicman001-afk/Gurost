@@ -88,6 +88,13 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
   `assistant_pending_actions`, plus projects and all other user data.
 - A qualified adviser must review the privacy policy (IP addresses count as
   personal data).
+- Per-user GitHub login (OAuth): GitHub saves use one server `GITHUB_TOKEN`, so
+  every user's project lands in the owner's GitHub account. Must be per-user
+  before real customers.
+- Verify every backup repo is private: checkpoint repos were created PUBLIC
+  until commit ac9a16c; any `gurost-checkpoint-*` repo made before then must be
+  switched to private by hand. (`createRepo` is still public by default for the
+  backend-deploy path; saves and checkpoints pass `{ private: true }`.)
 - Verify on a real phone: voice (iPhone Safari untested), the real AI replies,
   the .ics in a calendar app, a real admin login, `DEEPGRAM_API_KEY` on Render.
 
