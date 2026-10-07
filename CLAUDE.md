@@ -54,24 +54,22 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
    as base64 (one image ≈ 2.9M chars) and blow the model context. Fix:
    upload generated images to `project-assets`, reference by URL.
    Undo / Redo / History can't be verified until edits work.
-2. GitHub button: `@octokit/rest` is required in `server.js` but missing
-   from `package.json`.
-3. Design Mode: can't reach the sandboxed preview iframe (no
+2. Design Mode: can't reach the sandboxed preview iframe (no
    same-origin access) — needs a postMessage bridge like `code-boxes.js`.
-4. `/shared/:token` pages: helmet's default CSP (`script-src 'self'`)
+3. `/shared/:token` pages: helmet's default CSP (`script-src 'self'`)
    blocks inline scripts and the Tailwind CDN, so shared sites render
    unstyled. Don't just loosen CSP — shared HTML runs on the app origin;
    serve it sandboxed (opaque origin) with its own CSP.
-5. Free-plan project limit counts only in-memory projects (resets each
+4. Free-plan project limit counts only in-memory projects (resets each
    deploy) and there is no delete-project route, though the error tells
    users to delete one.
-6. Model output quality: designs sometimes use more `IMG_n` placeholders
+5. Model output quality: designs sometimes use more `IMG_n` placeholders
    than they list in `imageRequests` (left as broken images), omit the
    Tailwind CDN script, or contain literal `\n` text.
-7. gpt-oss-20b often spends its whole token budget reasoning and returns
+6. gpt-oss-20b often spends its whole token budget reasoning and returns
    no content — drop it from the free fallback list.
-8. Pulse Image panel stays on "Generating…" after an error.
-9. Variant "Corporate" brief hard-codes navy/slate; it competes with the
+7. Pulse Image panel stays on "Generating…" after an error.
+8. Variant "Corporate" brief hard-codes navy/slate; it competes with the
    industry palette.
 
 ## Later
@@ -98,6 +96,14 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
   with 10 languages). About a 2-3 day build; after the three builders are done.
 - Document reader (T3b), live streaming voice, OAuth for Gmail/Outlook/Calendar,
   a real CRM, Postmark email digest, Pulse voice announcements of suggestions.
+- Bot images: replace emojis with premium avatars (custom, premium icon pack,
+  or AI-generated via FLUX). 6-8 unique bot characters with a consistent style.
+  Do after the Website Builder is 100%.
+- Pulse avatar: replace the basic mic-in-circle with a distinctive, ownable
+  avatar (wave/pulse animation, glowing orb, stylised "C", or brain/mind icon).
+  Do alongside the bot images.
+- Kimi K2 as a background tool: note for future routing experiments. Do not
+  change current routing.
 
 ## Dev tools (Claude Code side — not callable from Gurost at runtime)
 - Playwright MCP: live testing. The Pulse ball animates, so open it with
