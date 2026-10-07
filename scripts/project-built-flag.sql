@@ -3,10 +3,10 @@
 -- limit counts only built projects (project-state.js isBuilt); new saves
 -- set the flag themselves - this fills it in for rows saved before.
 update project_state
-set context = coalesce(context, '{}'::jsonb) || jsonb_build_object('built',
+set context = coalesce(context, '{}'::jsonb) || jsonb_build_object('built', coalesce(
   coalesce(context->>'currentHtml', '') <> ''
   or (jsonb_typeof(context->'variants') = 'array' and jsonb_array_length(context->'variants') > 0)
   or (case jsonb_typeof(context->'appFiles')
         when 'array' then jsonb_array_length(context->'appFiles') > 0
         when 'object' then context->'appFiles' <> '{}'::jsonb
-        else false end));
+        else false end), false)); -- a missing key would otherwise make it null

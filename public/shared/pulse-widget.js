@@ -304,7 +304,10 @@
       setState('building');
       logStatus(`Building: "${text}"`, { feed: false });
       try {
-        await window.gurostBuilder.generate(text);
+        const started = await window.gurostBuilder.generate(text);
+        // A builder that reports { started: false, error } (the server refused:
+        // project limit, credit, a network error) failed - it isn't building.
+        if (started && started.started === false) throw new Error(started.error || "The build didn't start.");
         correctionHistory.push({ type: 'initial', text });
         // The Website Builder's generate() returns once the build has started; the
         // designs arrive later and the site exists only when one is picked

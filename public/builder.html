@@ -697,10 +697,13 @@ async function checkCreditWarningBeforeBuild() {
 
 // options.businessInfo: pass details (or null to skip) to build without
 // asking - otherwise the company details modal asks first.
+// Returns { started: true } once the server has accepted the build (the
+// designs then arrive over the WebSocket), or { started: false, error } -
+// so Pulse can say what really happened instead of "building…".
 async function generateWebsite(description, options = {}) {
   const trimmed = (description || '').trim();
-  if (!trimmed) return;
-  if (!GurostAPI.requireLogin()) return;
+  if (!trimmed) return { started: false, error: 'Describe what you want to build first.' };
+  if (!GurostAPI.requireLogin()) return { started: false, error: 'Please log in first.' };
 
   lastPromptTried = trimmed;
   hideCreditBanner();
@@ -734,10 +737,12 @@ async function generateWebsite(description, options = {}) {
     lastPartialHtml = null;
     PulseBuildBrain.start({ projectId, getFrame: currentLiveFrame, getHtml: () => lastPartialHtml });
     startCompletionPollFallback(projectId);
+    return { started: true };
   } catch (err) {
     logBot('Builder', err.message, 'fail');
     showCreditOrErrorBanner(err.message);
     setPreviewStatus(false);
+    return { started: false, error: err.message };
   }
 }
 
