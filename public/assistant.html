@@ -24,6 +24,9 @@
   .dept-copy { font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
   .dept-copy:hover { border-color: var(--orange); }
   .dept-copy:disabled { opacity: .5; cursor: default; }
+  .proactive-card { border: 1px solid var(--orange); background: #fff8ee; border-radius: 14px; padding: 12px 14px; transition: opacity .3s; }
+  .proactive-gone { opacity: 0; }
+  .proactive-bar { margin-top: 8px; }
   .dept-approval { border: 1px solid var(--orange); }
   .dept-approval-closed { opacity: .7; border-color: var(--line); }
   .dept-approval-bar { margin-top: 8px; }
@@ -55,6 +58,9 @@
     <h1 class="font-display font-bold text-3xl mb-3">Business Assistant</h1>
     <p class="text-[var(--muted)] max-w-lg mx-auto"><span data-brand-name></span>, working on one of your real projects. Hand it a task, ask for suggestions, or have it brief you every morning.</p>
   </div>
+
+  <!-- Suggestions: at most 2 a day, from how the assistant is used (never message text). Hidden when there are none. -->
+  <section id="proactiveCard" class="mb-6 grid gap-3" hidden></section>
 
   <!-- Company profile: who the business is (research and analysis build on this) -->
   <section id="companyProfile" class="mb-10 reveal border border-[var(--line)] rounded-2xl p-6">
@@ -211,6 +217,7 @@
 <script src="shared/voice-vad.js"></script>
 <script src="shared/voice-chat.js"></script>
 <script src="shared/approval-cards.js"></script>
+<script src="shared/proactive-card.js"></script>
 <script src="shared/department-bots.js"></script>
 <script src="shared/memory-panel.js"></script>
 <script>
