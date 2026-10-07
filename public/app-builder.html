@@ -64,7 +64,10 @@ Dashboard
      went wrong. This is the real, exact fix for that. -->
 <div class="builder-banner hidden px-4 py-3 text-sm bg-red-50 text-red-700 border border-red-200 rounded-lg flex items-center justify-between gap-3" id="appBuilderErrorBanner">
   <span id="appBuilderErrorText"></span>
-  <button class="text-xs font-semibold underline flex-shrink-0" id="appBuilderErrorDismiss">Dismiss</button>
+  <span class="flex items-center gap-3 flex-shrink-0">
+    <button class="hidden text-xs font-semibold px-3 py-1 rounded-full bg-red-600 text-white" id="appBuilderRetry" type="button">Retry</button>
+    <button class="text-xs font-semibold underline" id="appBuilderErrorDismiss">Dismiss</button>
+  </span>
 </div>
 
 <!-- Two clean screens - same real, proven pattern as Website Builder -->
@@ -294,7 +297,7 @@ function setPreviewStatus(active) {
   }
 }
 
-function showGenerateError(message) {
+function showGenerateError(message, opts) {
   // Real, critical fix - this used to be a real, honest stub that
   // only logged to the console, on the assumption Pulse would own
   // error display. It never did for this specific path - a genuine
@@ -305,12 +308,15 @@ function showGenerateError(message) {
   const banner = document.getElementById('appBuilderErrorBanner');
   const text = document.getElementById('appBuilderErrorText');
   if (banner && text) {
-    text.textContent = message;
+    text.textContent = window.GurostAI ? GurostAI.publicText(message) : message;
     banner.classList.remove('hidden');
+    // A failed build can be tried again with the same words and company details.
+    document.getElementById('appBuilderRetry')?.classList.toggle('hidden', !(opts && opts.retry && originalPrompt));
   }
 }
 function hideGenerateError() {
   document.getElementById('appBuilderErrorBanner')?.classList.add('hidden');
+  document.getElementById('appBuilderRetry')?.classList.add('hidden');
 }
 
 // ---------------- Code view ----------------
@@ -499,6 +505,7 @@ const STAGE_LABELS = {
 const STAGE_ORDER = ['schema', 'backend', 'frontend', 'reviewing', 'fixing', 'verifying', 'done'];
 let stageStatuses = {}; // stage -> 'pending' | 'running' | 'complete'
 let isPaused = false;
+let lastBusinessInfo = null; // the company details used for this build, reused by Retry
 let generationSocket = null;
 
 function resetStageChecklist() {
@@ -562,7 +569,7 @@ function connectGenerationSocket(id) {
     } else if (msg.type === 'error') {
       logBot('Builder', msg.error, 'fail', msg.at);
       if (stageFrames) { stageView.error = msg.error; renderStagePreview(); } // keep what was built, say why it stopped
-      showGenerateError(msg.error);
+      showGenerateError(msg.error, { retry: true });
       setGenerating(false);
     }
   });
@@ -659,7 +666,7 @@ async function fetchAndRenderCompletedProject() {
   }
 }
 
-async function generateApp(promptText) {
+async function generateApp(promptText, opts) {
   if (isGenerating) return;
   hideGenerateError();
 
@@ -682,7 +689,10 @@ async function generateApp(promptText) {
   loggedStages.clear();
   logBot('You', trimmed);
   // Same company details modal as the Website Builder (shared/bot-conversation.js).
-  const businessInfo = await askBusinessInfo(trimmed);
+  // A retry reuses the details already given instead of asking again.
+  const businessInfo = opts && 'businessInfo' in opts ? opts.businessInfo : await askBusinessInfo(trimmed);
+  lastBusinessInfo = businessInfo;
+  originalPrompt = trimmed;
   // A Dashboard hand-off is kept until the details are answered, so a
   // refresh while the modal is open asks again instead of losing the prompt.
   localStorage.removeItem('gurost_pending_generate');
@@ -709,7 +719,7 @@ async function generateApp(promptText) {
     showSkeleton(true);
     setStatus('error', 'Generation failed.', true);
     logBot('Builder', `Generation failed: ${err.message}`, 'fail');
-    showGenerateError(err.message);
+    showGenerateError(err.message, { retry: true });
     setGenerating(false);
   }
 }
@@ -717,10 +727,17 @@ async function generateApp(promptText) {
 async function loadExistingProject(id) {
   try {
     const project = await GurostAPI.call(`/api/project/${id}`);
-    if (project.type !== 'app' || !project.appFiles) return;
+    if (project.type !== 'app') return;
+    originalPrompt = project.prompt || '';
+    lastBusinessInfo = project.businessInfo || null;
+    const built = project.appFiles && project.appFiles.frontend && project.appFiles.frontend.length;
+    if (!built) {
+      // A build that stopped (or was cut off by an update) before the app existed: say why, offer Retry.
+      if (project.buildError) showGenerateError(project.buildError.error, { retry: true });
+      return;
+    }
     projectId = id;
     currentAppFiles = project.appFiles;
-    originalPrompt = project.prompt || '';
     setStatus('', '', false);
     renderLivePreview(currentAppFiles);
     renderCodeView(currentAppFiles);
@@ -737,6 +754,7 @@ async function loadExistingProject(id) {
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('appBuilderErrorDismiss')?.addEventListener('click', hideGenerateError);
+  document.getElementById('appBuilderRetry')?.addEventListener('click', () => generateApp(originalPrompt, { businessInfo: lastBusinessInfo }));
   if (!GurostAPI.requireLogin()) return;
 
   try {

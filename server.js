@@ -132,6 +132,7 @@ const { attachGuideBotSocket, broadcastProjectUpdate, presenceList: guideBotPres
 const { withProjectLock } = require("./lib/project-lock");
 
 const security = require("./security");
+const buildState = require("./lib/app-build-state");
 const auth = require("./auth");
 const userAuth = require("./user-auth");
 const { body, validationResult } = require("express-validator");
@@ -1402,6 +1403,7 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
   const project = newProject(prompt, req.user.id);
   project.type = "app";
   project.businessInfo = businessInfo; // same as the Website Builder: saved with the project from the start
+  buildState.beginBuild(project);
   PROJECTS.set(projectId, project);
   PENDING_CORRECTIONS.set(projectId, null);
   persistInBackground(projectId, project);
@@ -1445,6 +1447,8 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
           touchProgress();
           // Streamed chunks only feed the watchdog; a finished file is news.
           if (status === "progress" && !data) return;
+          // What each stage made is kept (and saved) as it lands, not only at the start.
+          if (buildState.recordStage(project, stage, status, data)) persistInBackground(projectId, project);
           broadcastProjectUpdate(projectId, { type: "stage_progress", stage, status, data: data || null });
         },
         getPendingCorrection: () => PENDING_CORRECTIONS.get(projectId),
@@ -1454,7 +1458,11 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
     ]).finally(() => clearTimeout(stallTimer));
 
     integrator.integrateApp(project, result);
+    persistInBackground(projectId, project); // the finished app, before the review starts
 
+    // The app is built and saved. A failure in the checks below must not throw it away: it is
+    // reported as "built, not fully checked" (see the catch around this block).
+    try {
     // Same real review/fix pass the non-staged /api/generate route
     // runs — reused exactly, not skipped. Broadcast as two more real
     // stages so the live-progress UI reflects what's actually
@@ -1516,8 +1524,17 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
       data: { verified: project.verified, honestNote: project.verified ? null : "The code was generated, but a real runtime check could not confirm it runs cleanly - review the code panel before relying on it." }
     });
 
+    } catch (checkErr) {
+      console.error(`[app-builder] Checks failed for project ${projectId}, keeping the built app:`, checkErr.message);
+      project.verified = false;
+      project.codeReview = project.codeReview || { initialIssueCount: 0, remainingIssues: [], hasCritical: false };
+      broadcastProjectUpdate(projectId, { type: "stage_progress", stage: "verifying", status: "complete", data: { verified: false, honestNote: "The app was built, but the final checks could not finish - review the code panel before relying on it." } });
+    }
+
     stageGate.clearGate(projectId);
     PENDING_CORRECTIONS.delete(projectId);
+    buildState.finishBuild(project);
+    persistInBackground(projectId, project);
     broadcastProjectUpdate(projectId, { type: "stage_progress", stage: "done", status: "complete", data: { appFiles: project.appFiles, codeReview: project.codeReview, verified: project.verified } });
   } catch (err) {
     // Real, deliberate fix - this used to only broadcast to the
@@ -1525,6 +1542,12 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
     // a real, live hang left zero trace in Render's own logs. Every
     // real failure now shows up here too, genuinely debuggable.
     console.error(`[app-builder] Real build failed for project ${projectId}:`, err.message);
+    // Reset, don't leave it "generating": release the stage lock and any waiting correction,
+    // mark the project finished-with-an-error (what was built is kept) and save that.
+    stageGate.clearGate(projectId);
+    PENDING_CORRECTIONS.delete(projectId);
+    buildState.failBuild(project, err);
+    persistInBackground(projectId, project);
     broadcastProjectUpdate(projectId, { type: "error", error: err.message });
   }
 });

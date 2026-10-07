@@ -34,6 +34,7 @@
  */
 
 const { supabase } = require("./lib/db");
+const { markInterrupted } = require("./lib/app-build-state");
 
 // Which real fields on a project object are worth persisting inside
 // the single `context` blob — kept as one named list so it's obvious
@@ -60,6 +61,7 @@ function toRow(projectId, userId, project) {
       // The user's company details - Pulse and later edits rely on them.
       businessInfo: project.businessInfo || null,
       premiumImageCost: project.premiumImageCost || 0, // FLUX Pro/Dev spend on the picked design (USD)
+      buildError: project.buildError || null, // App Builder: why a build stopped ({ error, at })
     },
     updated_at: new Date().toISOString(),
   };
@@ -74,7 +76,7 @@ function toRow(projectId, userId, project) {
 // project specifically.
 function fromRow(row) {
   const ctx = row.context || {};
-  return {
+  return markInterrupted({
     state: ctx.state,
     prompt: ctx.prompt,
     userId: row.user_id,
@@ -89,6 +91,7 @@ function fromRow(row) {
     deployUrl: ctx.deployUrl,
     businessInfo: ctx.businessInfo || null,
     premiumImageCost: ctx.premiumImageCost || 0,
+    buildError: ctx.buildError || null,
     assistantHistory: ctx.assistantHistory || [],
     pendingAssistantSuggestion: null,
     codeReview: null,
@@ -97,7 +100,7 @@ function fromRow(row) {
     buildStartedAt: new Date(row.updated_at).getTime(),
     lastCheckpointAt: null,
     hydratedFromPersistence: true, // real, honest marker — not a field newProject() sets, so callers can tell if they want to
-  };
+  });
 }
 
 /**
@@ -154,4 +157,4 @@ async function listPersistedProjects(userId, limit = 20) {
   }));
 }
 
-module.exports = { persistProjectState, hydrateProjectIfMissing, listPersistedProjects };
+module.exports = { toRow, fromRow, persistProjectState, hydrateProjectIfMissing, listPersistedProjects };
