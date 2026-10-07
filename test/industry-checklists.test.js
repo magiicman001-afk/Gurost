@@ -95,3 +95,13 @@ test("evidence is short plain text", () => {
   const ev = r.items.find((i) => i.id === "opening_hours").evidence;
   assert.ok(ev.length <= 80 && /opening hours/.test(ev));
 });
+
+test("prices are never invented: a marked placeholder counts, and the fixes ask for one", () => {
+  const r = runChecklist("restaurant", { text: "Our menu. Starters: soup of the day [Add your price]" });
+  assert.equal(status(r, "menu_with_prices"), "pass");
+  for (const [industry, id] of [["restaurant", "menu_with_prices"], ["bakery_cafe", "daily_menu"]]) {
+    const item = runChecklist(industry, { text: "" }).items.find((i) => i.id === id);
+    assert.match(item.fix, /\[Add your price\]/, id);
+    assert.match(item.fix, /never a made-up price/, id);
+  }
+});
