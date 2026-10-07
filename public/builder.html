@@ -369,8 +369,7 @@ async function upgradePickedImages() {
     if (result.upgraded?.length) {
       currentHtml = result.html;
       renderPreview(currentHtml, { keepScroll: true });
-      const parts = result.upgraded.map((u) => `${u.role} (${u.model})`).join(', ');
-      logBot('Designer', `Upgraded ${result.upgraded.length} image${result.upgraded.length === 1 ? '' : 's'}: ${parts} — $${result.cost.toFixed(3)}.`, 'ok');
+      logBot('Designer', `Polished ${result.upgraded.length} image${result.upgraded.length === 1 ? '' : 's'}, including the hero.`, 'ok');
     }
     if (result.failed) logBot('Designer', `${result.failed} image${result.failed === 1 ? '' : 's'} kept the stock photo (generation failed).`, 'info');
   } catch (err) {

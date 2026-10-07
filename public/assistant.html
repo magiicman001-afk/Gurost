@@ -24,6 +24,8 @@
   .dept-copy { font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
   .dept-copy:hover { border-color: var(--orange); }
   #deptLog { max-height: 420px; overflow-y: auto; margin-bottom: 12px; }
+  .dept-avatar { float: left; margin: 1px 8px 0 0; line-height: 0; }
+  .dept-bubble::after { content: ''; display: table; clear: both; }
 </style>
 </head>
 <body class="antialiased">
@@ -43,17 +45,15 @@
 
 <main class="max-w-3xl mx-auto px-6 py-16">
   <div class="text-center mb-12 reveal">
-    <div class="w-14 h-14 rounded-full gold-gradient mx-auto mb-5 flex items-center justify-center">
-      <span class="material-symbols-outlined text-white text-[26px]">smart_toy</span>
-    </div>
+    <div class="w-14 h-14 mx-auto mb-5 flex items-center justify-center" data-ai-avatar="56"></div>
     <h1 class="font-display font-bold text-3xl mb-3">Business Assistant</h1>
-    <p class="text-[var(--muted)] max-w-lg mx-auto">A dedicated AI assistant for one of your real projects — hand it a task, get real suggestions, or have it brief you every morning.</p>
+    <p class="text-[var(--muted)] max-w-lg mx-auto"><span data-brand-name></span>, working on one of your real projects. Hand it a task, ask for suggestions, or have it brief you every morning.</p>
   </div>
 
   <!-- Company profile: who the business is (research and analysis build on this) -->
   <section id="companyProfile" class="mb-10 reveal border border-[var(--line)] rounded-2xl p-6">
     <h2 class="font-display font-bold text-lg mb-1">Company profile</h2>
-    <p class="text-sm text-[var(--muted)] mb-4">Tell the assistant about your business once. It uses this to research your company and suggest what to improve.</p>
+    <p class="text-sm text-[var(--muted)] mb-4">Tell <span data-brand-name></span> about your business once. It uses this to research your company and suggest what to improve.</p>
     <div class="grid gap-3 sm:grid-cols-2">
       <label class="text-xs font-semibold">Company name<input id="cpName" class="field-input mt-1" maxlength="120" placeholder="e.g. Crumb &amp; Co" autocomplete="organization"></label>
       <label class="text-xs font-semibold">Website<input id="cpWebsite" class="field-input mt-1" maxlength="300" placeholder="www.yourbusiness.com" inputmode="url" autocapitalize="off" autocomplete="url"></label>
@@ -133,8 +133,8 @@
     <button id="assistantRunBtn" class="gold-gradient text-white text-sm font-semibold px-5 py-2.5 rounded-full">Run Task</button>
     <div id="assistantTaskResult" class="hidden mt-5">
       <div class="flex items-center gap-2 mb-3">
-        <span class="material-symbols-outlined text-[18px]" style="color: var(--orange);">smart_toy</span>
-        <span class="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Assistant's real answer</span>
+        <span class="flex items-center" data-ai-avatar="20"></span>
+        <span class="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]"><span data-brand-name></span>'s answer</span>
       </div>
       <div id="assistantTaskResultBody" class="rounded-xl bg-[#FFF8F0] border border-[#FDE4C4] p-5 text-sm leading-relaxed whitespace-pre-wrap"></div>
     </div>
@@ -190,6 +190,8 @@
 </main>
 
 <script src="shared/api-client.js"></script>
+<script src="shared/brand-config.js"></script>
+<script src="shared/ai-brand.js"></script>
 <script src="shared/pulse-voice.js"></script>
 <script src="shared/company-profile.js"></script>
 <script src="shared/company-findings.js"></script>
@@ -223,7 +225,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="text-center py-12 border border-[var(--line)] rounded-2xl">
           <span class="material-symbols-outlined text-[40px] mb-4" style="color: var(--orange);">lock</span>
           <h2 class="font-display font-bold text-2xl mb-3">The project assistant is included with Max and Custom</h2>
-          <p class="text-[var(--muted)] mb-6">Upgrade your plan to unlock a dedicated AI assistant for your business.</p>
+          <p class="text-[var(--muted)] mb-6">Upgrade your plan to have <span data-brand-name></span> work as a dedicated assistant for your business.</p>
           <a href="pricing.html" class="gold-gradient text-white font-semibold px-8 py-4 rounded-full inline-block">View Plans</a>
         </div>
       `;
@@ -274,6 +276,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const resultBody = document.getElementById('assistantTaskResultBody');
     btn.disabled = true;
     btn.textContent = 'Working…';
+    resultBody.textContent = GurostAI.STATUS.analyzing;
+    resultBody.className = 'rounded-xl bg-[#FFF8F0] border border-[#FDE4C4] p-5 text-sm leading-relaxed whitespace-pre-wrap';
+    resultEl.classList.remove('hidden');
     try {
       const result = await GurostAPI.call('/api/assistant', { method: 'POST', body: { projectId, task } });
       const agentsLine = result.agentsUsed && result.agentsUsed.length ? `[${result.agentsUsed.join(' + ')}]\n\n` : '';
@@ -281,7 +286,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       resultBody.className = 'rounded-xl bg-[#FFF8F0] border border-[#FDE4C4] p-5 text-sm leading-relaxed whitespace-pre-wrap';
       resultEl.classList.remove('hidden');
     } catch (err) {
-      resultBody.textContent = err.message;
+      resultBody.textContent = GurostAI.publicText(err.message);
       resultBody.className = 'rounded-xl bg-red-50 border border-red-200 text-red-700 p-5 text-sm leading-relaxed whitespace-pre-wrap';
       resultEl.classList.remove('hidden');
     } finally {
@@ -294,7 +299,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const projectId = select.value;
     if (!projectId) return;
     const listEl = document.getElementById('assistantSuggestionsList');
-    listEl.innerHTML = '<p class="text-sm text-[var(--muted)]">Loading…</p>';
+    listEl.innerHTML = `<p class="text-sm text-[var(--muted)]">${GurostAI.STATUS.thinking}</p>`;
     try {
       const { suggestions } = await GurostAPI.call('/api/assistant/suggest', { method: 'POST', body: { projectId } });
       if (!suggestions || !suggestions.length) {
@@ -304,11 +309,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       listEl.innerHTML = suggestions.map((s) => `
         <div class="flex items-start gap-3 border border-[var(--line)] rounded-xl px-4 py-3 text-sm">
           <span class="material-symbols-outlined text-[18px] mt-0.5 flex-shrink-0" style="color: var(--orange);">lightbulb</span>
-          <span>${typeof s === 'string' ? s : (s.message || JSON.stringify(s))}</span>
+          <span>${GurostAPI.escapeHtml(typeof s === 'string' ? s : (s.message || JSON.stringify(s)))}</span>
         </div>
       `).join('');
     } catch (err) {
-      listEl.innerHTML = `<p class="text-sm text-red-600">${err.message}</p>`;
+      listEl.innerHTML = `<p class="text-sm text-red-600">${GurostAPI.escapeHtml(GurostAI.publicText(err.message))}</p>`;
     }
   });
 
@@ -343,7 +348,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       resultEl.classList.remove('hidden');
     } catch (err) {
       resultLabel.textContent = 'Error';
-      resultBody.innerHTML = `<p class="text-red-700">${err.message}</p>`;
+      resultBody.innerHTML = `<p class="text-red-700">${GurostAPI.escapeHtml(GurostAI.publicText(err.message))}</p>`;
       resultEl.classList.remove('hidden');
     } finally {
       btn.disabled = false;
@@ -366,7 +371,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       statusEl.className = 'text-xs text-green-600 mt-3';
       statusEl.classList.remove('hidden');
     } catch (err) {
-      statusEl.textContent = err.message;
+      statusEl.textContent = GurostAI.publicText(err.message);
       statusEl.className = 'text-xs text-red-600 mt-3';
       statusEl.classList.remove('hidden');
     }
@@ -380,7 +385,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       statusEl.className = 'text-xs text-[var(--muted)] mt-3';
       statusEl.classList.remove('hidden');
     } catch (err) {
-      statusEl.textContent = err.message;
+      statusEl.textContent = GurostAI.publicText(err.message);
       statusEl.className = 'text-xs text-red-600 mt-3';
       statusEl.classList.remove('hidden');
     }

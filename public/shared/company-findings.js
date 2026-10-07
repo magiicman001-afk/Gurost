@@ -52,7 +52,7 @@
       return;
     }
     if (f.action.kind === 'social_draft') {
-      btn.disabled = true; status.textContent = 'Writing...'; out.textContent = '';
+      btn.disabled = true; status.textContent = (window.GurostAI ? GurostAI.STATUS.thinking : 'Writing…'); out.textContent = '';
       try {
         var r = await GurostAPI.call('/api/company-profile/findings/' + encodeURIComponent(f.id) + '/social-draft', { method: 'POST', body: {} });
         status.textContent = r.note || '';
@@ -60,7 +60,7 @@
         var copy = el('button', 'dept-copy', 'Copy post'); copy.type = 'button';
         copy.addEventListener('click', function () { copyText(r.draft, copy); });
         out.appendChild(box); out.appendChild(copy);
-      } catch (err) { status.style.color = '#b91c1c'; status.textContent = err.message; }
+      } catch (err) { status.style.color = '#b91c1c'; status.textContent = window.GurostAI ? GurostAI.publicText(err.message) : err.message; }
       btn.disabled = false;
     }
   }

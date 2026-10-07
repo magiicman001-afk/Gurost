@@ -37,13 +37,14 @@
 
   function showChat(bot) {
     $('deptCal').hidden = true; $('deptChat').hidden = false;
-    $('deptChatTitle').textContent = ((bot.calibration && bot.calibration.botName) || bot.label + ' Assistant');
+    $('deptChatTitle').textContent = ((bot.calibration && bot.calibration.botName) || bot.label + ' · ' + (window.GurostAI ? GurostAI.NAME : 'Assistant'));
     history = []; $('deptLog').textContent = '';
     bubble('bot', bot.summary + ' Paste an email or ask a question and I will draft the reply.');
   }
 
   function bubble(who, text, draft) {
     var b = el('div', 'dept-bubble dept-' + who);
+    if (who === 'bot' && window.GurostAI) { var av = el('span', 'dept-avatar'); av.innerHTML = GurostAI.avatar(20); av.title = GurostAI.NAME; b.appendChild(av); } // static markup, no user text
     if (text) b.appendChild(el('p', null, text));
     if (draft) {
       var box = el('pre', 'dept-draft', draft);
@@ -92,13 +93,13 @@
     if (!text) return;
     busy = true; $('deptSend').disabled = true; input.value = '';
     bubble('you', text);
-    var thinking = el('div', 'dept-bubble dept-bot', 'Thinking...'); $('deptLog').appendChild(thinking);
+    var thinking = el('div', 'dept-bubble dept-bot', (window.GurostAI ? GurostAI.STATUS.thinking : 'Thinking…')); $('deptLog').appendChild(thinking);
     try {
       var r = await GurostAPI.call('/api/department-bots/' + current.id + '/chat', { method: 'POST', body: { message: text, history: history } });
       thinking.remove();
       history.push({ role: 'user', content: text }, { role: 'assistant', content: (r.reply ? r.reply + '\n\n' : '') + (r.draft ? '--- DRAFT ---\n' + r.draft + '\n--- END DRAFT ---' : '') });
       bubble('bot', r.reply, r.draft);
-    } catch (err) { thinking.remove(); bubble('bot', "I couldn't answer that: " + err.message); }
+    } catch (err) { thinking.remove(); bubble('bot', "I couldn't answer that: " + (window.GurostAI ? GurostAI.publicText(err.message) : err.message)); }
     busy = false; $('deptSend').disabled = false;
   }
   $('deptSend').addEventListener('click', send);
