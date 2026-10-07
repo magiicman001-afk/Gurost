@@ -675,6 +675,19 @@ app.get("/api/admin/api-usage", requireAdminAuth, async (req, res) => {
   }
 });
 
+// GET /api/admin/audit - the Business Assistant audit trail, newest first.
+// Admin only. Optional filters: user, bot, event, limit (max 200), before (ISO time).
+app.get("/api/admin/audit", requireAdminAuth, async (req, res) => {
+  try {
+    const q = (k) => (typeof req.query[k] === "string" ? req.query[k].slice(0, 80) : undefined);
+    const rows = await require("./lib/audit").list(supabase, { userId: q("user"), botType: q("bot"), event: q("event"), limit: q("limit"), before: q("before") });
+    res.json({ entries: rows });
+  } catch (err) {
+    console.error("[audit] list failed:", err.message);
+    res.status(500).json({ error: "Could not load the audit trail." });
+  }
+});
+
 // GET /api/admin/system-health — real, honest data: request error
 // rates from request_timings (already logging every real request),
 // plus this real process's own uptime. Not a substitute for real
@@ -1941,6 +1954,12 @@ const botMemory = require("./lib/bot-memory");
 const memoryExtract = require("./lib/memory-extract");
 const modelRouter = require("./lib/model-router");
 const toolLoop = require("./lib/tools/loop");
+const auditLog = require("./lib/audit");
+// Every tool call is written to the audit trail (best effort; never blocks the call).
+require("./lib/tools").setAuditSink((ev) => auditLog.record(require("./lib/db").supabase, {
+  event: ev.event, userId: ev.userId, botType: ev.botType, ip: ev.ip, tool: ev.tool, ok: ev.ok,
+  input: ev.args, output: ev.ok ? ev.result : ev.error
+}));
 const botPrefsTable = () => require("./lib/db").supabase.from("user_bot_preferences");
 const requireBotId = (req, res) => {
   if (deptBots.BOT_IDS.includes(req.params.bot)) return true;
@@ -2003,7 +2022,9 @@ app.get("/api/memory", async (req, res) => {
 app.put("/api/memory/settings", security.rejectUnknownFields(["paused"]), async (req, res) => {
   if (typeof req.body.paused !== "boolean") return res.status(400).json({ error: "paused must be true or false." });
   try {
-    res.json({ paused: await botMemory.setPaused(require("./lib/db").supabase, req.user.id, req.body.paused) });
+    const paused = await botMemory.setPaused(require("./lib/db").supabase, req.user.id, req.body.paused);
+    auditLog.record(require("./lib/db").supabase, { event: "memory", userId: req.user.id, ip: req.ip, tool: "memory_pause", ok: true, output: paused ? "memory switched off" : "memory switched on" });
+    res.json({ paused });
   } catch (err) {
     console.error("[memory] setting failed:", err.message);
     res.status(500).json({ error: "Could not change that setting. Please try again." });
@@ -2015,6 +2036,7 @@ app.delete("/api/memory", async (req, res) => {
     const db = require("./lib/db").supabase;
     await botMemory.forgetAll(db, req.user.id);
     await botMemory.clearHistory(db, req.user.id);
+    auditLog.record(db, { event: "memory", userId: req.user.id, ip: req.ip, tool: "memory_forget_all", ok: true, output: "all notes and saved chats forgotten" });
     res.json({ ok: true });
   } catch (err) {
     console.error("[memory] forget all failed:", err.message);
@@ -2025,6 +2047,7 @@ app.delete("/api/memory", async (req, res) => {
 app.delete("/api/memory/:key", async (req, res) => {
   try {
     await botMemory.forgetItem(require("./lib/db").supabase, req.user.id, String(req.params.key).slice(0, 60));
+    auditLog.record(require("./lib/db").supabase, { event: "memory", userId: req.user.id, ip: req.ip, tool: "memory_forget_one", ok: true, output: "1 note forgotten" });
     res.json({ ok: true });
   } catch (err) {
     console.error("[memory] forget failed:", err.message);
@@ -2063,7 +2086,7 @@ const runDepartmentChat = (req, message, history) => {
   const chat = require("./lib/department-chat").createDepartmentChat({
     db: require("./lib/db").supabase,
     botPrefs: () => botPrefsTable().select("tone, signature, profile").eq("user_id", req.user.id).eq("bot_type", req.params.bot).maybeSingle(),
-    deptBots, botMemory, modelRouter, toolLoop, memoryExtract, claudeClient, freeModel: modelForTier("free"), approvals: require("./lib/approvals")
+    deptBots, botMemory, modelRouter, toolLoop, memoryExtract, claudeClient, freeModel: modelForTier("free"), approvals: require("./lib/approvals"), audit: auditLog
   });
   return chat.run({ userId: req.user.id, plan: req.user.plan, ip: req.ip, botId: req.params.bot, message, history });
 };
@@ -2104,8 +2127,9 @@ app.post("/api/approvals/:id/approve", security.rejectUnknownFields(["args"]), a
   try {
     const out = await approvalsLib.approve(require("./lib/db").supabase, req.user.id, req.params.id, {
       editedArgs: req.body.args,
-      run: (name, args) => toolsRegistry.runTool(name, args, { userId: req.user.id, db: require("./lib/db").supabase, approved: true })
+      run: (name, args, row) => toolsRegistry.runTool(name, args, { userId: req.user.id, db: require("./lib/db").supabase, approved: true, botType: row && row.bot_type, ip: req.ip })
     });
+    if (out.meta) auditLog.record(require("./lib/db").supabase, { event: "approval", userId: req.user.id, botType: out.meta.botType, ip: req.ip, tool: out.meta.tool, ok: out.status === 200, approved: true, input: out.args, output: out.status === 200 ? "approved and done" : out.body.error });
     res.status(out.status).json(out.body);
   } catch (err) {
     console.error("[approvals] approve failed:", err.message);
@@ -2117,6 +2141,7 @@ app.post("/api/approvals/:id/cancel", async (req, res) => {
   if (!isUuid(req.params.id)) return res.status(400).json({ error: "Bad request." });
   try {
     const out = await approvalsLib.cancel(require("./lib/db").supabase, req.user.id, req.params.id);
+    if (out.meta && out.status === 200) auditLog.record(require("./lib/db").supabase, { event: "approval", userId: req.user.id, botType: out.meta.botType, ip: req.ip, tool: out.meta.tool, ok: true, approved: false, output: "cancelled by the user" });
     res.status(out.status).json(out.body);
   } catch (err) {
     console.error("[approvals] cancel failed:", err.message);
