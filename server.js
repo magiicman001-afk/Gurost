@@ -39,7 +39,7 @@ const creditSystem = require("./credit-system");
 const complexityDetector = require("./complexity-detector");
 const apiKeyDetector = require("./api-key-detector");
 const apiKeyVault = require("./api-key-vault");
-const { packageProject } = require("./wrapper");
+const { packageProject, siteFiles } = require("./wrapper");
 
 const webBot = require("./bots/web-bot");
 const variantBot = require("./bots/variant-bot");
@@ -2473,7 +2473,7 @@ app.post("/api/deploy", security.rejectUnknownFields(["projectId"]), async (req,
 
     // website mode
     if (!project.currentHtml) return res.status(400).json({ error: "Nothing to deploy yet." });
-    const deployUrl = await deployToVercel(project.currentHtml, projectId);
+    const deployUrl = await deployToVercel(siteFiles(project).files, projectId);
     project.deployUrl = deployUrl;
     transition(project, "DONE");
     notifyDeploySuccess(req.user.id, deployUrl);
@@ -2669,7 +2669,7 @@ app.post("/api/deploy/one-click", security.rejectUnknownFields(["projectId"]), a
     // website mode — no generated code to review, straight to deploy
     if (!project.currentHtml) return res.status(400).json({ error: "Nothing to deploy yet." });
     transition(project, "DEPLOYING");
-    const deployUrl = await deployToVercel(project.currentHtml, projectId);
+    const deployUrl = await deployToVercel(siteFiles(project).files, projectId);
     project.deployUrl = deployUrl;
     transition(project, "DONE");
     notifyDeploySuccess(req.user.id, deployUrl);
@@ -4561,15 +4561,20 @@ app.post("/api/project/:id/github", security.rejectUnknownFields(["repoName"]), 
   if (!project) return;
   const repoName = (req.body.repoName || `gurost-${req.params.id.slice(0, 8)}`).replace(/[^a-zA-Z0-9-_]/g, "-");
 
+  // A website goes up as its real pages, styles, script and images (the same
+  // files as the download); decided before the repository is created, so
+  // an empty project doesn't leave an empty repo behind.
+  if (project.type !== "app" && !project.currentHtml) return res.status(400).json({ error: "Nothing to push yet." });
+
   try {
     const { Octokit } = require("@octokit/rest");
     const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-    const { data: repo } = await octokit.repos.createForAuthenticatedUser({ name: repoName, private: true, auto_init: true });
-
     const files = project.type === "app"
       ? [...(project.appFiles?.backend || []), ...(project.appFiles?.frontend || [])]
-      : [{ path: "index.html", content: project.currentHtml || "" }];
+      : siteFiles(project).files;
+
+    const { data: repo } = await octokit.repos.createForAuthenticatedUser({ name: repoName, private: true, auto_init: true });
 
     for (const file of files) {
       await octokit.repos.createOrUpdateFileContents({

@@ -8,7 +8,7 @@
  *   website: project.currentHtml (one HTML document)
  *   app:     project.appFiles = { frontend: [{path, content}], backend: [{path, content}],
  *            database: { engine, schema, rationale } }
- * entriesFor(project) turns either into the files of the zip; packageProject
+ * entriesFor(project) turns either into the files of the zip (a website via siteFiles, which also feeds deploy and GitHub); packageProject
  * streams them out. Kept apart so the file list can be checked without a zip.
  */
 
@@ -16,6 +16,7 @@ const crypto = require("crypto");
 const archiver = require("archiver");
 const { detectRequiredKeys } = require("./api-key-detector");
 const { buildPreviewDocument } = require("./public/shared/app-preview-doc");
+const { buildSite } = require("./lib/site-pages");
 
 // A path from model output, made safe for a zip: forward slashes, no leading
 // slash, no "." or ".." parts (a zip with "../x" can write outside the folder
@@ -51,7 +52,10 @@ function extractImages(html) {
   return { html: out, images };
 }
 
-function siteReadme(name, imageCount, formEndpoint) {
+function siteReadme(name, { pages = [], multi = false, imageCount = 0, formEndpoint = false } = {}) {
+  const pageLines = multi
+    ? pages.map((p) => `- \`${p.file}\` - ${p.label}.\n`).join("") + "- `styles.css` and `script.js` - the styling and behaviour every page shares.\n"
+    : "- `index.html` - the whole site.\n";
   return `# ${name}
 
 A website made with Gurost.
@@ -59,12 +63,11 @@ A website made with Gurost.
 ## How to open it
 
 1. Unzip this folder.
-2. Double-click \`index.html\`. It opens in your browser; nothing to install.
+2. Double-click \`index.html\`. It opens in your browser; nothing to install.${multi ? " The pages link to each other, so keep all the files together in the one folder." : ""}
 
 ## What's inside
 
-- \`index.html\` - the whole site.
-${imageCount ? `- \`images/\` - the ${imageCount} image${imageCount === 1 ? "" : "s"} used on the site.\n` : ""}- \`.env.example\` - not needed for a website.
+${pageLines}${imageCount ? `- \`images/\` - the ${imageCount} image${imageCount === 1 ? "" : "s"} used on the site.\n` : ""}- \`.env.example\` - not needed for a website.
 
 ## Good to know
 
@@ -75,6 +78,30 @@ ${formEndpoint ? "- The contact and order forms send their messages to your Guro
 
 Upload the folder to any static host (Netlify, Vercel, GitHub Pages, or your own web hosting). No server is needed.
 `;
+}
+
+/**
+ * The files of a website, in one place: used by the zip, the Vercel deploy and
+ * the GitHub push, so they can never disagree. Images are pulled out of the
+ * page first (real binary files in images/), then the page is split into its
+ * pages plus shared styles.css and script.js. A design that can't be split
+ * stays one index.html. Contents are strings, images are Buffers.
+ * Throws when there is nothing built.
+ */
+function siteFiles(project) {
+  const html = project && project.currentHtml;
+  if (!html) throw new Error("This project has nothing built yet to wrap.");
+  const { html: lean, images } = extractImages(html);
+  const site = buildSite(lean, { businessInfo: project.businessInfo || null });
+  const files = site.files.map((f) => ({ path: f.path, content: f.content }));
+  for (const img of images) files.push({ path: img.name, content: img.content });
+  return {
+    files,
+    multi: site.multi,
+    pages: site.multi ? site.pages : [{ file: "index.html", label: "Home" }],
+    imageCount: images.length,
+    formEndpoint: /\/api\/site-forms\//.test(lean)
+  };
 }
 
 function appReadme(name, { requiredKeyNames, backendStart, hasBackend, hasSchema, engine }) {
@@ -154,10 +181,9 @@ function entriesFor(project) {
       engine: project.appFiles.database?.engine
     });
   } else if (project.currentHtml) {
-    const { html, images } = extractImages(project.currentHtml);
-    add("index.html", html);
-    for (const img of images) add(img.name, img.content);
-    readme = siteReadme(projectName, images.length, /\/api\/site-forms\//.test(html));
+    const site = siteFiles(project);
+    for (const f of site.files) add(f.path, f.content);
+    readme = siteReadme(projectName, site);
   } else {
     throw new Error("This project has nothing built yet to wrap.");
   }
@@ -190,4 +216,4 @@ async function packageProject(project, outputStream) {
   return donePromise;
 }
 
-module.exports = { packageProject, entriesFor, extractImages, safePath };
+module.exports = { packageProject, entriesFor, extractImages, safePath, siteFiles };
