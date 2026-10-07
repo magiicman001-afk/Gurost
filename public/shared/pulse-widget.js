@@ -250,7 +250,7 @@
     if (!gb.hasActiveProject?.()) { ghArmed = false; return; }
     if (!ghArmed) { ghArmed = true; ghNextCheckAt = Date.now() + GH_EVERY; return; }
     if (Date.now() < ghNextCheckAt) return;
-    if (currentState === 'building' || currentState === 'correcting' || currentState === 'recording') return; // try again next minute
+    if (currentState === 'building' || currentState === 'correcting' || activeRecording) return; // try again next minute
     ghNextCheckAt = Date.now() + GH_EVERY;
     try {
       const projectId = gb.getProjectId?.();
@@ -266,19 +266,22 @@
   async function handleGithubCommand(cmd) {
     const hasProject = window.gurostBuilder?.hasActiveProject?.();
     logStatus(`Command: "${cmd === 'save' ? 'save this' : cmd === 'auto-on' ? 'turn on auto-save' : 'turn off auto-save'}"`, { feed: false });
-    if (cmd === 'save') await runAction('github', () => runGithubSave());
-    else if (cmd === 'auto-on') await runAction('github', async () => { await setGithubAutoSave(true); await runGithubSave(); });
-    else await runAction('github', () => setGithubAutoSave(false));
+    let saved = null;
+    let ok;
+    if (cmd === 'save') ok = await runAction('github', async () => { saved = await runGithubSave(); });
+    else if (cmd === 'auto-on') ok = await runAction('github', async () => { await setGithubAutoSave(true); saved = await runGithubSave(); });
+    else ok = await runAction('github', () => setGithubAutoSave(false));
     setState(hasProject ? 'done' : 'idle');
+    return { ok, kind: 'github', cmd, unchanged: !!(saved && saved.unchanged) };
   }
 
   // For tests and for checking the nudge by hand: look now instead of waiting 30 minutes.
   window.GurostPulseGithub = { parseCommand: parseGithubCommand, checkNow() { ghArmed = true; ghNextCheckAt = 0; return githubTick(); } };
 
   async function sendCorrection(text) {
-    if (!text || !window.gurostBuilder) return;
+    if (!text || !window.gurostBuilder) return null;
     const githubCmd = parseGithubCommand(text);
-    if (githubCmd) { handleGithubCommand(githubCmd); return; }
+    if (githubCmd) return handleGithubCommand(githubCmd);
     const hasProject = window.gurostBuilder.hasActiveProject?.();
 
     if (!hasProject) {
@@ -289,7 +292,7 @@
       // exist, tell the person plainly what to do instead.
       if (typeof window.gurostBuilder.generate !== 'function') {
         logStatus("Enter a URL or upload a file above to get started first.");
-        return;
+        return { ok: false, kind: 'noproject' };
       }
       setState('building');
       logStatus(`Building: "${text}"`, { feed: false });
@@ -301,11 +304,12 @@
         logStatus(doneStatus, { feed: false });
         setTimeout(checkForRealSuggestion, 500);
         refreshUndoRedoState();
+        return { ok: true, kind: 'build' };
       } catch (err) {
         logStatus('Failed: ' + safeErr(err.message), { feed: false });
         setState('idle');
+        return { ok: false, kind: 'build', error: safeErr(err.message) };
       }
-      return;
     }
 
     setState('correcting');
@@ -323,11 +327,116 @@
       logStatus(doneStatus, { feed: false });
       setTimeout(checkForRealSuggestion, 500);
       refreshUndoRedoState();
+      return { ok: true, kind: 'edit' };
     } catch (err) {
       logStatus('Failed: ' + safeErr(err.message), { feed: false });
       setState('idle');
+      return { ok: false, kind: 'edit', error: safeErr(err.message) };
     }
   }
+
+  // ---- Hands-free voice (see shared/pulse-handsfree.js) -------------------------------------------------
+  // Press Voice, then just talk: listen -> do it as a normal edit -> say a short answer -> listen again.
+  // The scripts load on the first press, so pages that never use voice never pay for them.
+  let handsFree = null;
+  let voiceLoading = false;
+  const SCRIPT_BASE = ((document.currentScript && document.currentScript.src) || '').replace(/[^/]*$/, '') || 'shared/';
+  const VOICE_TEXT = { listening: 'Listening… speak when you are ready.', thinking: 'Thinking…', speaking: 'Speaking. Talk any time to interrupt.' };
+
+  function loadScript(name) {
+    return new Promise((resolve, reject) => {
+      const el = document.createElement('script');
+      el.src = SCRIPT_BASE + name;
+      el.onload = resolve;
+      el.onerror = () => reject(new Error('Could not load ' + name));
+      document.head.appendChild(el);
+    });
+  }
+
+  function setVoiceLine(text) {
+    const line = document.getElementById('pulseVoiceStatus');
+    if (!line) return;
+    line.textContent = text || '';
+    line.style.display = text ? 'block' : 'none';
+  }
+
+  function setVoiceButton(on) {
+    const btn = document.getElementById('pulseVoiceButton');
+    if (!btn) return;
+    btn.textContent = on ? 'Stop voice' : 'Voice';
+    btn.classList.toggle('listening', !!on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+
+  function stopHandsFree() {
+    if (handsFree) handsFree.stop();
+  }
+
+  async function toggleHandsFree() {
+    if (handsFree && handsFree.active) { stopHandsFree(); return; }
+    if (voiceLoading) return;
+    voiceLoading = true;
+    try {
+      if (!window.GurostVad) await loadScript('voice-vad.js');
+      if (!window.GurostVoice) await loadScript('voice-chat.js');
+      if (!window.GurostPulseHandsFree) await loadScript('pulse-handsfree.js');
+    } catch (err) {
+      setVoiceLine('Voice could not load. You can type instead.');
+      voiceLoading = false;
+      return;
+    }
+    try {
+      if (!window.GurostVoice.browserSupported()) { setVoiceLine('Voice is not available in this browser. You can type instead.'); return; }
+      const st = await window.GurostAPI.call('/api/voice/status');
+      if (!st || !st.available) { setVoiceLine('Voice is not set up yet. You can type instead.'); return; }
+      const HF = window.GurostPulseHandsFree;
+      handsFree = HF.createHandsFree({
+        voice: window.GurostVoice,
+        lines: AI ? { retry: AI.VOICE.retry } : null,
+        transcribe: async (blob) => {
+          const res = await fetch(`${window.GurostAPI.API_BASE || ''}/api/voice/transcribe`, {
+            method: 'POST',
+            headers: { 'Content-Type': blob.type || 'audio/webm', ...window.GurostAPI.authHeaders() },
+            body: blob
+          });
+          if (!res.ok) throw new Error('I could not hear that. Please try again.');
+          return (await res.json()).transcript || '';
+        },
+        speak: async (text) => {
+          const res = await fetch(`${window.GurostAPI.API_BASE || ''}/api/voice/speak`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...window.GurostAPI.authHeaders() },
+            body: JSON.stringify({ text })
+          });
+          if (!res.ok) throw new Error('speech failed');
+          return HF.blobToBase64(await res.blob());
+        },
+        // One thing at a time: a voice request that arrives mid-edit is not stacked on top of it.
+        run: (text) => (currentState === 'building' || currentState === 'correcting' ? Promise.resolve({ ok: false, kind: 'busy' }) : sendCorrection(text)),
+        ui: {
+          onStatus: (state) => {
+            setVoiceLine(VOICE_TEXT[state] || '');
+            setVoiceButton(state !== 'off');
+            if (state === 'listening' && (currentState === 'idle' || currentState === 'done')) setState('recording'); // red ball: the microphone is on
+            if (state === 'off' && currentState === 'recording') setState('idle');
+          },
+          onHeard: (text) => logStatus(`You said: "${text}"`, { feed: false }),
+          onError: (message) => logStatus(safeErr(message || 'Voice hit a problem.'))
+        }
+      });
+      togglePanel(true);
+      await handsFree.start();
+    } catch (err) {
+      handsFree = null;
+      setVoiceButton(false);
+      setVoiceLine(err && err.name === 'NotAllowedError' ? 'Microphone access was blocked. Allow it in your browser, or type instead.' : 'I could not start the microphone. You can type instead.');
+    } finally {
+      voiceLoading = false;
+    }
+  }
+
+  // For tests and for checking by hand.
+  window.GurostPulseVoice = { toggle: toggleHandsFree, stop: stopHandsFree, get active() { return !!(handsFree && handsFree.active); } };
 
   function togglePanel(forceState) {
     const panel = document.getElementById('pulsePanel');
@@ -380,6 +489,7 @@
             <span class="material-symbols-outlined">lightbulb</span>
             <div id="pulseSuggestionList"></div>
           </div>
+          <div id="pulseVoiceStatus" style="display:none;margin:6px 0;font-size:12px;color:#6B6B7B;"></div>
           <div id="pulseGithubNudge" style="display:none;margin:8px 0;padding:10px;border:1px solid #E9E9EF;border-radius:12px;"></div>
           <div id="pulseInputArea">
             <textarea id="pulseTextArea" placeholder="Type your idea or a correction…"></textarea>
@@ -387,6 +497,7 @@
               <button id="pulseMicButton" aria-label="Hold to talk">
                 <span class="material-symbols-outlined">mic</span>
               </button>
+              <button id="pulseVoiceButton" type="button" aria-label="Hands-free voice" aria-pressed="false" style="font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;cursor:pointer;background:#fff;border:1px solid #E9E9EF;">Voice</button>
               <button id="pulseSendButton">Send</button>
             </div>
             <div id="pulsePauseResumeRow">
@@ -454,6 +565,7 @@
       isHolding = false;
       holdTimer = setTimeout(() => {
         isHolding = true;
+        stopHandsFree(); // one microphone user at a time
         // Real fix for a genuine, confirmed race condition: getUserMedia
         // can take a real, unpredictable moment (a permission prompt,
         // slow hardware init). Store the real, in-flight PROMISE itself,
@@ -621,7 +733,9 @@
 
     // Real hold-to-talk, same tested recording session used all night
     const micBtn = document.getElementById('pulseMicButton');
+    document.getElementById('pulseVoiceButton').addEventListener('click', toggleHandsFree);
     micBtn.addEventListener('mousedown', async () => {
+      stopHandsFree();
       try {
         activeRecording = await startRecordingSession();
         setState('recording');
@@ -1070,8 +1184,10 @@
     if (ACTION_START[name]) window.gurostBuilder?.logActivity?.(ACTION_START[name], 'work');
     try {
       await fn();
+      return true;
     } catch (err) {
       logStatus(`${name} failed: ${safeErr(err.message)}`);
+      return false;
     } finally {
       if (btn) btn.disabled = false;
     }
