@@ -48,7 +48,7 @@ async function saveCheckpoint(userId, projectId, files, buildMinutes) {
   } else {
     repoOwner = await getAuthenticatedUser();
     repoName = `gurost-checkpoint-${projectId.slice(0, 8)}`;
-    await createRepo(repoName);
+    await createRepo(repoName, { private: true }); // a customer's own work: never public
   }
 
   const commitSha = await commitFiles(repoOwner, repoName, files);
