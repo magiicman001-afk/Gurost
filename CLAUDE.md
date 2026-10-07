@@ -80,6 +80,25 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
   tier. Parked.
 - Amend Website could offer the industry palette as an optional audit fix.
 
+## Before launch (must do — none of this is built yet)
+- Privacy policy: add a line about audit rows (user id + IP address kept in
+  `business_assistant_audit`). The "Suggestions" paragraph is already in
+  section 11 (T7b); the audit-rows line is NOT yet in the policy.
+- "Delete my account data" route (GDPR erasure) must clear every user row:
+  `user_bot_conversations`, `user_bot_memory`, `user_memory_settings`,
+  `business_assistant_audit`, `proactive_suggestions`,
+  `assistant_pending_actions`, plus projects and all other user data.
+- A qualified adviser must review the privacy policy (IP addresses count as
+  personal data).
+- Verify on a real phone: voice (iPhone Safari untested), the real AI replies,
+  the .ics in a calendar app, a real admin login, `DEEPGRAM_API_KEY` on Render.
+
+## Parked (do NOT build yet)
+- Multi-language support (language picker, translated UI + Core messages, start
+  with 10 languages). About a 2-3 day build; after the three builders are done.
+- Document reader (T3b), live streaming voice, OAuth for Gmail/Outlook/Calendar,
+  a real CRM, Postmark email digest, Pulse voice announcements of suggestions.
+
 ## Dev tools (Claude Code side — not callable from Gurost at runtime)
 - Playwright MCP: live testing. The Pulse ball animates, so open it with
   dispatched mousedown + mouseup, not `.click()`. The Pulse status log keeps
