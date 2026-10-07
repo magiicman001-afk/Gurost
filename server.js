@@ -33,6 +33,7 @@ const rateLimit = require("express-rate-limit");
 
 const { transition, canTransition } = require("./lib/state-machine");
 const { deployToVercel, deployApp } = require("./lib/deploy");
+const { buildSite, previewDocs } = require("./lib/site-pages");
 const { createCheckoutSession, createTopUpCheckout, createBillingPortalSession, verifyWebhook, getBalance, addCredits, PLANS, TOPUPS, LOW_CREDIT_THRESHOLD, BUSINESS_ASSISTANT, createBusinessAssistantSubscription, updateBotSeatQuantity } = require("./lib/billing");
 const creditSystem = require("./credit-system");
 const complexityDetector = require("./complexity-detector");
@@ -4669,6 +4670,31 @@ function pushUndoSnapshot(project, actionType) {
   project.contentSnapshots.future = []; // real, standard undo/redo rule - a new change clears the redo stack
   if (project.contentSnapshots.past.length > MAX_UNDO_HISTORY) project.contentSnapshots.past.shift(); // real, bounded - not unlimited memory growth
 }
+
+// The multi-page view of the site for the preview tabs. Built on demand
+// from the one master page (currentHtml), so edits, undo and redo always
+// show the right pages. `?variant=ID` shows a design that is not picked yet.
+// A site that can't be split answers { multi: false } and the preview just
+// shows the single page, as before.
+app.get("/api/project/:id/site", (req, res) => {
+  const project = getProject(req.params.id, req, res);
+  if (!project) return;
+  let html = project.currentHtml;
+  const wanted = typeof req.query.variant === "string" ? req.query.variant : "";
+  if (wanted) {
+    const v = (project.variants || []).find((x) => x.id === wanted);
+    if (!v || !v.html) return res.status(404).json({ error: "Design not found." });
+    html = v.html;
+  }
+  if (!html) return res.status(400).json({ error: "Nothing built yet." });
+  const site = buildSite(html, { businessInfo: project.businessInfo || null });
+  if (!site.multi) return res.json({ multi: false, pages: [], previews: {} });
+  res.json({
+    multi: true,
+    pages: site.pages.map((p) => ({ file: p.file, label: p.label, title: p.title })),
+    previews: previewDocs(site.files)
+  });
+});
 
 // "Use this design": finalises the picked design (meta description, Open
 // Graph, LocalBusiness schema from the user's details) - no AI, no

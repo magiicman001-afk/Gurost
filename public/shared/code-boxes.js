@@ -80,12 +80,21 @@ const CODE_BOX_INJECTION_SCRIPT = `
     var href = a.getAttribute('href') || '';
     if (/^(mailto|tel):/i.test(href)) return;
     e.preventDefault();
-    if (href.charAt(0) !== '#') return; // leaves the page: works on the published site, not in the preview
+    // A link to another page of the site ("about.html", "order.html#form"):
+    // ask the builder to show that page in this frame.
+    var pm = /^(?:\\.\\/)?([a-z0-9_-]+\\.html)(#.*)?$/i.exec(href);
+    if (pm) { window.gurostGo(pm[1] + (pm[2] || '')); return; }
+    if (href.charAt(0) !== '#') return; // leaves the site: works on the published site, not in the preview
     var id = decodeURIComponent(href.slice(1));
     var target = id ? document.getElementById(id) : null;
     if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     else window.scrollTo({ top: 0, behavior: 'smooth' });
   });
+  // The site's own scripts (the Order and Contact buttons) call this to
+  // open another page; in the preview the builder swaps the frame.
+  window.gurostGo = function(file) {
+    window.parent.postMessage({ type: 'gurost-preview-nav', href: String(file) }, '*');
+  };
   window.addEventListener('submit', function(e) {
     if (!e.defaultPrevented) e.preventDefault();
   });
@@ -104,6 +113,13 @@ const CODE_BOX_INJECTION_SCRIPT = `
     var restore = function() { window.scrollTo({ top: restoreY, behavior: 'instant' }); };
     restore();
     window.addEventListener('load', restore); // again once images and fonts have moved the layout
+  }
+  // Opened through a link like "order.html#form": start at that section.
+  var openId = window.__gurostOpenHash;
+  if (openId) {
+    var openAt = function() { var t = document.getElementById(openId); if (t) t.scrollIntoView({ block: 'start' }); };
+    openAt();
+    window.addEventListener('load', openAt);
   }
 })();
 </script>
@@ -127,10 +143,15 @@ const PREVIEW_BASE_TAG = '<base href="about:srcdoc">';
  * app-builder.html's buildPreviewDocument) does too, since it's a
  * real HTML document with a #root mount point, not raw JSX.
  */
-function injectCodeBoxScript(htmlDocument, { scrollY = 0 } = {}) {
+function injectCodeBoxScript(htmlDocument, { scrollY = 0, hash = '' } = {}) {
   // The page's own <base> (rare) would undo the fix above.
   let doc = String(htmlDocument).replace(/<base\b[^>]*>/gi, '');
-  const head = PREVIEW_BASE_TAG + (scrollY > 0 ? `<script>window.__gurostRestoreY = ${Math.round(scrollY)};</script>` : '');
+  // `hash` ("form" or "#form") opens the page scrolled to that section id.
+  // Only plain id characters pass, so nothing can end the script tag early.
+  const openId = String(hash || '').replace(/^#/, '').replace(/[^\w\-.:]/g, '');
+  const head = PREVIEW_BASE_TAG
+    + (scrollY > 0 ? `<script>window.__gurostRestoreY = ${Math.round(scrollY)};</script>` : '')
+    + (openId ? `<script>window.__gurostOpenHash = ${JSON.stringify(openId)};</script>` : '');
   doc = /<head\b[^>]*>/i.test(doc) ? doc.replace(/<head\b[^>]*>/i, (m) => m + head) : head + doc;
   // Pulse's inspector rides along when the page has loaded it.
   const scripts = CODE_BOX_INJECTION_SCRIPT + (typeof PULSE_INSPECTOR_SCRIPT === 'string' ? PULSE_INSPECTOR_SCRIPT : '');

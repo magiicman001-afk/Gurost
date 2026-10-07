@@ -83,7 +83,10 @@ if (window.self !== window.top) { window.stop(); document.documentElement.innerH
         <div class="grid grid-cols-2 gap-2" id="variantGrid"></div>
       </div>
       <div class="w-full h-full" id="previewWrap">
-        <iframe id="previewFrame" class="w-full h-full border-0 bg-white" sandbox="allow-scripts allow-forms" title="Website preview"></iframe>
+        <div class="flex flex-col w-full h-full" id="previewInner">
+          <div class="hidden gap-1 px-2 py-1.5 overflow-x-auto bg-white border-b border-[var(--line)]" id="pageTabs" role="tablist" aria-label="Pages of your site"></div>
+          <iframe id="previewFrame" class="w-full flex-1 min-h-0 border-0 bg-white" sandbox="allow-scripts allow-forms" title="Website preview"></iframe>
+        </div>
         <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-8" id="previewEmptyState">
           <span class="material-symbols-outlined text-[48px] mb-3" style="color: var(--line);">web</span>
           <p class="text-sm text-[var(--ink-soft)]">Nothing built yet.</p>
@@ -192,17 +195,89 @@ window.addEventListener('message', (e) => {
 
 // keepScroll: true for edits of the same page (Pulse edit, undo, redo,
 // history restore); a newly picked or loaded design opens at the top.
-function renderPreview(html, { keepScroll = false } = {}) {
-  clearLivePreview();
-  document.getElementById('previewEmptyState').style.display = 'none';
-  if (!keepScroll) previewScrollY = 0;
+//
+// A multi-page site shows one page at a time with tabs above the preview.
+// The server builds the pages from the same master HTML (GET .../site), so
+// every edit, undo and redo shows the right tabs. If that call fails or the
+// site can't be split, the single master page is shown, as before.
+let sitePreviews = {};   // { 'about.html': '<html>...' }
+let currentPage = 'index.html';
+let previewToken = 0;
+
+function showMasterPage(html) {
   const frame = document.getElementById('previewFrame');
-  // Callers often un-hide the preview (display:none -> shown) in the same
-  // task. A srcdoc load that starts before the frame is laid out keeps a
-  // 0x0 viewport in Chromium and the page paints blank for good - reading
-  // offsetWidth lays the frame out at its real size first.
+  document.getElementById('pageTabs').classList.add('hidden');
+  document.getElementById('pageTabs').classList.remove('flex');
+  sitePreviews = {};
   void frame.offsetWidth;
   frame.srcdoc = injectCodeBoxScript(html, { scrollY: previewScrollY });
+}
+
+function showSitePage(file, { hash = '', scrollY = 0 } = {}) {
+  const doc = sitePreviews[file];
+  if (!doc) return false;
+  currentPage = file;
+  const frame = document.getElementById('previewFrame');
+  void frame.offsetWidth;
+  frame.srcdoc = injectCodeBoxScript(doc, { scrollY, hash });
+  document.querySelectorAll('#pageTabs button').forEach((b) => {
+    const on = b.dataset.file === file;
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+    b.style.background = on ? 'var(--gurost-primary)' : 'transparent';
+    b.style.color = on ? '#fff' : 'var(--ink-soft)';
+  });
+  return true;
+}
+
+function applySite(site, html) {
+  const pages = (site && site.multi && Array.isArray(site.pages)) ? site.pages : [];
+  if (!pages.length || !site.previews) { showMasterPage(html); return; }
+  sitePreviews = site.previews;
+  const tabs = document.getElementById('pageTabs');
+  tabs.textContent = '';
+  pages.forEach((p) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('role', 'tab');
+    b.dataset.file = p.file;
+    b.textContent = p.label || p.file;
+    b.className = 'text-xs font-semibold px-3 py-1.5 rounded-md whitespace-nowrap';
+    b.addEventListener('click', () => { previewScrollY = 0; showSitePage(p.file); });
+    tabs.appendChild(b);
+  });
+  tabs.classList.remove('hidden');
+  tabs.classList.add('flex');
+  // An edit keeps the page you were on; a page that no longer exists falls back to Home.
+  if (!sitePreviews[currentPage]) { currentPage = pages[0].file; previewScrollY = 0; }
+  showSitePage(currentPage, { scrollY: previewScrollY });
+}
+
+// A link or button inside the preview asked for another page.
+window.addEventListener('message', (e) => {
+  if (e.source !== document.getElementById('previewFrame')?.contentWindow || e.data?.type !== 'gurost-preview-nav') return;
+  const m = /^([a-z0-9_-]+\.html)(#.*)?$/i.exec(String(e.data.href || ''));
+  if (!m || !sitePreviews[m[1]]) return;
+  previewScrollY = 0;
+  showSitePage(m[1], { hash: m[2] || '' });
+});
+
+function renderPreview(html, { keepScroll = false, variantId = null } = {}) {
+  clearLivePreview();
+  document.getElementById('previewEmptyState').style.display = 'none';
+  if (!keepScroll) { previewScrollY = 0; currentPage = 'index.html'; }
+  const token = ++previewToken;
+  if (!projectId) {
+    showMasterPage(html);
+  } else {
+    // Callers often un-hide the preview (display:none -> shown) in the same
+    // task. A srcdoc load that starts before the frame is laid out keeps a
+    // 0x0 viewport in Chromium and the page paints blank for good - showMasterPage
+    // and showSitePage read offsetWidth first to lay the frame out.
+    const path = `/api/project/${projectId}/site` + (variantId ? `?variant=${encodeURIComponent(variantId)}` : '');
+    GurostAPI.call(path)
+      .then((site) => { if (token === previewToken) applySite(site, html); })
+      .catch(() => { if (token === previewToken) showMasterPage(html); });
+  }
   // codeEmptyMsg lives inside codeContent, so the textContent write below
   // deletes it - it only exists on the first render.
   document.getElementById('codeEmptyMsg')?.remove();
@@ -306,7 +381,7 @@ function previewDesign(variantId) {
   previewingVariantId = variantId;
   document.getElementById('variantSection').classList.add('hidden');
   document.getElementById('previewWrap').classList.remove('hidden');
-  renderPreview(v.html);
+  renderPreview(v.html, { variantId });
   document.getElementById('designChoiceLabel').textContent = v.label || variantId;
   const bar = document.getElementById('designChoiceBar');
   bar.classList.remove('hidden');

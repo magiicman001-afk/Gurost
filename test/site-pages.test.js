@@ -210,3 +210,103 @@ test("classify prefers data-page, then id, then heading", () => {
   assert.equal(classify(b("<section>", "<h2>Get in touch</h2>")), "contact");
   assert.equal(classify(b("<section>", "<h2>Something else</h2>")), "home");
 });
+
+// ---- 2b: preview pages and the link bridge -------------------------------------------------------------------
+
+const fs = require("fs");
+const vm = require("vm");
+const path = require("path");
+const { previewDocs } = require("../lib/site-pages");
+
+const boxCtx = {};
+vm.createContext(boxCtx);
+vm.runInContext(fs.readFileSync(path.join(__dirname, "../public/shared/code-boxes.js"), "utf8")
+  + "\nthis.inject = injectCodeBoxScript; this.GUARD = CODE_BOX_INJECTION_SCRIPT;", boxCtx);
+
+test("previewDocs writes styles.css and script.js into every page, so the preview needs no other files", () => {
+  const site = buildSite(harden(bakery(true)));
+  const docs = previewDocs(site.files);
+  assert.deepEqual(Object.keys(docs).sort(), site.pages.map((p) => p.file).sort());
+  const css = fileMap(site)["styles.css"];
+  for (const [file, doc] of Object.entries(docs)) {
+    assert.ok(!/href=["']styles\.css["']/.test(doc), `${file} still links styles.css`);
+    assert.ok(!/src=["']script\.js["']/.test(doc), `${file} still loads script.js`);
+    assert.ok(doc.includes("window.GUROST_PAGES"), `${file} has the shared script`);
+    assert.ok(doc.includes(css.trim().slice(0, 40)) || css.trim() === "", `${file} has the shared CSS`);
+  }
+});
+
+test("previewDocs keeps $ patterns and </script, </style text literal, and ignores non-html files", () => {
+  const out = previewDocs([
+    { path: "index.html", content: '<head><link rel="stylesheet" href="styles.css"></head><body><script src="script.js" defer></script></body>' },
+    { path: "styles.css", content: "a::after{content:'$&'} /* </style> */" },
+    { path: "script.js", content: "var s = '$1 </script>';" },
+    { path: "notes.txt", content: "x" }
+  ]);
+  assert.deepEqual(Object.keys(out), ["index.html"]);
+  assert.ok(out["index.html"].includes("content:'$&'"));
+  assert.ok(out["index.html"].includes("var s = '$1 <\\/script>';"));
+  assert.equal((out["index.html"].match(/<\/style>/g) || []).length, 1, "only the real closing tag");
+  assert.equal((out["index.html"].match(/<\/script>/g) || []).length, 1);
+});
+
+test("previewDocs never throws and answers an empty map for rubbish", () => {
+  for (const bad of [null, undefined, 5, "x", [null, 3, {}], [{ path: "a.html" }]]) assert.doesNotThrow(() => previewDocs(bad));
+  assert.deepEqual(previewDocs(null), {});
+});
+
+function runGuard() {
+  const handlers = {}; const posted = [];
+  const win = {
+    addEventListener: (t, h) => { (handlers[t] = handlers[t] || []).push(h); },
+    parent: { postMessage: (m) => posted.push(m) },
+    scrollTo() {}
+  };
+  const doc = { readyState: "loading", querySelectorAll: () => [], body: { children: [] }, getElementById: () => null };
+  new Function("window", "document", boxCtx.GUARD.replace(/^\s*<script>/, "").replace(/<\/script>\s*$/, ""))(win, doc);
+  const click = (href) => {
+    const a = { getAttribute: () => href };
+    const e = { defaultPrevented: false, target: { closest: () => a }, preventDefault() { e.defaultPrevented = true; } };
+    handlers.click.forEach((h) => h(e));
+    return e;
+  };
+  return { win, posted, click };
+}
+
+test("preview frame: a link to another page asks the builder to show it; other links stay blocked", () => {
+  const g = runGuard();
+  for (const href of ["about.html", "./order.html", "order.html#orderForm", "contact.html#visit"]) {
+    const e = g.click(href);
+    assert.equal(e.defaultPrevented, true, href);
+  }
+  assert.deepEqual(g.posted.filter((m) => m.type === "gurost-preview-nav").map((m) => m.href),
+    ["about.html", "order.html", "order.html#orderForm", "contact.html#visit"]);
+  g.posted.length = 0;
+  for (const href of ["https://example.com/", "#menu", "../secret.html", "a/b.html"]) g.click(href);
+  assert.equal(g.posted.filter((m) => m.type === "gurost-preview-nav").length, 0, "outside links and in-page anchors send nothing");
+  const mail = g.click("mailto:hi@example.com");
+  assert.equal(mail.defaultPrevented, false, "mail links are left alone");
+});
+
+test("preview frame: window.gurostGo (used by the Order and Contact buttons) opens that page", () => {
+  const g = runGuard();
+  g.win.gurostGo("order.html");
+  assert.deepEqual(g.posted, [{ type: "gurost-preview-nav", href: "order.html" }]);
+});
+
+test("a page can open at a section; the id is cleaned so it cannot break out of the script tag", () => {
+  const out = boxCtx.inject("<html><head></head><body></body></html>", { hash: "#order-form" });
+  assert.ok(out.includes('window.__gurostOpenHash = "order-form";'));
+  const evil = boxCtx.inject("<html><head></head><body></body></html>", { hash: '#x"</script><script>alert(1)' });
+  assert.ok(!/alert\(1\)<\/script>/.test(evil) && !evil.includes('x"</script>'));
+  assert.ok(!boxCtx.inject("<html><head></head><body></body></html>").includes("__gurostOpenHash ="));
+});
+
+test("every page's preview doc gets the base tag and the page-link guard", () => {
+  const docs = previewDocs(buildSite(harden(bakery(true))).files);
+  for (const doc of Object.values(docs)) {
+    const out = boxCtx.inject(doc);
+    assert.match(out, /<base href="about:srcdoc">/);
+    assert.ok(out.includes("gurost-preview-nav"));
+  }
+});
