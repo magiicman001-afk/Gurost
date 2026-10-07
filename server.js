@@ -2088,7 +2088,7 @@ app.post("/api/department-bots/:bot/chat", security.rejectUnknownFields(["messag
     const tooled = await toolLoop.runWithTools({
       system,
       messages: [...prep.history, { role: "user", content: message }],
-      ctx: { userId: req.user.id },
+      ctx: { userId: req.user.id, db: require("./lib/db").supabase },
       call: (a) => claudeClient.callClaude({
         ...a, maxTokens: 1500, model: modelChain, parse: (t) => String(t || "").trim(), context: { userId: req.user.id, ip: req.ip }
       })

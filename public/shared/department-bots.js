@@ -70,7 +70,7 @@
   }
 
   // A small line under the answer when a tool did part of the work.
-  var TOOL_NAMES = { calculator: 'calculator', time_date: 'date and time' };
+  var TOOL_NAMES = { calculator: 'calculator', time_date: 'date and time', currency_converter: 'exchange rates', company_profile: 'your company profile', web_search: 'web search' };
   function showTools(used) {
     if (!used || !used.length) return;
     var names = used.map(function (t) { return TOOL_NAMES[t] || t.replace(/_/g, ' '); });
