@@ -154,8 +154,16 @@ function logRawReply(variantId, err) {
 // attempt's partial page, and streaming keeps the inactivity timeout on.
 const DISCARD_STREAM = () => {};
 
-async function generateDesign({ system, content, plan, variantId, onStream, onRetry }) {
-  const call = (userContent, stream) => callClaude({
+// Each design gets 10 minutes, then one retry with 5 - never longer. A model
+// that keeps trickling output is cut off at the deadline (the 90s idle timer
+// alone can't stop it), and the build finishes with the other designs.
+const DESIGN_TIME_LIMIT_MS = 10 * 60 * 1000;
+const DESIGN_RETRY_LIMIT_MS = 5 * 60 * 1000;
+
+async function generateDesign({ system, content, plan, variantId, onStream, onRetry, limits = {} }) {
+  const firstMs = limits.firstMs ?? DESIGN_TIME_LIMIT_MS;
+  const retryMs = limits.retryMs ?? DESIGN_RETRY_LIMIT_MS;
+  const call = (userContent, stream, ms = retryMs) => callClaude({
     system,
     parse: parseVariantResponse,
     messages: [{ role: "user", content: userContent }],
@@ -164,18 +172,28 @@ async function generateDesign({ system, content, plan, variantId, onStream, onRe
     onStream: stream,
     // A page cut short at 32k tokens is still a page (its parser and
     // stripLeftoverPlaceholders cope) - kept rather than thrown away.
-    allowTruncated: true
+    allowTruncated: true,
+    deadline: Date.now() + ms
   });
   try {
-    return await call(content, onStream); // only the first attempt streams to the live preview
+    return await call(content, onStream, firstMs); // only the first attempt streams to the live preview
   } catch (err) {
-    if (err.idleTimeout) {
-      // Stalled (no output for 90s): one fresh attempt. If that stalls or
-      // fails too, the error reaches the caller and the build finishes
-      // with the other designs.
-      console.warn(`[variant-bot] "${variantId}" stalled, retrying:`, err.message);
-      if (onRetry) onRetry(err);
-      return await call(content, DISCARD_STREAM);
+    if (err.idleTimeout || err.deadlineExceeded) {
+      // Stalled (no output for 90s) or too slow (past the time limit): one
+      // fresh, shorter attempt. If that fails too, the error reaches the
+      // caller and the build finishes with the other designs.
+      const reason = err.deadlineExceeded ? `took longer than ${Math.round(firstMs / 60000)} minutes` : "no response for 90s";
+      console.warn(`[variant-bot] "${variantId}" ${reason}, retrying:`, err.message);
+      if (onRetry) onRetry(err, reason);
+      try {
+        return await call(content, DISCARD_STREAM, retryMs);
+      } catch (retryErr) {
+        if (retryErr.idleTimeout || retryErr.deadlineExceeded) {
+          // The user hears "took too long"; the cause (idle or deadline) stays on the error.
+          throw Object.assign(new Error("took too long — moving on"), { tookTooLong: true, idleTimeout: !!retryErr.idleTimeout, deadlineExceeded: !!retryErr.deadlineExceeded });
+        }
+        throw retryErr;
+      }
     }
     if (!(err instanceof VariantParseError)) throw err;
     logRawReply(variantId, err);
@@ -183,6 +201,9 @@ async function generateDesign({ system, content, plan, variantId, onStream, onRe
       return await call(`${content}\n\n(Your previous reply for this design could not be used: ${err.reason} Reply again with ONLY the complete HTML document, from <!DOCTYPE html> to </html>, with nothing before or after it.)`);
     } catch (retryErr) {
       if (retryErr instanceof VariantParseError) logRawReply(`${variantId} retry`, retryErr);
+      if (retryErr.idleTimeout || retryErr.deadlineExceeded) {
+        throw Object.assign(new Error("took too long — moving on"), { tookTooLong: true, idleTimeout: !!retryErr.idleTimeout, deadlineExceeded: !!retryErr.deadlineExceeded });
+      }
       throw retryErr;
     }
   }
@@ -559,9 +580,9 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
 
   const promises = BRIEFS.map((b) => {
     const system = systemFor(b.brief, includeBranding, design);
-    const onRetry = () => {
+    const onRetry = (err, reason = "no response for 90s") => {
       live.release(b.id); // its half-built page stops leading the preview
-      notify("designing", "variant-retrying", { variantId: b.id, label: b.label, reason: "no response for 90s" });
+      notify("designing", "variant-retrying", { variantId: b.id, label: b.label, reason });
     };
     const content = `${effectivePrompt}\n\n${businessInfoPrompt(businessInfo)}`;
     return generateDesign({ system, content, plan, variantId: b.id, onStream: live.streamFor(b, system), onRetry })

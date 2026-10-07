@@ -608,12 +608,14 @@ function connectGenerationSocket(id) {
           fetchAndRenderGeneratedVariants(id, 4 - variantsFinished);
         }
       } else if (msg.status === 'variant-retrying') {
-        log('Designer', `${d.label || 'A design'} went quiet (${d.reason || 'no response'}) — retrying it once…`, 'work');
+        log('Designer', `${d.label || 'A design'} ${/took longer/.test(d.reason || '') ? d.reason : `went quiet (${d.reason || 'no response'})`} — retrying it once…`, 'work');
       } else if (msg.status === 'variant-failed') {
         variantsFinished++;
         // The real reason, minus the raw model response the server appends.
         const reason = String(d.error || 'unknown error').split(' Raw:')[0].slice(0, 220);
-        log('Designer', `${d.label || 'A design'} failed (${variantsFinished}/4): ${reason}`, 'fail');
+        // Past both time limits: say so plainly and carry on with the others.
+        if (/took too long/.test(reason)) log('Designer', `Design ${variantsFinished}/4 (${d.label || 'a design'}) took too long — moving on`, 'fail');
+        else log('Designer', `${d.label || 'A design'} failed (${variantsFinished}/4): ${reason}`, 'fail');
         if (!currentHtml && pickerVisible()) fetchAndRenderGeneratedVariants(id, 4 - variantsFinished);
       } else if (msg.status === 'complete') {
         log('Designer', `${d.count} of 4 designs ready.`, d.count ? 'ok' : 'fail');
