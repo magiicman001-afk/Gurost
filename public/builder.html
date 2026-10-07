@@ -421,6 +421,8 @@ async function useDesign() {
     if (result.added?.length) logBot('Builder', `Added: ${result.added.join(', ')}.`, 'ok');
     await upgradePickedImages();
     logBot('Builder', `${GurostAI.VOICE.ready} Refine it with Pulse any time.`, 'ok');
+    // Pulse: the site exists now (generate() returns when the build starts).
+    window.dispatchEvent(new CustomEvent('gurost:site-ready', { detail: { projectId } }));
   } catch (err) {
     logBot('Builder', `Couldn't finalise the site: ${err.message}`, 'fail');
   } finally {

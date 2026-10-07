@@ -166,6 +166,13 @@
     box.classList.toggle('visible', host.children.length > 0);
   }
 
+  // A design was picked and finalised: the site is real, so it can have ideas.
+  window.addEventListener('gurost:site-ready', () => {
+    doneStatus = aiStatus('builtSite', 'Done');
+    logStatus(doneStatus, { feed: false });
+    setTimeout(checkForRealSuggestion, 500);
+  });
+
   async function checkForRealSuggestion() {
     const box = document.getElementById('pulseSuggestion');
     if (!box) return;
@@ -299,10 +306,14 @@
       try {
         await window.gurostBuilder.generate(text);
         correctionHistory.push({ type: 'initial', text });
-        doneStatus = /app-builder/.test(location.pathname) ? aiStatus('builtApp', 'Done') : aiStatus('builtSite', 'Done');
+        // The Website Builder's generate() returns once the build has started; the
+        // designs arrive later and the site exists only when one is picked
+        // (the 'gurost:site-ready' listener). Saying "built" here showed at 9%.
+        doneStatus = /app-builder/.test(location.pathname) ? aiStatus('builtApp', 'Done')
+          : onWebsiteBuilder ? `${aiStatus('building', 'Building…')} Pick a design on the left when it's ready.` : aiStatus('builtSite', 'Done');
         setState('done');
         logStatus(doneStatus, { feed: false });
-        setTimeout(checkForRealSuggestion, 500);
+        if (!onWebsiteBuilder) setTimeout(checkForRealSuggestion, 500);
         refreshUndoRedoState();
         return { ok: true, kind: 'build' };
       } catch (err) {
