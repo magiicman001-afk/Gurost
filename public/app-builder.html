@@ -322,10 +322,11 @@ function hideGenerateError() {
 // ---------------- Code view ----------------
 
 function renderCodeView(appFiles) {
+  // Empty or "line N" filler files are not shown as tabs (shared/app-preview-doc.js has the rule).
   const allFiles = [
     ...appFiles.backend.map((f) => ({ ...f, group: 'backend' })),
     ...appFiles.frontend.map((f) => ({ ...f, group: 'frontend' }))
-  ];
+  ].filter((f) => !isFillerFile(f));
   const tabsEl = document.getElementById('codeFileTabs');
   const contentEl = document.getElementById('codeContent');
 
@@ -343,6 +344,7 @@ function renderCodeView(appFiles) {
     b.addEventListener('click', () => showFile(Number(b.dataset.fileIndex)));
   });
   if (allFiles.length) showFile(0);
+  else contentEl.textContent = '// Nothing generated yet.';
 
   document.getElementById('codeToggleBtn').classList.remove('hidden');
   document.getElementById('deployBtn').classList.remove('hidden');
@@ -469,9 +471,9 @@ function updateStagePreview(msg) {
   const d = msg.data || {};
   if (msg.stage === 'schema' && msg.status === 'running' && !stageFrames) renderStagePreview();
   else if (msg.stage === 'schema' && msg.status === 'complete') { stageView.schema = d.schema || ''; stageView.engine = d.engine || ''; renderStagePreview(); }
-  else if (msg.stage === 'backend' && msg.status === 'complete') { stageView.backend = d.files || []; renderStagePreview(); }
+  else if (msg.stage === 'backend' && msg.status === 'complete') { stageView.backend = (d.files || []).filter((f) => !isFillerFile(f)); renderStagePreview(); }
   else if (msg.stage === 'frontend' && msg.status === 'progress' && d.files) { stageView.frontendFiles = d.files; renderStagePreview(); }
-  else if (msg.stage === 'frontend' && msg.status === 'complete') { stageView.frontendFiles = (d.files || []).map((f) => f.path); stageView.frontendDone = true; renderStagePreview(); }
+  else if (msg.stage === 'frontend' && msg.status === 'complete') { stageView.frontendFiles = (d.files || []).filter((f) => !isFillerFile(f)).map((f) => f.path); stageView.frontendDone = true; renderStagePreview(); }
 }
 
 function renderLivePreview(appFiles) {

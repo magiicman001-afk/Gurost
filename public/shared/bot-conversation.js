@@ -48,7 +48,15 @@ function escapeLogText(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 }
 
+// Empty text, or only "line 0 / line 1 / ..." filler, is not a message. Skipped (and noted in the
+// console, so a real occurrence can be traced), never drawn as an empty row.
+function isFillerText(text) {
+  const lines = String(text == null ? '' : text).split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  return !lines.length || lines.every((l) => /^(line\s*\d+\s*:?|\.{3}|…)$/i.test(l));
+}
+
 function logBot(bot, text, tone = 'info', at = Date.now()) {
+  if (isFillerText(text)) { console.warn('[bot-conversation] Skipped an empty or placeholder message from ' + bot + '.'); return; }
   const wrap = document.getElementById('botLog');
   const list = document.getElementById('botLogList');
   const avatar = BOT_AVATARS[bot] || { emoji: '🤖', color: '#cbd5e1' };

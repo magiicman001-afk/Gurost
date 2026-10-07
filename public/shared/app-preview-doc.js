@@ -13,7 +13,26 @@ function findEntryFile(frontendFiles) {
   );
 }
 
+// A file with nothing in it, or only "line 0 / line 1 / ..." filler or a bare "...", is not a screen.
+// Same rule as lib/file-blocks.js (this file runs in the browser, so it keeps its own copy).
+function isFillerFile(file) {
+  const content = file && file.content;
+  const lines = String(content == null ? '' : content).split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  return !lines.length || lines.every((l) => /^(line\s*\d+\s*:?|\.{3}|…)$/i.test(l));
+}
+
+const EMPTY_PREVIEW = '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;font-family:Inter,system-ui,sans-serif;background:#FAFAF9;color:#1A1A2E">'
+  + '<div data-gurost-empty="true" style="padding:40px 24px;max-width:520px;margin:auto;text-align:center">'
+  + '<h2 style="font-size:18px;margin:0 0 8px">This app has no screens to show yet</h2>'
+  + '<p style="font-size:14px;color:#6B7280;margin:0">The build did not produce a usable app screen. Try building it again.</p></div></body></html>';
+
 function buildPreviewDocument(frontendFiles, options) {
+  // Filler files can never be the app: drop them before the entry is chosen, and say so
+  // plainly when nothing real is left, rather than showing a blank or broken screen.
+  const dropped = (Array.isArray(frontendFiles) ? frontendFiles : []).filter(isFillerFile);
+  if (dropped.length && typeof console !== 'undefined') console.warn('[app-preview] Ignored ' + dropped.length + ' empty or placeholder file(s): ' + dropped.map((f) => f && f.path).join(', '));
+  frontendFiles = (Array.isArray(frontendFiles) ? frontendFiles : []).filter((f) => !isFillerFile(f));
+  if (!frontendFiles.length) return EMPTY_PREVIEW;
   // standalone: the copy that ships in the downloaded zip, opened from a file.
   const noBackend = JSON.stringify(options && options.standalone
     ? 'This page shows the app\'s interface only. Start the backend (see README.md) and serve the frontend from it to connect real data.'
@@ -184,7 +203,7 @@ function buildPreviewDocument(frontendFiles, options) {
 </body></html>`;
 }
 
-  var api = { buildPreviewDocument: buildPreviewDocument, findEntryFile: findEntryFile };
+  var api = { buildPreviewDocument: buildPreviewDocument, findEntryFile: findEntryFile, isFillerFile: isFillerFile };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  else { root.buildPreviewDocument = buildPreviewDocument; root.findEntryFile = findEntryFile; }
+  else { root.buildPreviewDocument = buildPreviewDocument; root.findEntryFile = findEntryFile; root.isFillerFile = isFillerFile; }
 })(typeof window !== 'undefined' ? window : globalThis);
