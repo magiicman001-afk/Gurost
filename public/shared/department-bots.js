@@ -69,6 +69,15 @@
     b.scrollIntoView({ block: 'nearest' });
   }
 
+  // A small line under the answer when a tool did part of the work.
+  var TOOL_NAMES = { calculator: 'calculator', time_date: 'date and time' };
+  function showTools(used) {
+    if (!used || !used.length) return;
+    var names = used.map(function (t) { return TOOL_NAMES[t] || t.replace(/_/g, ' '); });
+    var last = $('deptLog').lastElementChild;
+    if (last) last.appendChild(el('div', 'text-xs text-gray-500 mt-1', 'Checked with: ' + names.join(', ')));
+  }
+
   function copyText(text, btn) {
     var done = function () { btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = 'Copy draft'; }, 1500); };
     if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(done, fallback); } else fallback();
@@ -111,6 +120,7 @@
       thinking.remove();
       history.push({ role: 'user', content: text }, { role: 'assistant', content: (r.reply ? r.reply + '\n\n' : '') + (r.draft ? '--- DRAFT ---\n' + r.draft + '\n--- END DRAFT ---' : '') });
       bubble('bot', r.reply, r.draft);
+      showTools(r.toolsUsed);
     } catch (err) { thinking.remove(); bubble('bot', "I couldn't answer that: " + (window.GurostAI ? GurostAI.publicText(err.message) : err.message)); }
     busy = false; $('deptSend').disabled = false;
   }

@@ -1940,6 +1940,7 @@ const deptBots = require("./lib/department-bots");
 const botMemory = require("./lib/bot-memory");
 const memoryExtract = require("./lib/memory-extract");
 const modelRouter = require("./lib/model-router");
+const toolLoop = require("./lib/tools/loop");
 const botPrefsTable = () => require("./lib/db").supabase.from("user_bot_preferences");
 const requireBotId = (req, res) => {
   if (deptBots.BOT_IDS.includes(req.params.bot)) return true;
@@ -2083,18 +2084,20 @@ app.post("/api/department-bots/:bot/chat", security.rejectUnknownFields(["messag
     const modelChain = modelRouter.modelFor(task, req.user.plan);
     modelRouter.recordUse({ task, plan: req.user.plan, chain: modelChain });
 
-    const result = await claudeClient.callClaude({
+    // The bot may use tools (calculator, time and date) before it answers.
+    const tooled = await toolLoop.runWithTools({
       system,
       messages: [...prep.history, { role: "user", content: message }],
-      maxTokens: 1500,
-      model: modelChain,
-      parse: (t) => String(t || "").trim(),
-      context: { userId: req.user.id, ip: req.ip }
+      ctx: { userId: req.user.id },
+      call: (a) => claudeClient.callClaude({
+        ...a, maxTokens: 1500, model: modelChain, parse: (t) => String(t || "").trim(), context: { userId: req.user.id, ip: req.ip }
+      })
     });
-    const { reply, draft } = deptBots.parseReply(result.parsed);
+    const { reply, draft } = deptBots.parseReply(tooled.text);
+    const toolsUsed = [...new Set(tooled.toolsUsed.filter((t) => t.ok).map((t) => t.tool))];
     if (!reply && !draft) throw new Error("The AI sent back an empty answer.");
     const stored = prep.stored && await botMemory.recordExchange(require("./lib/db").supabase, req.user.id, req.params.bot, message, (reply ? reply + "\n\n" : "") + (draft ? "--- DRAFT ---\n" + draft + "\n--- END DRAFT ---" : ""));
-    res.json({ reply, draft });
+    res.json({ reply, draft, toolsUsed });
     // After the reply is sent: note anything lasting the user said, for all their bots.
     if (stored) {
       const db = require("./lib/db").supabase;
