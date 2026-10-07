@@ -4,6 +4,7 @@ const imageBot = require("../image-bot");
 const { modelForTier } = require("../lib/tier-router");
 const { designPromptLines } = require("../lib/industry-design");
 const { businessInfoPrompt } = require("../lib/business-info");
+const { repairExternalImports } = require("../lib/app-imports");
 const { parseFileBlocks, fileBlocksFormat, createRepeatDetector, completedFilePaths } = require("../lib/file-blocks");
 
 // Streams a file-block stage: every chunk is progress (the server's
@@ -191,6 +192,18 @@ On each top-level rendered section within a component (the outermost divs/sectio
 
 Images: where the design genuinely calls for a real photo or illustration (a hero image, a product shot, an avatar), do NOT draw it with SVG and do NOT invent an external image URL. Instead, write a literal placeholder token directly into the JSX's src attribute — e.g. src="IMG_1" — and add a matching entry to imageRequests with a detailed, specific description of exactly what that image should show. Use as many as the design genuinely benefits from, typically 1-4. For anything NOT requested this way (icons, decorative shapes), build a real, self-contained visual using inline SVG, a CSS gradient, or a Material Symbols icon inside a colored shape — never invent an external image URL for those.`;
 
+// The preview can load only React and the app's own files. If the frontend imports anything
+// else, one targeted rewrite takes those imports out (see lib/app-imports.js).
+async function keepSelfContained(files, plan) {
+  const { files: out, remaining, repaired } = await repairExternalImports(files, async (system, user) => {
+    const res = await callClaude({ system, messages: [{ role: "user", content: user }], maxTokens: 14000, model: modelForTier(plan, { complex: true }), parse: (text) => text });
+    return res.parsed; // the raw reply; lib/app-imports.js parses the file blocks itself
+  });
+  if (repaired) console.log(`[app-bot] Removed external imports from ${repaired} file(s).`);
+  if (remaining.length) console.warn("[app-bot] Still importing packages the preview cannot load:", remaining.map((r) => `${r.path}:${r.spec}`).join(", "));
+  return out;
+}
+
 async function buildApp(prompt, { dbEngine = "postgres", onSchemaComplete, plan } = {}) {
   const schemaRes = await callClaude({
     system: SCHEMA_SYSTEM,
@@ -289,7 +302,8 @@ async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStag
   notify("frontend", "running", { model: "Claude" });
   const frontendContent = await foldCorrection(`Business: ${prompt}\n\nBackend files (for reference on what's available): ${endpointList}\n\n${businessInfoPrompt(businessInfo)}`);
   const frontendRes = await callClaude({ system: frontendSystemFor(prompt), messages: [{ role: "user", content: frontendContent }], maxTokens: 14000, model: modelForTier(plan, { complex: true }), ...streamedFileStage("frontend", notify) });
-  const frontendFiles = await fulfillImageRequestsMultiFile(frontendRes.parsed.files, frontendRes.parsed.imageRequests);
+  const withImages = await fulfillImageRequestsMultiFile(frontendRes.parsed.files, frontendRes.parsed.imageRequests);
+  const frontendFiles = await keepSelfContained(withImages, plan);
   notify("frontend", "complete", { files: frontendFiles, summary: frontendRes.parsed.summary });
 
   notify("done", "complete");
@@ -304,4 +318,4 @@ async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStag
 
 module.exports = { buildApp, buildAppStaged };
 // Exposed for tests only.
-module.exports._internal = { fulfillImageRequestsMultiFile, frontendSystemFor, BACKEND_SYSTEM, removeStrayFileTags };
+module.exports._internal = { keepSelfContained, fulfillImageRequestsMultiFile, frontendSystemFor, BACKEND_SYSTEM, removeStrayFileTags };
