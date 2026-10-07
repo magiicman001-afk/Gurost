@@ -145,6 +145,8 @@ if (window.self !== window.top) { window.stop(); document.documentElement.innerH
 <script src="shared/pulse-voice.js"></script>
 <script src="shared/pulse-inspector.js"></script>
 <script src="shared/code-boxes.js"></script>
+<script src="shared/brand-config.js"></script>
+<script src="shared/ai-brand.js"></script>
 <script src="shared/bot-conversation.js"></script>
 <script>
 /**
@@ -176,7 +178,7 @@ function setBuildProgress(percent) {
   el.classList.toggle('hidden', percent == null);
   if (percent == null) return;
   const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  el.textContent = `Building… ${time} | ${percent}% complete`;
+  el.textContent = `${GurostAI.STATUS.building} ${time} | ${percent}% complete`;
 }
 
 // Where the visitor is in the preview, so an edit re-render opens at the
@@ -343,7 +345,7 @@ async function useDesign() {
     renderPreview(currentHtml, { keepScroll: true });
     if (result.added?.length) logBot('Builder', `Added: ${result.added.join(', ')}.`, 'ok');
     await upgradePickedImages();
-    logBot('Builder', 'Your site is ready. Refine with Pulse or launch.', 'ok');
+    logBot('Builder', `${GurostAI.VOICE.ready} Refine it with Pulse any time.`, 'ok');
   } catch (err) {
     logBot('Builder', `Couldn't finalise the site: ${err.message}`, 'fail');
   } finally {
@@ -351,13 +353,13 @@ async function useDesign() {
   }
 }
 
-// Paid plans: the kept design's hero becomes FLUX Pro and its key images
-// FLUX Dev (server: /api/project/:id/premium-images). Free plans skip it.
+// Paid plans: the kept design's hero and its key images are upgraded
+// (server: /api/project/:id/premium-images). Free plans skip it.
 // A failure only means the stock images stay - the site is already done.
 async function upgradePickedImages() {
   const plan = await GurostAPI.getMyPlan();
   if (!plan || plan === 'free') return;
-  logBot('Designer', 'Upgrading your images with FLUX — the hero with FLUX Pro, key sections with FLUX Dev…', 'work');
+  logBot('Designer', 'Polishing your images — the hero and the key sections…', 'work');
   try {
     const result = await GurostAPI.call(`/api/project/${projectId}/premium-images`, { method: 'POST', body: {} });
     if (result.skipped) {
@@ -478,22 +480,23 @@ function connectGenerationSocket(id) {
       } else if (msg.status === 'images-running') {
         const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
         const label = d.label || 'a design';
-        if (d.gemini === undefined) log('Gemini', `Generating ${plural(d.count, 'image')} for ${label}…`, 'work');
-        if (d.gemini) log('Gemini', `Generating ${plural(d.gemini, 'key image')} (hero/featured) for ${label}…`, 'work');
-        if (d.stock) log('Stock photos', `Finding ${plural(d.stock, 'photo')} on Pixabay for ${label} — FLUX fills any gaps…`, 'work');
+        if (d.gemini === undefined) log('Images', `Creating ${plural(d.count, 'image')} for ${label}…`, 'work');
+        if (d.gemini) log('Images', `Creating ${plural(d.gemini, 'key image')} (hero and featured) for ${label}…`, 'work');
+        if (d.stock) log('Stock photos', `Finding ${plural(d.stock, 'photo')} for ${label}…`, 'work');
         if (d.videos) log('Stock video', `Finding ${plural(d.videos, 'video clip')} for ${label}…`, 'work');
       } else if (msg.status === 'images-note') {
         const label = d.label || 'a design';
         if (d.kind === 'image-sources') {
-          const parts = [`${d.pixabay} Pixabay`].concat(d.openverse ? [`${d.openverse} Openverse`] : [], [`${d.flux} FLUX`, `${d.gemini} Gemini`]).concat(d.dropped ? [`${d.dropped} left out`] : []);
-          log('Stock photos', `${label}: ${parts.join(' · ')} — $${d.cost.toFixed(3)} (all-Gemini: $${d.allGeminiCost.toFixed(3)}).`, 'ok');
+          const total = (d.pixabay || 0) + (d.openverse || 0) + (d.flux || 0) + (d.gemini || 0);
+          log('Stock photos', `${label}: ${total} image${total === 1 ? '' : 's'} ready${d.dropped ? `, ${d.dropped} left out` : ''}.`, 'ok');
         } else if (d.kind === 'gemini-fallback') {
-          log('Gemini', `Gemini unavailable (${d.reason}) — using Pixabay ${d.count === 1 ? 'photo' : `${d.count} photos`} instead for ${label}.`, 'ok');
+          log('Images', `I couldn't create custom images just now, so I used ${d.count === 1 ? 'a stock photo' : `${d.count} stock photos`} instead for ${label}.`, 'ok');
         } else if (d.kind === 'image-dropped') {
-          log('Stock photos', `No image found for ${d.count === 1 ? 'a key image' : `${d.count} key images`} in ${label} (${d.reason}) — left out.`, 'fail');
+          log('Stock photos', `I couldn't find ${d.count === 1 ? 'a key image' : `${d.count} key images`} for ${label}, so I left ${d.count === 1 ? 'it' : 'them'} out.`, 'fail');
         }
       } else if (msg.status === 'media-summary') {
-        log('Builder', `Images this build: ${d.pixabay} Pixabay${d.openverse ? ` + ${d.openverse} Openverse` : ''} (free), ${d.flux} FLUX, ${d.gemini} Gemini — $${d.cost.toFixed(3)} vs $${d.allGeminiCost.toFixed(3)} all-Gemini (${d.savedPct}% saved).`, 'ok');
+        const total = (d.pixabay || 0) + (d.openverse || 0) + (d.flux || 0) + (d.gemini || 0);
+        log('Builder', `${total} image${total === 1 ? '' : 's'} added across your designs.`, 'ok');
       } else if (msg.status === 'variant-complete') {
         variantsFinished++;
         log('Designer', `${d.label || 'Design'} ready (${variantsFinished}/4).`, 'ok');
@@ -518,7 +521,7 @@ function connectGenerationSocket(id) {
       }
     } else if (msg.stage === 'done' && msg.status === 'complete') {
       // Already picked one early? Then there's nothing left to pick.
-      if (d.variants?.length) log('Builder', currentHtml ? `All ${d.variants.length} designs finished — you're working on the one you picked.` : 'Done — pick a direction on the left.', 'ok');
+      if (d.variants?.length) log('Builder', currentHtml ? `All ${d.variants.length} designs finished — you're working on the one you picked.` : 'Built your site. Pick the direction you like on the left.', 'ok');
       else log('Builder', 'Finished with no usable designs — see the errors above.', 'fail');
       // A replay to a reopened, already-chosen project must not swap the
       // live preview back to the direction picker.

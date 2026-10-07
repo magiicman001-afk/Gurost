@@ -205,6 +205,8 @@ Dashboard
 <script src="shared/pulse-voice.js"></script>
 <script src="shared/pulse-inspector.js"></script>
 <script src="shared/code-boxes.js"></script>
+<script src="shared/brand-config.js"></script>
+<script src="shared/ai-brand.js"></script>
 <script src="shared/bot-conversation.js"></script>
 <script src="shared/app-preview-doc.js"></script>
 <script>
@@ -496,13 +498,11 @@ const STAGE_LABELS = {
 };
 const STAGE_ORDER = ['schema', 'backend', 'frontend', 'reviewing', 'fixing', 'verifying', 'done'];
 let stageStatuses = {}; // stage -> 'pending' | 'running' | 'complete'
-let stageModels = {}; // real, genuine model name per stage, from the backend's own broadcast - Perplexity-style transparency, not decorative
 let isPaused = false;
 let generationSocket = null;
 
 function resetStageChecklist() {
   stageStatuses = {};
-  stageModels = {};
   STAGE_ORDER.forEach((s) => { stageStatuses[s] = 'pending'; });
   renderStageChecklist();
 }
@@ -518,10 +518,9 @@ function renderStageChecklist() {
       const status = stageStatuses[stage] || 'pending';
       const icon = status === 'complete' ? 'check_circle' : status === 'running' ? 'autorenew' : 'radio_button_unchecked';
       const colorClass = status === 'complete' ? 'text-green-500' : status === 'running' ? 'text-secondary' : 'text-outline-variant';
-      const modelTag = stageModels[stage] ? ` <span class="text-xs opacity-60">— ${stageModels[stage]}</span>` : '';
       return `<div class="flex items-center gap-2 text-sm">
         <span class="material-symbols-outlined text-lg ${colorClass}">${icon}</span>
-        <span class="${status === 'pending' ? 'text-on-surface-variant' : 'text-on-surface'}">${STAGE_LABELS[stage]}${modelTag}</span>
+        <span class="${status === 'pending' ? 'text-on-surface-variant' : 'text-on-surface'}">${STAGE_LABELS[stage]}</span>
       </div>`;
     })
     .join('');
@@ -540,11 +539,10 @@ function logStage(msg) {
   loggedStages.add(key);
   const bot = STAGE_BOTS[msg.stage] || 'Builder';
   const label = STAGE_LABELS[msg.stage] || msg.stage;
-  const model = msg.data?.model ? ` (${msg.data.model})` : '';
   if (msg.stage === 'paused') logBot('Builder', 'Paused.', 'info', msg.at);
   else if (msg.stage === 'resumed') logBot('Builder', 'Resuming…', 'work', msg.at);
-  else if (msg.stage === 'done' && msg.status === 'complete') logBot('Builder', 'Done — your app is in the preview on the left.', 'ok', msg.at);
-  else if (msg.status === 'running') logBot(bot, `${label}…${model}`, 'work', msg.at);
+  else if (msg.stage === 'done' && msg.status === 'complete') logBot('Builder', `Built your app. It's in the preview on the left. ${GurostAI.VOICE.ready}`, 'ok', msg.at);
+  else if (msg.status === 'running') logBot(bot, `${label}…`, 'work', msg.at);
   else if (msg.status === 'complete') logBot(bot, `${label} — done.`, 'ok', msg.at);
   else if (msg.status === 'failed' || msg.status === 'error') logBot(bot, `${label} failed${msg.data?.error ? `: ${msg.data.error}` : '.'}`, 'fail', msg.at);
 }
@@ -634,7 +632,6 @@ function handleStageProgress(msg) {
 
   if (STAGE_ORDER.includes(msg.stage)) {
     stageStatuses[msg.stage] = msg.status;
-    if (msg.data?.model) stageModels[msg.stage] = msg.data.model;
     renderStageChecklist();
   }
 

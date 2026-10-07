@@ -16,7 +16,7 @@ const BOT_AVATARS = {
   Industry: { emoji: '🏷️', color: '#22d3ee' },
   Designer: { emoji: '🎨', color: '#f472b6' },
   Builder: { emoji: '🔨', color: '#fb923c' },
-  Gemini: { emoji: '✨', color: '#a78bfa' },
+  Images: { emoji: '✨', color: '#a78bfa' },
   'Stock photos': { emoji: '📷', color: '#94a3b8' },
   'Stock video': { emoji: '🎬', color: '#f472b6' },
   'Guide Bot': { emoji: '🧭', color: '#34d399' },
@@ -29,6 +29,14 @@ const BOT_AVATARS = {
   Verifier: { emoji: '🧪', color: '#34d399' },
   You: { emoji: '🙂', color: '#e5e7eb' }
 };
+// Every AI helper speaks under the AI's one name (shared/ai-brand.js, set in brand-config.js); the helper's job is
+// a small tag beside the name. Pulse and You keep their own names.
+const AI_ROLES = {
+  Planner: 'Planner', Industry: 'Industry', Designer: 'Designer', Builder: 'Builder', Images: 'Images',
+  'Stock photos': 'Photos', 'Stock video': 'Video', 'Guide Bot': 'Guide',
+  Schema: 'Schema', Backend: 'Backend', Frontend: 'Frontend', Reviewer: 'Reviewer', Verifier: 'Verifier'
+};
+const AI_COLOR = '#FEB246';
 const BOT_TONES = {
   work: { icon: 'autorenew', color: 'text-[var(--gurost-primary)]' },
   ok: { icon: 'check_circle', color: 'text-green-400' },
@@ -44,6 +52,12 @@ function logBot(bot, text, tone = 'info', at = Date.now()) {
   const wrap = document.getElementById('botLog');
   const list = document.getElementById('botLogList');
   const avatar = BOT_AVATARS[bot] || { emoji: '🤖', color: '#cbd5e1' };
+  const aiRole = window.GurostAI ? AI_ROLES[bot] : null;
+  // Error lines never name a model or provider (see GurostAI.publicText). Other lines are
+  // written without them, and may echo what the person typed, which must stay as typed.
+  if (tone === 'fail' && window.GurostAI && (aiRole || bot === 'Pulse')) text = GurostAI.publicText(text);
+  const speaker = aiRole ? GurostAI.NAME : bot;
+  const speakerColor = aiRole ? AI_COLOR : avatar.color;
   const status = BOT_TONES[tone] ? `<span class="material-symbols-outlined text-[13px] ${BOT_TONES[tone].color}">${BOT_TONES[tone].icon}</span>` : '';
   const time = new Date(at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const textClass = tone === 'fail' ? 'text-red-300' : 'text-white/85';
@@ -54,9 +68,11 @@ function logBot(bot, text, tone = 'info', at = Date.now()) {
   li.className = `flex items-start gap-2.5 ${sameTurn ? '-mt-1' : 'mt-1'}`;
   li.innerHTML = `${sameTurn
       ? '<span class="w-6 flex-shrink-0"></span>'
-      : `<span class="w-6 h-6 rounded-full flex items-center justify-center text-[13px] flex-shrink-0" style="background:${avatar.color}26; box-shadow: inset 0 0 0 1px ${avatar.color}55" aria-hidden="true">${avatar.emoji}</span>`}
+      : aiRole
+        ? `<span class="w-6 h-6 flex items-center justify-center flex-shrink-0">${GurostAI.avatar(24)}</span>`
+        : `<span class="w-6 h-6 rounded-full flex items-center justify-center text-[13px] flex-shrink-0" style="background:${avatar.color}26; box-shadow: inset 0 0 0 1px ${avatar.color}55" aria-hidden="true">${avatar.emoji}</span>`}
     <div class="min-w-0 flex-1">
-      ${sameTurn ? '' : `<div class="flex items-center gap-2 leading-5"><span class="font-semibold text-[12px]" style="color:${avatar.color}">${escapeLogText(bot)}</span><span class="text-[10px] text-white/30">${time}</span></div>`}
+      ${sameTurn ? '' : `<div class="flex items-center gap-2 leading-5"><span class="font-semibold text-[12px]" style="color:${speakerColor}">${escapeLogText(speaker)}</span>${aiRole ? `<span class="text-[10px] text-white/45">${escapeLogText(aiRole)}</span>` : ''}<span class="text-[10px] text-white/30">${time}</span></div>`}
       <p class="${textClass} text-[12.5px] leading-snug [overflow-wrap:anywhere] flex items-start gap-1.5">${status}<span>${escapeLogText(text)}</span></p>
     </div>`;
   list.appendChild(li);

@@ -23,6 +23,13 @@
   let activeRecording = null;
   let correctionHistory = []; // real, session-local memory of corrections made on this project
 
+  // The AI's name is the one in brand-config.js. It is the AI behind Pulse (shared/ai-brand.js). Pulse keeps its own name; the
+  // status line says what the AI is doing. Plain fallbacks if the brand file did not load.
+  const AI = window.GurostAI;
+  const aiStatus = (key, fallback) => (AI && AI.STATUS[key]) || fallback;
+  const safeErr = (m) => (AI ? AI.publicText(m) : m); // an error never names a model or provider
+  let doneStatus = 'Done'; // what the status line says once a build or an edit finishes
+
   function setState(newState) {
     currentState = newState;
     const ball = document.getElementById('pulseBall');
@@ -44,11 +51,11 @@
     const statusText = document.getElementById('pulsePanelStatusText');
     const statusMap = {
       idle: 'Ready when you are',
-      building: 'Building…',
+      building: aiStatus('thinking', 'Building…'),
       paused: 'Paused',
       recording: 'Listening…',
-      correcting: 'Applying your change…',
-      done: 'Done',
+      correcting: aiStatus('thinking', 'Applying your change…'),
+      done: doneStatus,
     };
     if (statusText) statusText.textContent = statusMap[newState] || '';
 
@@ -155,12 +162,13 @@
       try {
         await window.gurostBuilder.generate(text);
         correctionHistory.push({ type: 'initial', text });
+        doneStatus = /app-builder/.test(location.pathname) ? aiStatus('builtApp', 'Done') : aiStatus('builtSite', 'Done');
         setState('done');
-        logStatus('Done!', { feed: false });
+        logStatus(doneStatus, { feed: false });
         setTimeout(checkForRealSuggestion, 500);
         refreshUndoRedoState();
       } catch (err) {
-        logStatus('Failed: ' + err.message, { feed: false });
+        logStatus('Failed: ' + safeErr(err.message), { feed: false });
         setState('idle');
       }
       return;
@@ -176,12 +184,13 @@
       const fullInstruction = recentContext ? `${text} (earlier changes this session: ${recentContext})` : text;
       await window.gurostBuilder.correct(fullInstruction);
       correctionHistory.push({ type: 'correction', text });
+      doneStatus = AI ? AI.VOICE.ready : 'Done';
       setState('done');
-      logStatus('Done!', { feed: false });
+      logStatus(doneStatus, { feed: false });
       setTimeout(checkForRealSuggestion, 500);
       refreshUndoRedoState();
     } catch (err) {
-      logStatus('Failed: ' + err.message, { feed: false });
+      logStatus('Failed: ' + safeErr(err.message), { feed: false });
       setState('idle');
     }
   }
@@ -813,7 +822,7 @@
         navigator.clipboard?.writeText(dataUrl);
         logStatus('Image copied — paste its data URL into an <img> tag via a correction.');
       });
-      logStatus(`Image generated via ${data.provider}.`);
+      logStatus('Image created.');
     }));
 
     document.getElementById('actHistory').addEventListener('click', () => runAction('history', async () => {
@@ -851,7 +860,7 @@
             headers: window.GurostAPI?.authHeaders ? window.GurostAPI.authHeaders() : {}
           });
           const restoreData = await restoreRes.json();
-          if (!restoreRes.ok) { logStatus(restoreData.error || 'Restore failed.'); return; }
+          if (!restoreRes.ok) { logStatus(safeErr(restoreData.error || 'Restore failed.')); return; }
           gb.applyHistoryRestore?.(restoreData);
           logStatus(`Restored to "${restoreData.action}".`);
           panel.classList.remove('visible');
@@ -947,7 +956,7 @@
     try {
       await fn();
     } catch (err) {
-      logStatus(`${name} failed: ${err.message}`);
+      logStatus(`${name} failed: ${safeErr(err.message)}`);
     } finally {
       if (btn) btn.disabled = false;
     }

@@ -73,7 +73,7 @@ Dashboard
 <!-- Input Section -->
 <section class="w-full max-w-3xl flex flex-col items-center text-center gap-4">
 <h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary">Enter URL to Amend</h1>
-<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Paste your existing website URL below to run a comprehensive AI audit and automatically fix performance, SEO, and accessibility issues.</p>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Paste your existing website URL below and <span data-brand-name></span> will run a comprehensive audit, then fix performance, SEO, and accessibility issues for you.</p>
 <div class="w-full relative mt-1 group">
 <span class="material-symbols-outlined absolute left-6 top-1/2 -translate-y-1/2 text-outline text-2xl group-focus-within:text-secondary transition-colors" data-icon="link">link</span>
 <input class="w-full h-14 pl-16 pr-[120px] rounded-full border border-outline-variant bg-surface-container-lowest shadow-sm text-lg focus:outline-none focus:ring-4 focus:ring-secondary/20 focus:border-secondary transition-all" id="siteUrl" placeholder="https://yourwebsite.com" type="url"/>
@@ -83,6 +83,7 @@ Dashboard
 </button>
 </div>
 <p class="text-sm text-error hidden" id="amendError"></p>
+<p class="text-sm text-on-surface-variant hidden" id="aiStatus" role="status"></p>
 
 <!-- Real, working drag-and-drop / file-picker - opens the folder
      browser on click, real drag-over/drop handling, wired to the
@@ -171,6 +172,8 @@ Dashboard
 </footer>
 
 <script src="shared/api-client.js"></script>
+<script src="shared/brand-config.js"></script>
+<script src="shared/ai-brand.js"></script>
 <script src="shared/pulse-voice.js"></script>
 <script>
 /**
@@ -194,7 +197,7 @@ let latestCodeHtml = null;
 
 function showError(message) {
   const el = document.getElementById('amendError');
-  el.textContent = message;
+  el.textContent = GurostAI.publicText(message); // never names a model or provider
   el.classList.remove('hidden');
 }
 function hideError() {
@@ -206,7 +209,10 @@ function setAuditLoading(active) {
   const label = document.getElementById('auditBtnLabel');
   const icon = document.getElementById('auditBtnIcon');
   btn.disabled = active;
-  label.textContent = active ? 'Auditing…' : 'Audit';
+  label.textContent = active ? 'Analyzing…' : 'Audit';
+  const aiLine = document.getElementById('aiStatus');
+  aiLine.textContent = active ? GurostAI.STATUS.analyzing : '';
+  aiLine.classList.toggle('hidden', !active);
   icon.textContent = active ? 'autorenew' : 'search';
 }
 
@@ -216,6 +222,9 @@ function setFixLoading(active) {
   const icon = document.getElementById('fixAllBtnIcon');
   btn.disabled = active;
   label.textContent = active ? 'Fixing…' : 'Fix All Issues';
+  const aiLine = document.getElementById('aiStatus');
+  aiLine.textContent = active ? GurostAI.STATUS.thinking : '';
+  aiLine.classList.toggle('hidden', !active);
   icon.textContent = active ? 'autorenew' : 'auto_fix_high';
 }
 
@@ -228,10 +237,10 @@ const ISSUE_ICONS = {
 
 function renderIssues(issues) {
   const list = document.getElementById('issuesList');
-  document.getElementById('issuesHeading').textContent = issues.length ? `${issues.length} Issue${issues.length === 1 ? '' : 's'} Found` : 'No Issues Found';
+  document.getElementById('issuesHeading').textContent = GurostAI.STATUS.found(issues.length);
 
   if (!issues.length) {
-    list.innerHTML = '<li class="text-on-surface-variant">Nice — the audit came back clean.</li>';
+    list.innerHTML = `<li class="text-on-surface-variant">${GurostAI.VOICE.cleanAudit}</li>`;
     document.getElementById('fixAllBtn').style.display = 'none';
     return;
   }
@@ -290,9 +299,9 @@ async function runAudit(url) {
     const queuedFix = pendingFix; pendingFix = null;
     if (queuedFix) currentIssues = [{ category: 'custom', severity: queuedFix.severity, description: queuedFix.text, fix_summary: queuedFix.text }, ...currentIssues];
     window.history.replaceState({}, '', `amend_website.html?projectId=${projectId}`);
-    if (result.modelUsed) {
+    {
       const tag = document.getElementById('auditModelTag');
-      tag.textContent = `Audited by ${result.modelUsed}`;
+      tag.textContent = `Audited by ${GurostAI.NAME}`;
       tag.classList.remove('hidden');
     }
 
@@ -328,9 +337,9 @@ async function runAuditFromFile(html, fileName) {
     projectId = result.projectId;
     currentIssues = result.issues || [];
     window.history.replaceState({}, '', `amend_website.html?projectId=${projectId}`);
-    if (result.modelUsed) {
+    {
       const tag = document.getElementById('auditModelTag');
-      tag.textContent = `Audited by ${result.modelUsed}`;
+      tag.textContent = `Audited by ${GurostAI.NAME}`;
       tag.classList.remove('hidden');
     }
 
@@ -549,7 +558,7 @@ async function applyCorrection(instruction) {
   document.getElementById('codeToggleLabel').textContent = 'Show Code';
 
   try {
-    await speakTextViaRest('Done. Your site has been rebuilt with that change.');
+    await speakTextViaRest("All done. I've rebuilt your site with that change.");
   } catch {
     // TTS is a nice-to-have on top of the already-completed rebuild —
     // never block or error the actual result over a failed voice reply.
