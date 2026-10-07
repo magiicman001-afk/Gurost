@@ -105,3 +105,21 @@ test("prices are never invented: a marked placeholder counts, and the fixes ask 
     assert.match(item.fix, /never a made-up price/, id);
   }
 });
+
+test("price placeholders pass with honest evidence; common variants count; real prices still read as prices", () => {
+  for (const ph of ["[Add your price]", "[Your price]", "[Price]", "[add price here]"]) {
+    const r = runChecklist("restaurant", { text: `Our menu. Soup of the day ${ph}` });
+    const item = r.items.find((i) => i.id === "menu_with_prices");
+    assert.equal(item.status, "pass", ph);
+    assert.match(item.evidence, /price placeholders - add your real prices/, ph);
+  }
+  const real = runChecklist("restaurant", { text: "Our menu. Soup of the day £5.50" }).items.find((i) => i.id === "menu_with_prices");
+  assert.equal(real.status, "pass");
+  assert.doesNotMatch(real.evidence, /placeholder/);
+});
+
+test("Pulse edits carry the same honesty rule (never invented prices, reviews or stats)", () => {
+  const src = require("fs").readFileSync(require("path").join(__dirname, "../bots/correction-bot.js"), "utf8");
+  assert.match(src, /never invent prices, reviews, customer names, ratings or statistics/);
+  assert.equal((src.match(/\$\{HONEST_CONTENT\}/g) || []).length, 2, "both the patch and the full-edit prompts");
+});
