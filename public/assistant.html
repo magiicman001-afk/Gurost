@@ -23,6 +23,12 @@
   .dept-draft { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin: 8px 0; font: inherit; white-space: pre-wrap; word-break: break-word; }
   .dept-copy { font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff; cursor: pointer; }
   .dept-copy:hover { border-color: var(--orange); }
+  .dept-copy:disabled { opacity: .5; cursor: default; }
+  .dept-approval { border: 1px solid var(--orange); }
+  .dept-approval-closed { opacity: .7; border-color: var(--line); }
+  .dept-approval-bar { margin-top: 8px; }
+  .dept-approval-input { display: block; width: 100%; margin-top: 4px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; font: inherit; background: #fff; }
+  textarea.dept-approval-input { min-height: 90px; }
   #deptLog { max-height: 420px; overflow-y: auto; margin-bottom: 12px; }
   .dept-avatar { float: left; margin: 1px 8px 0 0; line-height: 0; }
   .dept-bubble::after { content: ''; display: table; clear: both; }
@@ -204,6 +210,7 @@
 <script src="shared/company-findings.js"></script>
 <script src="shared/voice-vad.js"></script>
 <script src="shared/voice-chat.js"></script>
+<script src="shared/approval-cards.js"></script>
 <script src="shared/department-bots.js"></script>
 <script src="shared/memory-panel.js"></script>
 <script>

@@ -50,9 +50,10 @@
   async function restore(bot) {
     try {
       var r = await GurostAPI.call('/api/department-bots/' + bot.id + '/history');
-      if (current !== bot || !r.messages || !r.messages.length) return;
+      if (current !== bot || !r.messages || !r.messages.length) { restoreApprovals(bot); return; }
       var note = el('p', 'text-xs text-gray-500 mb-2', 'Earlier conversation restored.'); $('deptLog').appendChild(note);
       r.messages.forEach(function (m) { if (m.role === 'user') bubble('you', m.text); else bubble('bot', m.text, m.draft); });
+      restoreApprovals(bot);
     } catch (e) { /* no saved chat to show; start fresh */ }
   }
 
@@ -122,6 +123,27 @@
     });
   }
 
+  // Actions the bot wants to take (send, add...) wait for the user's OK as cards.
+  function showApprovals(list) {
+    if (!window.GurostApprovals) return;
+    (list || []).forEach(function (a) {
+      if ($('deptLog').querySelector('[data-approval-id="' + String(a.id).replace(/[^0-9a-f-]/gi, '') + '"]')) return;
+      var c = GurostApprovals.renderCard(document, a, {
+        approve: function (id, args) { return GurostAPI.call('/api/approvals/' + id + '/approve', { method: 'POST', body: args ? { args: args } : {} }); },
+        cancel: function (id) { return GurostAPI.call('/api/approvals/' + id + '/cancel', { method: 'POST', body: {} }); }
+      });
+      $('deptLog').appendChild(c); c.scrollIntoView({ block: 'nearest' });
+    });
+  }
+
+  // Cards still waiting after a reload or on another device.
+  async function restoreApprovals(bot) {
+    try {
+      var r = await GurostAPI.call('/api/approvals?bot=' + encodeURIComponent(bot.id));
+      if (current === bot) showApprovals(r.approvals);
+    } catch (e) { /* nothing waiting, or not reachable: the chat still works */ }
+  }
+
   function copyText(text, btn) {
     var done = function () { btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = 'Copy draft'; }, 1500); };
     if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(done, fallback); } else fallback();
@@ -188,7 +210,7 @@
       onStatus: function (s) { setVoiceStatus(VOICE_TEXT[s] || ''); $('deptVoice').textContent = s === 'off' ? 'Talk' : 'Stop'; if (s === 'off') voice = null; },
       onUser: function (text) { bubble('you', text); },
       onResult: function (r) {
-        bubble('bot', r.reply, r.draft); showTools(r.toolsUsed); showProposals(r.proposals);
+        bubble('bot', r.reply, r.draft); showTools(r.toolsUsed); showProposals(r.proposals); showApprovals(r.approvals);
         history.push({ role: 'user', content: r.transcript }, { role: 'assistant', content: (r.reply ? r.reply + '\n\n' : '') + (r.draft ? '--- DRAFT ---\n' + r.draft + '\n--- END DRAFT ---' : '') });
       },
       onError: function (msg) { bubble('bot', "I couldn't answer that: " + (window.GurostAI ? GurostAI.publicText(msg) : msg)); }
@@ -216,6 +238,7 @@
       bubble('bot', r.reply, r.draft);
       showTools(r.toolsUsed);
       showProposals(r.proposals);
+      showApprovals(r.approvals);
     } catch (err) { thinking.remove(); bubble('bot', "I couldn't answer that: " + (window.GurostAI ? GurostAI.publicText(err.message) : err.message)); }
     busy = false; $('deptSend').disabled = false;
   }
