@@ -82,6 +82,8 @@
       /** After a turn is handled, start listening for the next one (room noise is kept). */
       listenAgain: function () { toIdle(); },
       get state() { return state; },
+      /** true while a possible start of speech is being measured (do not restart the recorder now) */
+      get pending() { return loudSince !== null; },
       get noiseFloor() { return floor; }
     };
   }

@@ -110,7 +110,11 @@
       </div>
       <div id="deptLog" aria-live="polite"></div>
       <textarea id="deptInput" rows="4" class="field-input resize-y mb-2" placeholder="Paste an email or ask a question. Ctrl+Enter sends."></textarea>
-      <button id="deptSend" type="button" class="gold-gradient text-white text-sm font-semibold px-5 py-2.5 rounded-full">Draft a reply</button>
+      <div class="flex flex-wrap items-center gap-2">
+        <button id="deptSend" type="button" class="gold-gradient text-white text-sm font-semibold px-5 py-2.5 rounded-full">Draft a reply</button>
+        <button id="deptVoice" type="button" class="text-sm font-semibold px-5 py-2.5 rounded-full border border-[var(--line)] hover:border-[var(--orange)]" disabled>Talk</button>
+        <span id="deptVoiceStatus" class="text-sm text-[var(--muted)]" role="status" aria-live="polite"></span>
+      </div>
     </div>
   </section>
 
@@ -198,6 +202,8 @@
 <script src="shared/pulse-voice.js"></script>
 <script src="shared/company-profile.js"></script>
 <script src="shared/company-findings.js"></script>
+<script src="shared/voice-vad.js"></script>
+<script src="shared/voice-chat.js"></script>
 <script src="shared/department-bots.js"></script>
 <script src="shared/memory-panel.js"></script>
 <script>

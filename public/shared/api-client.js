@@ -46,14 +46,16 @@ window.GurostAPI = (function () {
   }
 
   async function call(path, { method = 'GET', body, headers = {} } = {}) {
+    // A form upload (a voice recording) must go as-is: the browser sets its own content type.
+    const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
     const res = await fetch(`${API_BASE}${path}`, {
       method,
       headers: {
-        'Content-Type': 'application/json',
+        ...(isForm ? {} : { 'Content-Type': 'application/json' }),
         ...authHeaders(),
         ...headers
       },
-      body: body ? JSON.stringify(body) : undefined
+      body: body ? (isForm ? body : JSON.stringify(body)) : undefined
     });
 
     let data;

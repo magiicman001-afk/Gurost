@@ -88,3 +88,13 @@ test("reset forgets everything, including the room calibration", () => {
   assert.equal(vad.noiseFloor, 0);
   assert.equal(vad.state, "idle");
 });
+
+test("pending is true while a possible start of speech is being measured", () => {
+  const vad = createVad();
+  let r = run(vad, [[QUIET, 600]]);
+  assert.equal(vad.pending, false);
+  r = run(vad, [[TALK, 100]], r.end);
+  assert.equal(vad.pending, true);
+  r = run(vad, [[QUIET, 200]], r.end);
+  assert.equal(vad.pending, false);
+});

@@ -23,6 +23,7 @@
   }
 
   function showCalibration(bot) {
+    stopVoice();
     var c = bot.calibration || {};
     $('deptCalTitle').textContent = 'Set up your ' + bot.label + ' bot';
     $('deptBotName').value = c.botName || '';
@@ -38,6 +39,7 @@
   function showChat(bot) {
     $('deptCal').hidden = true; $('deptChat').hidden = false;
     $('deptChatTitle').textContent = ((bot.calibration && bot.calibration.botName) || bot.label + ' · ' + (window.GurostAI ? GurostAI.NAME : 'Assistant'));
+    stopVoice(); checkVoice();
     history = []; $('deptLog').textContent = '';
     bubble('bot', bot.summary + ' Paste an email or ask a question and I will draft the reply.');
     restore(bot);
@@ -149,6 +151,56 @@
       current.calibration = r.calibration; msg(''); showChat(current);
     } catch (err) { msg(err.message, true); }
   });
+
+
+  // ---- Talk: hands-free voice conversation (see shared/voice-chat.js) ----------
+  var voice = null, voiceReady = false;
+  var VOICE_TEXT = { listening: 'Listening... speak when you are ready.', thinking: 'Thinking...', speaking: 'Speaking. Talk any time to interrupt.', off: '' };
+
+  function setVoiceStatus(text) { var s = $('deptVoiceStatus'); if (s) s.textContent = text || ''; }
+
+  async function checkVoice() {
+    var btn = $('deptVoice'); if (!btn) return;
+    voiceReady = false; btn.disabled = true; btn.textContent = 'Talk';
+    if (!window.GurostVoice || !window.GurostVad || !GurostVoice.browserSupported()) { setVoiceStatus('Voice is not available in this browser. You can type instead.'); return; }
+    try {
+      var st = await GurostAPI.call('/api/voice/status');
+      if (!st.available) { setVoiceStatus('Voice is not set up yet. You can type instead.'); return; }
+    } catch (e) { setVoiceStatus(''); return; }
+    voiceReady = true; btn.disabled = false; setVoiceStatus('');
+  }
+
+  function stopVoice() {
+    if (voice) { voice.stop(); voice = null; }
+    var btn = $('deptVoice'); if (btn) btn.textContent = 'Talk';
+    if (voiceReady) setVoiceStatus('');
+  }
+
+  async function startVoice() {
+    if (!current || !voiceReady || voice) return;
+    var botId = current.id;
+    voice = GurostVoice.createVoiceSession(GurostVoice.browserEnv(), {
+      send: function (blob) {
+        var form = new FormData();
+        form.append('audio', blob, 'speech.' + (/mp4/.test(blob.type) ? 'm4a' : /ogg/.test(blob.type) ? 'ogg' : 'webm'));
+        return GurostAPI.call('/api/department-bots/' + botId + '/voice', { method: 'POST', body: form });
+      },
+      onStatus: function (s) { setVoiceStatus(VOICE_TEXT[s] || ''); $('deptVoice').textContent = s === 'off' ? 'Talk' : 'Stop'; if (s === 'off') voice = null; },
+      onUser: function (text) { bubble('you', text); },
+      onResult: function (r) {
+        bubble('bot', r.reply, r.draft); showTools(r.toolsUsed); showProposals(r.proposals);
+        history.push({ role: 'user', content: r.transcript }, { role: 'assistant', content: (r.reply ? r.reply + '\n\n' : '') + (r.draft ? '--- DRAFT ---\n' + r.draft + '\n--- END DRAFT ---' : '') });
+      },
+      onError: function (msg) { bubble('bot', "I couldn't answer that: " + (window.GurostAI ? GurostAI.publicText(msg) : msg)); }
+    });
+    try { await voice.start(); }
+    catch (err) {
+      voice = null; $('deptVoice').textContent = 'Talk';
+      setVoiceStatus(err && err.name === 'NotAllowedError' ? 'Microphone access was blocked. Allow it in your browser, or type instead.' : 'I could not start the microphone. You can type instead.');
+    }
+  }
+
+  $('deptVoice').addEventListener('click', function () { if (voice) stopVoice(); else startVoice(); });
 
   async function send() {
     if (!current || busy) return;
