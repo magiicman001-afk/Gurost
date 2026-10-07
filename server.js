@@ -2150,6 +2150,29 @@ app.post("/api/approvals/:id/cancel", async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// Proactive suggestions: at most 2 a day, from the user's own usage counts (no
+// message text, no model). Nothing is returned when memory is paused.
+// ---------------------------------------------------------------------------
+const proactive = require("./lib/proactive");
+
+app.get("/api/proactive", async (req, res) => {
+  const tz = typeof req.query.tz === "string" ? req.query.tz.slice(0, 60) : "UTC";
+  const suggestions = await proactive.suggestionsFor(require("./lib/db").supabase, req.user.id, { tz, isPaused: botMemory.isPaused, auditList: auditLog.list });
+  res.json({ suggestions });
+});
+
+app.post("/api/proactive/:id/respond", security.rejectUnknownFields(["action"]), async (req, res) => {
+  if (!isUuid(req.params.id)) return res.status(400).json({ error: "Bad request." });
+  try {
+    const out = await proactive.respond(require("./lib/db").supabase, req.user.id, req.params.id, req.body.action);
+    res.status(out.status).json(out.body);
+  } catch (err) {
+    console.error("[proactive] respond failed:", err.message);
+    res.status(500).json({ error: "Could not save that answer." });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // Voice: the user speaks, the bot answers by text AND speech. The recording is
 // turned into text, run through the same chat as a typed message, and the
 // answer is spoken back. Audio is not stored; the typed-out text is saved like
