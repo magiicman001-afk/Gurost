@@ -371,17 +371,30 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
 });
 
+// The grid's one-line message (loading, empty, error). Rebuilt each time:
+// showing cards clears the grid, the message element with it.
+function showProjectsMessage(text) {
+  const p = document.createElement('p');
+  p.id = 'dashProjectsEmpty';
+  p.className = 'text-sm text-[var(--muted)] col-span-full text-center py-8';
+  p.textContent = text;
+  document.getElementById('dashProjectsGrid').replaceChildren(p);
+}
+
 async function loadRealDashboardProjects() {
   const grid = document.getElementById('dashProjectsGrid');
   let projects;
   try {
-    projects = await GurostAPI.call('/api/projects');
+    // The route answers { projects: [...] } - reading .length off that object
+    // left the dashboard saying "No projects yet" for everyone.
+    const res = await GurostAPI.call('/api/projects');
+    projects = Array.isArray(res) ? res : (res.projects || []);
   } catch (err) {
-    document.getElementById('dashProjectsEmpty').textContent = "Couldn't load your projects: " + err.message;
+    showProjectsMessage("Couldn't load your projects: " + err.message);
     return;
   }
   if (!projects.length) {
-    document.getElementById('dashProjectsEmpty').textContent = 'No projects yet — describe what you want to build above to get started.';
+    showProjectsMessage('No projects yet — describe what you want to build above to get started.');
     return;
   }
   grid.innerHTML = '';
@@ -399,9 +412,13 @@ async function loadRealDashboardProjects() {
         <span class="material-symbols-outlined text-[18px]" style="color: var(--orange);">${p.type === 'app' ? 'phone_iphone' : 'language'}</span>
         <span class="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">${p.type === 'app' ? 'App' : 'Website'}</span>
       </div>
-      <p class="text-sm font-semibold mb-1 truncate">${displayName}</p>
-      <p class="text-xs text-[var(--muted)]">Last edited: ${timeAgo}</p>
+      <p class="text-sm font-semibold mb-1 truncate" data-name></p>
+      <p class="text-xs text-[var(--muted)]" data-when></p>
     `;
+    // Text the user typed goes in as text, never as HTML.
+    card.querySelector('[data-name]').textContent = displayName;
+    card.querySelector('[data-when]').textContent = p.built === false ? 'Failed — nothing was built' : `Last edited: ${timeAgo}`;
+    card.appendChild(deleteButton(p, card));
     const subs = subCounts[p.id];
     if (p.type !== 'app' && subs && subs.total) {
       const link = document.createElement('a');
@@ -415,6 +432,33 @@ async function loadRealDashboardProjects() {
     card.addEventListener('click', () => { window.location.href = `${targetPage}?projectId=${p.id}`; });
     grid.appendChild(card);
   });
+}
+
+// "Delete project" (or "Failed — delete?" for a build that produced nothing),
+// with a confirmation - the project's saved state and share links are gone
+// for good; form submissions and GitHub backups are kept.
+function deleteButton(p, card) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'mt-3 text-xs font-semibold underline-offset-2 hover:underline';
+  btn.style.color = p.built === false ? 'var(--orange)' : 'var(--muted)';
+  btn.textContent = p.built === false ? 'Failed — delete?' : 'Delete project';
+  btn.addEventListener('click', async (e) => {
+    e.stopPropagation(); // not an "open project" click
+    const name = (p.prompt || 'this project').slice(0, 60);
+    if (!confirm(`Delete "${name}"?\n\nIts site, designs and share links are removed for good. Form submissions and GitHub backups are kept.`)) return;
+    btn.disabled = true;
+    btn.textContent = 'Deleting…';
+    try {
+      await GurostAPI.call(`/api/project/${encodeURIComponent(p.id)}`, { method: 'DELETE' });
+      card.remove();
+      loadRealDashboardProjects();
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = `Couldn't delete: ${err.message}`;
+    }
+  });
+  return btn;
 }
 </script>
 </body>

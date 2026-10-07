@@ -844,6 +844,15 @@ function newProject(prompt, userId) {
   };
 }
 
+// Projects that count towards the plan's limit: built ones (a site, designs
+// or app files - projectState.isBuilt), saved or still only in memory.
+// Failed and empty builds don't count.
+async function builtProjectCount(userId) {
+  const ids = await projectState.builtProjectIds(userId);
+  for (const [id, p] of PROJECTS) if (p.userId === userId && projectState.isBuilt(p)) ids.add(id);
+  return ids.size;
+}
+
 // Fire-and-forget save to project_state. Every deploy restarts the
 // server and empties PROJECTS; Website Builder projects used to be
 // saved only by the explicit Save button, so unsaved sites vanished.
@@ -1229,7 +1238,7 @@ app.post(
     if (!prompt) return res.status(400).json({ error: "Missing 'prompt'." });
 
     const maxProjects = auth.isAdmin(req.user.email) ? Infinity : (PLANS[req.user.plan]?.maxProjects ?? 1);
-    const currentProjectCount = [...PROJECTS.values()].filter((p) => p.userId === req.user.id).length;
+    const currentProjectCount = maxProjects === Infinity ? 0 : await builtProjectCount(req.user.id);
     if (currentProjectCount >= maxProjects) {
       return res.status(402).json({
         error: `Project limit reached (${maxProjects} for the ${req.user.plan} plan). Upgrade for more, or delete an existing project.`
@@ -5327,7 +5336,7 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt", "
   if (!prompt) return res.status(400).json({ error: "Missing 'prompt'." });
 
   const maxProjects = auth.isAdmin(req.user.email) ? Infinity : (PLANS[req.user.plan]?.maxProjects ?? 1);
-  const currentProjectCount = [...PROJECTS.values()].filter((p) => p.userId === req.user.id).length;
+  const currentProjectCount = maxProjects === Infinity ? 0 : await builtProjectCount(req.user.id);
   if (currentProjectCount >= maxProjects) {
     return res.status(402).json({ error: `Project limit reached (${maxProjects} for the ${req.user.plan} plan). Upgrade for more, or delete an existing project.` });
   }
@@ -5606,6 +5615,7 @@ app.get("/api/projects", async (req, res) => {
       type: p.type,
       state: p.state,
       deployUrl: p.deployUrl,
+      built: projectState.isBuilt(p),
       hasCriticalIssues: p.codeReview?.hasCritical || false,
       lastUpdated: p.stateHistory?.[p.stateHistory.length - 1]?.ts || p.buildStartedAt
     }));
@@ -5626,12 +5636,39 @@ app.get("/api/projects", async (req, res) => {
       type: p.type,
       state: p.state,
       deployUrl: p.deploy_url,
+      built: p.built,
       hasCriticalIssues: false, // not persisted — codeReview is intentionally left out of project_state, see its header
       lastUpdated: new Date(p.updated_at).getTime()
     }));
 
   const mine = [...inMemory, ...persistedOnly].sort((a, b) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
   res.json({ projects: mine });
+});
+
+// DELETE /api/project/:id - the owner deletes a project: it leaves memory
+// and its saved state, history and share links are removed. Refused while
+// it is building or being edited (a save in flight would bring it back).
+// Form submissions and GitHub backup repos are kept.
+app.delete("/api/project/:id", async (req, res) => {
+  const id = req.params.id;
+  try {
+    const inMemory = PROJECTS.get(id);
+    const owner = inMemory ? inMemory.userId : await projectState.ownerOf(id);
+    // 404 for someone else's project too - no hint that the id exists.
+    if (!owner || owner !== req.user.id) return res.status(404).json({ error: "Project not found." });
+    // Only a live build counts: one stuck in BUILDING from a crash long ago can be deleted.
+    const lastChange = inMemory?.stateHistory?.[inMemory.stateHistory.length - 1]?.ts || inMemory?.buildStartedAt || 0;
+    const busy = inMemory && ["BUILDING", "PLANNING", "CORRECTING", "RESUMING"].includes(inMemory.state) && Date.now() - lastChange < 15 * 60 * 1000;
+    if (busy) {
+      return res.status(409).json({ error: "This project is still building or being edited - try again when it has finished." });
+    }
+    await projectState.deleteProjectRows(id, req.user.id);
+    PROJECTS.delete(id);
+    security.auditLog("project_deleted", req, `project=${id}`).catch(() => {});
+    res.json({ deleted: id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ---------------------------------------------------------------------------

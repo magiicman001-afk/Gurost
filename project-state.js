@@ -36,6 +36,16 @@
 const { supabase } = require("./lib/db");
 const { markInterrupted } = require("./lib/app-build-state");
 
+// A project counts towards the plan's project limit once something has
+// been built: a site, the designs to pick from, or an app's files. A build
+// that failed or never started is an empty shell - it doesn't use up the
+// user's allowance (they can delete it from the dashboard).
+function isBuilt(project) {
+  const files = project?.appFiles;
+  const hasFiles = Array.isArray(files) ? files.length > 0 : !!files && Object.keys(files).length > 0;
+  return Boolean(project?.currentHtml) || (Array.isArray(project?.variants) && project.variants.length > 0) || hasFiles;
+}
+
 // Which real fields on a project object are worth persisting inside
 // the single `context` blob — kept as one named list so it's obvious
 // at a glance what does and doesn't survive a restart.
@@ -64,6 +74,7 @@ function toRow(projectId, userId, project) {
       buildError: project.buildError || null, // App Builder: why a build stopped ({ error, at })
       suggestionLog: project.suggestionLog || null, // Website Builder suggestion box: what was accepted or put off, and when
       githubSave: project.githubSave || null, // its private GitHub repo, last save, and the auto-save choice
+      built: isBuilt(project), // counts towards the project limit (see isBuilt)
     },
     updated_at: new Date().toISOString(),
   };
@@ -141,7 +152,7 @@ async function hydrateProjectIfMissing(projectId) {
 async function listPersistedProjects(userId, limit = 20) {
   const { data, error } = await supabase
     .from("project_state")
-    .select("id, name, context, updated_at")
+    .select("id, name, context->prompt, context->type, context->state, context->deployUrl, context->built, updated_at")
     .eq("user_id", userId)
     .order("updated_at", { ascending: false })
     .limit(limit);
@@ -153,12 +164,45 @@ async function listPersistedProjects(userId, limit = 20) {
   // rather than making every caller reach into `context` itself.
   return data.map((row) => ({
     project_id: row.id,
-    prompt: row.context?.prompt,
-    type: row.context?.type,
-    state: row.context?.state,
-    deploy_url: row.context?.deployUrl,
+    prompt: row.prompt,
+    type: row.type,
+    state: row.state,
+    deploy_url: row.deployUrl,
+    built: row.built === true,
     updated_at: row.updated_at,
   }));
 }
 
-module.exports = { toRow, fromRow, persistProjectState, hydrateProjectIfMissing, listPersistedProjects };
+/**
+ * Ids of a user's saved projects that count towards the limit. The saved
+ * rows, not server memory: memory is emptied by every deploy, so counting
+ * it let a Free user start another project after each restart.
+ */
+async function builtProjectIds(userId) {
+  const { data, error } = await supabase.from("project_state").select("id").eq("user_id", userId).eq("context->>built", "true");
+  if (error) throw new Error(`Couldn't count your projects: ${error.message}`);
+  return new Set((data || []).map((r) => r.id));
+}
+
+// The owner of a saved project, or null if there is no such row.
+async function ownerOf(projectId) {
+  const { data, error } = await supabase.from("project_state").select("user_id").eq("id", projectId).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data ? data.user_id : null;
+}
+
+// Removes a project's saved state, history and share links. Form
+// submissions and GitHub backup repos are kept: they belong to the owner,
+// not the build, and deleting them is a separate decision.
+async function deleteProjectRows(projectId, userId) {
+  const steps = [
+    supabase.from("project_state").delete().eq("id", projectId).eq("user_id", userId),
+    supabase.from("project_history").delete().eq("id", projectId).eq("user_id", userId),
+    supabase.from("project_shares").delete().eq("project_id", projectId)
+  ];
+  const results = await Promise.all(steps);
+  const failed = results.find((r) => r.error);
+  if (failed) throw new Error(`Couldn't delete the project: ${failed.error.message}`);
+}
+
+module.exports = { toRow, fromRow, persistProjectState, hydrateProjectIfMissing, listPersistedProjects, isBuilt, builtProjectIds, ownerOf, deleteProjectRows };
