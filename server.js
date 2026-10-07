@@ -1937,6 +1937,7 @@ app.post(
 // (the free tier uses free models). Drafts only - nothing here sends anything.
 // ---------------------------------------------------------------------------
 const deptBots = require("./lib/department-bots");
+const botMemory = require("./lib/bot-memory");
 const botPrefsTable = () => require("./lib/db").supabase.from("user_bot_preferences");
 const requireBotId = (req, res) => {
   if (deptBots.BOT_IDS.includes(req.params.bot)) return true;
@@ -1980,6 +1981,30 @@ app.put("/api/department-bots/:bot/calibration", security.rejectUnknownFields(["
   }
 });
 
+// This user's saved conversation with one bot, so a reload or a new device
+// picks up where they left off. DELETE clears it.
+app.get("/api/department-bots/:bot/history", async (req, res) => {
+  if (!requireBotId(req, res)) return;
+  try {
+    const rows = await botMemory.loadHistory(require("./lib/db").supabase, req.user.id, req.params.bot, 50);
+    res.json({ messages: botMemory.toDisplayMessages(rows, deptBots.parseReply) });
+  } catch (err) {
+    console.error("[department-bots] history failed:", err.message);
+    res.json({ messages: [] });
+  }
+});
+
+app.delete("/api/department-bots/:bot/history", async (req, res) => {
+  if (!requireBotId(req, res)) return;
+  try {
+    await botMemory.clearHistory(require("./lib/db").supabase, req.user.id, req.params.bot);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[department-bots] clear history failed:", err.message);
+    res.status(500).json({ error: "Could not clear this conversation. Please try again." });
+  }
+});
+
 app.post("/api/department-bots/:bot/chat", security.rejectUnknownFields(["message", "history"]), async (req, res) => {
   if (!requireBotId(req, res)) return;
   const message = security.sanitizeText(req.body.message, 6000);
@@ -1995,9 +2020,14 @@ app.post("/api/department-bots/:bot/chat", security.rejectUnknownFields(["messag
     if (!data && req.params.bot === "custom") return res.status(400).json({ error: "Tell your custom bot what it should help with first." });
     const cal = data ? deptBots.normalizeCalibration({ ...(data.profile || {}), tone: data.tone, signature: data.signature }, req.params.bot) : deptBots.normalizeCalibration({}, req.params.bot);
 
+    // Saved history and notes (shared by all of this user's bots). If the
+    // database is unavailable the chat carries on with what the page sent.
+    const prep = await botMemory.prepareChat(require("./lib/db").supabase, req.user.id, req.params.bot, history);
+    const system = deptBots.buildSystemPrompt(req.params.bot, cal) + (prep.memoryBlock ? "\n\n" + prep.memoryBlock : "");
+
     const result = await claudeClient.callClaude({
-      system: deptBots.buildSystemPrompt(req.params.bot, cal),
-      messages: [...history, { role: "user", content: message }],
+      system,
+      messages: [...prep.history, { role: "user", content: message }],
       maxTokens: 1500,
       model: modelForTier(req.user.plan, { complex: message.length > 1200 }),
       parse: (t) => String(t || "").trim(),
@@ -2005,6 +2035,7 @@ app.post("/api/department-bots/:bot/chat", security.rejectUnknownFields(["messag
     });
     const { reply, draft } = deptBots.parseReply(result.parsed);
     if (!reply && !draft) throw new Error("The AI sent back an empty answer.");
+    await botMemory.recordExchange(require("./lib/db").supabase, req.user.id, req.params.bot, message, (reply ? reply + "\n\n" : "") + (draft ? "--- DRAFT ---\n" + draft + "\n--- END DRAFT ---" : ""));
     res.json({ reply, draft });
   } catch (err) {
     console.error("[department-bots] chat failed:", err.message);

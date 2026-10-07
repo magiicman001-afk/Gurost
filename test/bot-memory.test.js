@@ -109,3 +109,32 @@ test("buildMemoryBlock labels notes as data, caps size, and is empty with nothin
   const many = Array.from({ length: 60 }, (_, i) => ({ memory_type: "fact", key: "k" + i, value: "v" }));
   assert.equal(m.buildMemoryBlock(many).split("\n").length, 3 + 25 - 1);
 });
+
+test("prepareChat loads saved history and notes; recordExchange saves a turn pair", async () => {
+  const db = fakeDb();
+  await m.rememberItems(db, "u1", [{ memory_type: "fact", key: "role", value: "CEO" }]);
+  assert.equal(await m.recordExchange(db, "u1", "sales", "hi", "hello"), true);
+  const prep = await m.prepareChat(db, "u1", "sales", [{ role: "user", content: "from the page" }]);
+  assert.equal(prep.stored, true);
+  assert.deepEqual(prep.history, [{ role: "user", content: "hi" }, { role: "assistant", content: "hello" }]);
+  assert.match(prep.memoryBlock, /role: CEO/);
+});
+
+test("a database failure never breaks the chat: falls back to the page's history", async () => {
+  const broken = { from() { throw new Error("db down"); } };
+  const prep = await m.prepareChat(broken, "u1", "sales", [{ role: "user", content: "from the page" }]);
+  assert.equal(prep.stored, false);
+  assert.deepEqual(prep.history, [{ role: "user", content: "from the page" }]);
+  assert.equal(prep.memoryBlock, "");
+  assert.equal(await m.recordExchange(broken, "u1", "sales", "a", "b"), false);
+});
+
+test("toDisplayMessages splits a stored bot message into notes and draft", () => {
+  const { parseReply } = require("../lib/department-bots");
+  const out = m.toDisplayMessages([
+    { role: "user", content: "reply to John" },
+    { role: "assistant", content: "Here you go.\n\n--- DRAFT ---\nHi John\n--- END DRAFT ---" },
+    { role: "tool", content: "ignored" }
+  ], parseReply);
+  assert.deepEqual(out, [{ role: "user", text: "reply to John" }, { role: "assistant", text: "Here you go.", draft: "Hi John" }]);
+});

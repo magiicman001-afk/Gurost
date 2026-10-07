@@ -40,6 +40,18 @@
     $('deptChatTitle').textContent = ((bot.calibration && bot.calibration.botName) || bot.label + ' · ' + (window.GurostAI ? GurostAI.NAME : 'Assistant'));
     history = []; $('deptLog').textContent = '';
     bubble('bot', bot.summary + ' Paste an email or ask a question and I will draft the reply.');
+    restore(bot);
+  }
+
+  // Put back the saved conversation (same account, any device). The server
+  // keeps the history itself, so this only shows it.
+  async function restore(bot) {
+    try {
+      var r = await GurostAPI.call('/api/department-bots/' + bot.id + '/history');
+      if (current !== bot || !r.messages || !r.messages.length) return;
+      var note = el('p', 'text-xs text-gray-500 mb-2', 'Earlier conversation restored.'); $('deptLog').appendChild(note);
+      r.messages.forEach(function (m) { if (m.role === 'user') bubble('you', m.text); else bubble('bot', m.text, m.draft); });
+    } catch (e) { /* no saved chat to show; start fresh */ }
   }
 
   function bubble(who, text, draft) {
