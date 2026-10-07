@@ -76,6 +76,9 @@
     <div id="cfList" class="grid gap-3"></div>
   </section>
 
+  <!-- What the assistant remembers: notes saved from chats, with forget and an off switch -->
+  <section id="memoryPanel" class="mb-10 reveal border border-[var(--line)] rounded-2xl p-6"></section>
+
   <!-- Department bots: chat-only helpers (Sales, HR, Finance, Payroll, Support, Custom) -->
   <section id="deptBots" class="mb-10 reveal border border-[var(--line)] rounded-2xl p-6">
     <h2 class="font-display font-bold text-lg mb-1">Department bots</h2>
@@ -196,6 +199,7 @@
 <script src="shared/company-profile.js"></script>
 <script src="shared/company-findings.js"></script>
 <script src="shared/department-bots.js"></script>
+<script src="shared/memory-panel.js"></script>
 <script>
 // Real, deliberate fix: this used to run only after the login and
 // plan checks below succeeded - if either ever failed or hung, every

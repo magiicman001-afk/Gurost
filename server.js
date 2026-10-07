@@ -1982,12 +1982,62 @@ app.put("/api/department-bots/:bot/calibration", security.rejectUnknownFields(["
   }
 });
 
+// ---------------------------------------------------------------------------
+// "What Core remembers": the user's own view of their saved notes. They can
+// forget one note, forget everything (notes and saved chats), or switch memory
+// off. Scoped to req.user.id everywhere.
+// ---------------------------------------------------------------------------
+app.get("/api/memory", async (req, res) => {
+  try {
+    const db = require("./lib/db").supabase;
+    const [items, paused] = await Promise.all([botMemory.listMemory(db, req.user.id), botMemory.isPaused(db, req.user.id)]);
+    res.json({ items, paused });
+  } catch (err) {
+    console.error("[memory] list failed:", err.message);
+    res.status(500).json({ error: "Could not load what is remembered. Please try again." });
+  }
+});
+
+app.put("/api/memory/settings", security.rejectUnknownFields(["paused"]), async (req, res) => {
+  if (typeof req.body.paused !== "boolean") return res.status(400).json({ error: "paused must be true or false." });
+  try {
+    res.json({ paused: await botMemory.setPaused(require("./lib/db").supabase, req.user.id, req.body.paused) });
+  } catch (err) {
+    console.error("[memory] setting failed:", err.message);
+    res.status(500).json({ error: "Could not change that setting. Please try again." });
+  }
+});
+
+app.delete("/api/memory", async (req, res) => {
+  try {
+    const db = require("./lib/db").supabase;
+    await botMemory.forgetAll(db, req.user.id);
+    await botMemory.clearHistory(db, req.user.id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[memory] forget all failed:", err.message);
+    res.status(500).json({ error: "Could not forget everything. Please try again." });
+  }
+});
+
+app.delete("/api/memory/:key", async (req, res) => {
+  try {
+    await botMemory.forgetItem(require("./lib/db").supabase, req.user.id, String(req.params.key).slice(0, 60));
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[memory] forget failed:", err.message);
+    res.status(500).json({ error: "Could not forget that. Please try again." });
+  }
+});
+
 // This user's saved conversation with one bot, so a reload or a new device
 // picks up where they left off. DELETE clears it.
 app.get("/api/department-bots/:bot/history", async (req, res) => {
   if (!requireBotId(req, res)) return;
   try {
-    const rows = await botMemory.loadHistory(require("./lib/db").supabase, req.user.id, req.params.bot, 50);
+    const db = require("./lib/db").supabase;
+    if (await botMemory.isPaused(db, req.user.id)) return res.json({ messages: [], paused: true });
+    const rows = await botMemory.loadHistory(db, req.user.id, req.params.bot, 50);
     res.json({ messages: botMemory.toDisplayMessages(rows, deptBots.parseReply) });
   } catch (err) {
     console.error("[department-bots] history failed:", err.message);
@@ -2036,7 +2086,7 @@ app.post("/api/department-bots/:bot/chat", security.rejectUnknownFields(["messag
     });
     const { reply, draft } = deptBots.parseReply(result.parsed);
     if (!reply && !draft) throw new Error("The AI sent back an empty answer.");
-    const stored = await botMemory.recordExchange(require("./lib/db").supabase, req.user.id, req.params.bot, message, (reply ? reply + "\n\n" : "") + (draft ? "--- DRAFT ---\n" + draft + "\n--- END DRAFT ---" : ""));
+    const stored = prep.stored && await botMemory.recordExchange(require("./lib/db").supabase, req.user.id, req.params.bot, message, (reply ? reply + "\n\n" : "") + (draft ? "--- DRAFT ---\n" + draft + "\n--- END DRAFT ---" : ""));
     res.json({ reply, draft });
     // After the reply is sent: note anything lasting the user said, for all their bots.
     if (stored) {

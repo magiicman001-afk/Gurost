@@ -39,3 +39,11 @@ create table if not exists public.company_research (
 create unique index if not exists company_research_owner
   on public.company_research (user_id, coalesce(project_id, ''));
 alter table public.company_research enable row level security;
+
+-- The user's memory switch. paused = bots neither read nor write memory.
+create table if not exists public.user_memory_settings (
+  user_id text primary key,
+  paused boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+alter table public.user_memory_settings enable row level security;

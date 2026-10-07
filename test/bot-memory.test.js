@@ -5,7 +5,7 @@ const m = require("../lib/bot-memory");
 
 // Minimal in-memory stand-in for the Supabase query builder.
 function fakeDb() {
-  const tables = { user_bot_conversations: [], user_bot_memory: [] };
+  const tables = { user_bot_conversations: [], user_bot_memory: [], user_memory_settings: [] };
   let clock = 0;
   return {
     tables,
@@ -17,7 +17,7 @@ function fakeDb() {
         insert(row) { rows.push({ ...row, created_at: ++clock }); return Promise.resolve({ error: null }); },
         upsert(list, opts) {
           const keys = opts.onConflict.split(",");
-          for (const r of list) {
+          for (const r of [].concat(list)) {
             const i = rows.findIndex((x) => keys.every((k) => x[k] === r[k]));
             if (i >= 0) rows[i] = { ...rows[i], ...r }; else rows.push({ ...r, created_at: ++clock });
           }
@@ -137,4 +137,29 @@ test("toDisplayMessages splits a stored bot message into notes and draft", () =>
     { role: "tool", content: "ignored" }
   ], parseReply);
   assert.deepEqual(out, [{ role: "user", text: "reply to John" }, { role: "assistant", text: "Here you go.", draft: "Hi John" }]);
+});
+
+test("pausing memory: bots read and write nothing, then resume when switched back on", async () => {
+  const db = fakeDb();
+  await m.rememberItems(db, "u1", [{ memory_type: "fact", key: "role", value: "CEO" }]);
+  await m.recordExchange(db, "u1", "sales", "old q", "old a");
+  assert.equal(await m.isPaused(db, "u1"), false);
+  await m.setPaused(db, "u1", true);
+  assert.equal(await m.isPaused(db, "u1"), true);
+  assert.equal(await m.isPaused(db, "u2"), false, "per user");
+  const prep = await m.prepareChat(db, "u1", "sales", [{ role: "user", content: "page" }]);
+  assert.deepEqual(prep, { history: [{ role: "user", content: "page" }], memoryBlock: "", stored: false, paused: true });
+  await m.setPaused(db, "u1", false);
+  const back = await m.prepareChat(db, "u1", "sales", []);
+  assert.equal(back.stored, true);
+  assert.equal(back.history.length, 2);
+  assert.match(back.memoryBlock, /role: CEO/);
+});
+
+test("if the switch cannot be read, nothing is saved (fails closed)", async () => {
+  const db = fakeDb();
+  const real = db.from.bind(db);
+  db.from = (name) => { if (name === "user_memory_settings") throw new Error("table missing"); return real(name); };
+  const prep = await m.prepareChat(db, "u1", "sales", []);
+  assert.equal(prep.stored, false);
 });
