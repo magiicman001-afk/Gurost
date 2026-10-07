@@ -18,6 +18,7 @@
  *   { type: "pulse_text",  text }
  */
 
+const { wsJson } = require("../lib/brand");
 const { WebSocketServer } = require("ws");
 const guideBot = require("./guide-bot");
 const voiceClient = require("./voice-client");
@@ -40,7 +41,7 @@ function presenceList(projectId) {
 }
 
 function broadcastToRoom(projectId, message, excludeWs) {
-  const payload = JSON.stringify(message);
+  const payload = wsJson(message);
   for (const client of getRoom(projectId)) {
     if (client.ws === excludeWs) continue;
     if (client.ws.readyState === client.ws.OPEN) client.ws.send(payload);
@@ -103,7 +104,7 @@ function attachGuideBotSocket(httpServer, PROJECTS) {
     const client = { ws, userId };
     room.add(client);
     broadcastPresence(projectId); // let everyone know someone joined, including the new arrival
-    for (const past of STATUS_HISTORY.get(projectId) || []) ws.send(JSON.stringify(past));
+    for (const past of STATUS_HISTORY.get(projectId) || []) ws.send(wsJson(past));
 
     let pendingSuggestion = null;
 
@@ -114,14 +115,14 @@ function attachGuideBotSocket(httpServer, PROJECTS) {
         const { suggestions } = await guideBot.analyzeAndSuggest(project, userId);
         for (const s of suggestions) {
           pendingSuggestion = s;
-          ws.send(JSON.stringify({ type: "suggestion", suggestion: s }));
+          ws.send(wsJson({ type: "suggestion", suggestion: s }));
         }
       } catch (err) {
         // Background suggestions are optional - a failure here must not
         // arrive as type "error", which builder pages treat as the build
         // itself failing (it hid the live progress panel mid-build).
         console.warn(`[guide-bot] Suggestion pass failed for project ${projectId}:`, err.message);
-        ws.send(JSON.stringify({ type: "suggestion_unavailable", error: err.message }));
+        ws.send(wsJson({ type: "suggestion_unavailable", error: err.message }));
       }
     }
 
@@ -133,11 +134,11 @@ function attachGuideBotSocket(httpServer, PROJECTS) {
       try {
         msg = JSON.parse(raw.toString());
       } catch {
-        return ws.send(JSON.stringify({ type: "error", error: "Malformed message." }));
+        return ws.send(wsJson({ type: "error", error: "Malformed message." }));
       }
 
       const project = PROJECTS.get(projectId);
-      if (!project) return ws.send(JSON.stringify({ type: "error", error: "Project not found." }));
+      if (!project) return ws.send(wsJson({ type: "error", error: "Project not found." }));
 
       try {
         let transcript;
@@ -164,12 +165,12 @@ function attachGuideBotSocket(httpServer, PROJECTS) {
             return r;
           });
           await guideBot.recordResponse(userId, pendingSuggestion, "accepted");
-          ws.send(JSON.stringify({ type: "applied", html: project.currentHtml, summary: result.summary }));
+          ws.send(wsJson({ type: "applied", html: project.currentHtml, summary: result.summary }));
           broadcastToRoom(projectId, { type: "collab_update", html: project.currentHtml, summary: result.summary, appliedBy: userId }, ws);
           pendingSuggestion = null;
         } else if (classified.intent === "reject" && pendingSuggestion) {
           await guideBot.recordResponse(userId, pendingSuggestion, "rejected");
-          ws.send(JSON.stringify({ type: "acknowledged", message: "Skipped." }));
+          ws.send(wsJson({ type: "acknowledged", message: "Skipped." }));
           pendingSuggestion = null;
         } else {
           const instruction = classified.instruction || transcript;
@@ -178,18 +179,18 @@ function attachGuideBotSocket(httpServer, PROJECTS) {
             integrator.integrateCorrection(project, r);
             return r;
           });
-          ws.send(JSON.stringify({ type: "applied", html: project.currentHtml, summary: result.summary }));
+          ws.send(wsJson({ type: "applied", html: project.currentHtml, summary: result.summary }));
           broadcastToRoom(projectId, { type: "collab_update", html: project.currentHtml, summary: result.summary, appliedBy: userId }, ws);
         }
 
         try {
           const audio = await voiceClient.speak(result ? result.summary : "Okay.");
-          ws.send(JSON.stringify({ type: "voice_response", audioBase64: audio.toString("base64") }));
+          ws.send(wsJson({ type: "voice_response", audioBase64: audio.toString("base64") }));
         } catch {
           // voice is a nice-to-have on top of the already-applied change
         }
       } catch (err) {
-        ws.send(JSON.stringify({ type: "error", error: err.message }));
+        ws.send(wsJson({ type: "error", error: err.message }));
       }
     });
 

@@ -244,6 +244,16 @@ app.post("/api/whatsapp/webhook", express.raw({ type: "application/json" }), asy
 
 app.use(express.json({ limit: "5mb" }));
 
+// No AI model or provider names reach a browser. Admin routes are for the
+// owner and keep the real model names.
+const brand = require("./lib/brand");
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api/admin")) return next();
+  const send = res.json.bind(res);
+  res.json = (body) => send(brand.publicPayload(body));
+  next();
+});
+
 // Real addition: server.js never actually served the frontend as
 // static files — only /api/* JSON routes existed. Without this, the
 // backend alone couldn't serve any HTML page at all.
