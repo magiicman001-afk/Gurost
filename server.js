@@ -134,6 +134,7 @@ const { withProjectLock } = require("./lib/project-lock");
 
 const security = require("./security");
 const buildState = require("./lib/app-build-state");
+const { dropPlaceholderFiles, cleanAppFiles } = require("./lib/file-blocks");
 const auth = require("./auth");
 const userAuth = require("./user-auth");
 const { body, validationResult } = require("express-validator");
@@ -807,7 +808,11 @@ app.use(
     let project = PROJECTS.get(id);
     if (!project) {
       project = await projectState.hydrateProjectIfMissing(id);
-      if (project) PROJECTS.set(id, project);
+      if (project) {
+        // Apps saved before filler files were blocked may still hold some.
+        if (project.type === "app" && project.appFiles) project.appFiles = cleanAppFiles(project.appFiles, { where: "project load", projectId: id });
+        PROJECTS.set(id, project);
+      }
     }
     return project;
   })
@@ -1273,6 +1278,8 @@ app.post(
           }
         });
         integrator.integrateApp(project, result);
+        project.appFiles = cleanAppFiles(project.appFiles, { where: "finished build", projectId });
+        if (!project.appFiles.frontend.length && !project.appFiles.backend.length) throw new Error("The build produced no usable files. Please try again.");
         await botOrchestrator.recordHandoff(projectId, "app-bot", "review-bot", `Generated ${result.backend.files.length + result.frontend.files.length} files, handing off for review.`);
 
         // Testing pipeline: review every generated file, auto-fix
@@ -1293,8 +1300,8 @@ app.post(
           const { fixedFiles, fixLog: log, failures: fixFailures } = await fixBot.fixFiles(allFiles, initialReview.results);
           fixLog = log;
 
-          project.appFiles.backend = fixedFiles.slice(0, backendCount);
-          project.appFiles.frontend = fixedFiles.slice(backendCount);
+          project.appFiles.backend = dropPlaceholderFiles(fixedFiles.slice(0, backendCount), { where: "review fix", projectId });
+          project.appFiles.frontend = dropPlaceholderFiles(fixedFiles.slice(backendCount), { where: "review fix", projectId });
 
           finalReview = await reviewBot.reviewFiles(fixedFiles);
           if (fixFailures.length) finalReview.fixFailures = fixFailures;
@@ -1341,7 +1348,7 @@ app.post(
               issues: f.path === entryPath ? syntheticIssues : []
             }))
           );
-          project.appFiles.backend = fixedFiles;
+          project.appFiles.backend = dropPlaceholderFiles(fixedFiles, { where: "sandbox fix", projectId });
           sandboxResult = await runSandboxTest(project.appFiles.backend);
         }
 
@@ -1461,6 +1468,8 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
           touchProgress();
           // Streamed chunks only feed the watchdog; a finished file is news.
           if (status === "progress" && !data) return;
+          // Empty or "line N" filler never reaches the saved project or the browser.
+          if (data && Array.isArray(data.files)) data = { ...data, files: dropPlaceholderFiles(data.files, { where: `${stage} stage`, projectId }) };
           // What each stage made is kept (and saved) as it lands, not only at the start.
           if (buildState.recordStage(project, stage, status, data)) persistInBackground(projectId, project);
           broadcastProjectUpdate(projectId, { type: "stage_progress", stage, status, data: data || null });
@@ -1472,6 +1481,8 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
     ]).finally(() => clearTimeout(stallTimer));
 
     integrator.integrateApp(project, result);
+    project.appFiles = cleanAppFiles(project.appFiles, { where: "finished build", projectId });
+    if (!project.appFiles.frontend.length && !project.appFiles.backend.length) throw new Error("The build produced no usable files. Please try again.");
     persistInBackground(projectId, project); // the finished app, before the review starts
 
     // The app is built and saved. A failure in the checks below must not throw it away: it is
@@ -1491,8 +1502,8 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
     if (initialReview.hasCritical || initialReview.hasHigh) {
       broadcastProjectUpdate(projectId, { type: "stage_progress", stage: "fixing", status: "running", data: { issueCount: initialReview.allIssues.length } });
       const { fixedFiles, failures: fixFailures } = await fixBot.fixFiles(allFiles, initialReview.results);
-      project.appFiles.backend = fixedFiles.slice(0, backendCount);
-      project.appFiles.frontend = fixedFiles.slice(backendCount);
+      project.appFiles.backend = dropPlaceholderFiles(fixedFiles.slice(0, backendCount), { where: "review fix", projectId });
+      project.appFiles.frontend = dropPlaceholderFiles(fixedFiles.slice(backendCount), { where: "review fix", projectId });
       finalReview = await reviewBot.reviewFiles(fixedFiles);
       if (fixFailures.length) finalReview.fixFailures = fixFailures;
       broadcastProjectUpdate(projectId, { type: "stage_progress", stage: "fixing", status: "complete" });
@@ -1523,7 +1534,7 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
         severity: "Critical",
         description: `Real runtime error caught by actually running this code: ${sandboxResult.errors?.[0]?.slice(0, 500)}`
       }]);
-      project.appFiles.backend = sandboxFixedFiles;
+      project.appFiles.backend = dropPlaceholderFiles(sandboxFixedFiles, { where: "sandbox fix", projectId });
       // Real, one retry only - same honest, bounded philosophy as the
       // static review/fix pass above. This won't catch every real
       // crash class, and that's said here plainly, not hidden.
@@ -4786,7 +4797,7 @@ app.post("/api/project/:id/undo", async (req, res) => {
   const current = project.type === "app" ? project.appFiles : project.currentHtml;
   const entry = project.contentSnapshots.past.pop();
   project.contentSnapshots.future.push({ action: entry.action, content: current, ts: Date.now() });
-  if (project.type === "app") project.appFiles = entry.content; else project.currentHtml = entry.content;
+  if (project.type === "app") project.appFiles = cleanAppFiles(entry.content, { where: "undo/redo", projectId: req.params.id }); else project.currentHtml = entry.content;
   persistInBackground(req.params.id, project);
   res.json({
     html: project.currentHtml,
@@ -4806,7 +4817,7 @@ app.post("/api/project/:id/redo", async (req, res) => {
   const current = project.type === "app" ? project.appFiles : project.currentHtml;
   const entry = project.contentSnapshots.future.pop();
   project.contentSnapshots.past.push({ action: entry.action, content: current, ts: Date.now() });
-  if (project.type === "app") project.appFiles = entry.content; else project.currentHtml = entry.content;
+  if (project.type === "app") project.appFiles = cleanAppFiles(entry.content, { where: "undo/redo", projectId: req.params.id }); else project.currentHtml = entry.content;
   persistInBackground(req.params.id, project);
   res.json({
     html: project.currentHtml,
@@ -5231,7 +5242,7 @@ app.post("/api/project/:id/history/:index/restore", async (req, res) => {
   pushUndoSnapshot(project, "jump-to-history"); // real - so this jump itself can be undone
 
   if (project.type === "app") {
-    project.appFiles = JSON.parse(JSON.stringify(target.content));
+    project.appFiles = cleanAppFiles(JSON.parse(JSON.stringify(target.content)), { where: "history restore", projectId: req.params.id });
   } else {
     project.currentHtml = target.content;
   }
