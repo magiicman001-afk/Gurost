@@ -1938,6 +1938,7 @@ app.post(
 // ---------------------------------------------------------------------------
 const deptBots = require("./lib/department-bots");
 const botMemory = require("./lib/bot-memory");
+const memoryExtract = require("./lib/memory-extract");
 const botPrefsTable = () => require("./lib/db").supabase.from("user_bot_preferences");
 const requireBotId = (req, res) => {
   if (deptBots.BOT_IDS.includes(req.params.bot)) return true;
@@ -2035,8 +2036,18 @@ app.post("/api/department-bots/:bot/chat", security.rejectUnknownFields(["messag
     });
     const { reply, draft } = deptBots.parseReply(result.parsed);
     if (!reply && !draft) throw new Error("The AI sent back an empty answer.");
-    await botMemory.recordExchange(require("./lib/db").supabase, req.user.id, req.params.bot, message, (reply ? reply + "\n\n" : "") + (draft ? "--- DRAFT ---\n" + draft + "\n--- END DRAFT ---" : ""));
+    const stored = await botMemory.recordExchange(require("./lib/db").supabase, req.user.id, req.params.bot, message, (reply ? reply + "\n\n" : "") + (draft ? "--- DRAFT ---\n" + draft + "\n--- END DRAFT ---" : ""));
     res.json({ reply, draft });
+    // After the reply is sent: note anything lasting the user said, for all their bots.
+    if (stored) {
+      const db = require("./lib/db").supabase;
+      memoryExtract.learnFromExchange({
+        userText: message, botType: req.params.bot,
+        call: (a) => claudeClient.callClaude({ ...a, model: modelForTier("free"), context: { userId: req.user.id, ip: req.ip } }),
+        list: () => botMemory.listMemory(db, req.user.id),
+        save: (items) => botMemory.rememberItems(db, req.user.id, items)
+      });
+    }
   } catch (err) {
     console.error("[department-bots] chat failed:", err.message);
     res.status(500).json({ error: /OPENROUTER|credit|402/i.test(err.message) ? "The AI service needs credits or a key right now. Please try again later." : "The bot could not answer just now. Please try again." });
