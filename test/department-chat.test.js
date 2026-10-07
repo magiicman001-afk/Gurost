@@ -71,3 +71,24 @@ test("model and database failures become plain messages, never a crash", async (
   assert.equal((await quiet(() => empty.chat.run(input))).status, 500);
   assert.equal(empty.seen.recorded.length, 0, "a fallback line is never saved as the bot's answer");
 });
+
+test("a tool that needs approval is parked through the approvals dependency and its card comes back", async () => {
+  const tools = require("../lib/tools");
+  const gated = { name: "gated_write", description: "Writes", needsApproval: true, parameters: { type: "object", properties: { to: { type: "string" } }, required: ["to"] }, async execute() { return {}; } };
+  tools.register(gated);
+  const parked = [];
+  const { seen } = setup();
+  const replies = ['TOOL_CALL: {"tool":"gated_write","args":{"to":"bob"}}', "Waiting for your OK."];
+  const claudeClient = { async callClaude() { return { parsed: replies.shift() }; } };
+  const chat = createDepartmentChat({
+    botPrefs: async () => ({ data: { tone: "casual", signature: "A", profile: {} }, error: null }), db: {}, deptBots,
+    botMemory: { async prepareChat() { return { history: [], memoryBlock: "", stored: false }; } },
+    modelRouter, toolLoop, claudeClient, memoryExtract: { learnFromExchange() {} }, freeModel: "f",
+    approvals: { async create(_db, a) { parked.push(a); return { id: "card1", tool: a.tool.name }; } }
+  });
+  const out = await quiet(() => chat.run(input));
+  assert.equal(out.status, 200);
+  assert.deepEqual(out.body.approvals, [{ id: "card1", tool: "gated_write" }]);
+  assert.equal(parked[0].userId, "u1");
+  assert.equal(parked[0].botType, "sales");
+});

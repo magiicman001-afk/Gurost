@@ -2063,7 +2063,7 @@ const runDepartmentChat = (req, message, history) => {
   const chat = require("./lib/department-chat").createDepartmentChat({
     db: require("./lib/db").supabase,
     botPrefs: () => botPrefsTable().select("tone, signature, profile").eq("user_id", req.user.id).eq("bot_type", req.params.bot).maybeSingle(),
-    deptBots, botMemory, modelRouter, toolLoop, memoryExtract, claudeClient, freeModel: modelForTier("free")
+    deptBots, botMemory, modelRouter, toolLoop, memoryExtract, claudeClient, freeModel: modelForTier("free"), approvals: require("./lib/approvals")
   });
   return chat.run({ userId: req.user.id, plan: req.user.plan, ip: req.ip, botId: req.params.bot, message, history });
 };
@@ -2078,6 +2078,50 @@ app.post("/api/department-bots/:bot/chat", security.rejectUnknownFields(["messag
     .map((m) => ({ role: m.role, content: m.content.slice(0, 6000) }));
   const out = await runDepartmentChat(req, message, history);
   res.status(out.status).json(out.body);
+});
+
+// ---------------------------------------------------------------------------
+// Approval gates: actions a bot wants to take wait here for the user's decision.
+// Only the signed-in owner of an action can approve, edit or cancel it.
+// ---------------------------------------------------------------------------
+const approvalsLib = require("./lib/approvals");
+const toolsRegistry = require("./lib/tools");
+const findTool = (name) => toolsRegistry.list().find((t) => t.name === name);
+const isUuid = (s) => /^[0-9a-f-]{36}$/i.test(String(s || ""));
+
+app.get("/api/approvals", async (req, res) => {
+  try {
+    const bot = typeof req.query.bot === "string" && deptBots.BOT_IDS.includes(req.query.bot) ? req.query.bot : undefined;
+    res.json({ approvals: await approvalsLib.list(require("./lib/db").supabase, req.user.id, bot, findTool) });
+  } catch (err) {
+    console.error("[approvals] list failed:", err.message);
+    res.status(500).json({ error: "Could not load waiting actions." });
+  }
+});
+
+app.post("/api/approvals/:id/approve", security.rejectUnknownFields(["args"]), async (req, res) => {
+  if (!isUuid(req.params.id)) return res.status(400).json({ error: "Bad request." });
+  try {
+    const out = await approvalsLib.approve(require("./lib/db").supabase, req.user.id, req.params.id, {
+      editedArgs: req.body.args,
+      run: (name, args) => toolsRegistry.runTool(name, args, { userId: req.user.id, db: require("./lib/db").supabase, approved: true })
+    });
+    res.status(out.status).json(out.body);
+  } catch (err) {
+    console.error("[approvals] approve failed:", err.message);
+    res.status(500).json({ error: "Could not complete that action." });
+  }
+});
+
+app.post("/api/approvals/:id/cancel", async (req, res) => {
+  if (!isUuid(req.params.id)) return res.status(400).json({ error: "Bad request." });
+  try {
+    const out = await approvalsLib.cancel(require("./lib/db").supabase, req.user.id, req.params.id);
+    res.status(out.status).json(out.body);
+  } catch (err) {
+    console.error("[approvals] cancel failed:", err.message);
+    res.status(500).json({ error: "Could not cancel that action." });
+  }
 });
 
 // ---------------------------------------------------------------------------
