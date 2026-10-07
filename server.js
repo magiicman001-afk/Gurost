@@ -2097,7 +2097,7 @@ app.post("/api/department-bots/:bot/chat", security.rejectUnknownFields(["messag
     const toolsUsed = [...new Set(tooled.toolsUsed.filter((t) => t.ok).map((t) => t.tool))];
     if (!reply && !draft) throw new Error("The AI sent back an empty answer.");
     const stored = prep.stored && await botMemory.recordExchange(require("./lib/db").supabase, req.user.id, req.params.bot, message, (reply ? reply + "\n\n" : "") + (draft ? "--- DRAFT ---\n" + draft + "\n--- END DRAFT ---" : ""));
-    res.json({ reply, draft, toolsUsed });
+    res.json({ reply, draft, toolsUsed, proposals: tooled.proposals });
     // After the reply is sent: note anything lasting the user said, for all their bots.
     if (stored) {
       const db = require("./lib/db").supabase;

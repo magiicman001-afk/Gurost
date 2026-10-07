@@ -70,12 +70,54 @@
   }
 
   // A small line under the answer when a tool did part of the work.
-  var TOOL_NAMES = { calculator: 'calculator', time_date: 'date and time', currency_converter: 'exchange rates', company_profile: 'your company profile', web_search: 'web search' };
+  var TOOL_NAMES = { calculator: 'calculator', time_date: 'date and time', currency_converter: 'exchange rates', company_profile: 'your company profile', web_search: 'web search', email_draft: 'email draft', calendar_event: 'calendar' };
   function showTools(used) {
     if (!used || !used.length) return;
     var names = used.map(function (t) { return TOOL_NAMES[t] || t.replace(/_/g, ' '); });
     var last = $('deptLog').lastElementChild;
     if (last) last.appendChild(el('div', 'text-xs text-gray-500 mt-1', 'Checked with: ' + names.join(', ')));
+  }
+
+  // Drafts the bot prepared (an email, a calendar event) as cards. Nothing is
+  // sent or added for the user: they copy, open in their own app, or download.
+  var EMAIL_RE = /^[^\s@<>(),;:\\"]+@[^\s@<>(),;:\\"]+\.[^\s@<>(),;:\\"]{2,}$/;
+  function actionBtn(label, onClick) { var b = el('button', 'dept-copy', label); b.type = 'button'; b.addEventListener('click', onClick); return b; }
+  function card(title) { var c = el('div', 'dept-bubble dept-bot'); c.appendChild(el('div', 'text-xs font-semibold text-gray-500 mb-1', title)); return c; }
+
+  function emailCard(p) {
+    var c = card('Email draft - not sent');
+    if (p.to && p.to.length) c.appendChild(el('div', 'text-sm', 'To: ' + p.to.join(', ')));
+    c.appendChild(el('div', 'text-sm font-semibold', 'Subject: ' + p.subject));
+    c.appendChild(el('pre', 'dept-draft', p.body));
+    var copy = actionBtn('Copy email', function () { copyText((p.to && p.to.length ? 'To: ' + p.to.join(', ') + '\n' : '') + 'Subject: ' + p.subject + '\n\n' + p.body, copy); });
+    copy.className = 'dept-copy'; c.appendChild(copy);
+    var addrs = (p.to || []).filter(function (a) { return EMAIL_RE.test(a); });
+    var open = el('a', 'dept-copy', 'Open in email app'); open.style.marginLeft = '8px'; open.style.textDecoration = 'none'; open.style.display = 'inline-block';
+    open.href = 'mailto:' + addrs.map(function (a) { return encodeURIComponent(a).replace(/%40/g, '@'); }).join(',') + '?subject=' + encodeURIComponent(p.subject) + '&body=' + encodeURIComponent(String(p.body).slice(0, 1800));
+    c.appendChild(open);
+    return c;
+  }
+
+  function eventCard(p) {
+    var c = card('Calendar event - not added yet');
+    c.appendChild(el('div', 'text-sm font-semibold', p.title));
+    c.appendChild(el('div', 'text-sm', p.start.replace('T', ' ') + ' (' + p.timezone + '), ' + p.durationMinutes + ' min'));
+    if (p.location) c.appendChild(el('div', 'text-sm', 'Where: ' + p.location));
+    if (p.description) c.appendChild(el('div', 'text-sm', p.description));
+    var dl = actionBtn('Download calendar file', function () {
+      var url = URL.createObjectURL(new Blob([p.ics], { type: 'text/calendar' }));
+      var a = document.createElement('a'); a.href = url; a.download = (p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'event') + '.ics';
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    });
+    c.appendChild(dl);
+    return c;
+  }
+
+  function showProposals(list) {
+    (list || []).forEach(function (p) {
+      var c = p && p.type === 'email' ? emailCard(p) : p && p.type === 'event' ? eventCard(p) : null;
+      if (c) { $('deptLog').appendChild(c); c.scrollIntoView({ block: 'nearest' }); }
+    });
   }
 
   function copyText(text, btn) {
@@ -121,6 +163,7 @@
       history.push({ role: 'user', content: text }, { role: 'assistant', content: (r.reply ? r.reply + '\n\n' : '') + (r.draft ? '--- DRAFT ---\n' + r.draft + '\n--- END DRAFT ---' : '') });
       bubble('bot', r.reply, r.draft);
       showTools(r.toolsUsed);
+      showProposals(r.proposals);
     } catch (err) { thinking.remove(); bubble('bot', "I couldn't answer that: " + (window.GurostAI ? GurostAI.publicText(err.message) : err.message)); }
     busy = false; $('deptSend').disabled = false;
   }
