@@ -63,6 +63,7 @@ function toRow(projectId, userId, project) {
       premiumImageCost: project.premiumImageCost || 0, // FLUX Pro/Dev spend on the picked design (USD)
       buildError: project.buildError || null, // App Builder: why a build stopped ({ error, at })
       suggestionLog: project.suggestionLog || null, // Website Builder suggestion box: what was accepted or put off, and when
+      githubSave: project.githubSave || null, // its private GitHub repo, last save, and the auto-save choice
     },
     updated_at: new Date().toISOString(),
   };
@@ -94,6 +95,7 @@ function fromRow(row) {
     premiumImageCost: ctx.premiumImageCost || 0,
     buildError: ctx.buildError || null,
     suggestionLog: ctx.suggestionLog || null,
+    githubSave: ctx.githubSave || null,
     assistantHistory: ctx.assistantHistory || [],
     pendingAssistantSuggestion: null,
     codeReview: null,

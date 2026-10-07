@@ -179,8 +179,106 @@
     }
   }
 
+  // GitHub saving. Every 30 minutes, if the site changed since the last save, Pulse offers to save it
+  // (or saves quietly when the person turned auto-save on). It runs from the open tab: projects live in
+  // server memory, so there is no background timer per project. Also by voice or text:
+  // "Core, save this" / "turn off auto-save".
+  const GH_EVERY = 30 * 60 * 1000;
+  let ghNextCheckAt = Date.now() + GH_EVERY;
+  let ghArmed = false; // the clock starts when a project exists, not when the page opens
+  let ghBusy = false;
+
+  function parseGithubCommand(text) {
+    const t = String(text || '').trim().toLowerCase().replace(/^(?:hey[\s,]+)?core[\s,:.\-]+/, '').replace(/[.!?\s]+$/, '');
+    if (/^(?:please\s+)?(?:turn off|stop|disable|switch off)\s+(?:the\s+)?auto[\s-]?save$/.test(t)) return 'auto-off';
+    if (/^(?:please\s+)?(?:turn on|start|enable|switch on)\s+(?:the\s+)?auto[\s-]?save$/.test(t)) return 'auto-on';
+    if (/^(?:please\s+)?save\s+(?:this|it|that|my\s+(?:work|site|project|website)|to\s+github)(?:\s+to\s+github)?$/.test(t)) return 'save';
+    return null;
+  }
+
+  async function runGithubSave({ quiet = false } = {}) {
+    const projectId = window.gurostBuilder?.getProjectId?.();
+    if (!projectId) throw new Error('Nothing to push yet.');
+    if (ghBusy) return null;
+    ghBusy = true;
+    try {
+      const r = await window.GurostAPI.call(`/api/project/${projectId}/github`, { method: 'POST', body: {} });
+      ghNextCheckAt = Date.now() + GH_EVERY;
+      if (r.unchanged) { if (!quiet) logStatus('GitHub is already up to date: ' + r.repoUrl); }
+      else logStatus((quiet ? 'Auto-saved to GitHub: ' : 'Saved to GitHub: ') + r.repoUrl);
+      return r;
+    } finally { ghBusy = false; }
+  }
+
+  async function setGithubAutoSave(on) {
+    const projectId = window.gurostBuilder?.getProjectId?.();
+    if (!projectId) throw new Error('Build something first.');
+    await window.GurostAPI.call(`/api/project/${projectId}/github/auto`, { method: 'POST', body: { enabled: on } });
+    logStatus(on ? 'Auto-save is on: I will save to GitHub every 30 minutes while this page is open. Say "turn off auto-save" to stop.' : 'Auto-save is off.');
+  }
+
+  function hideGithubNudge() {
+    const box = document.getElementById('pulseGithubNudge');
+    if (box) { box.textContent = ''; box.style.display = 'none'; }
+  }
+
+  function showGithubNudge() {
+    const box = document.getElementById('pulseGithubNudge');
+    if (!box || box.children.length) return;
+    const text = document.createElement('p');
+    text.textContent = 'Been a while. Save to GitHub?';
+    text.style.cssText = 'margin:0 0 8px;font-size:13px;';
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;';
+    const yes = suggestionButton('Yes, save now', true);
+    const auto = suggestionButton('Auto-save every 30 min', false);
+    const later = suggestionButton('Later', false);
+    yes.addEventListener('click', () => { hideGithubNudge(); runAction('github', () => runGithubSave()); });
+    auto.addEventListener('click', () => {
+      hideGithubNudge();
+      runAction('github', async () => { await setGithubAutoSave(true); await runGithubSave(); });
+    });
+    later.addEventListener('click', () => { hideGithubNudge(); ghNextCheckAt = Date.now() + GH_EVERY; });
+    row.append(yes, auto, later);
+    box.append(text, row);
+    box.style.display = 'block';
+  }
+
+  async function githubTick() {
+    const gb = window.gurostBuilder;
+    if (!gb || !window.GurostAPI) return;
+    if (!gb.hasActiveProject?.()) { ghArmed = false; return; }
+    if (!ghArmed) { ghArmed = true; ghNextCheckAt = Date.now() + GH_EVERY; return; }
+    if (Date.now() < ghNextCheckAt) return;
+    if (currentState === 'building' || currentState === 'correcting' || currentState === 'recording') return; // try again next minute
+    ghNextCheckAt = Date.now() + GH_EVERY;
+    try {
+      const projectId = gb.getProjectId?.();
+      const st = await window.GurostAPI.call(`/api/project/${projectId}/github/status`);
+      if (!st || !st.connected || st.changedSinceSave === false) return;
+      if (st.autoSave) await runGithubSave({ quiet: true });
+      else showGithubNudge();
+    } catch (err) {
+      logStatus('GitHub save failed: ' + safeErr(err.message));
+    }
+  }
+
+  async function handleGithubCommand(cmd) {
+    const hasProject = window.gurostBuilder?.hasActiveProject?.();
+    logStatus(`Command: "${cmd === 'save' ? 'save this' : cmd === 'auto-on' ? 'turn on auto-save' : 'turn off auto-save'}"`, { feed: false });
+    if (cmd === 'save') await runAction('github', () => runGithubSave());
+    else if (cmd === 'auto-on') await runAction('github', async () => { await setGithubAutoSave(true); await runGithubSave(); });
+    else await runAction('github', () => setGithubAutoSave(false));
+    setState(hasProject ? 'done' : 'idle');
+  }
+
+  // For tests and for checking the nudge by hand: look now instead of waiting 30 minutes.
+  window.GurostPulseGithub = { parseCommand: parseGithubCommand, checkNow() { ghArmed = true; ghNextCheckAt = 0; return githubTick(); } };
+
   async function sendCorrection(text) {
     if (!text || !window.gurostBuilder) return;
+    const githubCmd = parseGithubCommand(text);
+    if (githubCmd) { handleGithubCommand(githubCmd); return; }
     const hasProject = window.gurostBuilder.hasActiveProject?.();
 
     if (!hasProject) {
@@ -282,6 +380,7 @@
             <span class="material-symbols-outlined">lightbulb</span>
             <div id="pulseSuggestionList"></div>
           </div>
+          <div id="pulseGithubNudge" style="display:none;margin:8px 0;padding:10px;border:1px solid #E9E9EF;border-radius:12px;"></div>
           <div id="pulseInputArea">
             <textarea id="pulseTextArea" placeholder="Type your idea or a correction…"></textarea>
             <div id="pulseActionRow">
@@ -928,12 +1027,8 @@
       logStatus('Downloaded.');
     }));
 
-    document.getElementById('actGithub').addEventListener('click', () => runAction('github', async () => {
-      const projectId = gb.getProjectId?.();
-      if (!projectId) throw new Error('Nothing to push yet.');
-      const result = await window.GurostAPI.call(`/api/project/${projectId}/github`, { method: 'POST', body: {} });
-      logStatus('Pushed to ' + result.repoUrl);
-    }));
+    document.getElementById('actGithub').addEventListener('click', () => runAction('github', () => runGithubSave()));
+    setInterval(githubTick, 60000);
 
     document.getElementById('actUpload').addEventListener('click', () => {
       document.getElementById('pulseUploadInput').click();
@@ -964,7 +1059,7 @@
   // status log rather than failing silently.
   // "Started" line for the bot feed; each action logs its own result.
   const ACTION_START = {
-    save: 'Saving project…', deploy: 'Deploying to Vercel…', github: 'Pushing to GitHub…',
+    save: 'Saving project…', deploy: 'Deploying to Vercel…', github: 'Saving to GitHub…',
     image: 'Generating image…', share: 'Creating a share link…', undo: 'Undoing the last change…',
     redo: 'Redoing the change…', upload: 'Uploading file…', history: 'Opening history…'
   };

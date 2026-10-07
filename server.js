@@ -35,12 +35,13 @@ const { transition, canTransition } = require("./lib/state-machine");
 const { deployToVercel, deployApp } = require("./lib/deploy");
 const { buildSite, previewDocs } = require("./lib/site-pages");
 const siteSuggestions = require("./lib/site-suggestions");
+const githubSave = require("./lib/github-save");
 const { createCheckoutSession, createTopUpCheckout, createBillingPortalSession, verifyWebhook, getBalance, addCredits, PLANS, TOPUPS, LOW_CREDIT_THRESHOLD, BUSINESS_ASSISTANT, createBusinessAssistantSubscription, updateBotSeatQuantity } = require("./lib/billing");
 const creditSystem = require("./credit-system");
 const complexityDetector = require("./complexity-detector");
 const apiKeyDetector = require("./api-key-detector");
 const apiKeyVault = require("./api-key-vault");
-const { packageProject, siteFiles } = require("./wrapper");
+const { packageProject, siteFiles, safePath } = require("./wrapper");
 
 const webBot = require("./bots/web-bot");
 const variantBot = require("./bots/variant-bot");
@@ -4565,42 +4566,54 @@ app.post("/api/project/:id/save", async (req, res) => {
 //    OAuth token once that's set up) in your environment before it
 //    can actually push anything.
 // ---------------------------------------------------------------
+// The files that go to GitHub: a website as its real pages, styles, script and images (the same files
+// as the download); an app as backend/ and frontend/ folders. Null when there is nothing built.
+function githubFilesFor(project) {
+  if (project.type === "app") {
+    const list = (arr, dir) => (Array.isArray(arr) ? arr : []).filter((f) => f && typeof f.path === "string" && typeof f.content === "string").map((f) => ({ path: `${dir}/${safePath(f.path)}`, content: f.content }));
+    const files = [...list(project.appFiles?.backend, "backend"), ...list(project.appFiles?.frontend, "frontend")];
+    return files.length ? files : null;
+  }
+  return project.currentHtml ? siteFiles(project).files : null;
+}
+
+// Save to the project's own private repo. The first save creates it; every later save is one commit,
+// and nothing is committed when nothing changed.
 app.post("/api/project/:id/github", security.rejectUnknownFields(["repoName"]), async (req, res) => {
   if (!process.env.GITHUB_TOKEN) {
     return res.status(503).json({ error: "GitHub isn't connected yet — add a real GITHUB_TOKEN (or set up GitHub OAuth) first." });
   }
   const project = getProject(req.params.id, req, res);
   if (!project) return;
-  const repoName = (req.body.repoName || `gurost-${req.params.id.slice(0, 8)}`).replace(/[^a-zA-Z0-9-_]/g, "-");
-
-  // A website goes up as its real pages, styles, script and images (the same
-  // files as the download); decided before the repository is created, so
-  // an empty project doesn't leave an empty repo behind.
-  if (project.type !== "app" && !project.currentHtml) return res.status(400).json({ error: "Nothing to push yet." });
-
+  const files = githubFilesFor(project);
+  if (!files) return res.status(400).json({ error: "Nothing to push yet." });
   try {
-    const { Octokit } = require("@octokit/rest");
-    const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
-
-    const files = project.type === "app"
-      ? [...(project.appFiles?.backend || []), ...(project.appFiles?.frontend || [])]
-      : siteFiles(project).files;
-
-    const { data: repo } = await octokit.repos.createForAuthenticatedUser({ name: repoName, private: true, auto_init: true });
-
-    for (const file of files) {
-      await octokit.repos.createOrUpdateFileContents({
-        owner: repo.owner.login,
-        repo: repo.name,
-        path: file.path,
-        message: `Add ${file.path} via Gurost`,
-        content: Buffer.from(file.content).toString("base64"),
-      });
-    }
-    res.json({ repoUrl: repo.html_url });
+    const result = await githubSave.save(project, req.params.id, files, { repoName: req.body && req.body.repoName });
+    if (result.saved) persistInBackground(req.params.id, project);
+    res.json({ repoUrl: result.repoUrl, saved: result.saved, unchanged: result.unchanged, savedAt: result.lastSavedAt });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// Where GitHub saving stands for this project (for the Pulse nudge): connected, auto-save on or off,
+// the repo, the last save, and whether anything changed since.
+app.get("/api/project/:id/github/status", (req, res) => {
+  const project = getProject(req.params.id, req, res);
+  if (!project) return;
+  let files = null;
+  try { files = githubFilesFor(project); } catch { /* status still answers without the change check */ }
+  res.json(githubSave.status(project, files));
+});
+
+// Turn auto-save on or off. It runs from the open browser tab, so it pauses when the tab is closed.
+app.post("/api/project/:id/github/auto", security.rejectUnknownFields(["enabled"]), (req, res) => {
+  const project = getProject(req.params.id, req, res);
+  if (!project) return;
+  if (!req.body || typeof req.body.enabled !== "boolean") return res.status(400).json({ error: "enabled must be true or false." });
+  githubSave.setAutoSave(project, req.body.enabled);
+  persistInBackground(req.params.id, project);
+  res.json(githubSave.status(project));
 });
 
 // ---------------------------------------------------------------
