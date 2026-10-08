@@ -90,6 +90,16 @@ async function resolveSSO(token) {
   return { id: ssoIdentity.id, plan, org: ssoIdentity.org, ssoProvider: ssoIdentity.ssoProvider };
 }
 
+// Why a bearer token was refused, read from its own (unsigned) payload: "expired" when its exp time has
+// passed, otherwise "invalid". Only used to choose the message and the log line; it never grants access.
+function tokenState(token) {
+  try {
+    const payload = JSON.parse(Buffer.from(String(token).split(".")[1] || "", "base64url").toString("utf8"));
+    if (payload && typeof payload.exp === "number" && payload.exp * 1000 < Date.now()) return "expired";
+  } catch { /* not a readable token */ }
+  return "invalid";
+}
+
 // Accepts `x-api-key: <key>`, `Authorization: Bearer <jwt>` (either this
 // app's own JWT, or a Supabase-issued SSO token — tried in that order).
 async function requireAuth(req, res, next) {
@@ -97,12 +107,15 @@ async function requireAuth(req, res, next) {
   const authHeader = req.headers["authorization"];
 
   let user = null;
+  let why = "no_credentials"; // what was missing or wrong, for the reply and the log
   try {
     if (apiKey) {
       user = await resolveApiKey(apiKey);
+      if (!user) why = "invalid_api_key";
     } else if (authHeader && authHeader.startsWith("Bearer ")) {
       const token = authHeader.slice(7);
       user = resolveJwt(token) || (await resolveSSO(token));
+      if (!user) why = tokenState(token) === "expired" ? "token_expired" : "token_invalid";
     }
   } catch (err) {
     console.error("Auth check failed:", err.message);
@@ -110,9 +123,12 @@ async function requireAuth(req, res, next) {
   }
 
   if (!user) {
-    security.auditLog("auth_failed", req, "No valid credentials").catch(() => {});
+    security.auditLog("auth_failed", req, `No valid credentials (${why})`).catch(() => {});
     security.trackViolation(req.ip, "auth_failed", req.path).catch(() => {});
-    return res.status(401).json({ error: "Valid API key (x-api-key header) or JWT (Authorization: Bearer) required." });
+    // An expired or unreadable login says so, with a code the pages use to send the person to log in again.
+    if (why === "token_expired") return res.status(401).json({ error: "Your session has expired. Please log in again.", code: why });
+    if (why === "token_invalid") return res.status(401).json({ error: "Your login is no longer valid. Please log in again.", code: why });
+    return res.status(401).json({ error: "Valid API key (x-api-key header) or JWT (Authorization: Bearer) required.", code: why });
   }
 
   req.user = user;
@@ -218,6 +234,7 @@ function requireBusinessAssistant(req, res, next) {
 
 module.exports = {
   requireAuth,
+  tokenState,
   requireProjectOwnership,
   enforcePlanLimit,
   recordBuildEvent,

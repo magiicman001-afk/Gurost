@@ -65,6 +65,16 @@ window.GurostAPI = (function () {
       data = null;
     }
 
+    // A login that has expired (or is no longer valid) is cleared and the person is sent to log in again,
+    // instead of every page showing a raw "credentials required" error. API-key users are not affected.
+    if (res.status === 401 && data && (data.code === 'token_expired' || data.code === 'token_invalid') && localStorage.getItem('gurost_jwt')) {
+      localStorage.removeItem('gurost_jwt');
+      localStorage.removeItem('gurost_user_id');
+      if (!/\/(login|signup|reset-password|index)?(\.html)?$/.test(window.location.pathname)) {
+        window.location.href = 'login.html?expired=1';
+      }
+    }
+
     if (!res.ok) {
       const err = new Error((data && data.error) || `Request failed (${res.status})`);
       err.status = res.status;
