@@ -1448,7 +1448,7 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
   // broadcasting real progress. The client is expected to already be
   // connected (or connect right after this response) to this
   // project's /ws/guide room to receive those events.
-  res.json({ projectId, state: "GENERATING", businessInfoSummary: describeBusinessInfo(businessInfo) });
+  res.json({ projectId, state: "GENERATING", expectedVariants: project.expectedVariants, businessInfoSummary: describeBusinessInfo(businessInfo) });
 
   try {
     // Real, deliberate fix - confirmed live that this build call could
@@ -5411,6 +5411,11 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt", "
   const project = newProject(prompt, req.user.id);
   project.type = "website";
   project.businessInfo = businessInfo; // saved with the project from the start - a reload mid-build keeps it
+  // What the page needs to know without the WebSocket: how many designs to wait for, whether the build
+  // is over, and which designs failed. A phone that missed the live messages reads these instead.
+  project.expectedVariants = 2;
+  project.buildFinished = false;
+  project.failedVariants = [];
   PROJECTS.set(projectId, project);
   persistInBackground(projectId, project);
 
@@ -5455,11 +5460,16 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt", "
     if (!result.variants.length) {
       const realReason = result.failures[0]?.error || "Every real design attempt failed.";
       console.error(`[website-builder] All real variants failed for project ${projectId}:`, realReason);
+      project.buildFinished = true;
+      project.failedVariants = result.failures.map((f) => f.variant);
+      persistInBackground(projectId, project);
       broadcastProjectUpdate(projectId, { type: "error", error: realReason });
       return;
     }
 
     integrator.integrateVariants(project, result.variants);
+    project.buildFinished = true;
+    project.failedVariants = result.failures.map((f) => f.variant);
     persistInBackground(projectId, project);
     // Real, same established pattern as the existing generate route -
     // stays in BUILDING until the user actually selects a variant via
@@ -5481,6 +5491,68 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt", "
     // so this just logs and broadcasts, leaving the project's real
     // state as whatever it validly was.
     console.error("[website-builder] Real staged generation failed:", err.message);
+    project.buildFinished = true;
+    broadcastProjectUpdate(projectId, { type: "error", error: err.message });
+  }
+});
+
+// "Show me 2 more": the two directions a build does not start with (Corporate, Playful), added to the same
+// picker. Once per project, only while choosing (before a design is picked) and only when the first batch is
+// over. No extra credit is charged for it.
+app.post("/api/website-builder/more", security.rejectUnknownFields(["projectId"]), async (req, res) => {
+  const project = getProject(req.body.projectId, req, res);
+  if (!project) return;
+  const projectId = req.body.projectId;
+  if (project.type !== "website" || !(project.variants || []).length) return res.status(400).json({ error: "Build your designs first." });
+  if (project.currentHtml) return res.status(400).json({ error: "You've already picked a design for this project." });
+  if (project.moreRequested) return res.status(409).json({ error: "You've already asked for more designs on this project." });
+  if (project.buildFinished === false) return res.status(409).json({ error: "Your first designs are still being made." });
+
+  project.moreRequested = true;
+  project.buildFinished = false;
+  project.expectedVariants = 4;
+  persistInBackground(projectId, project);
+  res.json({ ok: true, expectedVariants: project.expectedVariants });
+
+  try {
+    const result = await variantBot.generateVariantsStaged(project.prompt, {
+      businessInfo: project.businessInfo || null,
+      projectId,
+      briefIds: variantBot.MORE_BRIEF_IDS,
+      includeBranding: !PLANS[req.user.plan]?.whiteLabel,
+      userId: req.user.id,
+      plan: req.user.plan,
+      onStage: (stage, status, data) => {
+        if (status === "variant-complete" && data?.variant) {
+          const { variant, ...rest } = data;
+          project.variants = [...(project.variants || []).filter((v) => v.id !== variant.id), variant];
+          data = rest;
+        }
+        // The batch's own "done" is replaced below by one that lists every design on the project.
+        if (stage === "done") return;
+        broadcastProjectUpdate(projectId, { type: "stage_progress", stage, status, data: data || null });
+      }
+    });
+    if (!result.variants.length) project.moreRequested = false; // nothing came of it: allow another try
+    project.failedVariants = [...(project.failedVariants || []), ...result.failures.map((f) => f.variant)];
+    project.history.push({ type: "variants", summary: `${result.variants.length} more design directions generated`, ts: Date.now() });
+    project.buildFinished = true;
+    persistInBackground(projectId, project);
+    if (!result.variants.length) {
+      broadcastProjectUpdate(projectId, { type: "error", error: result.failures[0]?.error || "The extra designs could not be made." });
+      return;
+    }
+    broadcastProjectUpdate(projectId, {
+      type: "stage_progress",
+      stage: "done",
+      status: "complete",
+      data: { variants: project.variants.map((v) => ({ id: v.id, label: v.label, summary: v.summary })) }
+    });
+  } catch (err) {
+    console.error("[website-builder] Extra designs failed:", err.message);
+    project.moreRequested = false;
+    project.buildFinished = true;
+    persistInBackground(projectId, project);
     broadcastProjectUpdate(projectId, { type: "error", error: err.message });
   }
 });

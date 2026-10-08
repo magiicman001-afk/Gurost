@@ -35,6 +35,12 @@ const BRIEFS = [
   }
 ];
 
+// A build starts with two directions (faster on a phone, half the model cost); "Show me 2 more" adds the
+// other two. Corporate is held back because its brief hard-codes navy/slate and competes with the
+// industry palette (CLAUDE.md known issue 8); Playful is the least premium-looking.
+const FIRST_BRIEF_IDS = ["minimal", "bold"];
+const MORE_BRIEF_IDS = ["corporate", "playful"];
+
 // Real, specific, named anti-patterns - the actual, recognizable tells
 // of AI-generated design, called out directly so the model has a
 // concrete negative example to avoid, not just a vague instruction
@@ -537,7 +543,7 @@ function verifyRealHtml(html) {
 
 // businessInfo: normalized by lib/business-info (null = the user skipped -
 // placeholders, not invented details).
-async function generateVariantsStaged(prompt, { includeBranding = true, onStage, userId, plan, businessInfo = null, projectId = null } = {}) {
+async function generateVariantsStaged(prompt, { includeBranding = true, onStage, userId, plan, businessInfo = null, projectId = null, briefIds = FIRST_BRIEF_IDS } = {}) {
   const notify = (stage, status, data) => onStage && onStage(stage, status, data);
 
   notify("understanding", "running");
@@ -576,7 +582,7 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
   // Image sources across the whole build, for the cost summary at the end.
   const media = { pixabay: 0, openverse: 0, flux: 0, gemini: 0, dropped: 0, cost: 0, allGeminiCost: 0 };
 
-  const promises = BRIEFS.map((b) => {
+  const promises = BRIEFS.filter((b) => briefIds.includes(b.id)).map((b) => {
     const system = systemFor(b.brief, includeBranding, design);
     const onRetry = (err, reason = "no response for 90s") => {
       live.release(b.id); // its half-built page stops leading the preview
@@ -650,7 +656,7 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
   return { variants, failures };
 }
 
-module.exports = { generateVariants, generateVariantsStaged, verifyRealHtml, checkCredibility, BRIEFS };
+module.exports = { generateVariants, generateVariantsStaged, verifyRealHtml, checkCredibility, BRIEFS, FIRST_BRIEF_IDS, MORE_BRIEF_IDS };
 // Exposed for tests only.
 module.exports._internal = { generateDesign, stripLeftoverPlaceholders, resetGeminiPause: () => { geminiPausedUntil = 0; }, fulfillImageRequests, fulfillVideoRequests, fulfillMedia, mediaCredits, stockQuery, createLivePreview, systemFor, condenseForReview };
 

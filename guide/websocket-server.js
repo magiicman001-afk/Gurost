@@ -77,6 +77,7 @@ function broadcastProjectUpdate(projectId, message) {
 // join means a late joiner still sees real progress and real errors
 // instead of sitting on "Starting…" forever.
 const STATUS_HISTORY = new Map();
+const KEEPALIVE_MS = Number(process.env.WS_KEEPALIVE_MS) || 25000;
 
 function attachGuideBotSocket(httpServer, PROJECTS) {
   // noServer + a path-checked upgrade listener, not { server, path }: with
@@ -90,7 +91,23 @@ function attachGuideBotSocket(httpServer, PROJECTS) {
     wss.handleUpgrade(req, socket, head, (ws) => wss.emit("connection", ws, req));
   });
 
+  // Keepalive. A build can go quiet for a minute or more between messages, and hosting proxies close
+  // connections that stay silent that long - a phone then never hears that a design finished. A ping every
+  // 25s keeps the line open; one that gets no answer for two rounds is dead and is closed so the page
+  // notices (and reconnects) instead of waiting on a socket that goes nowhere.
+  const keepalive = setInterval(() => {
+    for (const ws of wss.clients) {
+      if (ws.missedPongs >= 2) { ws.terminate(); continue; }
+      ws.missedPongs = (ws.missedPongs || 0) + 1;
+      try { ws.ping(); } catch { /* closing */ }
+    }
+  }, KEEPALIVE_MS);
+  keepalive.unref();
+  wss.on("close", () => clearInterval(keepalive));
+
   wss.on("connection", (ws, req) => {
+    ws.missedPongs = 0;
+    ws.on("pong", () => { ws.missedPongs = 0; });
     const url = new URL(req.url, "http://localhost");
     const projectId = url.searchParams.get("projectId");
     const userId = url.searchParams.get("userId");

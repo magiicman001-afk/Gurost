@@ -81,6 +81,7 @@ if (window.self !== window.top) { window.stop(); document.documentElement.innerH
       <div class="hidden p-4" id="variantSection">
         <p class="text-xs font-semibold mb-3 text-center text-[var(--ink-soft)]">Choose a direction</p>
         <div class="grid grid-cols-2 gap-2" id="variantGrid"></div>
+        <button type="button" id="moreDesignsBtn" class="hidden mt-3 w-full text-xs font-semibold px-3 py-2.5 border border-[var(--line)] bg-white hover:border-[var(--gurost-primary)] transition-colors">Show me 2 more</button>
       </div>
       <div class="w-full h-full" id="previewWrap">
         <div class="flex flex-col w-full h-full" id="previewInner">
@@ -505,6 +506,8 @@ async function selectVariant(variantId, { render = true } = {}) {
 }
 
 let generationSocket = null;
+let designsExpected = 2; // designs the build is making (2 to start; 4 after "Show me 2 more")
+const socketMemory = {}; // per project: what was already logged, kept across reconnects (the server replays recent events)
 let lastPromptTried = null; // real, honest memory - lets the Restart button retry the exact same thing, not guess
 
 // Bot conversation helpers (logBot, logActivity, toggleCode...) live in
@@ -515,19 +518,19 @@ function connectGenerationSocket(id) {
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
   generationSocket = new WebSocket(`${protocol}//${window.location.host}/ws/guide?projectId=${id}&userId=${localStorage.getItem('gurost_user_id') || 'anon'}`);
 
-  let variantsFinished = 0;
+  const mem = (socketMemory[id] = socketMemory[id] || { finished: 0, seen: new Set() });
   let liveLeadId = null;
   // Server labels: a heading, "#id", or a tag word ("navigation", "footer").
   const sectionName = (s) => (s.startsWith('#') ? `the ${s.slice(1).replace(/[-_]/g, ' ')} section` : s === 'a section' ? 'another section' : /^[a-z ]+$/.test(s) ? `the ${s}` : `"${s}"`);
   const liveGenericLogged = new Set();
   let pickHintLogged = false; // "you can pick it now" - once per build
-  const seen = new Set(); // the server replays recent events to late joiners - log each once
+  const seen = mem.seen; // the server replays recent events to late joiners - log each once
 
   generationSocket.addEventListener('message', (event) => {
     let msg;
     try { msg = JSON.parse(event.data); } catch { return; }
     if (!['stage_progress', 'error', 'credibility_check'].includes(msg.type)) return;
-    const key = JSON.stringify([msg.type, msg.stage, msg.status, msg.data?.variantId, msg.data?.sectionCount, msg.error, msg.credibility?.missing]);
+    const key = JSON.stringify([msg.at, msg.type, msg.stage, msg.status, msg.data?.variantId, msg.data?.sectionCount, msg.error, msg.credibility?.missing]);
     if (seen.has(key)) return;
     seen.add(key);
     const log = (bot, text, tone) => logBot(bot, text, tone, msg.at || Date.now());
@@ -597,28 +600,28 @@ function connectGenerationSocket(id) {
         const total = (d.pixabay || 0) + (d.openverse || 0) + (d.flux || 0) + (d.gemini || 0);
         log('Builder', `${total} image${total === 1 ? '' : 's'} added across your designs.`, 'ok');
       } else if (msg.status === 'variant-complete') {
-        variantsFinished++;
-        log('Designer', `${d.label || 'Design'} ready (${variantsFinished}/4).`, 'ok');
+        mem.finished++;
+        log('Designer', `${d.label || 'Design'} ready (${mem.finished}/${designsExpected}).`, 'ok');
         // Pickable as soon as it exists - the rest join the picker as they finish.
         if (!currentHtml) {
-          if (!pickHintLogged && variantsFinished < 4) {
+          if (!pickHintLogged && mem.finished < designsExpected) {
             pickHintLogged = true;
             log('Builder', 'You can pick it now on the left — the others will appear as they finish.', 'ok');
           }
-          fetchAndRenderGeneratedVariants(id, 4 - variantsFinished);
+          fetchAndRenderGeneratedVariants(id, designsExpected - mem.finished);
         }
       } else if (msg.status === 'variant-retrying') {
         log('Designer', `${d.label || 'A design'} ${/took longer/.test(d.reason || '') ? d.reason : `went quiet (${d.reason || 'no response'})`} — retrying it once…`, 'work');
       } else if (msg.status === 'variant-failed') {
-        variantsFinished++;
+        mem.finished++;
         // The real reason, minus the raw model response the server appends.
         const reason = String(d.error || 'unknown error').split(' Raw:')[0].slice(0, 220);
         // Past both time limits: say so plainly and carry on with the others.
-        if (/took too long/.test(reason)) log('Designer', `Design ${variantsFinished}/4 (${d.label || 'a design'}) took too long — moving on`, 'fail');
-        else log('Designer', `${d.label || 'A design'} failed (${variantsFinished}/4): ${reason}`, 'fail');
-        if (!currentHtml && pickerVisible()) fetchAndRenderGeneratedVariants(id, 4 - variantsFinished);
+        if (/took too long/.test(reason)) log('Designer', `Design ${mem.finished}/${designsExpected} (${d.label || 'a design'}) took too long — moving on`, 'fail');
+        else log('Designer', `${d.label || 'A design'} failed (${mem.finished}/${designsExpected}): ${reason}`, 'fail');
+        if (!currentHtml && pickerVisible()) fetchAndRenderGeneratedVariants(id, designsExpected - mem.finished);
       } else if (msg.status === 'complete') {
-        log('Designer', `${d.count} of 4 designs ready.`, d.count ? 'ok' : 'fail');
+        log('Designer', `${d.count} design${d.count === 1 ? '' : 's'} ready.`, d.count ? 'ok' : 'fail');
       }
     } else if (msg.stage === 'done' && msg.status === 'complete') {
       PulseBuildBrain.buildFinished();
@@ -631,21 +634,36 @@ function connectGenerationSocket(id) {
     }
   });
 
-  generationSocket.addEventListener('close', () => { generationSocket = null; });
+  generationSocket.addEventListener('close', () => {
+    generationSocket = null;
+    scheduleReconnect(id); // only does anything while a build is being waited on
+  });
 }
 
 async function fetchAndRenderGeneratedVariants(id, pending = 0) {
   try {
     const project = await GurostAPI.call(`/api/project/${id}`);
     if (currentHtml) return; // picked while this was loading
-    if (!pending) setPreviewStatus(false);
+    const stillPending = pendingFrom(project, pending);
+    if (!stillPending) setPreviewStatus(false);
     if (project.variants && project.variants.length) {
-      renderVariants(project.variants, pending);
+      renderVariants(project.variants, stillPending);
     }
+    updateMoreButton(project);
   } catch (err) {
     showCreditOrErrorBanner(err.message);
     setPreviewStatus(false);
   }
+}
+
+// How many "Still designing…" cards to show. The project record knows (designs expected, designs failed,
+// whether the build is over); the count from the live messages is only the fallback for an old record.
+function pendingFrom(project, fallback = 0) {
+  if (project.buildFinished === true) return 0;
+  if (project.buildFinished === false && project.expectedVariants) {
+    return Math.max(0, project.expectedVariants - (project.variants || []).length - (project.failedVariants || []).length);
+  }
+  return fallback;
 }
 
 // Real, honest banner logic - genuinely distinguishes a credit
@@ -734,6 +752,7 @@ async function generateWebsite(description, options = {}) {
     if (result.businessInfoSummary) logBot('Builder', `Company details saved: ${result.businessInfoSummary}.`, 'ok');
     else logBot('Builder', businessInfo ? "Those details didn't look valid - building with placeholders you can replace later." : 'No company details - building with placeholders you can replace later.', 'info');
     projectId = result.projectId;
+    designsExpected = result.expectedVariants || 2;
     window.history.replaceState({}, '', `builder.html?projectId=${projectId}`);
     connectGenerationSocket(projectId);
     lastPartialHtml = null;
@@ -748,37 +767,110 @@ async function generateWebsite(description, options = {}) {
   }
 }
 
-// Real, honest safety net - same, proven pattern already used on App
-// Builder. The WebSocket above connects AFTER the real
-// /api/website-builder/start call returns, since it genuinely needs
-// the real projectId that call produces - leaving a real, if usually
-// brief, gap where the backend could already be broadcasting before
-// anyone's listening. Rather than trust that gap is always short
-// enough, this polls the actual, real project record directly every
-// few seconds - if real variants ever show up, or a real failure is
-// recorded, this catches it regardless of whether any single
-// WebSocket message actually made it through.
-function startCompletionPollFallback(id) {
-  let attempts = 0;
-  const maxAttempts = 40; // real ceiling - a little over 3 minutes at 5s intervals
-  const interval = setInterval(async () => {
-    attempts++;
-    if (attempts > maxAttempts) { clearInterval(interval); return; }
-    if (document.getElementById('variantSection').classList.contains('hidden') === false) {
-      clearInterval(interval); // real variants already showing - the WebSocket did its job, nothing left for this fallback to do
-      return;
+// The WebSocket is the quick path: a design shows up the moment it finishes. It is not the only path.
+// A phone that sleeps, switches app or changes network loses it, and the live messages sent in the
+// meantime are gone. So while a build is running this page also asks the project record every 5s - the
+// server keeps the designs, how many to expect, which failed and whether the build is over there - and
+// it keeps asking until the build is over (not until the first design shows, as it used to). It also
+// asks the moment the tab comes back to the front or the network returns, and reconnects the socket.
+let buildWatch = null;
+const WATCH_INTERVAL_MS = 5000;
+const WATCH_MAX_MS = 14 * 60 * 1000; // a design gets 10 min + one 5 min retry on the server
+
+function watchBuild(id) {
+  stopWatchingBuild();
+  buildWatch = { id, startedAt: Date.now(), timer: null, busy: false, lastKey: '', reconnectTimer: null, attempts: 0 };
+  buildWatch.timer = setInterval(syncBuild, WATCH_INTERVAL_MS);
+}
+
+function stopWatchingBuild() {
+  if (!buildWatch) return;
+  clearInterval(buildWatch.timer);
+  clearTimeout(buildWatch.reconnectTimer);
+  buildWatch = null;
+}
+
+async function syncBuild() {
+  const w = buildWatch;
+  if (!w || w.busy) return;
+  if (Date.now() - w.startedAt > WATCH_MAX_MS) { stopWatchingBuild(); return; }
+  w.busy = true;
+  try {
+    const project = await GurostAPI.call(`/api/project/${w.id}`);
+    if (buildWatch !== w) return;
+    if (currentHtml) { stopWatchingBuild(); return; } // a design was picked: nothing left to wait for
+    const got = project.variants || [];
+    const finished = project.buildFinished === true;
+    const pending = pendingFrom(project, 0);
+    const key = got.map((v) => v.id).join(',') + '|' + pending + '|' + finished;
+    if (got.length && key !== w.lastKey) {
+      w.lastKey = key;
+      renderVariants(got, pending);
     }
-    try {
-      const project = await GurostAPI.call(`/api/project/${id}`);
-      if (project.variants && project.variants.length) {
-        clearInterval(interval);
-        setPreviewStatus(false);
-        renderVariants(project.variants);
-      }
-    } catch (err) {
-      console.error('[builder] Real completion poll failed:', err.message);
+    if (finished) {
+      setPreviewStatus(false);
+      updateMoreButton(project);
+      stopWatchingBuild();
     }
-  }, 5000);
+  } catch (err) {
+    console.error('[builder] Build check failed:', err.message);
+  } finally {
+    w.busy = false;
+  }
+}
+
+// Reconnect the socket while a build is being waited on (the server replays its recent events).
+function scheduleReconnect(id) {
+  const w = buildWatch;
+  if (!w || w.id !== id || w.reconnectTimer) return;
+  const delay = Math.min(15000, 1000 * 2 ** w.attempts);
+  w.attempts++;
+  w.reconnectTimer = setTimeout(() => {
+    if (buildWatch !== w) return;
+    w.reconnectTimer = null;
+    if (!generationSocket) connectGenerationSocket(id);
+  }, delay);
+}
+
+function wakeBuildWatch() {
+  if (!buildWatch) return;
+  buildWatch.attempts = 0;
+  if (!generationSocket) connectGenerationSocket(buildWatch.id);
+  syncBuild();
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') wakeBuildWatch(); });
+window.addEventListener('online', wakeBuildWatch);
+window.addEventListener('pageshow', wakeBuildWatch);
+
+// Kept under its old name: generateWebsite() calls this once the build has started.
+function startCompletionPollFallback(id) { watchBuild(id); }
+
+// "Show me 2 more": the two directions a build does not start with. Offered once, while choosing.
+function updateMoreButton(project) {
+  const btn = document.getElementById('moreDesignsBtn');
+  if (!btn) return;
+  const show = !currentHtml && project.buildFinished === true && !project.moreRequested
+    && (project.variants || []).length > 0 && (project.variants || []).length < 4;
+  btn.classList.toggle('hidden', !show);
+}
+
+async function requestMoreDesigns() {
+  const btn = document.getElementById('moreDesignsBtn');
+  btn.disabled = true;
+  btn.classList.add('hidden');
+  try {
+    const r = await GurostAPI.call('/api/website-builder/more', { method: 'POST', body: { projectId } });
+    designsExpected = r.expectedVariants || 4;
+    logBot('Builder', 'Making 2 more directions…', 'work');
+    renderVariants([...pickerVariants.values()], 2);
+    watchBuild(projectId);
+    if (!generationSocket) connectGenerationSocket(projectId);
+  } catch (err) {
+    logBot('Builder', err.message, 'fail');
+    btn.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 // Real, honest display for the Credibility Engine's genuine findings -
@@ -793,6 +885,7 @@ function showCredibilityPanel(credibility, at) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('moreDesignsBtn').addEventListener('click', requestMoreDesigns);
   document.getElementById('creditRestartBtn').addEventListener('click', () => {
     if (lastPromptTried) {
       hideCreditBanner();
@@ -841,7 +934,13 @@ async function loadExistingProject(id) {
       currentHtml = project.currentHtml;
       renderPreview(currentHtml);
     } else if (project.variants && project.variants.length) {
-      renderVariants(project.variants);
+      renderVariants(project.variants, pendingFrom(project, 0));
+      updateMoreButton(project);
+    }
+    // Reopened (or reloaded) while a build is still running: keep waiting for the rest of its designs.
+    if (!project.currentHtml && project.buildFinished === false) {
+      designsExpected = project.expectedVariants || designsExpected;
+      watchBuild(id);
     }
     if (project.businessInfo) {
       const details = await GurostAPI.call(`/api/project/${id}/company-details`);
