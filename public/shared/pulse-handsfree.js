@@ -30,7 +30,7 @@
   }
 
   /**
-   * What Pulse says back. outcome comes from the widget: { ok, kind: "edit" | "build" | "github" | "busy" | "noproject",
+   * What Pulse says back. outcome comes from the widget: { ok, kind: "edit" | "build" | "github" | "busy" | "noproject" | "pickdesign" | "unsupported" (these two carry say),
    * cmd, unchanged }. Short on purpose: the screen shows the rest.
    */
   function spokenReply(outcome, lines) {
@@ -38,6 +38,7 @@
     if (!outcome) return "";
     if (outcome.kind === "busy") return "One moment, I am still working on the last change.";
     if (outcome.kind === "noproject") return "Enter a web address or upload a file above to get started first.";
+    if (outcome.say && (outcome.kind === "pickdesign" || outcome.kind === "unsupported")) return outcome.say;
     if (!outcome.ok) return L.retry || "That didn't work. Shall we try again?";
     if (outcome.kind === "build") return "Built. Take a look.";
     if (outcome.kind === "github") {

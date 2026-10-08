@@ -286,13 +286,41 @@
   // For tests and for checking the nudge by hand: look now instead of waiting 30 minutes.
   window.GurostPulseGithub = { parseCommand: parseGithubCommand, checkNow() { ghArmed = true; ghNextCheckAt = 0; return githubTick(); } };
 
+  // What Pulse does with a typed or spoken request, given where the page's project is:
+  //   state "none"      no project yet                  -> start a new build
+  //   state "building"  designs still on their way      -> say so; never start a second build
+  //   state "choosing"  designs on screen, none picked  -> ask for a pick; never start a second build
+  //   state "ready"     a design is in use              -> edit it
+  // (Live phone test 2026-10-08: with designs on screen but none picked, every message was treated
+  // as a new build - the company-details form came back and the designs on screen were wiped.)
+  // "Add a page" is not a feature on the Website Builder yet, so it gets an honest answer instead.
+  const ADD_PAGE = /\b(?:add|make|create|build|generate)\s+(?:me\s+)?(?:a|an|one|another|a new|new|extra|more|two|three)\s+(?:[\w-]+\s+){0,2}pages?\b/i;
+  const ADD_PAGE_REPLY = "Adding new pages isn't ready yet. I can redesign your site or change the text and content. Want me to do that?";
+  const PICK_DESIGN_REPLY = 'Pick a design first - tap the one you like on the left, then I can change it.';
+  const STILL_BUILDING_REPLY = 'Your designs are still being built. Once you pick one, I can change it.';
+  function routeRequest(text, state, onWebsite) {
+    const m = ADD_PAGE.exec(String(text || ''));
+    // "add a link to page 2", "make a button on the page" are edits, not a new page.
+    if (onWebsite && m && !/\b(?:to|on|in|of|for|at|from|with)\b/i.test(m[0])) return { action: 'reply', kind: 'unsupported', say: ADD_PAGE_REPLY };
+    if (state === 'building') return { action: 'reply', kind: 'pickdesign', say: STILL_BUILDING_REPLY };
+    if (state === 'choosing') return { action: 'reply', kind: 'pickdesign', say: PICK_DESIGN_REPLY };
+    return { action: state === 'none' ? 'build' : 'edit' };
+  }
+  window.GurostPulseRoute = { decide: routeRequest }; // for tests
+
   async function sendCorrection(text) {
     if (!text || !window.gurostBuilder) return null;
     const githubCmd = parseGithubCommand(text);
     if (githubCmd) return handleGithubCommand(githubCmd);
-    const hasProject = window.gurostBuilder.hasActiveProject?.();
+    const gb = window.gurostBuilder;
+    const state = gb.projectState ? gb.projectState() : (gb.hasActiveProject?.() ? 'ready' : 'none');
+    const route = routeRequest(text, state, onWebsiteBuilder);
+    if (route.action === 'reply') {
+      logStatus(route.say);
+      return { ok: false, kind: route.kind, say: route.say };
+    }
 
-    if (!hasProject) {
+    if (route.action === 'build') {
       // Real, honest check - not every page can "start" a build from
       // typed text. Amend Website's real starting point is a URL or
       // an uploaded file, not a description, so it has no generate()

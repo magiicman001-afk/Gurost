@@ -634,8 +634,11 @@ function connectGenerationSocket(id) {
     }
   });
 
+  const thisSocket = generationSocket;
   generationSocket.addEventListener('close', () => {
-    generationSocket = null;
+    // Only forget the socket this handler belongs to: closing the old one for a new build fires its
+    // close AFTER the new socket is stored, and used to wipe the new one's reference.
+    if (generationSocket === thisSocket) generationSocket = null;
     scheduleReconnect(id); // only does anything while a build is being waited on
   });
 }
@@ -1000,6 +1003,9 @@ window.gurostBuilder = {
   generate: generateWebsite,
   correct: sendCorrection,
   hasActiveProject: () => !!(projectId && currentHtml),
+  // Where the project is, for Pulse: none (start a build) | building (designs still coming) |
+  // choosing (designs on screen, none picked yet) | ready (a design is in use, so Pulse edits it).
+  projectState: () => (!projectId ? 'none' : currentHtml ? 'ready' : pickerVariants.size > 0 ? 'choosing' : buildWatch ? 'building' : 'none'),
   getProjectId: () => projectId,
   undo: undoChange,
   redo: redoChange,
