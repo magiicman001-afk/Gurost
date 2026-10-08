@@ -29,6 +29,7 @@ const express = require("express");
 const crypto = require("crypto");
 const { pageSecurity, sandboxSharedPage } = require("./lib/security-headers");
 const cors = require("cors");
+const { corsPolicy } = require("./lib/cors-policy");
 const rateLimit = require("express-rate-limit");
 
 const { transition, canTransition } = require("./lib/state-machine");
@@ -270,7 +271,9 @@ app.use(pageSecurity());
 // backend alone couldn't serve any HTML page at all.
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use(cors());
+// CORS: Gurost's own domains only; /api/site-forms stays open for published
+// sites. Was cors() - every origin allowed (audit 2026-10-08). lib/cors-policy.js
+app.use(corsPolicy(cors));
 app.use(performance.timingMiddleware);
 
 // Rejects IPs already blocked from repeated security violations, before
