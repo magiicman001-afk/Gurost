@@ -261,6 +261,8 @@ document.addEventListener('DOMContentLoaded', () => {
 document.addEventListener('DOMContentLoaded', async () => {
   if (!GurostAPI.requireLogin()) return;
 
+  loadRealDashboardProjects(); // starts now, alongside /api/me, instead of after it
+
   try {
     const me = await GurostAPI.call('/api/me');
     const name = me.email ? me.email.split('@')[0] : 'there';
@@ -350,8 +352,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  loadRealDashboardProjects();
-
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => { if (entry.isIntersecting) entry.target.classList.add('in-view'); });
   }, { threshold: 0.15 });
@@ -368,25 +368,52 @@ function showProjectsMessage(text) {
   document.getElementById('dashProjectsGrid').replaceChildren(p);
 }
 
+// The last list this browser saw, per user: shown at once while the fresh one loads, so the
+// dashboard is not an empty grid for the length of three requests. Never trusted: it is
+// replaced as soon as the server answers, and any storage error just means no instant paint.
+const DASH_CACHE_KEY = () => `gurost_dash_cache_${localStorage.getItem('gurost_user_id') || 'anon'}`;
+function readDashCache() {
+  try { const c = JSON.parse(localStorage.getItem(DASH_CACHE_KEY()) || 'null'); return c && Array.isArray(c.projects) ? c : null; } catch (e) { return null; }
+}
+function writeDashCache(projects, subCounts) {
+  try { localStorage.setItem(DASH_CACHE_KEY(), JSON.stringify({ projects: projects.slice(0, 4), subCounts })); } catch (e) { /* storage full or blocked - fine */ }
+}
+
+let dashLoadId = 0;
 async function loadRealDashboardProjects() {
-  const grid = document.getElementById('dashProjectsGrid');
+  const myLoad = ++dashLoadId;
+  const cached = readDashCache();
+  if (cached && cached.projects.length) renderDashboardProjects(cached.projects, cached.subCounts || {});
+  // Both requests start together (the second used to wait for the first, and both for /api/me).
+  // The submissions count is a nice-to-have: if it fails the cards just show no count.
+  const projectsReq = GurostAPI.call('/api/projects');
+  const subsReq = GurostAPI.call('/api/submissions/summary').then((r) => r.projects || {}, () => null);
   let projects;
   try {
     // The route answers { projects: [...] } - reading .length off that object
     // left the dashboard saying "No projects yet" for everyone.
-    const res = await GurostAPI.call('/api/projects');
+    const res = await projectsReq;
     projects = Array.isArray(res) ? res : (res.projects || []);
   } catch (err) {
-    showProjectsMessage("Couldn't load your projects: " + err.message);
+    if (myLoad !== dashLoadId) return;
+    if (!cached) showProjectsMessage("Couldn't load your projects: " + err.message); // keep the last list if there is one
     return;
   }
+  if (myLoad !== dashLoadId) return; // a newer load (after a delete) is in charge
   if (!projects.length) {
+    writeDashCache([], {});
     showProjectsMessage('No projects yet — describe what you want to build above to get started.');
     return;
   }
+  const subCounts = (await subsReq) || (cached && cached.subCounts) || {};
+  if (myLoad !== dashLoadId) return;
+  renderDashboardProjects(projects, subCounts);
+  writeDashCache(projects, subCounts);
+}
+
+function renderDashboardProjects(projects, subCounts) {
+  const grid = document.getElementById('dashProjectsGrid');
   grid.innerHTML = '';
-  let subCounts = {};
-  try { subCounts = (await GurostAPI.call('/api/submissions/summary')).projects || {}; } catch (e) { /* cards just show no count */ }
   projects.slice(0, 4).forEach((p) => {
     const card = document.createElement('div');
     card.className = 'border-2 rounded-2xl p-5 hover:shadow-md transition-all cursor-pointer';

@@ -5778,6 +5778,7 @@ app.delete("/api/project/:id/submissions/:sid", async (req, res) => {
 });
 
 app.get("/api/projects", async (req, res) => {
+  const startedAt = Date.now();
   const inMemory = [...PROJECTS.entries()]
     .filter(([, p]) => p.userId === req.user.id)
     .map(([id, p]) => ({
@@ -5814,6 +5815,9 @@ app.get("/api/projects", async (req, res) => {
 
   const mine = [...inMemory, ...persistedOnly].sort((a, b) => (b.lastUpdated || 0) - (a.lastUpdated || 0));
   res.json({ projects: mine });
+  // For finding out whether a slow dashboard is the server or the page. cache=hit: every project came
+  // from memory; miss: at least one had to be read back from the database (the database is asked either way).
+  console.log(`[dashboard] /api/projects took ${Date.now() - startedAt}ms, rows=${mine.length}, cache=${persistedOnly.length ? "miss" : "hit"}`);
 });
 
 // DELETE /api/project/:id - the owner deletes a project: it leaves memory
