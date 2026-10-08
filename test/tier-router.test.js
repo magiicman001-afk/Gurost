@@ -63,3 +63,28 @@ test("APP_CODE_MODEL can swap the first model or switch Kimi off, without a code
   assert.match(run("other/model"), /^other\/model,/);
   assert.equal(run("off"), modelForTier("pro", { complex: true }));
 });
+
+test("App Builder frontend: GLM-5.2 first, then the ordinary App Builder chain (Kimi stays first for the backend)", () => {
+  const { modelForAppCode, modelForAppFrontend } = require("../lib/tier-router");
+  for (const plan of ["pro", "unlimited", "ultimate", "free", undefined]) {
+    const f = models(modelForAppFrontend(plan));
+    assert.equal(f[0], "z-ai/glm-5.2", `${plan}: GLM first`);
+    assert.equal(f[1], "moonshotai/kimi-k2.6", `${plan}: Kimi is the first fallback`);
+    assert.equal(new Set(f).size, f.length, `${plan}: no model twice`);
+    assert.ok(f.at(-1).endsWith(":free"), `${plan}: a free model is the last resort`);
+    assert.equal(models(modelForAppCode(plan))[0], "moonshotai/kimi-k2.6", `${plan}: backend still Kimi first`);
+  }
+});
+
+test("APP_FRONTEND_MODEL swaps the frontend's first model, or 'off' uses the ordinary chain", () => {
+  const run = (value) => require("child_process").execFileSync(process.execPath, ["-e", "console.log(require('./lib/tier-router').modelForAppFrontend('pro'))"], { env: { ...process.env, APP_FRONTEND_MODEL: value }, cwd: require("path").join(__dirname, "..") }).toString().trim();
+  assert.match(run("other/model"), /^other\/model,/);
+  assert.equal(run("off"), require("../lib/tier-router").modelForAppCode("pro"));
+});
+
+test("the frontend stage asks for 24,000 tokens and the frontend model chain", () => {
+  const { _internal } = require("../bots/app-bot");
+  assert.equal(_internal.FRONTEND_MAX_TOKENS, 24000);
+  const src = require("fs").readFileSync(require("path").join(__dirname, "../bots/app-bot.js"), "utf8");
+  assert.match(src, /maxTokens: FRONTEND_MAX_TOKENS, model: modelForAppFrontend\(plan\)/);
+});

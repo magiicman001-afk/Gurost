@@ -193,7 +193,7 @@ test("a reply with no files is asked again ONCE, on the models after the one tha
   assert.deepEqual(bodies[1].models, ["z-ai/glm-5.2", "nvidia/nemotron-3-super-120b-a12b:free"], "next models only, not the one that failed");
   assert.match(bodies[1].messages.at(-1).content, /Business: pets\n\nREMINDER-TEXT/);
   assert.equal(bodies[0].messages.at(-1).content, "Business: pets", "the first request is unchanged");
-  assert.ok(logs.some((l) => /\[code-call\] app-backend model=anthropic\/claude-sonnet-5 stop=stop cutoff=false chars=\d+ files=0 unusable=/.test(l)), logs.join("\n"));
+  assert.ok(logs.some((l) => /\[code-call\] app-backend model=anthropic\/claude-sonnet-5 stop=stop cutoff=false chars=\d+ secs=[\d.]+ chars\/s=\d+ files=0 unusable=/.test(l)), logs.join("\n"));
   assert.ok(logs.some((l) => /\[code-call\] app-backend model=z-ai\/glm-5\.2 stop=stop .* files=1 .*\(retry\)/.test(l)));
 }));
 
@@ -219,7 +219,7 @@ test("a good reply logs one line: model, stop reason, length, files; cut-off mod
   mockFetch([reply("moonshotai/kimi-k2.6", "partial", "length"), reply("anthropic/claude-sonnet-5", WITH_FILES)]);
   await callClaude({ system: "sys", messages: msgs, model: CHAIN, ...stage });
   const line = logs.find((l) => l.startsWith("[code-call]"));
-  assert.match(line, /model=anthropic\/claude-sonnet-5 stop=stop cutoff=false chars=\d+ files=1 skipped=\[moonshotai\/kimi-k2\.6:cut-off\/length\/7ch\]/);
+  assert.match(line, /model=anthropic\/claude-sonnet-5 stop=stop cutoff=false chars=\d+ secs=[\d.]+ chars\/s=\d+ files=1 skipped=\[moonshotai\/kimi-k2\.6:cut-off\/length\/7ch\]/);
   assert.ok(logs.some((l) => /moonshotai\/kimi-k2\.6 was cut off at the token limit \(stop=length, 7 chars, max_tokens=/.test(l)));
 }));
 

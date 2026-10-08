@@ -1,7 +1,7 @@
 const { callClaude } = require("../lib/claude-client");
 const stageGate = require("../lib/stage-gate");
 const imageBot = require("../image-bot");
-const { modelForTier, modelForAppCode } = require("../lib/tier-router");
+const { modelForTier, modelForAppCode, modelForAppFrontend } = require("../lib/tier-router");
 const { designPromptLines } = require("../lib/industry-design");
 const { businessInfoPrompt } = require("../lib/business-info");
 const { repairExternalImports } = require("../lib/app-imports");
@@ -62,6 +62,9 @@ const SCHEMA_AGENT_MODEL = process.env.SCHEMA_AGENT_MODEL || undefined;
 const appCodeModel = (plan) => modelForAppCode(plan);
 // The backend stage: 6000 was too little for a big app (Kimi was cut off live, 2026-10-08).
 const BACKEND_MAX_TOKENS = 12000;
+// Room for a full set of screens. Affordable only because the frontend model streams at ~130 tokens/s
+// (24,000 tokens is about 3 min); on Kimi's ~27 tokens/s it would be 15 min.
+const FRONTEND_MAX_TOKENS = 24000;
 
 // Real, honest step - App Builder's frontend is multiple real files
 // (unlike variant-bot's single HTML document), so this searches every
@@ -337,7 +340,7 @@ async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStag
     const endpointList = backendRes.parsed.files.map((f) => f.path).join(", ");
     notify("frontend", "running", { model: "Claude" });
     const frontendContent = await foldCorrection(`Business: ${prompt}\n\nBackend files (for reference on what's available): ${endpointList}\n\n${businessInfoPrompt(businessInfo)}`);
-    const frontendRes = await callClaude({ system: frontendSystemFor(prompt), messages: [{ role: "user", content: frontendContent }], maxTokens: 14000, model: appCodeModel(plan), ...streamedFileStage("frontend", notify) });
+    const frontendRes = await callClaude({ system: frontendSystemFor(prompt), messages: [{ role: "user", content: frontendContent }], maxTokens: FRONTEND_MAX_TOKENS, model: modelForAppFrontend(plan), ...streamedFileStage("frontend", notify) });
     const withImages = await fulfillImageRequestsMultiFile(frontendRes.parsed.files, frontendRes.parsed.imageRequests);
     const frontendFiles = await keepSelfContained(withImages, plan);
     notify("frontend", "complete", { files: frontendFiles, summary: frontendRes.parsed.summary });
@@ -463,4 +466,4 @@ async function editApp(appFiles, instruction, { plan, businessInfo = null, call 
 
 module.exports = { buildApp, buildAppStaged, editApp };
 // Exposed for tests only.
-module.exports._internal = { stashDataUris, restoreDataUris, areaForNewPath, appCodeModel, keepSelfContained, fulfillImageRequestsMultiFile, frontendSystemFor, BACKEND_SYSTEM, removeStrayFileTags, BACKEND_MAX_TOKENS, FILE_RETRY_HINT };
+module.exports._internal = { stashDataUris, restoreDataUris, areaForNewPath, appCodeModel, keepSelfContained, fulfillImageRequestsMultiFile, frontendSystemFor, BACKEND_SYSTEM, removeStrayFileTags, BACKEND_MAX_TOKENS, FRONTEND_MAX_TOKENS, FILE_RETRY_HINT };
