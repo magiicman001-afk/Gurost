@@ -109,8 +109,16 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
 - Pulse avatar: replace the basic mic-in-circle with a distinctive, ownable
   avatar (wave/pulse animation, glowing orb, stylised "C", or brain/mind icon).
   Do alongside the bot images.
-- Kimi K2 as a background tool: note for future routing experiments. Do not
-  change current routing.
+- Pulse Analyze with Apply / Skip: `/api/pulse/analyze` and `bots/pulse-brain.js`
+  exist, but no UI calls them, in either builder. Build the Analyze button and
+  the Apply / Skip cards later, for both builders. Parked (2026-10-08).
+- Mermaid diagram in View Code (file structure, component hierarchy, API
+  routes): does not exist in either builder. Parked (2026-10-08), after the
+  App Builder parity work.
+- Kimi K2: used for App Builder code only (`modelForAppCode` in
+  `lib/tier-router.js`, since 2026-10-08). Website Builder routing is unchanged;
+  do not move it to Kimi without being asked. `APP_CODE_MODEL=off` on Render
+  restores the old chain.
 
 ## Dev tools (Claude Code side — not callable from Gurost at runtime)
 - Playwright MCP: live testing. The Pulse ball animates, so open it with
