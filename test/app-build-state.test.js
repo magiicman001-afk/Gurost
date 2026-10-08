@@ -32,7 +32,8 @@ test("a failed build resets to DONE with the reason, keeping whatever was built"
   b.recordStage(p, "schema", "complete", { schema: "s", engine: "postgres" });
   b.failBuild(p, new Error("Build timed out after 150s with no progress."), 1000);
   assert.equal(p.state, "DONE");
-  assert.deepEqual(p.buildError, { error: "Build timed out after 150s with no progress.", at: 1000 });
+  // Plain words for the user (the raw text stays in the server log); no stage known here.
+  assert.deepEqual(p.buildError, { error: "Gurost took too long on one step. Tap Retry to carry on from this step.", at: 1000, stage: null });
   assert.equal(p.appFiles.database.schema, "s", "the partial work is kept");
 });
 

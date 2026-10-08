@@ -1427,16 +1427,23 @@ app.post(
 
 const PENDING_CORRECTIONS = new Map(); // projectId -> string | null
 
-app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEngine", "businessInfo"]), async (req, res) => {
+app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEngine", "businessInfo", "resumeProjectId"]), async (req, res) => {
   const { prompt, dbEngine } = req.body;
   if (!prompt || !prompt.trim()) return res.status(400).json({ error: "Missing 'prompt'." });
   const businessInfo = normalizeBusinessInfo(req.body.businessInfo);
 
-  const projectId = crypto.randomUUID();
-  const project = newProject(prompt, req.user.id);
+  // Retry after a failed build: pick it up at the stage that failed (the schema, and the backend
+  // when it was finished, are reused). Only the user's own failed app with the same prompt
+  // qualifies; anything else is a fresh build, as before.
+  const earlier = typeof req.body.resumeProjectId === "string" ? PROJECTS.get(req.body.resumeProjectId) : null;
+  const resume = earlier && String(earlier.prompt).trim() === String(prompt).trim() ? buildState.resumeFor(earlier, req.user.id) : null;
+
+  const projectId = resume ? req.body.resumeProjectId : crypto.randomUUID();
+  const project = resume ? earlier : newProject(prompt, req.user.id);
   project.type = "app";
   project.businessInfo = businessInfo; // same as the Website Builder: saved with the project from the start
-  buildState.beginBuild(project);
+  if (resume) buildState.restartBuild(project);
+  else buildState.beginBuild(project);
   PROJECTS.set(projectId, project);
   PENDING_CORRECTIONS.set(projectId, null);
   persistInBackground(projectId, project);
@@ -1448,7 +1455,7 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
   // broadcasting real progress. The client is expected to already be
   // connected (or connect right after this response) to this
   // project's /ws/guide room to receive those events.
-  res.json({ projectId, state: "GENERATING", expectedVariants: project.expectedVariants, businessInfoSummary: describeBusinessInfo(businessInfo) });
+  res.json({ projectId, state: "GENERATING", expectedVariants: project.expectedVariants, businessInfoSummary: describeBusinessInfo(businessInfo), resumedAt: resume ? (resume.backendFiles ? "frontend" : "backend") : null });
 
   try {
     // Real, deliberate fix - confirmed live that this build call could
@@ -1476,6 +1483,7 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
         dbEngine,
         plan: req.user.plan,
         businessInfo,
+        resume,
         onStage: (stage, status, data) => {
           touchProgress();
           // Streamed chunks only feed the watchdog; a finished file is news.
@@ -1580,14 +1588,15 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
     // frontend, never actually log server-side, which is exactly why
     // a real, live hang left zero trace in Render's own logs. Every
     // real failure now shows up here too, genuinely debuggable.
-    console.error(`[app-builder] Real build failed for project ${projectId}:`, err.message);
+    console.error(`[app-builder] Real build failed for project ${projectId} (stage: ${err.stage || "unknown"}):`, err.message);
     // Reset, don't leave it "generating": release the stage lock and any waiting correction,
     // mark the project finished-with-an-error (what was built is kept) and save that.
     stageGate.clearGate(projectId);
     PENDING_CORRECTIONS.delete(projectId);
     buildState.failBuild(project, err);
     persistInBackground(projectId, project);
-    broadcastProjectUpdate(projectId, { type: "error", error: err.message });
+    // The user gets plain words (and the step that stopped); the raw reason stays in the log above.
+    broadcastProjectUpdate(projectId, { type: "error", error: project.buildError.error, stage: project.buildError.stage });
   }
 });
 

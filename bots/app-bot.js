@@ -11,12 +11,19 @@ const { parseFileBlocks, fileBlocksFormat, createRepeatDetector, completedFilePa
 // no-progress watchdog), each newly finished file is reported (the live
 // preview), and a model that starts rewriting a file it already wrote is
 // stopped there - its answer was complete.
+// Added to the request when a model's reply held no files (see callClaude's retryHint).
+const FILE_RETRY_HINT = "REMINDER: the previous attempt returned no files. Answer with the META block, then one complete FILE block for every file, and nothing else. Do not stop after the META block.";
+
 function streamedFileStage(stage, notify) {
   let text = "";
   let reported = 0;
   return {
     parse: parseFileBlocks,
     stopWhen: createRepeatDetector(),
+    newStopWhen: createRepeatDetector, // the one-time retry on another model starts clean
+    retryHint: FILE_RETRY_HINT,
+    reasoningOff: true, // thinking tokens count against max_tokens (Kimi ran out at 6000 on the backend)
+    logLabel: `app-${stage}`,
     onStream: ({ content }) => {
       if (!content) { notify(stage, "progress", null); return; }
       text += content;
@@ -53,6 +60,8 @@ const SCHEMA_AGENT_MODEL = process.env.SCHEMA_AGENT_MODEL || undefined;
 
 // The model for every code-writing call of an app build or edit: one place to change.
 const appCodeModel = (plan) => modelForAppCode(plan);
+// The backend stage: 6000 was too little for a big app (Kimi was cut off live, 2026-10-08).
+const BACKEND_MAX_TOKENS = 12000;
 
 // Real, honest step - App Builder's frontend is multiple real files
 // (unlike variant-bot's single HTML document), so this searches every
@@ -203,7 +212,7 @@ Images: where the design genuinely calls for a real photo or illustration (a her
 // else, one targeted rewrite takes those imports out (see lib/app-imports.js).
 async function keepSelfContained(files, plan) {
   const { files: out, remaining, repaired } = await repairExternalImports(files, async (system, user) => {
-    const res = await callClaude({ system, messages: [{ role: "user", content: user }], maxTokens: 14000, model: appCodeModel(plan), parse: (text) => text });
+    const res = await callClaude({ system, messages: [{ role: "user", content: user }], maxTokens: 14000, model: appCodeModel(plan), parse: (text) => text, reasoningOff: true, logLabel: "app-imports" });
     return res.parsed; // the raw reply; lib/app-imports.js parses the file blocks itself
   });
   if (repaired) console.log(`[app-bot] Removed external imports from ${repaired} file(s).`);
@@ -283,7 +292,7 @@ async function buildApp(prompt, { dbEngine = "postgres", onSchemaComplete, plan 
  */
 // businessInfo: the user's company details (lib/business-info), or null
 // when skipped - the frontend then uses obvious placeholders.
-async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStage, getPendingCorrection, clearPendingCorrection, plan, businessInfo = null } = {}) {
+async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStage, getPendingCorrection, clearPendingCorrection, plan, businessInfo = null, resume = null } = {}) {
   const notify = (stage, status, data) => onStage && onStage(stage, status, data);
   const foldCorrection = async (baseContent) => {
     await stageGate.awaitGate(projectId);
@@ -295,34 +304,57 @@ async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStag
     return baseContent;
   };
 
-  notify("schema", "running", { model: "Claude" });
-  const schemaContent = await foldCorrection(`Business: ${prompt}\nPreferred engine: ${dbEngine}`);
-  const schemaRes = await callClaude({ system: SCHEMA_SYSTEM, messages: [{ role: "user", content: schemaContent }], maxTokens: 2000, model: SCHEMA_AGENT_MODEL || modelForTier(plan, { complex: false }) });
-  notify("schema", "complete", { schema: schemaRes.parsed.schema, engine: schemaRes.parsed.engine });
+  // The stage under way is put on any error that escapes, so the user can be told which step
+  // stopped and Retry can carry on from it (lib/app-build-state.js).
+  let current = "schema";
+  try {
+    // resume = { schema: { engine, schema }, backendFiles }: what an earlier, failed attempt of
+    // this same build already made. Those stages are not run again.
+    let schemaRes;
+    if (resume && resume.schema) {
+      schemaRes = { parsed: { engine: resume.schema.engine, schema: resume.schema.schema, rationale: "" }, usage: null };
+      notify("schema", "complete", { schema: schemaRes.parsed.schema, engine: schemaRes.parsed.engine, resumed: true });
+    } else {
+      notify("schema", "running", { model: "Claude" });
+      const schemaContent = await foldCorrection(`Business: ${prompt}\nPreferred engine: ${dbEngine}`);
+      schemaRes = await callClaude({ system: SCHEMA_SYSTEM, messages: [{ role: "user", content: schemaContent }], maxTokens: 2000, model: SCHEMA_AGENT_MODEL || modelForTier(plan, { complex: false }) });
+      notify("schema", "complete", { schema: schemaRes.parsed.schema, engine: schemaRes.parsed.engine });
+    }
 
-  notify("backend", "running", { model: "Claude" });
-  const backendContent = await foldCorrection(`Business: ${prompt}\n\nDatabase schema:\n${schemaRes.parsed.schema}`);
-  const backendRes = await callClaude({ system: BACKEND_SYSTEM, messages: [{ role: "user", content: backendContent }], maxTokens: 6000, model: appCodeModel(plan), ...streamedFileStage("backend", notify) });
-  notify("backend", "complete", { files: backendRes.parsed.files, summary: backendRes.parsed.summary });
+    current = "backend";
+    let backendRes;
+    if (resume && resume.schema && Array.isArray(resume.backendFiles) && resume.backendFiles.length) {
+      backendRes = { parsed: { files: resume.backendFiles, summary: "" }, usage: null };
+      notify("backend", "complete", { files: backendRes.parsed.files, summary: "", resumed: true });
+    } else {
+      notify("backend", "running", { model: "Claude" });
+      const backendContent = await foldCorrection(`Business: ${prompt}\n\nDatabase schema:\n${schemaRes.parsed.schema}`);
+      backendRes = await callClaude({ system: BACKEND_SYSTEM, messages: [{ role: "user", content: backendContent }], maxTokens: BACKEND_MAX_TOKENS, model: appCodeModel(plan), ...streamedFileStage("backend", notify) });
+      notify("backend", "complete", { files: backendRes.parsed.files, summary: backendRes.parsed.summary });
+    }
 
-  const endpointList = backendRes.parsed.files.map((f) => f.path).join(", ");
-  notify("frontend", "running", { model: "Claude" });
-  const frontendContent = await foldCorrection(`Business: ${prompt}\n\nBackend files (for reference on what's available): ${endpointList}\n\n${businessInfoPrompt(businessInfo)}`);
-  const frontendRes = await callClaude({ system: frontendSystemFor(prompt), messages: [{ role: "user", content: frontendContent }], maxTokens: 14000, model: appCodeModel(plan), ...streamedFileStage("frontend", notify) });
-  const withImages = await fulfillImageRequestsMultiFile(frontendRes.parsed.files, frontendRes.parsed.imageRequests);
-  const frontendFiles = await keepSelfContained(withImages, plan);
-  notify("frontend", "complete", { files: frontendFiles, summary: frontendRes.parsed.summary });
+    current = "frontend";
+    const endpointList = backendRes.parsed.files.map((f) => f.path).join(", ");
+    notify("frontend", "running", { model: "Claude" });
+    const frontendContent = await foldCorrection(`Business: ${prompt}\n\nBackend files (for reference on what's available): ${endpointList}\n\n${businessInfoPrompt(businessInfo)}`);
+    const frontendRes = await callClaude({ system: frontendSystemFor(prompt), messages: [{ role: "user", content: frontendContent }], maxTokens: 14000, model: appCodeModel(plan), ...streamedFileStage("frontend", notify) });
+    const withImages = await fulfillImageRequestsMultiFile(frontendRes.parsed.files, frontendRes.parsed.imageRequests);
+    const frontendFiles = await keepSelfContained(withImages, plan);
+    notify("frontend", "complete", { files: frontendFiles, summary: frontendRes.parsed.summary });
 
-  notify("done", "complete");
+    notify("done", "complete");
 
-  return {
-    database: { engine: schemaRes.parsed.engine, schema: schemaRes.parsed.schema, rationale: schemaRes.parsed.rationale },
-    backend: { files: backendRes.parsed.files, summary: backendRes.parsed.summary },
-    frontend: { files: frontendFiles, summary: frontendRes.parsed.summary },
-    usage: { schema: schemaRes.usage, backend: backendRes.usage, frontend: frontendRes.usage }
-  };
+    return {
+      database: { engine: schemaRes.parsed.engine, schema: schemaRes.parsed.schema, rationale: schemaRes.parsed.rationale },
+      backend: { files: backendRes.parsed.files, summary: backendRes.parsed.summary },
+      frontend: { files: frontendFiles, summary: frontendRes.parsed.summary },
+      usage: { schema: schemaRes.usage, backend: backendRes.usage, frontend: frontendRes.usage }
+    };
+  } catch (err) {
+    if (err && typeof err === "object" && !err.stage) err.stage = current;
+    throw err;
+  }
 }
-
 
 // ---------------------------------------------------------------------------
 // EDITING A FINISHED APP
@@ -388,7 +420,7 @@ async function editApp(appFiles, instruction, { plan, businessInfo = null, call 
   }
   const user = `${businessInfo ? businessInfoPrompt(businessInfo) + "\n\n" : ""}THE APP'S FILES:\n${shown.join("\n")}${unseen.length ? `\n\nFiles you cannot see (do not change them): ${unseen.join(", ")}` : ""}\n\nTHE CHANGE TO MAKE: ${instruction}`;
 
-  const res = await call({ system: EDIT_SYSTEM, messages: [{ role: "user", content: user }], maxTokens: 14000, model: appCodeModel(plan), parse: parseFileBlocks });
+  const res = await call({ system: EDIT_SYSTEM, messages: [{ role: "user", content: user }], maxTokens: 14000, model: appCodeModel(plan), parse: parseFileBlocks, reasoningOff: true, retryHint: FILE_RETRY_HINT, logLabel: "app-edit" });
   const returned = removeStrayFileTags(res.parsed.files).map((f) => ({ path: f.path.trim(), content: restoreDataUris(f.content, table) }));
 
   const out = { frontend: frontend.map((f) => ({ ...f })), backend: backend.map((f) => ({ ...f })), database: database ? { ...database } : null };
@@ -431,4 +463,4 @@ async function editApp(appFiles, instruction, { plan, businessInfo = null, call 
 
 module.exports = { buildApp, buildAppStaged, editApp };
 // Exposed for tests only.
-module.exports._internal = { stashDataUris, restoreDataUris, areaForNewPath, appCodeModel, keepSelfContained, fulfillImageRequestsMultiFile, frontendSystemFor, BACKEND_SYSTEM, removeStrayFileTags };
+module.exports._internal = { stashDataUris, restoreDataUris, areaForNewPath, appCodeModel, keepSelfContained, fulfillImageRequestsMultiFile, frontendSystemFor, BACKEND_SYSTEM, removeStrayFileTags, BACKEND_MAX_TOKENS, FILE_RETRY_HINT };

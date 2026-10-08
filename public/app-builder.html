@@ -711,8 +711,10 @@ async function generateApp(promptText, opts) {
     // over the WebSocket connected right after, not simulated here.
     const result = await GurostAPI.call('/api/app-builder/start', {
       method: 'POST',
-      body: { prompt: trimmed, businessInfo }
+      body: { prompt: trimmed, businessInfo, ...(opts && opts.resumeProjectId ? { resumeProjectId: opts.resumeProjectId } : {}) }
     });
+    // A Retry that carried on from the failed step says so.
+    if (result.resumedAt) logBot('Builder', result.resumedAt === 'frontend' ? 'Carrying on from the screens - the database and server code are already done.' : 'Carrying on from the server code - the database is already done.', 'info');
     // What the server kept (cleaned) - not just what was typed.
     if (result.businessInfoSummary) logBot('Builder', `Company details saved: ${result.businessInfoSummary}.`, 'ok');
     else logBot('Builder', businessInfo ? "Those details didn't look valid - building with placeholders you can replace later." : 'No company details - building with placeholders you can replace later.', 'info');
@@ -740,6 +742,7 @@ async function loadExistingProject(id) {
     const built = project.appFiles && project.appFiles.frontend && project.appFiles.frontend.length;
     if (!built) {
       // A build that stopped (or was cut off by an update) before the app existed: say why, offer Retry.
+      projectId = id; // so Retry can carry on from the step that failed
       if (project.buildError) showGenerateError(project.buildError.error, { retry: true });
       return;
     }
@@ -761,7 +764,7 @@ async function loadExistingProject(id) {
 
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('appBuilderErrorDismiss')?.addEventListener('click', hideGenerateError);
-  document.getElementById('appBuilderRetry')?.addEventListener('click', () => generateApp(originalPrompt, { businessInfo: lastBusinessInfo }));
+  document.getElementById('appBuilderRetry')?.addEventListener('click', () => generateApp(originalPrompt, { businessInfo: lastBusinessInfo, resumeProjectId: projectId }));
   if (!GurostAPI.requireLogin()) return;
 
   try {
