@@ -522,9 +522,18 @@ function logStage(msg) {
 function connectGenerationSocket(id) {
   if (generationSocket) generationSocket.close();
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  generationSocket = new WebSocket(`${protocol}//${window.location.host}/ws/guide?projectId=${id}&userId=${localStorage.getItem('gurost_user_id') || 'anon'}`);
+  const socket = new WebSocket(`${protocol}//${window.location.host}/ws/guide?projectId=${id}&userId=${localStorage.getItem('gurost_user_id') || 'anon'}`);
+  generationSocket = socket;
 
-  generationSocket.addEventListener('message', (event) => {
+  socket.addEventListener('open', () => { if (buildWatch) buildWatch.attempts = 0; });
+  // A dropped connection used to leave the page frozen for the rest of the build. Now it reconnects
+  // (the server replays its recent events) and the project check below covers whatever was missed.
+  socket.addEventListener('close', () => {
+    if (generationSocket === socket) generationSocket = null; // only clear our own (a newer socket may exist)
+    scheduleReconnect(id);
+  });
+
+  socket.addEventListener('message', (event) => {
     let msg;
     try { msg = JSON.parse(event.data); } catch { return; }
 
@@ -532,57 +541,91 @@ function connectGenerationSocket(id) {
       logStage(msg);
       handleStageProgress(msg);
     } else if (msg.type === 'error') {
-      logBot('Builder', msg.error, 'fail', msg.at);
-      if (stageFrames) { stageView.error = msg.error; renderStagePreview(); } // keep what was built, say why it stopped
-      showGenerateError(msg.error, { retry: true });
-      setGenerating(false);
+      showBuildFailure(msg.error, msg.at);
     }
   });
 }
 
-// Real, honest safety net - the WebSocket above is connected AFTER
-// the real /api/app-builder/start call returns, since it genuinely
-// needs the real projectId that call produces. That leaves a real,
-// if usually brief, gap where the backend could already be
-// broadcasting progress before anyone's listening yet. Rather than
-// trust that gap is always short enough, this polls the actual,
-// real project record directly every few seconds - if the real
-// appFiles ever show up, the build is genuinely done regardless of
-// whether any single WebSocket message made it through, and this
-// renders it. Stops itself once real content arrives or after a
-// real, honest ceiling, so it doesn't poll forever.
-function startCompletionPollFallback(id) {
-  let attempts = 0;
-  const maxAttempts = 60; // real ceiling - 5 minutes at 5s intervals
-  const interval = setInterval(async () => {
-    attempts++;
-    if (attempts > maxAttempts) { clearInterval(interval); return; }
-    // Real, honest check - if the live preview already has real
-    // content (from the WebSocket doing its job correctly), this
-    // fallback has nothing left to do.
-    if (currentAppFiles && currentAppFiles.frontend && currentAppFiles.frontend.length) {
-      clearInterval(interval);
-      return;
-    }
-    try {
-      const project = await GurostAPI.call(`/api/project/${id}`);
-      if (project.appFiles && project.appFiles.frontend && project.appFiles.frontend.length) {
-        clearInterval(interval);
-        currentAppFiles = project.appFiles;
-        renderLivePreview(currentAppFiles);
-        renderCodeView(currentAppFiles);
-        setStatus('', '', false);
-        setGenerating(false);
-      } else if (project.state === 'ERROR') {
-        clearInterval(interval);
-        showGenerateError('Generation failed.');
-        setGenerating(false);
-      }
-    } catch (err) {
-      console.error('[app-builder] Real completion poll failed:', err.message);
-    }
-  }, 5000);
+function showBuildFailure(text, at) {
+  if (!isGenerating) return; // already shown (the socket and the project check can both report it)
+  logBot('Builder', text, 'fail', at);
+  if (stageFrames) { stageView.error = text; renderStagePreview(); } // keep what was built, say why it stopped
+  showGenerateError(text, { retry: true });
+  setGenerating(false);
+  stopWatchingBuild();
 }
+
+// The WebSocket is connected AFTER /api/app-builder/start returns, and phones drop it whenever the tab
+// sleeps or the network changes. So while a build runs this page also asks the project record every 5s:
+// the record says which parts are finished, whether the build failed and whether it is over. It asks
+// again the moment the tab comes back to the front or the network returns, and reconnects the socket.
+// (The old check stopped after 5 minutes and looked for a state the server never sets - a 9-minute
+// build, or a failed one, left the page waiting for ever.)
+let buildWatch = null;
+const WATCH_INTERVAL_MS = 5000;
+const WATCH_MAX_MS = 25 * 60 * 1000; // stage stalls are cut at 150s on the server; this is only a ceiling
+
+function watchBuild(id) {
+  stopWatchingBuild();
+  buildWatch = { id, startedAt: Date.now(), timer: null, busy: false, reconnectTimer: null, attempts: 0 };
+  buildWatch.timer = setInterval(syncBuild, WATCH_INTERVAL_MS);
+}
+
+function stopWatchingBuild() {
+  if (!buildWatch) return;
+  clearInterval(buildWatch.timer);
+  clearTimeout(buildWatch.reconnectTimer);
+  buildWatch = null;
+}
+
+async function syncBuild() {
+  const w = buildWatch;
+  if (!w || w.busy) return;
+  if (Date.now() - w.startedAt > WATCH_MAX_MS) { stopWatchingBuild(); return; }
+  w.busy = true;
+  try {
+    const project = await GurostAPI.call(`/api/project/${w.id}`);
+    if (buildWatch !== w) return;
+    if (!isGenerating) { stopWatchingBuild(); return; } // the socket already finished or failed it
+    const files = project.appFiles || {};
+    // Catch the three step markers up with what the server has finished.
+    if (files.database && stageStatuses.schema !== 'complete') handleStageProgress({ type: 'stage_progress', stage: 'schema', status: 'complete' });
+    if (files.backend && files.backend.length && stageStatuses.backend !== 'complete') handleStageProgress({ type: 'stage_progress', stage: 'backend', status: 'complete' });
+    if (project.state === 'DONE') {
+      if (project.buildError) showBuildFailure(project.buildError.error || 'Gurost got stuck on this build. Tap Retry to try again.', project.buildError.at);
+      else if (files.frontend && files.frontend.length) handleStageProgress({ type: 'stage_progress', stage: 'done', status: 'complete' });
+    }
+  } catch (err) {
+    console.error('[app-builder] Build check failed:', err.message);
+  } finally {
+    w.busy = false;
+  }
+}
+
+function scheduleReconnect(id) {
+  const w = buildWatch;
+  if (!w || w.id !== id || w.reconnectTimer) return;
+  const delay = Math.min(15000, 1000 * 2 ** w.attempts);
+  w.attempts++;
+  w.reconnectTimer = setTimeout(() => {
+    if (buildWatch !== w) return;
+    w.reconnectTimer = null;
+    if (!generationSocket) connectGenerationSocket(id);
+  }, delay);
+}
+
+function wakeBuildWatch() {
+  if (!buildWatch) return;
+  buildWatch.attempts = 0;
+  if (!generationSocket) connectGenerationSocket(buildWatch.id);
+  syncBuild();
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') wakeBuildWatch(); });
+window.addEventListener('online', wakeBuildWatch);
+window.addEventListener('pageshow', wakeBuildWatch);
+
+// Kept under its old name: generateApp() calls this once the build has started.
+function startCompletionPollFallback(id) { watchBuild(id); }
 
 function handleStageProgress(msg) {
   if (msg.stage === 'paused') {
@@ -608,6 +651,7 @@ function handleStageProgress(msg) {
   }
 
   if (msg.stage === 'done' && msg.status === 'complete') {
+    stopWatchingBuild();
     setStatus('', '', false);
     setGenerating(false);
     fetchAndRenderCompletedProject();
