@@ -100,6 +100,14 @@ function tokenState(token) {
   return "invalid";
 }
 
+// An admin (an email on ADMIN_EMAILS) is treated as the top plan on every request, so no plan gate can stop
+// them (project limit, Download, Business Assistant, image tools...). The stored plan is kept as realPlan,
+// and nothing is written back to the account: it is the request that is upgraded, not the customer record.
+function applyAdminTier(user) {
+  if (!user || !isAdmin(user.email)) return user;
+  return { ...user, realPlan: user.plan, plan: "ultimate", isAdmin: true };
+}
+
 // Accepts `x-api-key: <key>`, `Authorization: Bearer <jwt>` (either this
 // app's own JWT, or a Supabase-issued SSO token — tried in that order).
 async function requireAuth(req, res, next) {
@@ -131,7 +139,7 @@ async function requireAuth(req, res, next) {
     return res.status(401).json({ error: "Valid API key (x-api-key header) or JWT (Authorization: Bearer) required.", code: why });
   }
 
-  req.user = user;
+  req.user = applyAdminTier(user);
   if (user.ssoProvider) security.auditLog("sso_login", req, `provider=${user.ssoProvider} org=${user.org || "none"}`).catch(() => {});
   next();
 }
@@ -241,6 +249,7 @@ module.exports = {
   hashApiKey,
   requireAdmin,
   isAdmin,
+  applyAdminTier,
   requireBusinessAssistant,
   PLAN_LIMITS
 };
