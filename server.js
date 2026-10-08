@@ -27,7 +27,7 @@ require("dotenv").config();
 
 const express = require("express");
 const crypto = require("crypto");
-const helmet = require("helmet");
+const { pageSecurity, sandboxSharedPage } = require("./lib/security-headers");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 
@@ -260,12 +260,16 @@ app.use((req, res, next) => {
   next();
 });
 
+// Security headers first, so pages get them too: express.static used to
+// come before helmet(), and every HTML page - login included - went out
+// with none (audit 2026-10-08). See lib/security-headers.js.
+app.use(pageSecurity());
+
 // Real addition: server.js never actually served the frontend as
 // static files — only /api/* JSON routes existed. Without this, the
 // backend alone couldn't serve any HTML page at all.
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use(helmet());
 app.use(cors());
 app.use(performance.timingMiddleware);
 
@@ -283,6 +287,23 @@ const ipLimiter = rateLimit({
   message: { error: "Too many requests from this IP. Try again later." }
 });
 app.use(ipLimiter);
+
+// Content Security Policy violation reports (the policy is report-only
+// until these show the pages and generated sites need nothing more - see
+// lib/security-headers.js). Before auth: browsers send them with no
+// credentials. Each distinct violation is logged once per server start.
+const cspSeen = new Set();
+app.post("/api/csp-report", express.json({ type: ["application/csp-report", "application/json", "application/reports+json"], limit: "20kb" }), (req, res) => {
+  const reports = [].concat(req.body || []).map((r) => r["csp-report"] || r.body || r);
+  for (const r of reports.slice(0, 10)) {
+    const key = `${r["violated-directive"] || r.effectiveDirective || "?"} ${String(r["blocked-uri"] || r.blockedURL || "?").slice(0, 120)}`;
+    if (cspSeen.has(key)) continue;
+    if (cspSeen.size >= 500) { if (!cspSeen.has("(full)")) { cspSeen.add("(full)"); console.warn("[csp] 500 distinct violations logged - further ones are not logged until restart"); } continue; }
+    cspSeen.add(key);
+    console.warn(`[csp] ${key} on ${String(r["document-uri"] || r.documentURL || "?").slice(0, 120)}`);
+  }
+  res.status(204).end();
+});
 
 // Real, dedicated, stricter limiter specifically for login/signup -
 // confirmed via real, live testing that the general limiter above
@@ -5003,6 +5024,9 @@ app.get("/shared/:token", async (req, res) => {
     const project = PROJECTS.get(share.project_id) || (await projectState.hydrateProjectIfMissing(share.project_id));
     if (!project?.currentHtml) return res.status(404).send("Nothing to show for this project yet.");
     res.setHeader("Content-Type", "text/html");
+    // A generated site runs in an opaque origin of its own: it can't read
+    // Gurost's storage or call the API as the visitor.
+    sandboxSharedPage(res);
     res.send(project.currentHtml);
   } catch (err) {
     res.status(500).send("Something went wrong loading this shared project.");
