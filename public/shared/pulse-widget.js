@@ -576,7 +576,15 @@
     let isHolding = false;
     let dragJustEnded = false; // a drag's release must not open the panel
 
-    ball.addEventListener('mousedown', () => {
+    // A finger sends touch/pointer events first and then "emulated" mouse events a moment later. Both used to
+    // run this code, so one tap opened the panel and the emulated mouseup closed it again (seen on a real
+    // phone 2026-10-08: "Pulse doesn't open"). Touch and pen now drive the ball through pointer events, and the
+    // mouse events that follow a touch are ignored; a real mouse (and test scripts that dispatch mouse events)
+    // still use mousedown / mouseup as before.
+    let lastTouchAt = 0;
+    const fromTouch = () => Date.now() - lastTouchAt < 1000;
+
+    function startPress() {
       isHolding = false;
       holdTimer = setTimeout(() => {
         isHolding = true;
@@ -608,7 +616,9 @@
             setState('idle');
           });
       }, 500);
-    });
+    }
+    ball.addEventListener('mousedown', () => { if (!fromTouch()) startPress(); });
+    ball.addEventListener('contextmenu', (e) => e.preventDefault()); // a long press must not open the phone's menu
 
     let recordingStartPromise = null;
     let releaseRequestedWhileStarting = false;
@@ -660,9 +670,8 @@
         }
       }
     }
-    ball.addEventListener('mouseup', releaseBall);
-    ball.addEventListener('mouseleave', () => { if (isHolding) releaseBall(); });
-    ball.addEventListener('touchend', releaseBall);
+    ball.addEventListener('mouseup', () => { if (!fromTouch()) releaseBall(); });
+    ball.addEventListener('mouseleave', () => { if (isHolding && !fromTouch()) releaseBall(); });
 
     // Drag the ball anywhere (pointer events: mouse and touch). Moving more
     // than 6px makes it a drag - hold-to-talk is cancelled and the release
@@ -693,6 +702,7 @@
     let drag = null;
     ball.addEventListener('pointerdown', (e) => {
       if (e.button) return; // left button / touch / pen only
+      if (e.pointerType !== 'mouse') { lastTouchAt = Date.now(); startPress(); } // finger or pen: hold-to-talk starts here
       const r = widget.getBoundingClientRect();
       drag = { id: e.pointerId, x: e.clientX, y: e.clientY, dx: e.clientX - r.left, dy: e.clientY - r.top, moved: false };
     });
@@ -717,7 +727,16 @@
       if (!drag || e.pointerId !== drag.id) return;
       const moved = drag.moved;
       drag = null;
-      if (!moved) return;
+      if (!moved) {
+        if (e.pointerType !== 'mouse') {
+          lastTouchAt = Date.now();
+          // The browser took the touch over (scroll, menu): never a tap. Only a recording in progress is finished.
+          if (e.type === 'pointercancel' && !isHolding) { clearTimeout(holdTimer); return; }
+          releaseBall(); // a quick tap toggles the panel; a hold finishes the recording
+        }
+        return; // a mouse is released by its own mouseup
+      }
+      if (e.pointerType !== 'mouse') lastTouchAt = Date.now();
       widget.classList.remove('dragging');
       dragJustEnded = true;
       setTimeout(() => { dragJustEnded = false; }, 400); // touch: no mouseup follows
