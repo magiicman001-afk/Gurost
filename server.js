@@ -2795,12 +2795,20 @@ app.post(
 const voiceClient = require("./guide/voice-client");
 
 app.post("/api/voice/transcribe", express.raw({ type: "*/*", limit: "10mb" }), async (req, res) => {
+  const mimeType = req.headers["content-type"] || "audio/webm";
+  const bytes = Buffer.isBuffer(req.body) ? req.body.length : 0;
+  // Not audio at all, or a header with nothing in it: say so in plain words and never forward it.
+  if (!Buffer.isBuffer(req.body) || bytes < 1500) {
+    return res.status(400).json({ error: "I didn't catch any sound. Hold the mic while you speak, then let go." });
+  }
   try {
-    const mimeType = req.headers["content-type"] || "audio/webm";
     const transcript = await voiceClient.transcribe(req.body, mimeType);
     res.json({ transcript });
   } catch (err) {
-    res.status(502).json({ error: err.message });
+    // The speech service's own words (its name, request ids) stay in the log; the person gets a plain line.
+    console.error(`[voice] transcription failed: type=${mimeType} bytes=${bytes}: ${err.message}`);
+    if (/not configured/i.test(err.message)) return res.status(503).json({ error: "Voice is not set up yet. You can type instead." });
+    res.status(502).json({ error: "I couldn't make out that recording. Please try again." });
   }
 });
 

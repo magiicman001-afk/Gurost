@@ -191,6 +191,40 @@ function prefetchVoiceStatus() {
   return voiceStatusPromise;
 }
 
+const MIN_RECORDING_MS = 600; // shorter than this is a tap, not speech: the recorder's file is a header with nothing in it
+const TOO_SHORT_TEXT = "That was too short. Hold the mic while you speak, then let go.";
+
+// iPhone Safari records fragmented mp4, which the speech service sometimes refuses as "corrupt". Plain
+// 16-bit mono WAV (16 kHz) is understood everywhere, so an mp4 recording is decoded here and re-sent as WAV.
+// Any failure returns null and the original recording is sent as before.
+async function blobToWav(blob) {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    const ctx = new AC();
+    try {
+      const raw = await blob.arrayBuffer();
+      const decoded = await new Promise((ok, no) => { const p = ctx.decodeAudioData(raw, ok, no); if (p && p.then) p.then(ok, no); });
+      const RATE = 16000;
+      const frames = Math.max(1, Math.ceil(decoded.duration * RATE));
+      const off = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, frames, RATE);
+      const src = off.createBufferSource();
+      src.buffer = decoded;
+      src.connect(off.destination);
+      src.start(0);
+      const pcm = (await new Promise((ok, no) => { const p = off.startRendering(); if (p && p.then) p.then(ok, no); else off.oncomplete = (e) => ok(e.renderedBuffer); })).getChannelData(0);
+      const out = new DataView(new ArrayBuffer(44 + pcm.length * 2));
+      const str = (o, t) => { for (let i = 0; i < t.length; i++) out.setUint8(o + i, t.charCodeAt(i)); };
+      str(0, "RIFF"); out.setUint32(4, 36 + pcm.length * 2, true); str(8, "WAVE"); str(12, "fmt ");
+      out.setUint32(16, 16, true); out.setUint16(20, 1, true); out.setUint16(22, 1, true);
+      out.setUint32(24, RATE, true); out.setUint32(28, RATE * 2, true); out.setUint16(32, 2, true); out.setUint16(34, 16, true);
+      str(36, "data"); out.setUint32(40, pcm.length * 2, true);
+      for (let i = 0; i < pcm.length; i++) out.setInt16(44 + i * 2, Math.max(-1, Math.min(1, pcm[i])) * 0x7fff, true);
+      return new Blob([out.buffer], { type: "audio/wav" });
+    } finally { try { ctx.close(); } catch {} }
+  } catch { return null; }
+}
+
 function micErrorText(err) {
   const name = err && err.name;
   if (name === "NotAllowedError" || name === "SecurityError") return "The microphone is blocked. Allow it in your browser settings, or type instead.";
@@ -218,6 +252,7 @@ function startRecordingSession() {
       const chunks = [];
       recorder.addEventListener("dataavailable", (e) => { if (e.data.size > 0) chunks.push(e.data); });
       recorder.start();
+      const startedAt = Date.now();
 
       resolveStart({
         stop: () =>
@@ -228,10 +263,16 @@ function startRecordingSession() {
                 stream.getTracks().forEach((t) => t.stop());
                 try {
                   if (!chunks.length) { resolveStop(""); return; } // nothing was recorded (released at once)
-                  const blob = new Blob(chunks, { type: mimeType });
+                  if (Date.now() - startedAt < MIN_RECORDING_MS) throw new Error(TOO_SHORT_TEXT);
+                  let blob = new Blob(chunks, { type: mimeType });
+                  let sendType = mimeType;
+                  if (mimeType === "audio/mp4") { // iPhone Safari
+                    const wav = await blobToWav(blob);
+                    if (wav) { blob = wav; sendType = "audio/wav"; }
+                  }
                   const response = await fetch("/api/voice/transcribe", {
                     method: "POST",
-                    headers: { "Content-Type": mimeType, ...(window.GurostAPI?.authHeaders ? window.GurostAPI.authHeaders() : {}) },
+                    headers: { "Content-Type": sendType, ...(window.GurostAPI?.authHeaders ? window.GurostAPI.authHeaders() : {}) },
                     body: blob
                   });
                   if (!response.ok) {

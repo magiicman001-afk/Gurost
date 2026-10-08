@@ -58,3 +58,24 @@ test("panel, Dashboard and Assistant mics all use the helper and no longer liste
   }
   assert.ok(!/micBtn\.addEventListener\('touchend'/.test(read("public/shared/pulse-widget.js")));
 });
+
+test("a tap is not sent: under 0.6s the person is told to hold longer", () => {
+  assert.match(voice, /const MIN_RECORDING_MS = 600/);
+  assert.match(voice, /if \(Date\.now\(\) - startedAt < MIN_RECORDING_MS\) throw new Error\(TOO_SHORT_TEXT\)/);
+});
+
+test("an iPhone mp4 recording is re-sent as 16 kHz mono WAV, with the original as fallback", () => {
+  assert.match(voice, /if \(mimeType === "audio\/mp4"\)/);
+  assert.match(voice, /const wav = await blobToWav\(blob\);\n\s+if \(wav\) \{ blob = wav; sendType = "audio\/wav"; \}/);
+  assert.match(voice, /const RATE = 16000/);
+  assert.match(voice, /catch \{ return null; \}/);
+});
+
+test("the transcribe route refuses non-audio and empty bodies, and never shows the speech service's own words", () => {
+  const server = read("server.js");
+  const route = server.slice(server.indexOf('app.post("/api/voice/transcribe"'), server.indexOf('app.post("/api/voice/speak"'));
+  assert.match(route, /!Buffer\.isBuffer\(req\.body\) \|\| bytes < 1500/);
+  assert.match(route, /console\.error\(`\[voice\] transcription failed: type=\$\{mimeType\} bytes=\$\{bytes\}/);
+  assert.ok(!/res\.status\(502\)\.json\(\{ error: err\.message \}\)/.test(route));
+  assert.match(route, /I couldn't make out that recording/);
+});
