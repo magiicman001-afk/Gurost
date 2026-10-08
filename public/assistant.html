@@ -273,21 +273,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.error('[assistant] Failed to load real projects:', err.message);
   }
 
-  let assistantRecordingSession = null;
-  document.getElementById('assistantMicBtn').addEventListener('mousedown', async () => {
-    try { assistantRecordingSession = await startRecordingSession(); }
-    catch (err) { console.error('[assistant] Could not access microphone:', err.message); }
-  });
-  document.getElementById('assistantMicBtn').addEventListener('mouseup', async () => {
-    if (!assistantRecordingSession) return;
-    try {
-      const transcript = await assistantRecordingSession.stop();
-      if (transcript) document.getElementById('assistantTask').value = transcript;
-    } catch (err) {
-      console.error('[assistant] Real transcription failed:', err.message);
-    } finally {
-      assistantRecordingSession = null;
-    }
+  const assistantTaskBox = document.getElementById('assistantTask');
+  const assistantPlaceholder = assistantTaskBox.placeholder;
+  const sayInTaskBox = (msg) => { assistantTaskBox.placeholder = msg; setTimeout(() => { assistantTaskBox.placeholder = assistantPlaceholder; }, 6000); };
+  holdToTalk(document.getElementById('assistantMicBtn'), {
+    onResult: (transcript) => { if (transcript) assistantTaskBox.value = transcript; },
+    onError: (msg) => { console.error('[assistant] Voice failed:', msg); sayInTaskBox(msg); },
+    onUnavailable: sayInTaskBox
   });
 
   document.getElementById('assistantRunBtn').addEventListener('click', async () => {

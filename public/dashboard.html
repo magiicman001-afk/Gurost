@@ -223,7 +223,6 @@
 <script>
 const PLAN_DISPLAY_NAMES = { free: 'Free', pro: 'Plus', unlimited: 'Max', ultimate: 'Custom' };
 let selectedMode = null;
-let recordingSession = null;
 
 function requireMode(validationEl) {
   if (!selectedMode) {
@@ -290,22 +289,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  document.getElementById('dashMicBtn').addEventListener('mousedown', async () => {
-    // Real, deliberate fix: this used to require a build-mode chip to
-    // already be selected before the mic would even start recording -
-    // if someone's first instinct was to just hold the mic and speak
-    // (a completely natural thing to try), nothing happened at all,
-    // and the real, only feedback was a small text message elsewhere
-    // on the page, easy to miss entirely while looking at the mic
-    // itself. The mic now genuinely always starts - mode gets checked
-    // after real speech is captured instead, not before.
-    try { recordingSession = await startRecordingSession(); }
-    catch (err) { validationMsg.textContent = "Couldn't access your microphone — you can type instead."; validationMsg.classList.remove('hidden'); }
-  });
-  document.getElementById('dashMicBtn').addEventListener('mouseup', async () => {
-    if (!recordingSession) return;
-    try {
-      const transcript = await recordingSession.stop();
+  // The mic always starts - the mode is checked after speech is captured, not before. Hold-to-talk comes
+  // from shared/pulse-voice.js (finger, pen or mouse; works on iPhone).
+  holdToTalk(document.getElementById('dashMicBtn'), {
+    onPress: () => validationMsg.classList.add('hidden'),
+    onResult: (transcript) => {
       if (transcript) {
         document.getElementById('dashPromptInput').value = transcript;
         // Real, honest check, moved here - now that real speech
@@ -322,10 +310,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
         }
       }
-    } catch (err) {
-      validationMsg.textContent = "Couldn't transcribe that — you can type instead. (" + err.message + ")";
-      validationMsg.classList.remove('hidden');
-    } finally { recordingSession = null; }
+    },
+    onError: (msg) => { validationMsg.textContent = msg; validationMsg.classList.remove('hidden'); },
+    onUnavailable: (msg) => { validationMsg.textContent = msg; validationMsg.classList.remove('hidden'); }
   });
 
   document.getElementById('dashPromptInput').addEventListener('focus', () => requireMode(validationMsg));

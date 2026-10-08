@@ -768,33 +768,14 @@
     // Real hold-to-talk, same tested recording session used all night
     const micBtn = document.getElementById('pulseMicButton');
     document.getElementById('pulseVoiceButton').addEventListener('click', toggleHandsFree);
-    micBtn.addEventListener('mousedown', async () => {
-      stopHandsFree();
-      try {
-        activeRecording = await startRecordingSession();
-        setState('recording');
-        micBtn.classList.add('listening');
-      } catch (err) {
-        logStatus("Microphone unavailable — type instead.");
-      }
+    holdToTalk(micBtn, {
+      onPress: stopHandsFree, // one microphone user at a time
+      onStart: (session) => { activeRecording = session; setState('recording'); micBtn.classList.add('listening'); },
+      onRelease: () => { activeRecording = null; micBtn.classList.remove('listening'); },
+      onResult: (transcript) => { setState('idle'); if (transcript) sendCorrection(transcript); },
+      onError: (msg) => { logStatus(msg); setState('idle'); },
+      onUnavailable: (msg) => logStatus(msg)
     });
-    async function releaseMic() {
-      if (!activeRecording) return;
-      micBtn.classList.remove('listening');
-      const recording = activeRecording;
-      activeRecording = null;
-      try {
-        const transcript = await recording.stop();
-        setState('idle');
-        if (transcript) sendCorrection(transcript);
-      } catch (err) {
-        logStatus("Couldn't transcribe — type instead.");
-        setState('idle');
-      }
-    }
-    micBtn.addEventListener('mouseup', releaseMic);
-    micBtn.addEventListener('mouseleave', releaseMic);
-    micBtn.addEventListener('touchend', releaseMic);
 
     // Real pause/resume - only meaningful on pages whose real
     // gurostBuilder exposes a pause function (App Builder currently;

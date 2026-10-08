@@ -104,8 +104,8 @@ function createPulseVoice({ projectId, getUserId, onCorrectionApplied, onError, 
 
     connect();
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/ogg";
-    mediaRecorder = new MediaRecorder(stream, { mimeType });
+    const mimeType = pickRecorderMime();
+    mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
     audioChunks = [];
 
     mediaRecorder.addEventListener("dataavailable", (e) => { if (e.data.size > 0) audioChunks.push(e.data); });
@@ -166,9 +166,41 @@ function createPulseVoice({ projectId, getUserId, onCorrectionApplied, onError, 
  * whatever real mechanism actually fits that page.
  */
 
+const VOICE_NOT_SET_UP = "Voice is not set up yet. You can type instead.";
+
+// The first format this browser can really record. Chrome and Firefox give webm or ogg; iPhone Safari
+// gives only mp4. A hard-coded "webm else ogg" made the recorder fail to start on every iPhone.
+function pickRecorderMime() {
+  if (typeof MediaRecorder === "undefined" || typeof MediaRecorder.isTypeSupported !== "function") return "";
+  const candidates = ["audio/webm", "audio/mp4", "audio/ogg"];
+  return candidates.find((t) => MediaRecorder.isTypeSupported(t)) || "";
+}
+
+// Asked once per page, ahead of any press: the press itself must go straight to getUserMedia, because
+// iOS only allows the microphone from inside a real tap and an await before it would lose that.
+// Resolves true / false, or null when the answer is not known (offline, not logged in) - then a press goes ahead.
+let voiceStatusPromise = null;
+let voiceStatus = null;
+function prefetchVoiceStatus() {
+  if (!voiceStatusPromise) {
+    voiceStatusPromise = Promise.resolve()
+      .then(() => (window.GurostAPI && window.GurostAPI.call ? window.GurostAPI.call("/api/voice/status") : null))
+      .then((st) => { voiceStatus = st && typeof st.available === "boolean" ? st.available : null; return voiceStatus; })
+      .catch(() => null);
+  }
+  return voiceStatusPromise;
+}
+
+function micErrorText(err) {
+  const name = err && err.name;
+  if (name === "NotAllowedError" || name === "SecurityError") return "The microphone is blocked. Allow it in your browser settings, or type instead.";
+  if (name === "NotFoundError") return "No microphone found. You can type instead.";
+  return "Microphone unavailable. You can type instead.";
+}
+
 /**
  * The actually-usable shape: returns start/stop handles a real UI can
- * wire to mousedown/mouseup, rather than an unstoppable auto-recording
+ * wire to a press and release, rather than an unstoppable auto-recording
  * promise.
  */
 function startRecordingSession() {
@@ -179,8 +211,10 @@ function startRecordingSession() {
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/ogg";
-      const recorder = new MediaRecorder(stream, { mimeType });
+      const picked = pickRecorderMime();
+      const recorder = picked ? new MediaRecorder(stream, { mimeType: picked }) : new MediaRecorder(stream);
+      // What the recorder really writes (it may differ from the request); the base type only.
+      const mimeType = (recorder.mimeType || picked || "audio/mp4").split(";")[0];
       const chunks = [];
       recorder.addEventListener("dataavailable", (e) => { if (e.data.size > 0) chunks.push(e.data); });
       recorder.start();
@@ -193,13 +227,17 @@ function startRecordingSession() {
               async () => {
                 stream.getTracks().forEach((t) => t.stop());
                 try {
+                  if (!chunks.length) { resolveStop(""); return; } // nothing was recorded (released at once)
                   const blob = new Blob(chunks, { type: mimeType });
                   const response = await fetch("/api/voice/transcribe", {
                     method: "POST",
                     headers: { "Content-Type": mimeType, ...(window.GurostAPI?.authHeaders ? window.GurostAPI.authHeaders() : {}) },
                     body: blob
                   });
-                  if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || "Transcription failed.");
+                  if (!response.ok) {
+                    const msg = (await response.json().catch(() => ({}))).error || "Transcription failed.";
+                    throw new Error(/not configured/i.test(msg) ? VOICE_NOT_SET_UP : msg);
+                  }
                   const { transcript } = await response.json();
                   resolveStop(transcript);
                 } catch (err) {
@@ -208,6 +246,7 @@ function startRecordingSession() {
               },
               { once: true }
             );
+            if (recorder.state === "inactive") { stream.getTracks().forEach((t) => t.stop()); resolveStop(""); return; }
             recorder.stop();
           })
       });
@@ -215,6 +254,73 @@ function startRecordingSession() {
       rejectStart(err);
     }
   });
+}
+
+/**
+ * Hold-to-talk on a button, for a finger, a pen or a mouse.
+ * - Pointer events carry all three; the mouse events a phone sends after a touch are ignored
+ *   (a phone sends them AFTER the finger lifts, so the old mousedown/mouseup wiring released before
+ *   the microphone had started and left it recording forever).
+ * - A release while the microphone is still starting is remembered and stops it the moment it is ready.
+ * - Mouse events dispatched by scripts still work.
+ * handlers: onPress() immediately on press; onStart(session) once recording; onRelease() when it stops;
+ * onResult(transcript); onError(message); onUnavailable(message) when voice is not set up.
+ */
+function holdToTalk(button, handlers = {}) {
+  if (!button) return null;
+  let session = null;
+  let starting = false;
+  let releaseWanted = false;
+  let lastTouchAt = 0;
+  const fromTouch = () => Date.now() - lastTouchAt < 1000;
+  prefetchVoiceStatus();
+
+  button.style.touchAction = "none";
+  button.style.webkitUserSelect = "none";
+  button.style.userSelect = "none";
+  button.style.webkitTouchCallout = "none";
+  button.addEventListener("contextmenu", (e) => e.preventDefault()); // a long press must not open the phone's menu
+
+  function finish(s) {
+    session = null;
+    handlers.onRelease?.();
+    s.stop().then((t) => handlers.onResult?.(t || "")).catch((err) => handlers.onError?.(err && err.message ? err.message : "Couldn't transcribe. You can type instead."));
+  }
+
+  function press() {
+    if (session || starting) return;
+    if (voiceStatus === false) { handlers.onUnavailable?.(VOICE_NOT_SET_UP); return; }
+    starting = true;
+    releaseWanted = false;
+    handlers.onPress?.();
+    startRecordingSession()
+      .then((s) => {
+        starting = false;
+        session = s;
+        if (releaseWanted) { finish(s); return; }
+        handlers.onStart?.(s);
+      })
+      .catch((err) => { starting = false; releaseWanted = false; handlers.onRelease?.(); handlers.onError?.(micErrorText(err)); });
+  }
+
+  function release() {
+    if (starting) { releaseWanted = true; return; }
+    if (session) finish(session);
+  }
+
+  button.addEventListener("pointerdown", (e) => {
+    if (e.pointerType !== "mouse") lastTouchAt = Date.now();
+    try { button.setPointerCapture(e.pointerId); } catch {} // so the release is seen even if the finger slides off
+    press();
+  });
+  // The emulated mouse events come right after the finger LIFTS, so the guard window restarts there too
+  // (after a long hold they would otherwise arrive more than a second after pointerdown and start a second recording).
+  const lifted = (e) => { if (e.pointerType !== "mouse") lastTouchAt = Date.now(); release(); };
+  button.addEventListener("pointerup", lifted);
+  button.addEventListener("pointercancel", lifted);
+  button.addEventListener("mousedown", () => { if (!fromTouch()) press(); });
+  button.addEventListener("mouseup", () => { if (!fromTouch()) release(); });
+  return { press, release };
 }
 
 async function speakTextViaRest(text) {
