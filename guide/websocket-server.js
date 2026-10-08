@@ -26,6 +26,9 @@ const correctionBot = require("../bots/correction-bot");
 const integrator = require("../bots/integrator-bot");
 const { withProjectLock } = require("../lib/project-lock");
 
+// A socket has this long to send { type: "auth", token | apiKey } before it is closed.
+const AUTH_TIMEOUT_MS = 10000;
+
 // projectId -> Set<{ ws, userId }>. Module-level so both the connection
 // handler and the exported broadcastProjectUpdate() (called from
 // server.js's REST /api/pulse route) share the same room state.
@@ -79,7 +82,17 @@ function broadcastProjectUpdate(projectId, message) {
 const STATUS_HISTORY = new Map();
 const KEEPALIVE_MS = Number(process.env.WS_KEEPALIVE_MS) || 25000;
 
-function attachGuideBotSocket(httpServer, PROJECTS) {
+function attachGuideBotSocket(httpServer, PROJECTS, {
+  authenticate = (creds) => require("../auth").authenticateToken(creds),
+  // Same as the REST routes: the project in memory, or restored from the database.
+  loadProject = async (id) => {
+    if (PROJECTS.has(id)) return PROJECTS.get(id);
+    const restored = await require("../project-state").hydrateProjectIfMissing(id);
+    if (restored) PROJECTS.set(id, restored);
+    return restored;
+  },
+  authTimeoutMs = AUTH_TIMEOUT_MS
+} = {}) {
   // noServer + a path-checked upgrade listener, not { server, path }: with
   // ws's { server } option every WebSocketServer on the same HTTP server
   // runs handleUpgrade on EVERY upgrade and aborts the ones whose path
@@ -110,18 +123,42 @@ function attachGuideBotSocket(httpServer, PROJECTS) {
     ws.on("pong", () => { ws.missedPongs = 0; });
     const url = new URL(req.url, "http://localhost");
     const projectId = url.searchParams.get("projectId");
-    const userId = url.searchParams.get("userId");
-
-    if (!projectId || !userId) {
-      ws.close(1008, "projectId and userId query params are required");
+    if (!projectId) {
+      ws.close(1008, "projectId is required");
       return;
     }
 
-    const room = getRoom(projectId);
-    const client = { ws, userId };
-    room.add(client);
-    broadcastPresence(projectId); // let everyone know someone joined, including the new arrival
-    for (const past of STATUS_HISTORY.get(projectId) || []) ws.send(wsJson(past));
+    // Nothing reaches this socket - no history, no broadcasts, no Pulse edits -
+    // until its FIRST message proves who it is and that the project is theirs
+    // (owner, or an admin - the same rule as the REST routes). Audit 2026-10-08:
+    // the URL's userId used to be trusted, so anyone with a project id could
+    // read the build and run AI edits on someone else's site. The token comes in
+    // the message, never the URL (URLs end up in logs); the user id comes from it.
+    let userId = null;
+    let room = null;
+    let client = null;
+    let interval = null;
+    let checking = false;
+    const authTimer = setTimeout(() => ws.close(4401, "Login required"), authTimeoutMs);
+
+    async function admit(msg) {
+      checking = true;
+      const user = await authenticate({ token: msg.token, apiKey: msg.apiKey });
+      const project = user ? await loadProject(projectId).catch(() => null) : null;
+      clearTimeout(authTimer);
+      // Closed (or timed out) while the login was being checked: nothing to join.
+      if (ws.readyState !== ws.OPEN) return;
+      // One answer whether the project is missing or someone else's - no hint either way.
+      if (!user || !project || (project.userId !== user.id && !user.isAdmin)) return ws.close(4403, "Not allowed");
+      userId = user.id;
+      room = getRoom(projectId);
+      client = { ws, userId };
+      room.add(client);
+      broadcastPresence(projectId); // let everyone know someone joined, including the new arrival
+      for (const past of STATUS_HISTORY.get(projectId) || []) ws.send(wsJson(past));
+      pushSuggestions();
+      interval = setInterval(pushSuggestions, 45000);
+    }
 
     let pendingSuggestion = null;
 
@@ -143,15 +180,20 @@ function attachGuideBotSocket(httpServer, PROJECTS) {
       }
     }
 
-    pushSuggestions();
-    const interval = setInterval(pushSuggestions, 45000);
-
     ws.on("message", async (raw) => {
       let msg;
       try {
         msg = JSON.parse(raw.toString());
       } catch {
+        if (!userId) return ws.close(4401, "Login required");
         return ws.send(wsJson({ type: "error", error: "Malformed message." }));
+      }
+
+      // Before login: the only message accepted is the login itself.
+      if (!userId) {
+        if (checking) return; // a login is being checked - nothing else until it's done
+        if (msg.type !== "auth") return ws.close(4401, "Login required");
+        return admit(msg);
       }
 
       const project = PROJECTS.get(projectId);
@@ -212,7 +254,9 @@ function attachGuideBotSocket(httpServer, PROJECTS) {
     });
 
     ws.on("close", () => {
+      clearTimeout(authTimer);
       clearInterval(interval);
+      if (!room) return; // never got in
       room.delete(client);
       if (room.size === 0) ROOMS.delete(projectId);
       else broadcastPresence(projectId);
