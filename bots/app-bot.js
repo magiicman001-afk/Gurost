@@ -1,7 +1,7 @@
 const { callClaude } = require("../lib/claude-client");
 const stageGate = require("../lib/stage-gate");
 const imageBot = require("../image-bot");
-const { modelForTier } = require("../lib/tier-router");
+const { modelForTier, modelForAppCode } = require("../lib/tier-router");
 const { designPromptLines } = require("../lib/industry-design");
 const { businessInfoPrompt } = require("../lib/business-info");
 const { repairExternalImports } = require("../lib/app-imports");
@@ -52,7 +52,7 @@ function streamedFileStage(stage, notify) {
 const SCHEMA_AGENT_MODEL = process.env.SCHEMA_AGENT_MODEL || undefined;
 
 // The model for every code-writing call of an app build or edit: one place to change.
-const appCodeModel = (plan) => modelForTier(plan, { complex: true });
+const appCodeModel = (plan) => modelForAppCode(plan);
 
 // Real, honest step - App Builder's frontend is multiple real files
 // (unlike variant-bot's single HTML document), so this searches every
