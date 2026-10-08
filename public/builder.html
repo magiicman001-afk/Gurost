@@ -529,10 +529,25 @@ let lastPromptTried = null; // real, honest memory - lets the Restart button ret
 // Bot conversation helpers (logBot, logActivity, toggleCode...) live in
 // shared/bot-conversation.js.
 
+// Same as the API client on an expired login: clear it and go to the login page.
+function sendToLogin() {
+  stopWatchingBuild();
+  localStorage.removeItem('gurost_jwt');
+  localStorage.removeItem('gurost_user_id');
+  window.location.href = 'login.html?expired=1';
+}
+
 function connectGenerationSocket(id) {
   if (generationSocket) generationSocket.close();
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  generationSocket = new WebSocket(`${protocol}//${window.location.host}/ws/guide?projectId=${id}&userId=${localStorage.getItem('gurost_user_id') || 'anon'}`);
+  generationSocket = new WebSocket(`${protocol}//${window.location.host}/ws/guide?projectId=${id}`);
+  const socketForLogin = generationSocket;
+  // The socket's first message is the login - never the URL (logs). The server
+  // sends nothing and accepts nothing until it has checked it.
+  socketForLogin.addEventListener('open', () => {
+    const h = GurostAPI.authHeaders();
+    socketForLogin.send(JSON.stringify({ type: 'auth', token: (h.Authorization || '').replace(/^Bearer /, '') || undefined, apiKey: h['x-api-key'] }));
+  });
 
   const mem = (socketMemory[id] = socketMemory[id] || { finished: 0, seen: new Set() });
   let liveLeadId = null;
@@ -661,10 +676,14 @@ function connectGenerationSocket(id) {
   });
 
   const thisSocket = generationSocket;
-  generationSocket.addEventListener('close', () => {
+  generationSocket.addEventListener('close', (event) => {
     // Only forget the socket this handler belongs to: closing the old one for a new build fires its
     // close AFTER the new socket is stored, and used to wipe the new one's reference.
     if (generationSocket === thisSocket) generationSocket = null;
+    // 4401: the login is missing or has expired - every retry would be refused, so log in again.
+    // 4403 / 1008: not this person's project (or none) - retrying cannot help; the project check reports it.
+    if (event.code === 4401) return sendToLogin();
+    if (event.code === 4403 || event.code === 1008) return;
     scheduleReconnect(id); // only does anything while a build is being waited on
   });
 }

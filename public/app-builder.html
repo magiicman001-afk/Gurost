@@ -522,17 +522,38 @@ function logStage(msg) {
   else if (msg.status === 'failed' || msg.status === 'error') logBot(bot, `${label} failed${msg.data?.error ? `: ${msg.data.error}` : '.'}`, 'fail', msg.at);
 }
 
+// Same as the API client on an expired login: clear it and go to the login page.
+function sendToLogin() {
+  stopWatchingBuild();
+  localStorage.removeItem('gurost_jwt');
+  localStorage.removeItem('gurost_user_id');
+  window.location.href = 'login.html?expired=1';
+}
+
 function connectGenerationSocket(id) {
   if (generationSocket) generationSocket.close();
   const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const socket = new WebSocket(`${protocol}//${window.location.host}/ws/guide?projectId=${id}&userId=${localStorage.getItem('gurost_user_id') || 'anon'}`);
+  const socket = new WebSocket(`${protocol}//${window.location.host}/ws/guide?projectId=${id}`);
   generationSocket = socket;
+  // The socket's first message is the login - never the URL (logs). The server
+  // sends nothing and accepts nothing until it has checked it. Read fresh on
+  // every connect, so a reconnect always sends the current login.
+  socket.addEventListener('open', () => {
+    const h = GurostAPI.authHeaders();
+    socket.send(JSON.stringify({ type: 'auth', token: (h.Authorization || '').replace(/^Bearer /, '') || undefined, apiKey: h['x-api-key'] }));
+  });
 
-  socket.addEventListener('open', () => { if (buildWatch) buildWatch.attempts = 0; });
+  // Back-off resets once the server has let this socket in (its first message), not on open: a socket
+  // that opens and is then turned away would otherwise retry every second.
+  socket.addEventListener('message', () => { if (buildWatch) buildWatch.attempts = 0; }, { once: true });
   // A dropped connection used to leave the page frozen for the rest of the build. Now it reconnects
   // (the server replays its recent events) and the project check below covers whatever was missed.
-  socket.addEventListener('close', () => {
+  socket.addEventListener('close', (event) => {
     if (generationSocket === socket) generationSocket = null; // only clear our own (a newer socket may exist)
+    // 4401: the login is missing or has expired - every retry would be refused, so log in again.
+    // 4403 / 1008: not this person's project (or none) - retrying cannot help; the project check reports it.
+    if (event.code === 4401) return sendToLogin();
+    if (event.code === 4403 || event.code === 1008) return;
     scheduleReconnect(id);
   });
 

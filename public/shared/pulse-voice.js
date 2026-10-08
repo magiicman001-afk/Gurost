@@ -42,7 +42,14 @@ function createPulseVoice({ projectId, getUserId, onCorrectionApplied, onError, 
   function connect() {
     if (socket) return socket;
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    socket = new WebSocket(`${protocol}//${window.location.host}/ws/guide?projectId=${projectId}&userId=${getUserId()}`);
+    socket = new WebSocket(`${protocol}//${window.location.host}/ws/guide?projectId=${projectId}`);
+    // The socket's first message is the login - never the URL (logs). The server
+    // sends nothing and accepts nothing until it has checked it.
+    const socketForLogin = socket;
+    socketForLogin.addEventListener("open", () => {
+      const h = window.GurostAPI?.authHeaders ? window.GurostAPI.authHeaders() : {};
+      socketForLogin.send(JSON.stringify({ type: "auth", token: (h.Authorization || "").replace(/^Bearer /, "") || undefined, apiKey: h["x-api-key"] }));
+    });
 
     socket.addEventListener("message", (event) => {
       let msg;
@@ -61,7 +68,15 @@ function createPulseVoice({ projectId, getUserId, onCorrectionApplied, onError, 
       // these three pages need — intentionally not handled here.
     });
 
-    socket.addEventListener("close", () => { socket = null; });
+    socket.addEventListener("close", (event) => {
+      socket = null;
+      // 4401: the login is missing or has expired - go and log in again, as the API client does.
+      if (event.code === 4401) {
+        localStorage.removeItem("gurost_jwt");
+        localStorage.removeItem("gurost_user_id");
+        window.location.href = "login.html?expired=1";
+      }
+    });
     return socket;
   }
 
