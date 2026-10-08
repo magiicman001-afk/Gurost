@@ -276,9 +276,20 @@ function renderPreview(html, { keepScroll = false, variantId = null } = {}) {
     // 0x0 viewport in Chromium and the page paints blank for good - showMasterPage
     // and showSitePage read offsetWidth first to lay the frame out.
     const path = `/api/project/${projectId}/site` + (variantId ? `?variant=${encodeURIComponent(variantId)}` : '');
+    // A fresh render (a design was just picked) paints the design's own HTML at once: the site
+    // request below can be slow, and the panel used to sit blank until it answered. An edit
+    // (keepScroll) keeps what is shown, so the page you were on does not flash back to Home.
+    const paintedEarly = !keepScroll;
+    if (paintedEarly) showMasterPage(html);
     GurostAPI.call(path)
-      .then((site) => { if (token === previewToken) applySite(site, html); })
-      .catch(() => { if (token === previewToken) showMasterPage(html); });
+      .then((site) => {
+        if (token !== previewToken) return;
+        // A single-page site is exactly what is already on screen: do not reload it.
+        const multi = !!(site && site.multi && Array.isArray(site.pages) && site.pages.length && site.previews);
+        if (paintedEarly && !multi) return;
+        applySite(site, html);
+      })
+      .catch(() => { if (token === previewToken && !paintedEarly) showMasterPage(html); });
   }
   // codeEmptyMsg lives inside codeContent, so the textContent write below
   // deletes it - it only exists on the first render.
