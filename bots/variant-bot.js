@@ -353,14 +353,11 @@ function replacePlaceholder(html, placeholder, url) {
   return html.replace(new RegExp(`\\b${placeholder}\\b`, "g"), url); // \b: IMG_1 must not hit IMG_10
 }
 
-// Stock photo terms ask for credit; one small line at the end of the footer.
-function addPhotoCredits(html, credits) {
-  if (!credits.length) return html;
-  const label = credits.some((c) => /^Video /.test(c)) ? "Photos & video" : "Photos";
-  const line = `<p style="font-size:12px;opacity:.7;margin-top:12px">${label}: ${[...new Set(credits)].join(" · ")}</p>`;
-  const at = html.toLowerCase().lastIndexOf("</footer>");
-  if (at !== -1) return html.slice(0, at) + line + html.slice(at);
-  return html.replace(/<\/body>/i, `${line}</body>`);
+// Where each stock photo and clip came from. Kept on the project record and in the log, NEVER written
+// into the page: a customer's site must not show where Gurost found its media (decision 2026-10-08).
+// Pixabay and Coverr need no credit; Openverse is limited to CC0 / public domain (image-bot.js).
+function mediaCredits(credits) {
+  return [...new Set((credits || []).filter(Boolean))];
 }
 
 // Stock videos (Pixabay) for VID_n placeholders. A found clip gets its
@@ -406,10 +403,11 @@ async function fulfillVideoRequests(html, videoRequests) {
 // onNote({ kind, ... }) reports what happened:
 //   "image-sources" { pixabay, openverse, flux, gemini, dropped, cost, allGeminiCost }
 //   "image-dropped" { count, reason } - hero/featured images nobody could supply.
-async function fulfillImageRequests(html, imageRequests, onImageStart, extraCredits = [], onNote = () => {}, { plan } = {}) {
+async function fulfillImageRequests(html, imageRequests, onImageStart, extraCredits = [], onNote = () => {}, { plan, onCredits } = {}) {
   if (!imageRequests || !imageRequests.length) {
     if (onImageStart) onImageStart({ gemini: 0, stock: 0 });
-    return addPhotoCredits(stripLeftoverPlaceholders(html), extraCredits);
+    if (onCredits) onCredits(mediaCredits(extraCredits));
+    return stripLeftoverPlaceholders(html);
   }
 
   const ordered = [...imageRequests].sort((a, b) => (ROLE_ORDER[a.role] ?? 2) - (ROLE_ORDER[b.role] ?? 2));
@@ -470,15 +468,16 @@ async function fulfillImageRequests(html, imageRequests, onImageStart, extraCred
   const droppedKey = unfilled.filter((r) => r.role === "hero" || r.role === "featured").length;
   if (droppedKey) onNote({ kind: "image-dropped", count: droppedKey, reason: "no Pixabay match and image generation failed" });
 
-  return addPhotoCredits(stripLeftoverPlaceholders(finalHtml), credits);
+  if (onCredits) onCredits(mediaCredits(credits));
+  return stripLeftoverPlaceholders(finalHtml);
 }
 
 // Videos and images for one parsed design. onStart({ gemini, stock, videos });
 // onNote - see fulfillImageRequests.
-async function fulfillMedia(parsed, onStart, onNote, { plan } = {}) {
+async function fulfillMedia(parsed, onStart, onNote, { plan, onCredits } = {}) {
   const videos = (parsed.videoRequests || []).slice(0, MAX_VIDEOS_PER_DESIGN).length;
   const v = await fulfillVideoRequests(parsed.html, parsed.videoRequests);
-  const html = await fulfillImageRequests(v.html, parsed.imageRequests, onStart && ((work) => onStart({ ...work, videos })), v.credits, onNote, { plan });
+  const html = await fulfillImageRequests(v.html, parsed.imageRequests, onStart && ((work) => onStart({ ...work, videos })), v.credits, onNote, { plan, onCredits });
   // An apostrophe in a single-quoted JS string ("Couldn't...") breaks a
   // site's whole script - its form and menu stop working.
   const scripts = repairInlineScripts(html);
@@ -490,13 +489,11 @@ async function generateVariants(prompt, { includeBranding = true, plan } = {}) {
   const design = industryDesignFor(prompt);
   const settled = await Promise.allSettled(
     BRIEFS.map((b) =>
-      generateDesign({ system: systemFor(b.brief, includeBranding, design), content: prompt, plan, variantId: b.id }).then(async (r) => ({
-        id: b.id,
-        label: b.label,
-        html: await fulfillMedia(r.parsed, undefined, undefined, { plan }),
-        summary: r.parsed.summary,
-        usage: r.usage
-      }))
+      generateDesign({ system: systemFor(b.brief, includeBranding, design), content: prompt, plan, variantId: b.id }).then(async (r) => {
+        let credits = [];
+        const html = await fulfillMedia(r.parsed, undefined, undefined, { plan, onCredits: (c) => { credits = c; } });
+        return { id: b.id, label: b.label, html, summary: r.parsed.summary, usage: r.usage, credits };
+      })
     )
   );
 
@@ -589,12 +586,14 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
     return generateDesign({ system, content, plan, variantId: b.id, onStream: live.streamFor(b, system), onRetry })
       .then(async (r) => {
         live.finish(b.id);
+        let credits = [];
         let html = await fulfillMedia(r.parsed, ({ gemini, stock, videos }) => {
           notify("designing", "images-running", { variantId: b.id, label: b.label, count: gemini + stock, gemini, stock, videos });
         }, (note) => {
           if (note.kind === "image-sources") for (const k of Object.keys(media)) media[k] += note[k] || 0;
           notify("designing", "images-note", { variantId: b.id, label: b.label, ...note });
-        }, { plan });
+        }, { plan, onCredits: (c) => { credits = c; } });
+        if (credits.length) console.log(`[variant-bot] "${b.id}" media credits (kept off the page): ${credits.join(" | ")}`);
 
         // Buttons and forms made real, no AI: dead links retargeted, an
         // order form / contact form / map added when the design left them
@@ -623,7 +622,7 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
           throw new Error(`Real verification failed: ${verification.reason}`);
         }
 
-        const variant = { id: b.id, label: b.label, html, summary: r.parsed.summary, usage: r.usage, verified: true };
+        const variant = { id: b.id, label: b.label, html, summary: r.parsed.summary, usage: r.usage, verified: true, credits };
         variants.push(variant);
         // Real, genuine progress - this fires the exact moment THIS
         // specific variant actually finishes AND is genuinely
@@ -653,7 +652,7 @@ async function generateVariantsStaged(prompt, { includeBranding = true, onStage,
 
 module.exports = { generateVariants, generateVariantsStaged, verifyRealHtml, checkCredibility, BRIEFS };
 // Exposed for tests only.
-module.exports._internal = { generateDesign, stripLeftoverPlaceholders, resetGeminiPause: () => { geminiPausedUntil = 0; }, fulfillImageRequests, fulfillVideoRequests, fulfillMedia, stockQuery, createLivePreview, systemFor, condenseForReview };
+module.exports._internal = { generateDesign, stripLeftoverPlaceholders, resetGeminiPause: () => { geminiPausedUntil = 0; }, fulfillImageRequests, fulfillVideoRequests, fulfillMedia, mediaCredits, stockQuery, createLivePreview, systemFor, condenseForReview };
 
 // Real, genuine Credibility Engine - honestly flags what a completed
 // page might genuinely be missing for real trust (testimonials, a

@@ -57,15 +57,18 @@ test("more than 3 videos: only 3 searched, the rest removed", async () => {
   assert.ok(!/VID_\d/.test(v.html));
 });
 
-test("fulfillMedia: videos and photos share one credit line; videos counted in the plan", async () => {
+test("fulfillMedia: no credit line in the page; credits returned separately; videos counted in the plan", async () => {
   stubVideos(() => true);
   imageBot.generateImageUrl = async () => "https://cdn/gem.png";
   imageBot.searchImage = async () => ({ url: "https://cdn/stock.jpg", credit: "Photo by A on Pixabay" });
   const parsed = parseVariantResponse(DOC(HERO + '<img src="IMG_1" data-gurost-image="loaf" data-gurost-image-role="secondary" alt="sourdough loaf">'));
-  let plan;
-  const html = await fulfillMedia(parsed, (p) => { plan = p; });
+  let plan, credits;
+  const html = await fulfillMedia(parsed, (p) => { plan = p; }, undefined, { onCredits: (c) => { credits = c; } });
   assert.deepEqual(plan, { gemini: 0, stock: 1, videos: 1 });
-  assert.match(html, /Photos &amp; video: Video by B on Pixabay · Photo by A on Pixabay<\/p><footer>|Photos & video: Video by B on Pixabay · Photo by A on Pixabay/);
+  // (a clip's own src still points at its CDN address; that is a link, not credit text)
+  assert.ok(!/Photos?\s*(&amp;|&)?\s*(video)?:|Video by|Photo by|Coverr|Openverse|on Pixabay/i.test(html), "no credit text anywhere in the page source");
+  assert.ok(!/Pixabay|Coverr|Openverse/i.test(html.replace(/<[^>]*>/g, " ")), "none of the names in the visible text");
+  assert.deepEqual(credits, ["Video by B on Pixabay", "Photo by A on Pixabay"], "credits are kept for the project record");
 });
 
 test("pickVideoFile (Pixabay renditions): smallest MP4 at least 1280 wide, else the largest smaller one", () => {
@@ -91,4 +94,11 @@ test("searchVideo: Pixabay hit -> landscape clip, poster and credit; no key -> n
     delete process.env.PIXABAY_API_KEY;
     assert.equal(await realSearchVideo("resort pool"), null);
   } finally { global.fetch = realFetch; }
+});
+
+test("the credit line is gone for good; each design keeps its credits on its record", () => {
+  const src = require("fs").readFileSync(require("path").join(__dirname, "../bots/variant-bot.js"), "utf8");
+  assert.ok(!/addPhotoCredits|Photos & video|Photos: /.test(src), "nothing writes a credit line into a page");
+  assert.match(src, /verified: true, credits \}/, "the staged variant record carries its credits");
+  assert.match(src, /usage: r\.usage, credits \}/, "so does the plain variant record");
 });

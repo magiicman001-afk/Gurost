@@ -52,23 +52,25 @@ test("a locked fal account (403 TOP_UP) pauses fal - no second call - and falAva
 });
 
 // Openverse: after Pixabay, before any paid generation (2026-10-05).
-test("Openverse: commercial licences only, large photos only, credited with title, creator and licence", async () => {
+test("Openverse: CC0 / public domain only (no credit needed), large photos only; credit kept for the record", async () => {
   let asked = "";
   globalThis.fetch = async (url) => {
     if (String(url).startsWith("https://api.openverse.org/")) {
       asked = String(url);
       return { ok: true, json: async () => ({ results: [
-        { url: "https://flickr/small.jpg", width: 500, title: "Too small", creator: "a", license: "by", license_version: "2.0" },
-        { url: "https://flickr/big.jpg", width: 2048, title: "Rustic Sourdough Bread", creator: "osiristhe", license: "by-nd", license_version: "2.0" }
+        { url: "https://flickr/small.jpg", width: 500, title: "Too small", creator: "a", license: "cc0", license_version: "1.0" },
+        { url: "https://flickr/needs-credit.jpg", width: 3000, title: "Needs credit", creator: "b", license: "by", license_version: "2.0" },
+        { url: "https://flickr/big.jpg", width: 2048, title: "Rustic Sourdough Bread", creator: "osiristhe", license: "cc0", license_version: "1.0" }
       ] }) };
     }
     return { ok: true, headers: { get: () => "image/jpeg" }, arrayBuffer: async () => new ArrayBuffer(4) };
   };
   const r = await imageBot.searchOpenverse("sourdough bread");
-  assert.match(asked, /license_type=commercial/);
+  assert.match(asked, /license=cc0,pdm/);
+  assert.ok(!/license_type=/.test(asked));
   assert.match(asked, /size=large/);
   assert.equal(r.provider, "openverse");
-  assert.equal(r.credit, '"Rustic Sourdough Bread" by osiristhe (CC BY-ND 2.0, via Openverse)');
+  assert.equal(r.credit, '"Rustic Sourdough Bread" by osiristhe (CC0 1.0, via Openverse)');
   assert.match(r.url, /^https:\/\/store\.example\/stock\//);
 });
 

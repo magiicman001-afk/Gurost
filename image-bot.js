@@ -85,21 +85,23 @@ async function searchPixabay(query) {
 /**
  * Openverse (api.openverse.org) - openly licensed photos (Flickr,
  * Wikimedia and more), no key. The fallback after Pixabay, before any
- * paid generation. Only licences that allow commercial use; only large
- * photos (results are often 500px thumbnails). CC licences require
- * credit, so the credit names the title, creator and licence; it goes in
- * the footer credits line with the Pixabay ones. Stored in project-assets
- * like a Pixabay photo, never hotlinked.
+ * paid generation. ONLY CC0 and public-domain photos (licence "cc0,pdm"):
+ * those need no credit, so nothing has to be shown on a customer's page
+ * (the CC "by" licences do, and are no longer used). Only large photos
+ * (results are often 500px thumbnails). The credit string is kept on the
+ * project record and in the log, never in the page. Stored in
+ * project-assets like a Pixabay photo, never hotlinked.
  */
 const OPENVERSE_MIN_WIDTH = 1000;
 
 async function searchOpenverse(query) {
   if (!String(query || "").trim()) return null;
   const q = encodeURIComponent(String(query).slice(0, 100));
-  const res = await fetch(`https://api.openverse.org/v1/images/?q=${q}&license_type=commercial&size=large&mature=false&page_size=8`).catch(() => null);
+  const res = await fetch(`https://api.openverse.org/v1/images/?q=${q}&license=cc0,pdm&size=large&mature=false&page_size=8`).catch(() => null);
   if (!res || !res.ok) return null;
   const data = await res.json().catch(() => ({}));
-  const photo = (data.results || []).find((p) => p.url && (p.width || 0) >= OPENVERSE_MIN_WIDTH);
+  // The query already asks for CC0 / public domain; this holds even if the API ever answers with another licence.
+  const photo = (data.results || []).find((p) => p.url && (p.width || 0) >= OPENVERSE_MIN_WIDTH && /^(cc0|pdm)$/i.test(String(p.license || "")));
   if (!photo) return null;
   const license = `CC ${String(photo.license || "").toUpperCase()} ${photo.license_version || ""}`.trim().replace(/^CC (CC0|PDM)/, "$1");
   const credit = `${photo.title ? `"${String(photo.title).slice(0, 60)}" ` : "Photo "}by ${photo.creator || "unknown"} (${license}, via Openverse)`;

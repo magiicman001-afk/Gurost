@@ -25,9 +25,10 @@ async function run({ stockHits = true, flux = "ok", gemini = "ok" } = {}) {
   imageBot.generateFluxImageUrl = async (d, o) => { calls.flux.push([d, o.aspectRatio]); if (flux !== "ok") throw new Error("FLUX image failed (500)"); return { url: `https://cdn/flux/${slug(d)}.jpg`, cost: 0.015 }; };
   imageBot.generateImageUrl = async (d) => { calls.gemini.push(d); if (gemini === "402") throw new Error("Gemini image generation failed (402): payment required"); return `https://cdn/gem/${slug(d)}.png`; };
   let plan; const notes = [];
-  const html = await fulfillImageRequests(PAGE, REQS, (p) => { plan = p; }, [], (n) => notes.push(n));
+  let credits;
+  const html = await fulfillImageRequests(PAGE, REQS, (p) => { plan = p; }, [], (n) => notes.push(n), { onCredits: (c) => { credits = c; } });
   const srcs = [...html.matchAll(/<img src="([^"]+)"/g)].map((m) => m[1]);
-  return { calls, plan, html, srcs, notes, sources: notes.find((n) => n.kind === "image-sources") };
+  return { calls, plan, html, srcs, notes, credits, sources: notes.find((n) => n.kind === "image-sources") };
 }
 
 test("Pixabay first: every image found there - no FLUX, no Gemini, $0", async () => {
@@ -37,7 +38,8 @@ test("Pixabay first: every image found there - no FLUX, no Gemini, $0", async ()
   assert.equal(r.calls.flux.length + r.calls.gemini.length, 0);
   assert.equal(r.srcs.length, 7);
   assert.deepEqual(r.sources, { kind: "image-sources", pixabay: 7, openverse: 0, flux: 0, gemini: 0, dropped: 0, cost: 0, allGeminiCost: 0.273 });
-  assert.match(r.html, /Photos: Photo by A on Pixabay<\/p><\/footer>/, "one deduplicated credit line inside the footer");
+  assert.ok(!/Pixabay|Photo by|Photos:/i.test(r.html), "no credit line in the page");
+  assert.deepEqual(r.credits, ["Photo by A on Pixabay"], "one deduplicated credit, kept off the page");
 });
 
 test("Pixabay misses -> FLUX, hero first, 16:9 for heroes and backgrounds; capped at 4", async () => {
