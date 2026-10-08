@@ -82,3 +82,31 @@ test("buildReport counts what the review really found, and claims nothing when t
   assert.deepEqual(b.buildReport({ startedAt: 1000, now: 4000, verified: false }), { seconds: 3, found: null, fixed: null, remaining: null, verified: false });
   assert.equal(b.buildReport({ startedAt: undefined, now: 5 }).seconds, 0);
 });
+
+// ---- Bug M (phone test 2026-10-08): the progress panel listed table names, column types and SQL ----
+test("the browser is never sent the schema while the app builds", () => {
+  const data = { schema: "CREATE TABLE pets (id SERIAL PRIMARY KEY, name VARCHAR(100) NOT NULL);", engine: "postgres", resumed: true };
+  const out = b.publicStageData("schema", data);
+  assert.deepEqual(out, { resumed: true });
+  assert.doesNotMatch(JSON.stringify(out), /pets|VARCHAR|CREATE|postgres/i);
+  assert.equal(data.schema.startsWith("CREATE TABLE"), true, "the original is not changed (the project record keeps it)");
+  assert.equal(b.publicStageData("schema", null), null);
+  const files = { files: [{ path: "server.js", content: "x" }], summary: "s" };
+  assert.deepEqual(b.publicStageData("backend", files), files, "other stages pass through");
+});
+
+test("the project record still keeps the schema (View Code shows it on purpose)", () => {
+  const p = b.beginBuild(fresh());
+  b.recordStage(p, "schema", "complete", { schema: "CREATE TABLE pets (id int);", engine: "postgres" });
+  assert.equal(p.appFiles.database.schema, "CREATE TABLE pets (id int);");
+});
+
+test("wiring: the build broadcast goes through publicStageData; the progress panel has no table/route/file code", () => {
+  const fs = require("node:fs"), path = require("node:path");
+  const server = fs.readFileSync(path.join(__dirname, "..", "server.js"), "utf8");
+  assert.match(server, /status, data: buildState\.publicStageData\(stage, data\) \}\);/);
+  const html = fs.readFileSync(path.join(__dirname, "..", "public", "app-builder.html"), "utf8");
+  assert.doesNotMatch(html, /tablesFromSchema|endpointsFromFiles|CREATE\s+TABLE|stageView\.schema\b|class="tables"|class="eps"/i);
+  assert.match(html, /Setting up your data structure/);
+  assert.match(html, /renderCodeView/, "View Code is still there");
+});

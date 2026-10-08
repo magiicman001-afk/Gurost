@@ -91,9 +91,8 @@ test("chat: normal messages still appear, including text that merely starts with
   assert.equal(p.isFillerText("line items are saved per order"), false);
 });
 
-test("app-builder.html filters filler in the code tabs and the stage preview", () => {
+test("app-builder.html filters filler in the code tabs (the stage preview lists no files at all any more)", () => {
   const src = fs.readFileSync(path.join(__dirname, "../public/app-builder.html"), "utf8");
   assert.ok(/\]\.filter\(\(f\) => !isFillerFile\(f\)\);/.test(src), "code tabs");
-  assert.ok(/stageView\.backend = \(d\.files \|\| \[\]\)\.filter\(\(f\) => !isFillerFile\(f\)\)/.test(src), "backend stage list");
-  assert.ok(/\(d\.files \|\| \[\]\)\.filter\(\(f\) => !isFillerFile\(f\)\)\.map/.test(src), "frontend stage list");
+  assert.doesNotMatch(src, /stageView\.(backend|frontendFiles) =/, "no file lists in the stage preview");
 });

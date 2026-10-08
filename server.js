@@ -1492,7 +1492,8 @@ app.post("/api/app-builder/start", security.rejectUnknownFields(["prompt", "dbEn
           if (data && Array.isArray(data.files)) data = { ...data, files: dropPlaceholderFiles(data.files, { where: `${stage} stage`, projectId }) };
           // What each stage made is kept (and saved) as it lands, not only at the start.
           if (buildState.recordStage(project, stage, status, data)) persistInBackground(projectId, project);
-          broadcastProjectUpdate(projectId, { type: "stage_progress", stage, status, data: data || null });
+          // The browser never gets the schema (table names, SQL) during the build; see publicStageData.
+          broadcastProjectUpdate(projectId, { type: "stage_progress", stage, status, data: buildState.publicStageData(stage, data) });
         },
         getPendingCorrection: () => PENDING_CORRECTIONS.get(projectId),
         clearPendingCorrection: () => PENDING_CORRECTIONS.set(projectId, null)
