@@ -115,10 +115,21 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
 - Mermaid diagram in View Code (file structure, component hierarchy, API
   routes): does not exist in either builder. Parked (2026-10-08), after the
   App Builder parity work.
+- Model benchmarks (parked 2026-10-08, after launch or if GLM fails): Kimi K3, Le Chonk
+  (Mistral 1T) and Sonnet 5 for the App Builder frontend. Compare on `[code-call]` lines
+  (`secs=` and `chars/s=`), not on guesses; the sandbox cannot reach OpenRouter.
+- App Builder parallel stages (next, own commit, after the GLM frontend swap is verified
+  live): the frontend only needs the backend file paths, so derive the API endpoints from
+  the schema and run backend and frontend together. Target: schema + max(backend,
+  frontend), full build under 3 minutes.
+- Real "add a page" feature for the Website Builder (Pulse answers honestly that it is
+  not ready; parked 2026-10-08).
 - Kimi K2: used for App Builder code only (`modelForAppCode` in
   `lib/tier-router.js`, since 2026-10-08). Website Builder routing is unchanged;
   do not move it to Kimi without being asked. `APP_CODE_MODEL=off` on Render
-  restores the old chain.
+  restores the old chain. The App Builder FRONTEND stage uses GLM-5.2 first (since
+  2026-10-08, 24,000-token budget; `APP_FRONTEND_MODEL` swaps it, `off` restores the
+  Kimi chain).
 
 ## Dev tools (Claude Code side — not callable from Gurost at runtime)
 - Playwright MCP: live testing. The Pulse ball animates, so open it with
