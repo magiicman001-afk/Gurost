@@ -363,8 +363,10 @@ function renderCodeView(appFiles) {
 let stageFrames = null;
 let stageFront = 0;
 let stageView = { schemaDone: false, backendDone: false, frontendDone: false, error: '' };
+let appShownEarly = false; // the finished screens are already in the preview (the checks are still running)
 
 function resetStagePreview() {
+  appShownEarly = false;
   stageFrames?.forEach((f) => f.remove());
   stageFrames = null;
   stageFront = 0;
@@ -428,6 +430,7 @@ function renderStagePreview() {
 // Called for every stage event. Returns nothing; draws when something changed.
 // Only "this stage is done" matters here - the server no longer sends the schema at all.
 function updateStagePreview(msg) {
+  if (appShownEarly) return; // the app is on screen: a replayed stage event must not cover it with the progress panel
   if (msg.stage === 'schema' && msg.status === 'running' && !stageFrames) renderStagePreview();
   else if (msg.stage === 'schema' && msg.status === 'complete') { stageView.schemaDone = true; renderStagePreview(); }
   else if (msg.stage === 'backend' && msg.status === 'complete') { stageView.backendDone = true; renderStagePreview(); }
@@ -591,6 +594,7 @@ async function syncBuild() {
     // Catch the three step markers up with what the server has finished.
     if (files.database && stageStatuses.schema !== 'complete') handleStageProgress({ type: 'stage_progress', stage: 'schema', status: 'complete' });
     if (files.backend && files.backend.length && stageStatuses.backend !== 'complete') handleStageProgress({ type: 'stage_progress', stage: 'backend', status: 'complete' });
+    if (project.state !== 'DONE' && files.frontend && files.frontend.length) showAppEarly(files.frontend);
     if (project.state === 'DONE') {
       if (project.buildError) showBuildFailure(project.buildError.error || 'Gurost got stuck on this build. Tap Retry to try again.', project.buildError.at);
       else if (files.frontend && files.frontend.length) handleStageProgress({ type: 'stage_progress', stage: 'done', status: 'complete' });
@@ -627,6 +631,17 @@ window.addEventListener('pageshow', wakeBuildWatch);
 // Kept under its old name: generateApp() calls this once the build has started.
 function startCompletionPollFallback(id) { watchBuild(id); }
 
+// The screens are written long before the build ends (images, review, fixes and a test run come
+// after, and can take minutes). The moment the screens exist they go on screen; the checks carry
+// on behind them. Once only: the server replays recent events after a reconnect.
+function showAppEarly(frontendFiles) {
+  if (appShownEarly || !Array.isArray(frontendFiles) || !frontendFiles.length) return;
+  appShownEarly = true;
+  currentAppFiles = { ...(currentAppFiles || {}), frontend: frontendFiles };
+  renderLivePreview(currentAppFiles);
+  logBot('Builder', 'Your app is on screen. Checking it now - this can take a minute or two.', 'work');
+}
+
 function handleStageProgress(msg) {
   if (msg.stage === 'paused') {
     isPaused = true;
@@ -642,6 +657,7 @@ function handleStageProgress(msg) {
   }
 
   updateStagePreview(msg);
+  if (msg.stage === 'frontend' && msg.status === 'complete' && msg.data) showAppEarly(msg.data.files);
   // Files finished so far in a streaming stage - not a stage status.
   if (msg.status === 'progress') return;
 
@@ -706,6 +722,7 @@ async function generateApp(promptText, opts) {
   // refresh while the modal is open asks again instead of losing the prompt.
   localStorage.removeItem('gurost_pending_generate');
   logBot('Builder', 'Starting a new build…', 'work');
+  renderStagePreview(); // the progress panel is on screen from the first moment, not when the first event arrives
 
   try {
     // Real streaming start: returns immediately with a projectId, then
