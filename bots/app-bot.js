@@ -51,6 +51,9 @@ function streamedFileStage(stage, notify) {
 // existing default rather than force a split that isn't well-founded.
 const SCHEMA_AGENT_MODEL = process.env.SCHEMA_AGENT_MODEL || undefined;
 
+// The model for every code-writing call of an app build or edit: one place to change.
+const appCodeModel = (plan) => modelForTier(plan, { complex: true });
+
 // Real, honest step - App Builder's frontend is multiple real files
 // (unlike variant-bot's single HTML document), so this searches every
 // real file's content for each requested placeholder and replaces it
@@ -200,7 +203,7 @@ Images: where the design genuinely calls for a real photo or illustration (a her
 // else, one targeted rewrite takes those imports out (see lib/app-imports.js).
 async function keepSelfContained(files, plan) {
   const { files: out, remaining, repaired } = await repairExternalImports(files, async (system, user) => {
-    const res = await callClaude({ system, messages: [{ role: "user", content: user }], maxTokens: 14000, model: modelForTier(plan, { complex: true }), parse: (text) => text });
+    const res = await callClaude({ system, messages: [{ role: "user", content: user }], maxTokens: 14000, model: appCodeModel(plan), parse: (text) => text });
     return res.parsed; // the raw reply; lib/app-imports.js parses the file blocks itself
   });
   if (repaired) console.log(`[app-bot] Removed external imports from ${repaired} file(s).`);
@@ -299,13 +302,13 @@ async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStag
 
   notify("backend", "running", { model: "Claude" });
   const backendContent = await foldCorrection(`Business: ${prompt}\n\nDatabase schema:\n${schemaRes.parsed.schema}`);
-  const backendRes = await callClaude({ system: BACKEND_SYSTEM, messages: [{ role: "user", content: backendContent }], maxTokens: 6000, model: modelForTier(plan, { complex: true }), ...streamedFileStage("backend", notify) });
+  const backendRes = await callClaude({ system: BACKEND_SYSTEM, messages: [{ role: "user", content: backendContent }], maxTokens: 6000, model: appCodeModel(plan), ...streamedFileStage("backend", notify) });
   notify("backend", "complete", { files: backendRes.parsed.files, summary: backendRes.parsed.summary });
 
   const endpointList = backendRes.parsed.files.map((f) => f.path).join(", ");
   notify("frontend", "running", { model: "Claude" });
   const frontendContent = await foldCorrection(`Business: ${prompt}\n\nBackend files (for reference on what's available): ${endpointList}\n\n${businessInfoPrompt(businessInfo)}`);
-  const frontendRes = await callClaude({ system: frontendSystemFor(prompt), messages: [{ role: "user", content: frontendContent }], maxTokens: 14000, model: modelForTier(plan, { complex: true }), ...streamedFileStage("frontend", notify) });
+  const frontendRes = await callClaude({ system: frontendSystemFor(prompt), messages: [{ role: "user", content: frontendContent }], maxTokens: 14000, model: appCodeModel(plan), ...streamedFileStage("frontend", notify) });
   const withImages = await fulfillImageRequestsMultiFile(frontendRes.parsed.files, frontendRes.parsed.imageRequests);
   const frontendFiles = await keepSelfContained(withImages, plan);
   notify("frontend", "complete", { files: frontendFiles, summary: frontendRes.parsed.summary });
@@ -320,6 +323,112 @@ async function buildAppStaged(projectId, prompt, { dbEngine = "postgres", onStag
   };
 }
 
-module.exports = { buildApp, buildAppStaged };
+
+// ---------------------------------------------------------------------------
+// EDITING A FINISHED APP
+// A Pulse edit changes only the files it has to. The model sees the app's files (generated images,
+// which are inlined as base64 and can be millions of characters, are swapped for short tokens first
+// and put back afterwards), and answers with just the files that change or are new.
+// ---------------------------------------------------------------------------
+const EDIT_CONTEXT_CHARS = 90000;
+const SCHEMA_PATH = "database/schema.sql";
+
+const EDIT_SYSTEM = `You are a senior engineer making ONE change to an existing app. You are given the app's files and the change to make.
+${fileBlocksFormat()}
+Rules:
+- Output ONLY the files that change or are new, each one COMPLETE (the whole file, never a fragment, never "rest unchanged"). Do not output files that stay the same.
+- Change only what the instruction asks for. Keep the app's look, structure, file names and everything else exactly as they are.
+- Only change files whose content you can see below. A tool token such as [[DATA_1]] stands for an embedded image: keep it exactly where it is, or leave the file out.
+- The live preview can only load React and the app's own files: add no npm package imports other than react and react-dom.
+- Do not add images. New text, buttons, sections and pages are fine; for a new page keep the app's existing way of switching pages.
+- database/schema.sql, when shown, is the database schema; change it only if the instruction needs a new table or column.`;
+
+// Swaps long embedded data (images) for short tokens; returns the text and the way back.
+function stashDataUris(text, table) {
+  return String(text).replace(/data:[a-z]+\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/=]{200,}/gi, (uri) => {
+    let n = table.indexOf(uri);
+    if (n === -1) { table.push(uri); n = table.length - 1; }
+    return `[[DATA_${n + 1}]]`;
+  });
+}
+function restoreDataUris(text, table) {
+  return String(text).replace(/\[\[DATA_(\d+)\]\]/g, (all, n) => table[Number(n) - 1] || BLANK_PIXEL);
+}
+
+// Which list a NEW file belongs in (an existing path stays where it is).
+function areaForNewPath(path) {
+  if (/^backend\//.test(path)) return "backend";
+  if (/^frontend\//.test(path)) return "frontend";
+  if (/^(server|index)\.(js|ts|cjs|mjs)$/.test(path) || /^(routes|controllers|models|middleware|db|config|services|api)\//.test(path) || /\.sql$/.test(path)) return "backend";
+  return "frontend";
+}
+const bareName = (path) => path.replace(/^(?:backend|frontend)\//, "");
+
+/**
+ * editApp(appFiles, instruction, { plan, businessInfo })
+ *  -> { appFiles, changed: [paths], skipped: [paths], summary }
+ * Never changes the appFiles it is given. Throws when nothing usable came back.
+ */
+async function editApp(appFiles, instruction, { plan, businessInfo = null, call = callClaude } = {}) {
+  const frontend = Array.isArray(appFiles && appFiles.frontend) ? appFiles.frontend : [];
+  const backend = Array.isArray(appFiles && appFiles.backend) ? appFiles.backend : [];
+  const database = (appFiles && appFiles.database) || null;
+  if (!frontend.length && !backend.length) throw new Error("There is no app to edit yet.");
+
+  const table = [];
+  const shown = [];
+  let budget = EDIT_CONTEXT_CHARS;
+  const unseen = [];
+  const entries = [...frontend, ...backend].map((f) => ({ path: f.path, content: String(f.content) }));
+  if (database && typeof database.schema === "string" && database.schema.trim()) entries.push({ path: SCHEMA_PATH, content: database.schema });
+  for (const f of entries) {
+    const body = stashDataUris(f.content, table);
+    if (body.length <= budget) { shown.push(`<<<FILE ${f.path}>>>\n${body}\n<<<END FILE>>>`); budget -= body.length; }
+    else unseen.push(f.path);
+  }
+  const user = `${businessInfo ? businessInfoPrompt(businessInfo) + "\n\n" : ""}THE APP'S FILES:\n${shown.join("\n")}${unseen.length ? `\n\nFiles you cannot see (do not change them): ${unseen.join(", ")}` : ""}\n\nTHE CHANGE TO MAKE: ${instruction}`;
+
+  const res = await call({ system: EDIT_SYSTEM, messages: [{ role: "user", content: user }], maxTokens: 14000, model: appCodeModel(plan), parse: parseFileBlocks });
+  const returned = removeStrayFileTags(res.parsed.files).map((f) => ({ path: f.path.trim(), content: restoreDataUris(f.content, table) }));
+
+  const out = { frontend: frontend.map((f) => ({ ...f })), backend: backend.map((f) => ({ ...f })), database: database ? { ...database } : null };
+  const changed = [];
+  const skipped = [];
+  const touchedFrontend = [];
+  for (const f of returned) {
+    if (unseen.includes(f.path)) { skipped.push(f.path); continue; }
+    if (f.path === SCHEMA_PATH) {
+      if (out.database && out.database.schema !== f.content) { out.database.schema = f.content; changed.push(f.path); }
+      continue;
+    }
+    const inFront = out.frontend.findIndex((x) => x.path === f.path || x.path === bareName(f.path));
+    const inBack = out.backend.findIndex((x) => x.path === f.path || x.path === bareName(f.path));
+    const list = inFront !== -1 ? "frontend" : inBack !== -1 ? "backend" : areaForNewPath(f.path);
+    const idx = inFront !== -1 ? inFront : inBack;
+    const old = idx === -1 ? null : out[list][idx];
+    // A file that comes back far shorter than it was is cut off, not edited: the old one stays.
+    if (old && old.content.length > 800 && f.content.length < old.content.length * 0.5) { skipped.push(f.path); continue; }
+    if (old && old.content === f.content) continue;
+    const file = { path: old ? old.path : bareName(f.path), content: f.content };
+    if (old) out[list][idx] = file; else out[list].push(file);
+    changed.push(file.path);
+    if (list === "frontend") touchedFrontend.push(file);
+  }
+  if (!changed.length) {
+    throw new Error(skipped.length ? "The change came back incomplete, so nothing was changed. Please try again." : "That change didn't alter anything. Try describing it a little differently.");
+  }
+
+  // The preview loads only React and the app's own files: the changed files get the same import check as a build.
+  if (touchedFrontend.length) {
+    const fixed = await keepSelfContained(touchedFrontend, plan);
+    for (const f of fixed) {
+      const i = out.frontend.findIndex((x) => x.path === f.path);
+      if (i !== -1) out.frontend[i] = f;
+    }
+  }
+  return { appFiles: out, changed, skipped, summary: res.parsed.summary || `Changed ${changed.length} file${changed.length === 1 ? "" : "s"}.` };
+}
+
+module.exports = { buildApp, buildAppStaged, editApp };
 // Exposed for tests only.
-module.exports._internal = { keepSelfContained, fulfillImageRequestsMultiFile, frontendSystemFor, BACKEND_SYSTEM, removeStrayFileTags };
+module.exports._internal = { stashDataUris, restoreDataUris, areaForNewPath, appCodeModel, keepSelfContained, fulfillImageRequestsMultiFile, frontendSystemFor, BACKEND_SYSTEM, removeStrayFileTags };

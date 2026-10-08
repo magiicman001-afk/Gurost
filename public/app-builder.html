@@ -813,9 +813,9 @@ async function pauseBuild() {
   }
 }
 
-// Real correction - same two genuine, distinct real paths as before:
-// mid-generation (pause gate already open, correct+resume) vs
-// post-completion (full regenerate with the correction folded in).
+// Real correction - two distinct paths: mid-generation (pause gate
+// already open, correct+resume) vs post-completion (only the files the
+// change needs are rewritten, via /api/app-builder/edit).
 // Exactly the same real logic, just taking the instruction as a
 // parameter instead of reading a page-local textarea, so the future
 // Pulse widget can call this directly.
@@ -835,14 +835,26 @@ async function applyCorrection(instruction) {
     return;
   }
 
-  if (!originalPrompt) throw new Error("No active project - generate an app first.");
-  const combinedPrompt = `${originalPrompt}\n\nAdditional correction: ${correction}`;
-  await generateApp(combinedPrompt);
+  if (!projectId) throw new Error("No active project - generate an app first.");
+  // A finished app is edited in place: only the files the change needs are rewritten (no rebuild,
+  // no company-details question). The promise settles when the edit is really finished.
+  let result;
+  try {
+    result = await GurostAPI.call('/api/app-builder/edit', { method: 'POST', body: { projectId, instruction: correction } });
+  } catch (err) {
+    logBot('Pulse', `That edit didn't work: ${err.message}`, 'fail');
+    throw err;
+  }
+  currentAppFiles = result.appFiles;
+  renderLivePreview(currentAppFiles);
+  renderCodeView(currentAppFiles);
+  const n = (result.changed || []).length;
+  logBot('Pulse', `${result.summary || 'Edit applied.'} (${n} file${n === 1 ? '' : 's'} changed: ${(result.changed || []).slice(0, 6).join(', ')}${n > 6 ? ', …' : ''}. Not re-checked; use Undo if it is not right.)`, 'ok');
 
   try {
-    await speakTextViaRest(`Done. Your app has been rebuilt with that change.`);
+    await speakTextViaRest(`Done. Your app has been updated.`);
   } catch {
-    // TTS is a nice-to-have on top of the already-completed rebuild —
+    // TTS is a nice-to-have on top of the already-completed edit —
     // never block or error the actual result over a failed voice reply.
   }
 }
@@ -896,8 +908,19 @@ function applyHistoryRestore(restoreData) {
   renderCodeView(currentAppFiles);
 }
 
+// For Pulse: resolves only when the build has really finished (or throws why it stopped), so Pulse
+// never says "Built" while the app is still being made. The page's own buttons keep using generateApp.
+async function generateAndWait(promptText, opts) {
+  await generateApp(promptText, opts);
+  const started = Date.now();
+  while (isGenerating && Date.now() - started < 12 * 60 * 1000) await new Promise((r) => setTimeout(r, 500));
+  if (isGenerating) throw new Error('The build is taking longer than expected. Check the progress panel.');
+  const banner = document.getElementById('appBuilderErrorBanner');
+  if (banner && !banner.classList.contains('hidden')) throw new Error(document.getElementById('appBuilderErrorText')?.textContent || 'The build did not finish.');
+}
+
 window.gurostBuilder = {
-  generate: generateApp,
+  generate: generateAndWait,
   correct: applyCorrection,
   pause: pauseBuild,
   hasActiveProject: () => !!projectId,

@@ -120,10 +120,11 @@
     bar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
   }
 
-  // Suggestion box (Website Builder only): up to 3 friendly ideas from the server, which checks the
+  // Suggestion box (Website Builder and App Builder): up to 3 friendly ideas from the server, which checks the
   // finished site's own HTML (no AI, no cost). "Add" sends the idea through the normal Pulse edit, so
   // it is undoable like any edit; "Maybe later" hides it for 7 days. Both answers are recorded.
   const onWebsiteBuilder = /\/builder(\.html)?$/.test(location.pathname);
+  const onSuggestionPage = /\/(builder|app-builder)(\.html)?$/.test(location.pathname); // websites and apps
 
   function answerSuggestion(projectId, id, action) {
     if (!window.GurostAPI || !projectId) return;
@@ -177,7 +178,7 @@
     const box = document.getElementById('pulseSuggestion');
     if (!box) return;
     const projectId = window.gurostBuilder?.getProjectId?.();
-    if (!onWebsiteBuilder || !projectId || !window.GurostAPI) { box.classList.remove('visible'); return; }
+    if (!onSuggestionPage || !projectId || !window.GurostAPI) { box.classList.remove('visible'); return; }
     try {
       const r = await window.GurostAPI.call(`/api/project/${projectId}/suggestions`);
       renderSuggestions(projectId, r && r.suggestions);
@@ -1012,6 +1013,7 @@
     });
     refreshSubmissionBadge();
     setInterval(refreshSubmissionBadge, 60000);
+    setTimeout(checkForRealSuggestion, 3000); // a finished project opened from the dashboard gets its ideas too, not only after the next edit
 
     document.getElementById('actSave').addEventListener('click', () => runAction('save', async () => {
       await gb.save();

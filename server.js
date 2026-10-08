@@ -1617,6 +1617,45 @@ app.post("/api/app-builder/resume", security.rejectUnknownFields(["projectId"]),
   res.json({ resumed: true });
 });
 
+// A Pulse edit on a FINISHED app: only the files the change needs are rewritten (the old way rebuilt the
+// whole app from the original prompt and asked for the company details again). Undoable like any edit.
+// Not re-reviewed or re-run in the sandbox: the answer says so, and the person can use Undo.
+app.post("/api/app-builder/edit", security.rejectUnknownFields(["projectId", "instruction"]), async (req, res) => {
+  const instruction = security.sanitizeText(req.body.instruction || "", 2000).trim();
+  if (!instruction) return res.status(400).json({ error: "Missing 'instruction'." });
+  const project = getProject(req.body.projectId, req, res);
+  if (!project) return;
+  const af = project.appFiles;
+  if (project.type !== "app" || !af || (!(af.frontend || []).length && !(af.backend || []).length)) {
+    return res.status(400).json({ error: "There is no finished app to edit yet." });
+  }
+  if (project.state !== "DONE") return res.status(409).json({ error: "The app is still being built. Wait for it to finish, or send the change while it builds." });
+
+  let recover = false;
+  try {
+    transition(project, "CORRECTING");
+    recover = true;
+    const result = await withProjectLock(req.body.projectId, async () => {
+      const r = await appBot.editApp(project.appFiles, instruction, { plan: req.user.plan, businessInfo: project.businessInfo || null });
+      pushUndoSnapshot(project, "correct");
+      project.appFiles = cleanAppFiles(r.appFiles, { where: "app edit", projectId: req.body.projectId });
+      project.history.push({ type: "correction", summary: r.summary, method: "app-patch", ts: Date.now() });
+      return r;
+    });
+    transition(project, "RESUMING");
+    transition(project, "DONE");
+    recover = false;
+    persistInBackground(req.body.projectId, project);
+    logPulseInteraction(req.user.id, req.body.projectId, "correct-app", instruction);
+    res.json({ projectId: req.body.projectId, appFiles: project.appFiles, changed: result.changed, summary: result.summary, state: project.state, rechecked: false });
+  } catch (err) {
+    // A failed edit must not strand the project in CORRECTING (every later edit would fail too).
+    if (recover && project.state === "CORRECTING") { transition(project, "RESUMING"); transition(project, "DONE"); }
+    console.error(`[app-builder] Edit failed for project ${req.body.projectId}:`, err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ---------------------------------------------------------------------------
 // SELECT — lock in a variant
 // ---------------------------------------------------------------------------
@@ -4607,6 +4646,9 @@ function githubFilesFor(project) {
   if (project.type === "app") {
     const list = (arr, dir) => (Array.isArray(arr) ? arr : []).filter((f) => f && typeof f.path === "string" && typeof f.content === "string").map((f) => ({ path: `${dir}/${safePath(f.path)}`, content: f.content }));
     const files = [...list(project.appFiles?.backend, "backend"), ...list(project.appFiles?.frontend, "frontend")];
+    // The database schema is part of the app, so it is part of the backup.
+    const schema = project.appFiles?.database?.schema;
+    if (typeof schema === "string" && schema.trim()) files.push({ path: "database/schema.sql", content: schema });
     return files.length ? files : null;
   }
   return project.currentHtml ? siteFiles(project).files : null;
