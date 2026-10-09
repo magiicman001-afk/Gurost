@@ -31,18 +31,19 @@ const NO_CREDIT = { status: 402, body: { error: { message: "in_flight_budget_exh
 const MSGS = [{ role: "user", content: "build it" }];
 
 test("no free keys set: nothing changes - the OpenRouter error comes straight back", async () => {
-  const calls = mockFetch({ "openrouter.ai": [NO_CREDIT] });
-  await assert.rejects(callOpenRouter({ model: "z-ai/glm-5.2", messages: MSGS }), (e) => e.status === 402);
-  assert.equal(calls.length, 1);
+  const calls = mockFetch({ "openrouter.ai": [NO_CREDIT, NO_CREDIT] }); // the paid chain, then the free-model rescue
+  await assert.rejects(callOpenRouter({ model: "z-ai/glm-5.2", messages: MSGS }), (e) => e.status === 402 && !e.freeProvidersFailed && !/free providers/.test(e.message));
+  assert.equal(calls.length, 2);
+  assert.ok(calls.every((c) => new URL(c.url).host === "openrouter.ai"), "no outside provider is contacted without a key");
 });
 
 test("out of OpenRouter credit -> the first free provider with a key answers, with its own URL, key and model", async () => {
   process.env.FREE_GEMINI_API_KEY = "gem-key";
-  const calls = mockFetch({ "openrouter.ai": [NO_CREDIT], "generativelanguage.googleapis.com": [{ body: okBody("gemini-2.5-flash", "<html>site</html>") }] });
+  const calls = mockFetch({ "openrouter.ai": [NO_CREDIT, NO_CREDIT], "generativelanguage.googleapis.com": [{ body: okBody("gemini-2.5-flash", "<html>site</html>") }] });
   const r = await callOpenRouter({ model: "z-ai/glm-5.2", messages: MSGS, maxTokens: 50000, reasoningOff: true });
   assert.equal(r.text, "<html>site</html>");
   assert.equal(r.model, "gemini-2.5-flash");
-  const g = calls[1];
+  const g = calls[2];
   assert.equal(g.url, "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions");
   assert.equal(g.auth, "Bearer gem-key");
   assert.equal(g.body.model, "gemini-2.5-flash");
@@ -55,7 +56,7 @@ test("out of OpenRouter credit -> the first free provider with a key answers, wi
 test("a provider that fails (rate limit, retired model, bad key) -> the next one answers; a failed one rests", async () => {
   process.env.FREE_GEMINI_API_KEY = "g"; process.env.FREE_MISTRAL_API_KEY = "m"; process.env.FREE_CEREBRAS_API_KEY = "c";
   const calls = mockFetch({
-    "openrouter.ai": [NO_CREDIT, NO_CREDIT],
+    "openrouter.ai": [NO_CREDIT, NO_CREDIT, NO_CREDIT, NO_CREDIT],
     "generativelanguage": [{ status: 404, body: { error: "model not found" } }],
     "mistral.ai": [{ status: 429 }],
     "cerebras.ai": [{ body: okBody("gpt-oss-120b", "from cerebras") }, { body: okBody("gpt-oss-120b", "again") }]
@@ -65,18 +66,18 @@ test("a provider that fails (rate limit, retired model, bad key) -> the next one
   const r2 = await callOpenRouter({ model: "z-ai/glm-5.2", messages: MSGS });
   assert.equal(r2.text, "again");
   const hosts = calls.map((c) => new URL(c.url).host);
-  assert.deepEqual(hosts, ["openrouter.ai", "generativelanguage.googleapis.com", "api.mistral.ai", "api.cerebras.ai", "openrouter.ai", "api.cerebras.ai"], "the second call skips the two that just failed");
+  assert.deepEqual(hosts, ["openrouter.ai", "openrouter.ai", "generativelanguage.googleapis.com", "api.mistral.ai", "api.cerebras.ai", "openrouter.ai", "openrouter.ai", "api.cerebras.ai"], "the second call skips the two that just failed");
 });
 
 test("every free provider fails too -> the caller gets the original plain OpenRouter error", async () => {
   process.env.FREE_GEMINI_API_KEY = "g";
-  mockFetch({ "openrouter.ai": [NO_CREDIT], "generativelanguage": [{ status: 500 }] });
-  await assert.rejects(callOpenRouter({ model: "z-ai/glm-5.2", messages: MSGS }), (e) => e.status === 402);
+  mockFetch({ "openrouter.ai": [NO_CREDIT, NO_CREDIT], "generativelanguage": [{ status: 500 }] });
+  await assert.rejects(callOpenRouter({ model: "z-ai/glm-5.2", messages: MSGS }), (e) => e.status === 402 && e.freeProvidersFailed === true && /free providers also failed: gemini/.test(e.message));
 });
 
 test("a free provider's reply that is cut off or empty counts as a miss and the next provider is tried", async () => {
   process.env.FREE_GEMINI_API_KEY = "g"; process.env.FREE_MISTRAL_API_KEY = "m";
-  mockFetch({ "openrouter.ai": [NO_CREDIT], "generativelanguage": [{ body: okBody("gemini-2.5-flash", "half", "length") }], "mistral.ai": [{ body: okBody("codestral-latest", "whole") }] });
+  mockFetch({ "openrouter.ai": [NO_CREDIT, NO_CREDIT], "generativelanguage": [{ body: okBody("gemini-2.5-flash", "half", "length") }], "mistral.ai": [{ body: okBody("codestral-latest", "whole") }] });
   const r = await callOpenRouter({ model: "z-ai/glm-5.2", messages: MSGS });
   assert.equal(r.text, "whole");
   assert.equal(r.skipped[0].why, "cut-off");
@@ -121,4 +122,21 @@ test("streaming works against a free provider (same SSE format) and sends the st
   assert.deepEqual(seen, ["he", "llo"]);
   assert.equal(body.stream, true);
   assert.deepEqual(body.stream_options, { include_usage: true });
+});
+
+test("a paid-only chain (Max / Custom, admin) that runs out of credit gets the free models before the build fails", async () => {
+  const calls = mockFetch({ "openrouter.ai": [NO_CREDIT, { body: okBody("nvidia/nemotron-3-super-120b-a12b:free", "free answer") }] });
+  const r = await callOpenRouter({ model: "anthropic/claude-sonnet-5", messages: MSGS });
+  assert.equal(r.text, "free answer");
+  assert.equal(calls.length, 2);
+  assert.ok(String(calls[1].body.model || calls[1].body.models).includes(":free"), "second request is the free models");
+  assert.ok(!String(calls[1].body.models || calls[1].body.model).includes("sonnet"), "the paid model is not in it");
+});
+
+test("the free-provider log line names the model and what it was for", async () => {
+  process.env.FREE_GEMINI_API_KEY = "g";
+  mockFetch({ "openrouter.ai": [NO_CREDIT, NO_CREDIT], "generativelanguage": [{ body: okBody("gemini-2.5-flash", "ok") }] });
+  const lines = []; const orig = console.log; console.log = (...a) => { lines.push(a.join(" ")); };
+  try { await callOpenRouter({ model: "z-ai/glm-5.2", messages: MSGS, label: "app-backend" }); } finally { console.log = orig; }
+  assert.ok(lines.some((l) => /^\[free-llm\] answered by gemini \(gemini-2\.5-flash\) for app-backend/.test(l)), lines.join("|"));
 });

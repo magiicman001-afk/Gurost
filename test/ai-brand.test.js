@@ -44,8 +44,7 @@ test("publicText turns model-naming text into a friendly line and leaves everyth
   assert.equal(F.publicText("Your site is ready."), "Your site is ready.");
   assert.equal(F.publicText(null), "");
   assert.equal(F.publicText('OpenRouter error (500) calling model "z-ai/glm-5.2": boom'), N + " hit a snag. Please try again in a moment.");
-  assert.equal(F.publicText("Gemini paused after a payment/quota error"), N + " is very busy right now. Please try again in a little while.");
-  assert.equal(F.publicText("OpenRouter error (402)"), N + " is very busy right now. Please try again in a little while.");
+  assert.equal(F.publicText("Gemini paused after a payment/quota error"), "Our AI credits ran low. Top up to keep building.");
   for (const t of ['Claude said no', "FLUX image failed (500)", "GPT-4 timeout", "deepseek/deepseek-v4 returned empty"]) assert.equal(F.mentionsModel(F.publicText(t)), false, t);
 });
 
@@ -78,4 +77,17 @@ test("the end-of-build report: time, what was found and fixed, what needs attent
   assert.match(unchecked[1], /couldn't confirm/);
   assert.equal(unchecked.some((l) => /issue/.test(l)), false, "no issue counts when the checks did not run");
   assert.deepEqual(F.buildSummary(null), ["Build complete (0s)."]);
+});
+
+test("publicText says what actually went wrong: no credit, today's limit, unavailable, or every provider down", () => {
+  const credit = "Our AI credits ran low. Top up to keep building.";
+  assert.equal(F.publicText('OpenRouter error (402) calling model "anthropic/claude-sonnet-5": {"error":{"message":"Insufficient credits."}}'), credit);
+  assert.equal(F.publicText("OpenRouter error (402)"), credit);
+  assert.equal(F.publicText('OpenRouter error (429) calling model "google/gemma-4-31b-it:free": rate limited'), "We've hit today's free limit. Please try again tomorrow or top up.");
+  assert.equal(F.publicText("All free models are busy. Please retry in 30 seconds."), "Our AI is temporarily unavailable. Try again in a moment.");
+  assert.equal(F.publicText('OpenRouter error (503) calling model "z-ai/glm-5.2": down'), "Our AI is temporarily unavailable. Try again in a moment.");
+  assert.equal(F.publicText('OpenRouter error (402) calling model "x": no credit [the free providers also failed: gemini, mistral]'), "All AI providers are temporarily unavailable. Please try again.");
+  assert.equal(F.publicText("Something odd from Gemini"), N + " hit a snag. Please try again in a moment.");
+  for (const t of ["Add a credit card form", "Your quota page is ready", "Models for sale: 402 Main St"]) assert.equal(F.publicText(t), t, "ordinary text is untouched: " + t);
+  for (const t of ["OpenRouter error (402)", "All free models are busy.", "[the free providers also failed: gemini]"]) assert.ok(!F.publicText(t).includes(N + " is very busy"), "never the old generic line");
 });

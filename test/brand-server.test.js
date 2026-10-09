@@ -23,7 +23,7 @@ test("server payloads: model names dropped from the envelope, error text scrubbe
   assert.equal(out.data.other, 1);
   assert.equal(out.data.schema.cars[0].model, "Civic", "a user's own 'model' field survives");
   assert.equal(out.issues[0].title, "Claude's Bakery menu", "user text survives");
-  assert.equal(out.error, N + " is very busy right now. Please try again in a little while.");
+  assert.equal(out.error, "Our AI credits ran low. Top up to keep building.");
   assert.equal(input.modelUsed, "Claude", "the original is not changed");
   assert.equal(publicPayload(null), null);
   assert.deepEqual(publicPayload([1, "a"]), [1, "a"]);

@@ -48,15 +48,33 @@
     return true;
   }
 
-  var CAPACITY_RE = /\b(402|429|credit|credits|quota|billing|payment|rate.?limit|RESOURCE_EXHAUSTED|overloaded|capacity)\b/i;
+  // What went wrong upstream, in plain words, so the person is told the true thing. The order matters:
+  // "the free providers also failed" beats "no credit", which beats "rate limit", which beats the rest.
+  var FREE_FAILED_RE = /free providers also failed/i;
+  var NO_CREDIT_RE = /\b(402|insufficient credits?|out of credits?|no credits?|credits? (?:ran|have run) (?:low|out)|payment|billing)\b/i;
+  var RATE_LIMIT_RE = /\b(429|rate.?limit(?:ed)?|too many requests|quota|RESOURCE_EXHAUSTED)\b/i;
+  var BUSY_RE = /\b(overloaded|capacity|(?:all|every) (?:free )?models? (?:are busy|returned empty|failed)|models? are busy|503|502|504)\b/i;
+  // Text that came from an upstream AI call even when no model is named in it.
+  var UPSTREAM_RE = /free providers also failed|error \((?:402|429|5\d\d)\)|insufficient credits?|(?:all|every) (?:free )?models? (?:are busy|returned empty|failed)/i;
 
-  // Text that is safe to show a person. Anything naming a model or provider becomes a
-  // friendly line (the full error stays in the server log).
+  var MESSAGES = {
+    freeFailed: "All AI providers are temporarily unavailable. Please try again.",
+    noCredit: "Our AI credits ran low. Top up to keep building.",
+    rateLimit: "We've hit today's free limit. Please try again tomorrow or top up.",
+    busy: "Our AI is temporarily unavailable. Try again in a moment.",
+    snag: NAME + " hit a snag. Please try again in a moment."
+  };
+
+  // Text that is safe to show a person. Anything naming a model or provider, or coming from a failed AI call,
+  // becomes a plain line saying what actually happened (the full error stays in the server log).
   function publicText(text) {
     var s = String(text == null ? "" : text);
-    if (!mentionsModel(s)) return s;
-    if (CAPACITY_RE.test(s)) return NAME + " is very busy right now. Please try again in a little while.";
-    return NAME + " hit a snag. Please try again in a moment.";
+    if (!mentionsModel(s) && !UPSTREAM_RE.test(s)) return s;
+    if (FREE_FAILED_RE.test(s)) return MESSAGES.freeFailed;
+    if (NO_CREDIT_RE.test(s)) return MESSAGES.noCredit;
+    if (RATE_LIMIT_RE.test(s)) return MESSAGES.rateLimit;
+    if (BUSY_RE.test(s)) return MESSAGES.busy;
+    return MESSAGES.snag;
   }
 
   var STATUS = {
