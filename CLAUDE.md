@@ -84,6 +84,14 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
   no company form, honest "add a page" reply).
 - Bug L cause not proven: the dashboard was reported slow (30s+); the page now loads in
   parallel and `[dashboard] /api/projects took Xms` logs the server side. Read that line.
+- RISK (S3a/S3d, WebSocket auth vs the App Builder reconnect, `ef392a6`): the page re-opens
+  `/ws/guide` on every drop (`connectGenerationSocket` / `scheduleReconnect` in `app-builder.html`).
+  If S3a authenticates the socket with a short-lived ticket or token, every retry must fetch a
+  FRESH one, or a reconnect after ~15 minutes fails silently: the build keeps running but the
+  page looks dead. An auth-error close must STOP the retry loop and send the person to login,
+  not retry forever. `builder.html` and `shared/pulse-voice.js` also open `/ws/guide` (no
+  reconnect there) and pass a client-supplied `userId` in the URL. When S3a lands: pull, check
+  how the socket is authenticated, and fix the reconnect BEFORE S3a goes live.
 - Unverified live: GLM frontend speed, early app preview (App Builder), Website Builder
   design painting at once, WebSocket reconnect.
 
