@@ -82,6 +82,7 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
 - Bug P: the bots all show as "Gurost Core" - each should speak with its own avatar and name.
 - Bug Q: verify Bug H on the live site (Pulse on an existing project: "Pick a design first",
   no company form, honest "add a page" reply).
+- Bug U (HIGH): built sites use anchor-scroll instead of real page navigation. Clicking an item (e.g. "birthday cake") only scrolls the one page; it should open a real page (e.g. `/order-birthday-cake`) with a pre-filled form. Cause not yet traced (hypothesis: single-file output with `href="#..."` links). Fix inside Website Builder V2 (multi-page output plus a dead-link / `href="#"` check in the quality gate), not as a quick patch. See `docs/ADMIN_AREA_SPEC.md` section 6.
 - Bug L cause not proven: the dashboard was reported slow (30s+); the page now loads in
   parallel and `[dashboard] /api/projects took Xms` logs the server side. Read that line.
 - RISK (S3a/S3d, WebSocket auth vs the App Builder reconnect, `ef392a6`): the page re-opens
