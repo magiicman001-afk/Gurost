@@ -514,7 +514,7 @@ function logStage(msg) {
   else if (msg.stage === 'done' && msg.status === 'complete') {
     // One feed: the helpers' lines, then the build report, then the sign-off, all from the same place.
     if (msg.data?.report) GurostAI.buildSummary(msg.data.report).forEach((line) => logBot('Builder', line, 'info', msg.at));
-    logBot('Builder', `Built your app. It's in the preview on the left. ${GurostAI.VOICE.ready}`, 'ok', msg.at);
+    logBot('Launch', `Built your app. It's in the preview on the left. ${GurostAI.VOICE.ready}`, 'ok', msg.at);
   }
   else if (msg.stage === 'fixing' && msg.status === 'running' && msg.data?.issueCount) logBot(bot, `The review found ${msg.data.issueCount} issue${msg.data.issueCount === 1 ? '' : 's'}. Fixing…`, 'work', msg.at);
   else if (msg.status === 'running') logBot(bot, `${label}…`, 'work', msg.at);

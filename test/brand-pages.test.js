@@ -11,9 +11,11 @@ const read = (f) => fs.readFileSync(path.join(PUB, f), "utf8");
 test("every speaker the builders use is a known one (no stray provider names, no default robot avatar)", () => {
   const panel = read("shared/bot-conversation.js");
   const known = new Set([...panel.matchAll(/^\s*(?:'([^']+)'|(\w+)):\s*\{ emoji:/gm)].map((m) => m[1] || m[2]));
-  const roles = new Set([...panel.slice(panel.indexOf("const AI_ROLES"), panel.indexOf("const AI_COLOR")).matchAll(/(?:'([^']+)'|\b(\w+)):\s*'/g)].map((m) => m[1] || m[2]));
+  const faces = panel.slice(panel.indexOf("const BOT_FACES"), panel.indexOf("const BOT_TONES"));
+  const roles = new Set([...faces.matchAll(/^\s*(?:'([^']+)'|(\w+)):\s*\{ name:/gm)].map((m) => m[1] || m[2]));
   assert.ok(known.has("Pulse") && known.has("You") && known.has("Images"));
   assert.ok(!known.has("Gemini") && !roles.has("Gemini"), "no model name as a speaker");
+  for (const img of faces.matchAll(/img: '(\w+)'/g)) assert.ok(fs.existsSync(path.join(PUB, "avatars", img[1] + ".png")), `avatar file for ${img[1]}`);
   for (const f of ["builder.html", "app-builder.html"]) {
     const src = read(f);
     const used = new Set([...src.matchAll(/\b(?:logBot|log)\(\s*'([^']+)'/g)].map((m) => m[1]));

@@ -21,6 +21,7 @@ const BOT_AVATARS = {
   'Stock video': { emoji: '🎬', color: '#f472b6' },
   'Guide Bot': { emoji: '🧭', color: '#34d399' },
   Pulse: { emoji: '⚡', color: '#facc15' },
+  Launch: { emoji: '🚀', color: '#4ade80' },
   // App Builder stages
   Schema: { emoji: '🗄️', color: '#38bdf8' },
   Backend: { emoji: '⚙️', color: '#fb923c' },
@@ -29,14 +30,28 @@ const BOT_AVATARS = {
   Verifier: { emoji: '🧪', color: '#34d399' },
   You: { emoji: '🙂', color: '#e5e7eb' }
 };
-// Every AI helper speaks under the AI's one name (shared/ai-brand.js, set in brand-config.js); the helper's job is
-// a small tag beside the name. Pulse and You keep their own names.
-const AI_ROLES = {
-  Planner: 'Planner', Industry: 'Industry', Designer: 'Designer', Builder: 'Builder', Images: 'Images',
-  'Stock photos': 'Photos', 'Stock video': 'Video', 'Guide Bot': 'Guide',
-  Schema: 'Schema', Backend: 'Backend', Frontend: 'Frontend', Reviewer: 'Reviewer', Verifier: 'Verifier'
+// Each helper speaks as its own bot: its own face (public/avatars/*.png) and its own name. Several log names
+// share one bot: image and video lookups are Research, the quality checks are Review, the App Builder stages
+// are the bot that does that kind of work. Text colours are lighter tints of each bot's colour so they read
+// on the dark panel. Pulse and You are not in this list: Pulse has a face too, You keeps the emoji.
+const BOT_FACES = {
+  Planner: { name: 'Planner', img: 'planner', color: '#7aa2e3' },
+  Designer: { name: 'Designer', img: 'designer', color: '#fb7185' },
+  Industry: { name: 'Industry', img: 'industry', color: '#2dd4bf' },
+  Builder: { name: 'Builder', img: 'builder', color: '#fb923c' },
+  Pulse: { name: 'Pulse', img: 'pulse', color: '#fbbf24' },
+  Images: { name: 'Research', img: 'research', color: '#a78bfa' },
+  'Stock photos': { name: 'Research', img: 'research', color: '#a78bfa' },
+  'Stock video': { name: 'Research', img: 'research', color: '#a78bfa' },
+  'Guide Bot': { name: 'Review', img: 'review', color: '#f87171' },
+  Reviewer: { name: 'Review', img: 'review', color: '#f87171' },
+  Verifier: { name: 'Review', img: 'review', color: '#f87171' },
+  Launch: { name: 'Launch', img: 'launch', color: '#4ade80' },
+  // App Builder stages
+  Schema: { name: 'Planner', img: 'planner', color: '#7aa2e3' },
+  Backend: { name: 'Builder', img: 'builder', color: '#fb923c' },
+  Frontend: { name: 'Designer', img: 'designer', color: '#fb7185' }
 };
-const AI_COLOR = '#FEB246';
 const BOT_TONES = {
   work: { icon: 'autorenew', color: 'text-[var(--gurost-primary)]' },
   ok: { icon: 'check_circle', color: 'text-green-400' },
@@ -60,12 +75,12 @@ function logBot(bot, text, tone = 'info', at = Date.now()) {
   const wrap = document.getElementById('botLog');
   const list = document.getElementById('botLogList');
   const avatar = BOT_AVATARS[bot] || { emoji: '🤖', color: '#cbd5e1' };
-  const aiRole = window.GurostAI ? AI_ROLES[bot] : null;
+  const face = BOT_FACES[bot] || null;
   // Error lines never name a model or provider (see GurostAI.publicText). Other lines are
   // written without them, and may echo what the person typed, which must stay as typed.
-  if (tone === 'fail' && window.GurostAI && (aiRole || bot === 'Pulse')) text = GurostAI.publicText(text);
-  const speaker = aiRole ? GurostAI.NAME : bot;
-  const speakerColor = aiRole ? AI_COLOR : avatar.color;
+  if (tone === 'fail' && window.GurostAI && face) text = GurostAI.publicText(text);
+  const speaker = face ? face.name : bot;
+  const speakerColor = face ? face.color : avatar.color;
   const status = BOT_TONES[tone] ? `<span class="material-symbols-outlined text-[13px] ${BOT_TONES[tone].color}">${BOT_TONES[tone].icon}</span>` : '';
   const time = new Date(at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const textClass = tone === 'fail' ? 'text-red-300' : 'text-white/85';
@@ -75,12 +90,12 @@ function logBot(bot, text, tone = 'info', at = Date.now()) {
   const li = document.createElement('li');
   li.className = `flex items-start gap-2.5 ${sameTurn ? '-mt-1' : 'mt-1'}`;
   li.innerHTML = `${sameTurn
-      ? '<span class="w-6 flex-shrink-0"></span>'
-      : aiRole
-        ? `<span class="w-6 h-6 flex items-center justify-center flex-shrink-0">${GurostAI.avatar(24)}</span>`
-        : `<span class="w-6 h-6 rounded-full flex items-center justify-center text-[13px] flex-shrink-0" style="background:${avatar.color}26; box-shadow: inset 0 0 0 1px ${avatar.color}55" aria-hidden="true">${avatar.emoji}</span>`}
+      ? '<span class="w-8 flex-shrink-0"></span>'
+      : face
+        ? `<img src="/avatars/${face.img}.png" width="32" height="32" alt="${escapeLogText(face.name)}" class="w-8 h-8 flex-shrink-0 object-contain">`
+        : `<span class="w-8 h-8 rounded-full flex items-center justify-center text-[15px] flex-shrink-0" style="background:${avatar.color}26; box-shadow: inset 0 0 0 1px ${avatar.color}55" aria-hidden="true">${avatar.emoji}</span>`}
     <div class="min-w-0 flex-1">
-      ${sameTurn ? '' : `<div class="flex items-center gap-2 leading-5"><span class="font-semibold text-[12px]" style="color:${speakerColor}">${escapeLogText(speaker)}</span>${aiRole ? `<span class="text-[10px] text-white/45">${escapeLogText(aiRole)}</span>` : ''}<span class="text-[10px] text-white/30">${time}</span></div>`}
+      ${sameTurn ? '' : `<div class="flex items-center gap-2 leading-5"><span class="font-semibold text-[12px]" style="color:${speakerColor}">${escapeLogText(speaker)}</span><span class="text-[10px] text-white/30">${time}</span></div>`}
       <p class="${textClass} text-[12.5px] leading-snug [overflow-wrap:anywhere] flex items-start gap-1.5">${status}<span>${escapeLogText(text)}</span></p>
     </div>`;
   const follow = isLogAtBottom();

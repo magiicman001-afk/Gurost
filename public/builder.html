@@ -439,7 +439,7 @@ async function useDesign() {
     renderPreview(currentHtml, { keepScroll: true });
     if (result.added?.length) logBot('Builder', `Added: ${result.added.join(', ')}.`, 'ok');
     await upgradePickedImages();
-    logBot('Builder', `${GurostAI.VOICE.ready} Refine it with Pulse any time.`, 'ok');
+    logBot('Launch', `${GurostAI.VOICE.ready} Refine it with Pulse any time.`, 'ok');
     // Pulse: the site exists now (generate() returns when the build starts).
     window.dispatchEvent(new CustomEvent('gurost:site-ready', { detail: { projectId } }));
     // Pulse checks the page you kept and offers fixes (plus anything you
