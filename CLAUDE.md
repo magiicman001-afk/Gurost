@@ -5,9 +5,26 @@ Live: https://gurost.onrender.com (Render service `srv-d9t3vbqfngtc73d49100`).
 Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
 (gitignored — this GitHub repo is PUBLIC, never commit credentials).
 
+## Priority and team (updated 2026-10-09)
+- CURRENT PRIORITY: the Website Builder to premium quality (design 8/10; it is about 4/10
+  today), THEN the App Builder. App Builder work waits until the Website Builder is
+  launch-ready, except fixes that already shipped.
+- Source of truth: `clean-main` on GitHub. Render auto-deploys from it, so nothing is
+  "live" until it is pushed, and anything not on GitHub can be lost with a machine.
+- Team: Irfan (boss, non-technical founder, tests on his phone), Web Claude (day builder),
+  Laptop Claude (evening tester and security work), DeepSeek (strategy / second opinion).
+  Web and Laptop Claude both read this file first. `git fetch` before starting anything
+  and check what the other has pushed, so work is not duplicated. (A shared
+  `TEAM_STATUS.md` was proposed but is not in the repo yet.)
+- Workflow: day build (Web Claude) -> evening test (Laptop Claude, Irfan on a phone) ->
+  fixes next day. A bad change is undone with `git revert` (small, logged), not by
+  holding commits back.
+
 ## RULES (critical — never violate)
 - Only commit to `clean-main` (it auto-deploys to Render). `main` is not used.
-- Show the diff before EVERY commit and wait for approval. Never auto-push.
+  Never force-push. `git fetch` before every push; rebase onto `origin/clean-main`.
+- PUSH RULE (since 2026-10-08): commit -> PUSH immediately. No held commits.
+  Show the diff before each commit; after the commit, push at once and report the hashes.
 - If a change touches more than 3 files, stop and ask first.
 - Screenshot every live test (Playwright MCP).
 - Never commit `.env`, `__auth-state.json` or `CLAUDE.local.md`.
@@ -21,8 +38,7 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
 - Pulse widget: `public/shared/pulse-widget.js` (13 action buttons, voice,
   Design Mode); routes in `server.js` (`/api/pulse`, `/api/project/:id/*`).
 - Business Assistant: `bots/assistant-bot.js` — Research, Email, Task, Code agents.
-- Models: `lib/tier-router.js` → `lib/openrouter-client.js`. Free tier is a
-  fallback list (gemma-4 :free → qwen3.8 :free → gpt-oss-20b).
+- Models: `lib/tier-router.js` → `lib/openrouter-client.js`. See "Model routing" below.
 - Images: ROOT `image-bot.js` (`generateImage` = Gemini first, OpenAI
   fallback). `bots/image-bot.js` is a stale unused copy.
 - Industry design: `lib/industry-design.js` + `lib/design-data/*.csv`
@@ -33,6 +49,43 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
   any output repeating 50+ chars of the system prompt.
 - Project state machine: `lib/state-machine.js`.
 - Projects live in an in-memory `PROJECTS` map (reset on every deploy).
+
+## Model routing (2026-10-09)
+- App Builder BACKEND, edits, Pulse: Kimi K2.6 first (`modelForAppCode`), then Sonnet 5,
+  GLM-5.2, Nemotron :free. `APP_CODE_MODEL=off` restores the old chain.
+- App Builder FRONTEND: GLM-5.2 first (`modelForAppFrontend`, ~130 tokens/s vs Kimi's ~27),
+  24,000-token budget; `APP_FRONTEND_MODEL` swaps it, `off` uses the Kimi chain. The first
+  live `[code-call] app-frontend` line (`secs=`, `chars/s=`) confirms the speed.
+- Free plan / no OpenRouter credit: the client drops to the `:free` entries (Nemotron).
+- Last resort (only when a key is set): `lib/free-llm-providers.js` - Gemini, Mistral
+  (Codestral), Cerebras, Groq free tiers, tried after OpenRouter has nothing left.
+  Env: `FREE_GEMINI_API_KEY`, `FREE_MISTRAL_API_KEY`, `FREE_CEREBRAS_API_KEY`,
+  `FREE_GROQ_API_KEY` (+ `FREE_<NAME>_MODEL` overrides). Log lines start `[free-llm]`.
+- Website Builder routing is unchanged; do not move it to Kimi without being asked.
+- Every code call logs `[code-call] <label> model=... stop=... chars=... secs=... chars/s=...`.
+
+## Status (2026-10-09)
+- Tests: 609 (607 pass in Web Claude's sandbox; `cors-policy` and `security-headers` need
+  `express` installed, which only the laptop has).
+- Security (audit 2026-10-08): items 1-3 DONE - `/shared/:token` runs sandboxed, security
+  headers on every page (CSP in report-only mode until `CSP_ENFORCE=1`), CORS allowlist
+  (form route stays open). Item 4 (S3: sessions table, short tokens, cookie login, logout
+  everywhere, admin) is IN PROGRESS with Laptop Claude: S3a WebSocket auth, S3b sessions
+  table, S3c server side, S3d browser side, S3e admin dashboard.
+- Money: OpenRouter balance is negative (paid models fail with 402); Gemini image API
+  prepayment is depleted. Both need topping up by Irfan.
+- Design-quality plan: stop asking the model to invent design. Build a section library
+  (GSAP + Lenis + React Bits) and industry design systems the model assembles from. Research
+  and blueprint first; no code until the blueprint is approved.
+
+## Known bugs (open)
+- Bug P: the bots all show as "Gurost Core" - each should speak with its own avatar and name.
+- Bug Q: verify Bug H on the live site (Pulse on an existing project: "Pick a design first",
+  no company form, honest "add a page" reply).
+- Bug L cause not proven: the dashboard was reported slow (30s+); the page now loads in
+  parallel and `[dashboard] /api/projects took Xms` logs the server side. Read that line.
+- Unverified live: GLM frontend speed, early app preview (App Builder), Website Builder
+  design painting at once, WebSocket reconnect.
 
 ## Verified live — 2026-09-30 (commit dcab3d1)
 - Website Builder: bakery build produced all 4 designs; thumbnails styled;
@@ -56,10 +109,8 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
    Undo / Redo / History can't be verified until edits work.
 2. Design Mode: can't reach the sandboxed preview iframe (no
    same-origin access) — needs a postMessage bridge like `code-boxes.js`.
-3. `/shared/:token` pages: helmet's default CSP (`script-src 'self'`)
-   blocks inline scripts and the Tailwind CDN, so shared sites render
-   unstyled. Don't just loosen CSP — shared HTML runs on the app origin;
-   serve it sandboxed (opaque origin) with its own CSP.
+3. `/shared/:token` pages: FIXED 2026-10-08 (4767729) - served sandboxed with their own CSP.
+   Confirm on a real shared link that the page is styled.
 4. Free-plan project limit counts only in-memory projects (resets each
    deploy) and there is no delete-project route, though the error tells
    users to delete one.
@@ -99,6 +150,10 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
   the .ics in a calendar app, a real admin login, `DEEPGRAM_API_KEY` on Render.
 
 ## Parked (do NOT build yet)
+- Section library (blueprint stage only): 15-25 sections x 3 variations, industry palettes,
+  GSAP + Lenis + React Bits animation. Taste Skill, Impeccable and awesome-design.md are
+  being researched as inputs. Nothing is built until Irfan approves the blueprint.
+- Cookie sessions / httpOnly (security S3): Laptop Claude's piece; do not start it from here.
 - Multi-language support (language picker, translated UI + Core messages, start
   with 10 languages). About a 2-3 day build; after the three builders are done.
 - Document reader (T3b), live streaming voice, OAuth for Gmail/Outlook/Calendar,
