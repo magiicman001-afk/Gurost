@@ -9,3 +9,6 @@ CLAUDE.local.md
 
 # DeepSeek review outputs (scripts/deepseek-review.js)
 reviews/
+
+# Claude Code local settings (hooks, personal config) - never commit to the public repo
+.claude/settings.local.json
