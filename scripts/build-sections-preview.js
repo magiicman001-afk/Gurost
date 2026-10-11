@@ -1,0 +1,219 @@
+#!/usr/bin/env node
+"use strict";
+// Builds public/sections-preview.html: one standalone page that shows Navbar, Hero and Footer (A/B/C) in the six
+// locked palettes, on light and dark backgrounds, at phone (375px) and desktop (1440px) widths.
+// Run: node scripts/build-sections-preview.js   (a test checks the committed file is up to date)
+const fs = require("fs");
+const path = require("path");
+const R = require("../lib/sections/render");
+
+const ROOT = path.join(__dirname, "..");
+const OUT = path.join(ROOT, "public", "sections-preview.html");
+const FIXED_NOW = new Date(Date.UTC(2026, 0, 1)); // keeps the build reproducible (the copyright year in the preview)
+
+const L = (label, href) => ({ label, href });
+const G = (title, ...labels) => ({ title, links: labels.map((l) => L(l, "#" + l.toLowerCase().replace(/\W+/g, "-"))) });
+
+// Sample copy only: it shows layout. No prices, ratings, years or numbers of customers anywhere.
+const SAMPLES = {
+  cafe: {
+    brand: "Luvky Bakes", links: ["Menu", "Our story", "Order", "Visit"], cta: "Call us", phone: "0113 496 0000",
+    eyebrow: "Bakery, Leeds", headline: "Fresh bread, baked every morning", subhead: "Small-batch sourdough and pastries, made by hand in the heart of town.",
+    cta2: "See the menu", brief: "Loaves of sourdough on a wooden counter", trust: "12 High Street, Leeds",
+    tagline: "Small-batch bread, baked daily.", address: "12 High Street, Leeds", email: "hello@luvky.example", hours: "Mon to Sat, early until mid-afternoon",
+    groups: [G("Explore", "Menu", "Our story", "Order"), G("Help", "Find us", "Contact")], ctaTitle: "Order for tomorrow",
+  },
+  law: {
+    brand: "Hartwell & Co", links: ["Services", "About", "Insights", "Contact"], cta: "Contact us", phone: "020 7946 0000",
+    eyebrow: "Solicitors, London", headline: "Clear advice when it matters most", subhead: "Property, family and business law explained in plain English by people who listen first.",
+    cta2: "Our services", brief: "A quiet, well-lit office with a desk and bookshelves", trust: "Bloomsbury, London",
+    tagline: "Plain-English legal advice.", address: "5 Gray's Inn Road, London", email: "enquiries@hartwell.example", hours: "Mon to Fri, office hours",
+    groups: [G("Practice", "Property", "Family", "Business"), G("Firm", "About", "Contact")], ctaTitle: "Speak to a solicitor",
+  },
+  salon: {
+    brand: "Maison Lune", links: ["Services", "Stylists", "Gallery", "Visit"], cta: "Book now", phone: "0161 496 0000",
+    eyebrow: "Hair studio, Manchester", headline: "Hair that feels like you", subhead: "Cuts, colour and care in a calm, welcoming studio.",
+    cta2: "View services", brief: "A stylist finishing a client's blow-dry in a bright studio", trust: "Northern Quarter, Manchester",
+    tagline: "A calm place to look and feel your best.", address: "8 Dale Street, Manchester", email: "hello@maisonlune.example", hours: "Tue to Sat, by appointment",
+    groups: [G("Studio", "Services", "Stylists", "Gallery"), G("Visit", "Find us", "Contact")], ctaTitle: "Book your next visit",
+  },
+  trades: {
+    brand: "Brightspark Electrical", links: ["Services", "Areas", "About", "Contact"], cta: "Call now", phone: "0121 496 0000",
+    eyebrow: "Electricians, Birmingham", headline: "Reliable electricians, on time", subhead: "Rewires, repairs and safety checks, done properly and tidied up after.",
+    cta2: "Get a quote", brief: "An electrician fitting a consumer unit in a home", trust: "Birmingham and surrounding areas",
+    tagline: "Safe, tidy, dependable electrical work.", address: "Unit 4, Soho Road, Birmingham", email: "jobs@brightspark.example", hours: "Mon to Sat, call for emergencies",
+    groups: [G("Services", "Rewires", "Repairs", "Safety checks"), G("Company", "About", "Contact")], ctaTitle: "Need an electrician?",
+  },
+  health: {
+    brand: "Greenfield Clinic", links: ["Treatments", "Team", "Patients", "Contact"], cta: "Call us", phone: "0117 496 0000",
+    eyebrow: "Physiotherapy, Bristol", headline: "Care that gets you moving again", subhead: "Friendly, one-to-one appointments in a calm, accessible clinic.",
+    cta2: "Our treatments", brief: "A physiotherapist talking with a patient in a bright treatment room", trust: "Clifton, Bristol",
+    tagline: "Calm, friendly, one-to-one care.", address: "3 Park Street, Bristol", email: "reception@greenfield.example", hours: "Mon to Fri, appointments only",
+    groups: [G("Clinic", "Treatments", "Team", "Patients"), G("Visit", "Find us", "Contact")], ctaTitle: "Book an appointment",
+  },
+  tech: {
+    brand: "Northwind", links: ["Product", "Docs", "Company", "Contact"], cta: "Book a demo", phone: "",
+    eyebrow: "Software studio", headline: "Software that gets out of the way", subhead: "We design and build focused tools for teams who value their time.",
+    cta2: "Read the docs", brief: "", trust: "",
+    tagline: "Focused software for busy teams.", address: "", email: "hello@northwind.example", hours: "",
+    groups: [G("Product", "Overview", "Docs", "Changelog"), G("Company", "About", "Contact")], ctaTitle: "See it in action",
+  },
+};
+
+function renderFor(palId) {
+  const s = SAMPLES[palId];
+  const pal = R.getPalette(palId);
+  const tone = pal.footerTone === "dark" ? "dark" : "light";
+  const nav = { brand: s.brand, links: s.links.map((l) => L(l, "#" + l.toLowerCase().replace(/\W+/g, "-"))), cta_label: s.cta, cta_href: "#contact", phone: s.phone };
+  const hero = { eyebrow: s.eyebrow, headline: s.headline, subhead: s.subhead, cta1_label: s.cta, cta1_href: "#contact", cta2_label: s.cta2, cta2_href: "#services", image: "IMG_1", image_brief: s.brief || "Photo placeholder", image_alt: s.brief || "Photo placeholder", trust_line: s.trust, tone };
+  const foot = {
+    brand: s.brand, tagline: s.tagline, link_groups: s.groups, address: s.address, phone: s.phone, email: s.email, hours: s.hours,
+    socials: [{ platform: "instagram", url: "https://instagram.com/example" }, { platform: "facebook", url: "https://facebook.com/example" }],
+    cta_title: s.ctaTitle, cta_label: s.cta, cta_href: "#contact", show_gurost_credit: true, tone,
+  };
+  const out = {};
+  for (const v of ["a", "b", "c"]) {
+    out["navbar-" + v] = R.renderSection("navbar", v, { ...nav, tone: v === "c" ? "dark" : tone === "dark" ? "dark" : "light" }, { now: FIXED_NOW, noSwap: true }).html;
+    out["hero-" + v] = R.renderSection("hero", v, hero, { now: FIXED_NOW, noSwap: true }).html;
+    out["footer-" + v] = R.renderSection("footer", v, foot, { now: FIXED_NOW }).html;
+  }
+  return out;
+}
+
+function build() {
+  const read = (f) => fs.readFileSync(path.join(ROOT, "lib", "sections", f), "utf8");
+  const data = {
+    palettes: Object.fromEntries(
+      Object.keys(R.palettes.palettes).map((id) => {
+        const p = R.getPalette(id);
+        return [id, { name: p.name, css: R.paletteCss(id), fonts: R.googleFontsHref(id), tone: p.footerTone, colors: { primary: p.colors.primary, accent: p.colors.accent, surface: p.colors.surface, dark: p.colors.dark }, sections: renderFor(id) }];
+      })
+    ),
+    css: R.baseCss() + "\n" + ["navbar", "hero", "footer"].map((s) => read(`${s}/${s}.css`)).join("\n"),
+    order: ["navbar-a", "navbar-b", "navbar-c", "hero-a", "hero-b", "hero-c", "footer-a", "footer-b", "footer-c"],
+  };
+  // JSON inside a <script>: make "</" and U+2028/9 safe.
+  const json = JSON.stringify(data).replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
+  return TEMPLATE.replace("/*DATA*/null", () => json);
+}
+
+const TEMPLATE = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Gurost section preview</title>
+<style>
+  :root { color-scheme: light; --bg:#f4f4f5; --fg:#18181b; --line:#d4d4d8; --ink:#27272a; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--fg); }
+  header.pv { position:sticky; top:0; z-index:10; background:#fff; border-bottom:1px solid var(--line); padding:12px 16px; }
+  header.pv h1 { margin:0 0 8px; font-size:18px; }
+  .row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:8px; }
+  .row b { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:#52525b; min-width:64px; }
+  button.chip { min-height:44px; padding:0 14px; border:1px solid var(--line); border-radius:999px; background:#fff; font:inherit; cursor:pointer; color:var(--ink); }
+  button.chip[aria-pressed="true"] { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .dot { display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:6px; vertical-align:-1px; border:1px solid rgba(0,0,0,.2); }
+  main.pv { padding:16px; }
+  .note { font-size:14px; color:#52525b; margin:0 0 12px; }
+  .stage { display:flex; justify-content:center; }
+  iframe { border:1px solid var(--line); background:#fff; width:100%; max-width:100%; height:calc(100vh - 220px); min-height:520px; }
+  iframe.w375 { width:375px; }
+  iframe.w1440 { width:1440px; }
+  .scroll { overflow:auto; }
+</style>
+</head>
+<body>
+<header class="pv">
+  <h1>Gurost section library: Navbar, Hero, Footer (A / B / C)</h1>
+  <div class="row"><b>Palette</b><span id="pal"></span></div>
+  <div class="row"><b>Width</b><span id="wid"></span><b>Backdrop</b><span id="bgs"></span></div>
+  <div class="row"><b>Show</b><span id="sec"></span></div>
+</header>
+<main class="pv">
+  <p class="note">Sample copy only, to show layout. Photos are placeholders. Fonts load from Google Fonts. Add <code>?palette=law&amp;width=375&amp;only=hero-b&amp;bg=dark&amp;bare=1</code> to the address to link to one view.</p>
+  <div class="scroll"><div class="stage"><iframe id="frame" title="Section preview"></iframe></div></div>
+</main>
+<script>
+(function () {
+  var DATA = /*DATA*/null;
+  var q = new URLSearchParams(location.search);
+  var state = {
+    palette: DATA.palettes[q.get("palette")] ? q.get("palette") : "cafe",
+    width: q.get("width") === "1440" ? "1440" : "375",
+    bg: q.get("bg") === "dark" ? "dark" : "light",
+    only: DATA.order.indexOf(q.get("only")) >= 0 ? q.get("only") : "all"
+  };
+  var LABELS = { navbar: "Navbar", hero: "Hero", footer: "Footer" };
+
+  function label(id) { var p = id.split("-"); return LABELS[p[0]] + " " + p[1].toUpperCase(); }
+
+  function placeholderImage(p) {
+    var c = DATA.palettes[p].colors;
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + c.primary + '"/><stop offset="1" stop-color="' + c.accent + '"/></linearGradient></defs><rect width="800" height="600" fill="url(#g)"/><circle cx="600" cy="170" r="110" fill="' + c.surface + '" fill-opacity=".35"/><rect x="90" y="360" width="420" height="40" rx="20" fill="' + c.surface + '" fill-opacity=".3"/></svg>';
+    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  }
+
+  function buildDoc() {
+    var pal = DATA.palettes[state.palette];
+    var ids = state.only === "all" ? DATA.order : [state.only];
+    var img = placeholderImage(state.palette);
+    var body = ids.map(function (id) {
+      var html = pal.sections[id].split('src="IMG_1"').join('src="' + img + '"').split("g-nav-panel").join("g-nav-panel-" + id);
+      var wrap = id === "navbar-c" ? '<div class="pv-stub">' + html + '<p class="pv-stubnote">Transparent navbar sits over a hero photo</p></div>' : html;
+      return '<div class="pv-label">' + label(id) + "</div>" + wrap;
+    }).join("");
+    var bgVar = state.bg === "dark" ? "var(--g-dark)" : "var(--g-bg)";
+    var fg = state.bg === "dark" ? "var(--g-on-dark)" : "var(--g-text)";
+    return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+      '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' +
+      '<link rel="stylesheet" href="' + pal.fonts + '">' +
+      "<style>" + pal.css + DATA.css +
+      ".pv-label{font:600 12px/1 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;padding:14px 16px 8px;color:" + fg + ";background:" + bgVar + ";}" +
+      ".pv-stub{position:relative;min-height:240px;background:var(--g-dark);}" +
+      ".pv-stubnote{position:absolute;left:16px;bottom:12px;margin:0;font:14px/1.4 system-ui,sans-serif;color:var(--g-on-dark);}" +
+      ".pv-body{background:" + bgVar + ";}" +
+      "</style></head><body class='g-page pv-body' data-industry='" + state.palette + "'>" + body + "</body></html>";
+  }
+
+  function chips(host, items, key) {
+    host.innerHTML = "";
+    items.forEach(function (it) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "chip";
+      b.setAttribute("aria-pressed", String(state[key] === it.value));
+      b.innerHTML = it.html;
+      b.addEventListener("click", function () { state[key] = it.value; render(); });
+      host.appendChild(b);
+    });
+  }
+
+  function render() {
+    var f = document.getElementById("frame");
+    chips(document.getElementById("pal"), Object.keys(DATA.palettes).map(function (id) {
+      return { value: id, html: '<span class="dot" style="background:' + DATA.palettes[id].colors.primary + '"></span>' + DATA.palettes[id].name };
+    }), "palette");
+    chips(document.getElementById("wid"), [{ value: "375", html: "Phone 375" }, { value: "1440", html: "Desktop 1440" }], "width");
+    chips(document.getElementById("bgs"), [{ value: "light", html: "Light" }, { value: "dark", html: "Dark" }], "bg");
+    chips(document.getElementById("sec"), [{ value: "all", html: "All 9" }].concat(DATA.order.map(function (id) { return { value: id, html: label(id) }; })), "only");
+    f.className = "w" + state.width;
+    f.srcdoc = buildDoc();
+  }
+
+  if (q.get("bare") === "1") {
+    window.addEventListener("load", function () { setTimeout(function () { document.open(); document.write(buildDoc()); document.close(); }, 0); });
+  } else {
+    render();
+  }
+})();
+</script>
+</body>
+</html>
+`;
+
+if (require.main === module) {
+  fs.writeFileSync(OUT, build());
+  console.log("wrote " + path.relative(ROOT, OUT));
+}
+module.exports = { build, SAMPLES, OUT };
