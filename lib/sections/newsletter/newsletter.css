@@ -1,0 +1,72 @@
+/* Newsletter A (centred on surface) / B (words beside the form) / C (dark band). The form posts to the owner's own provider; the page stores nothing. */
+.g-news__center {
+  max-width: 640px;
+  margin-inline: auto;
+  text-align: center;
+}
+.g-news__split {
+  display: grid;
+  gap: var(--g-s4);
+  align-items: center;
+}
+.g-news__split > * {
+  min-width: 0;
+}
+.g-news__split .g-head {
+  margin-bottom: 0;
+}
+.g-news__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--g-s2);
+  margin-top: var(--g-s3);
+}
+.g-news__side .g-news__form {
+  margin-top: 0;
+}
+.g-news__label {
+  display: block;
+  min-width: 0;
+}
+.g-news__input {
+  width: 100%;
+  min-height: var(--g-tap);
+  padding: 0 var(--g-s2);
+  font: inherit;
+  color: var(--g-text);
+  background: var(--g-bg);
+  border: 2px solid var(--g-border);
+  border-radius: var(--g-radius-btn);
+}
+.g-news__input:focus-visible {
+  outline: 2px solid var(--g-focus);
+  outline-offset: 2px;
+}
+.g-news[data-tone="dark"] .g-news__input:focus-visible {
+  outline-color: var(--g-on-dark);
+}
+.g-news__missing,
+.g-news__privacy {
+  margin-top: var(--g-s2);
+  font-size: var(--g-t-14);
+  color: var(--g-muted);
+  overflow-wrap: anywhere;
+}
+.g-news[data-tone="dark"] .g-news__privacy,
+.g-news[data-tone="dark"] .g-news__missing {
+  color: var(--g-on-dark-muted);
+}
+@media (min-width: 640px) {
+  .g-news__form {
+    flex-direction: row;
+  }
+  .g-news__label {
+    flex: 1;
+  }
+}
+@media (min-width: 880px) {
+  .g-news__split {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--g-s8);
+  }
+}

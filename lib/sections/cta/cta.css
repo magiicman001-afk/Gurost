@@ -1,0 +1,75 @@
+/* CTA A (full primary band, centred) / B (card with the buttons beside the words) / C (dark band, split). */
+.g-cta__inner,
+.g-cta__card {
+  display: grid;
+  gap: var(--g-s4);
+  align-items: center;
+}
+.g-cta__inner > *,
+.g-cta__card > * {
+  min-width: 0;
+}
+.g-cta__title {
+  overflow-wrap: anywhere;
+}
+.g-cta__text {
+  margin-top: var(--g-s2);
+  overflow-wrap: anywhere;
+}
+.g-cta__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--g-s2);
+}
+.g-cta__actions:empty {
+  display: none;
+}
+.g-cta__inner--center {
+  justify-items: center;
+  text-align: center;
+}
+.g-cta__inner--center .g-cta__actions {
+  justify-content: center;
+}
+.g-sec.g-cta--a {
+  background: var(--g-primary);
+  color: var(--g-on-primary);
+}
+.g-cta--a :focus-visible {
+  outline-color: var(--g-on-primary);
+}
+.g-sec.g-cta--a[data-tone="dark"] .g-lead {
+  color: var(--g-on-primary);
+}
+.g-btn--outline {
+  background: transparent;
+  color: var(--g-on-primary);
+  border-color: var(--g-on-primary);
+}
+.g-cta--c .g-btn--outline {
+  color: var(--g-on-dark);
+  border-color: var(--g-on-dark);
+}
+.g-cta--c .g-lead {
+  color: var(--g-on-dark-muted);
+}
+.g-cta__card {
+  padding: var(--g-s4) var(--g-s3);
+  background: var(--g-surface);
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-radius);
+}
+@media (min-width: 880px) {
+  .g-cta__inner:not(.g-cta__inner--center),
+  .g-cta__card {
+    grid-template-columns: 1.4fr 1fr;
+    gap: var(--g-s8);
+  }
+  .g-cta__card {
+    padding: var(--g-s6);
+  }
+  .g-cta__inner:not(.g-cta__inner--center) .g-cta__actions,
+  .g-cta__card .g-cta__actions {
+    justify-content: flex-end;
+  }
+}

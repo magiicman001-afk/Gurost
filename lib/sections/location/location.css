@@ -1,0 +1,113 @@
+/* Location A (details beside photo) / B (three cards) / C (dark band). Directions are a link: no embedded map, no third-party frame. */
+.g-loc__grid {
+  display: grid;
+  gap: var(--g-s6);
+  align-items: start;
+}
+.g-loc__grid > *,
+.g-loc__cards > * {
+  min-width: 0;
+}
+.g-loc__details {
+  display: grid;
+  gap: var(--g-s4);
+  justify-items: start;
+}
+.g-loc__block {
+  min-width: 0;
+  max-width: 100%;
+}
+.g-loc__h {
+  font-size: var(--g-t-14);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--g-muted);
+  font-family: var(--g-font-body, inherit);
+  font-weight: 700;
+}
+.g-loc__address {
+  margin-top: var(--g-s1);
+  font-style: normal;
+  font-size: var(--g-t-20);
+  overflow-wrap: anywhere;
+}
+.g-loc__hours {
+  margin-top: var(--g-s1);
+  display: grid;
+  gap: 4px;
+}
+.g-loc__hour {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0 var(--g-s3);
+  min-width: 0;
+  max-width: 320px;
+}
+.g-loc__day {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.g-loc__time {
+  overflow-wrap: anywhere;
+}
+.g-loc__links {
+  margin-top: var(--g-s1);
+  display: grid;
+  gap: 4px;
+}
+.g-loc__link {
+  font-size: var(--g-t-20);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+.g-loc__media {
+  margin: 0;
+  overflow: hidden;
+  border-radius: var(--g-radius);
+}
+.g-loc__img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+.g-loc__grid > :only-child {
+  max-width: 640px;
+}
+@media (min-width: 880px) {
+  .g-loc__grid:has(.g-loc__media) {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--g-s8);
+  }
+}
+/* B */
+.g-loc__cards {
+  display: grid;
+  gap: var(--g-s3);
+}
+.g-loc__card {
+  padding: var(--g-s3);
+  background: var(--g-bg);
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-radius);
+}
+.g-loc__card:empty {
+  display: none;
+}
+.g-loc__cta {
+  margin-top: var(--g-s4);
+  text-align: center;
+}
+.g-loc__cta:empty {
+  display: none;
+}
+@media (min-width: 880px) {
+  .g-loc__cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+/* C */
+.g-loc[data-tone="dark"] .g-loc__h {
+  color: var(--g-on-dark-muted);
+}

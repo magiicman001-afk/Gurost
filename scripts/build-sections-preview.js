@@ -10,8 +10,8 @@ const R = require("../lib/sections/render");
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "public", "sections-preview.html");
 // Page order of the preview, and the display names. Add a section here when it is built.
-const SECTION_IDS = ["navbar", "hero", "trust-bar", "features", "about", "services", "gallery", "testimonials", "pricing", "team", "process", "stats", "faq", "booking", "footer"];
-const NAMES = { navbar: "Navbar", hero: "Hero", "trust-bar": "Trust Bar", features: "Features", about: "About", services: "Services", gallery: "Gallery", testimonials: "Testimonials", pricing: "Pricing", team: "Team", process: "Process", stats: "Stats", faq: "FAQ", booking: "Booking", footer: "Footer" };
+const SECTION_IDS = ["navbar", "hero", "trust-bar", "features", "about", "services", "gallery", "testimonials", "pricing", "team", "process", "stats", "faq", "booking", "location", "blog", "cta", "newsletter", "footer"];
+const NAMES = { navbar: "Navbar", hero: "Hero", "trust-bar": "Trust Bar", features: "Features", about: "About", services: "Services", gallery: "Gallery", testimonials: "Testimonials", pricing: "Pricing", team: "Team", process: "Process", stats: "Stats", faq: "FAQ", booking: "Booking", location: "Location", blog: "Blog", cta: "Call to action", newsletter: "Newsletter", footer: "Footer" };
 const ORDER = SECTION_IDS.flatMap((id) => ["a", "b", "c"].map((v) => `${id}-${v}`));
 const FIXED_NOW = new Date(Date.UTC(2026, 0, 1)); // keeps the build reproducible (the copyright year in the preview)
 
@@ -132,9 +132,13 @@ function renderFor(palId) {
   const stats = { eyebrow: "", title: "In numbers", intro: "", items: ["Customers", "Years open", "Projects"].map((label) => ({ value: "[Add number]", label })) };
   const faq = { eyebrow: "FAQ", title: "Common questions", intro: "", items: [1, 2, 3, 4].map((n) => ({ question: "[Add question " + n + "]", answer: "[Add the answer your customers need]" })) };
   const booking = { eyebrow: "Get in touch", title: "Ready when you are", intro: "", methods: [{ label: "Call", value: s.phone || "[Add phone]", href: "#contact" }, { label: "Email", value: s.email || "[Add email]", href: "#contact" }, { label: "Hours", value: s.hours || "[Add your opening hours]" }], cta_label: s.cta, cta_href: "#contact", note: "" };
+  const location = { eyebrow: "Visit us", title: "Find us", intro: "", address: s.address || "[Add your address]", hours: [{ day: "Mon to Fri", time: "[Add hours]" }, { day: "Saturday", time: "[Add hours]" }, { day: "Sunday", time: "[Add hours]" }], phone: s.phone || "", email: s.email || "", cta_label: "Get directions", cta_href: "#contact", image: "IMG_1", image_brief: s.brief || "Photo placeholder", image_alt: s.brief || "Photo placeholder" };
+  const blog = { eyebrow: "News", title: "From the blog", intro: "", posts: [1, 2, 3].map((n) => ({ title: "[Add post title " + n + "]", text: "[Add a short summary]", date: "[Add date]", tag: "[Add topic]", href: "#blog", image: "IMG_" + n, brief: "Post image " + n, image_alt: "Post image " + n })), cta_label: "All posts", cta_href: "#blog" };
+  const cta = { title: s.ctaTitle || "Ready to get started?", text: "[Add one line that tells people what happens next]", cta1_label: s.cta, cta1_href: "#contact", cta2_label: s.phone ? "Call us" : "Learn more", cta2_href: s.phone ? "tel:" + s.phone.replace(/[^\d+]/g, "") : "#services" };
+  const newsletter = { eyebrow: "Stay in touch", title: "Get our news by email", intro: "", action: "https://example.com/subscribe", button_label: "Subscribe", privacy: "[Add a line about how you use email addresses]" };
   const out = {};
   for (const v of ["a", "b", "c"]) {
-    for (const [id, c] of Object.entries({ process, stats, faq, booking })) out[id + "-" + v] = R.renderSection(id, v, c, { now: FIXED_NOW }).html;
+    for (const [id, c] of Object.entries({ process, stats, faq, booking, location, blog, cta, newsletter })) out[id + "-" + v] = R.renderSection(id, v, c, { now: FIXED_NOW }).html;
     out["gallery-" + v] = R.renderSection("gallery", v, gallery, { now: FIXED_NOW }).html;
     out["testimonials-" + v] = R.renderSection("testimonials", v, testimonials, { now: FIXED_NOW }).html;
     out["pricing-" + v] = R.renderSection("pricing", v, pricing, { now: FIXED_NOW }).html;

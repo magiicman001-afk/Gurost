@@ -1,0 +1,5 @@
+<section class="g-sec g-news g-news--b" id="newsletter" data-gurost-section="newsletter" data-variant="b" data-tone="light">
+  <div class="g-container">
+    <div class="g-news__split" data-g-reveal="up" data-gsap-fade><div class="g-head">{{#if eyebrow}}<p class="g-eyebrow">{{eyebrow}}</p>{{/if}}<h2 class="g-title">{{title}}</h2>{{#if intro}}<p class="g-lead">{{intro}}</p>{{/if}}</div><div class="g-news__side">{{#if action}}<form class="g-news__form" method="post" action="{{action}}"><label class="g-news__label"><span class="g-sr-only">Email address</span><input class="g-news__input" type="email" name="email" placeholder="Your email address" autocomplete="email" required></label><button class="g-btn g-btn--primary g-news__btn" type="submit">{{button_label}}</button></form>{{/if}}{{#unless action}}<p class="g-news__missing">[Add your sign-up form link]</p>{{/unless}}{{#if privacy}}<p class="g-news__privacy">{{privacy}}</p>{{/if}}</div></div>
+  </div>
+</section>

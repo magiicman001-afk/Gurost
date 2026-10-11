@@ -1855,7 +1855,82 @@
         "b",
         "c"
       ],
-      "slots": null,
+      "slots": {
+        "eyebrow": {
+          "type": "text",
+          "max": 40,
+          "required": false
+        },
+        "title": {
+          "type": "text",
+          "max": 80,
+          "required": true
+        },
+        "intro": {
+          "type": "text",
+          "max": 200,
+          "required": false
+        },
+        "address": {
+          "type": "text",
+          "max": 160,
+          "required": true,
+          "placeholder": "[Add your address]"
+        },
+        "hours": {
+          "type": "list",
+          "max": 7,
+          "item": {
+            "day": {
+              "type": "text",
+              "max": 20,
+              "required": true
+            },
+            "time": {
+              "type": "text",
+              "max": 30,
+              "required": true
+            }
+          }
+        },
+        "phone": {
+          "type": "text",
+          "max": 20,
+          "required": false,
+          "tel": true
+        },
+        "email": {
+          "type": "text",
+          "max": 60,
+          "required": false,
+          "mail": true
+        },
+        "cta_label": {
+          "type": "text",
+          "max": 30,
+          "required": false
+        },
+        "cta_href": {
+          "type": "link"
+        },
+        "image": {
+          "type": "image"
+        },
+        "image_brief": {
+          "type": "text",
+          "max": 200,
+          "required": false
+        },
+        "image_alt": {
+          "type": "text",
+          "max": 100,
+          "required": false,
+          "fallback": [
+            "image_brief",
+            "title"
+          ]
+        }
+      },
       "aliases": [
         "find us",
         "map",
@@ -1877,13 +1952,48 @@
           4.5
         ],
         [
+          "text",
+          "surface",
+          4.5
+        ],
+        [
+          "muted",
+          "surface",
+          4.5
+        ],
+        [
+          "primary",
+          "bg",
+          4.5
+        ],
+        [
+          "primary",
+          "surface",
+          4.5
+        ],
+        [
           "on-primary",
           "primary",
           4.5
         ],
         [
+          "on-dark",
+          "dark",
+          4.5
+        ],
+        [
+          "on-dark-muted",
+          "dark",
+          4.5
+        ],
+        [
           "focus",
           "bg",
+          3.0
+        ],
+        [
+          "focus",
+          "surface",
           3.0
         ]
       ],
@@ -1891,7 +2001,7 @@
         "light",
         "dark"
       ],
-      "status": "planned"
+      "status": "built"
     },
     {
       "id": "blog",
@@ -1902,7 +2012,79 @@
         "b",
         "c"
       ],
-      "slots": null,
+      "slots": {
+        "eyebrow": {
+          "type": "text",
+          "max": 40,
+          "required": false
+        },
+        "title": {
+          "type": "text",
+          "max": 80,
+          "required": true
+        },
+        "intro": {
+          "type": "text",
+          "max": 200,
+          "required": false
+        },
+        "posts": {
+          "type": "list",
+          "min": 1,
+          "max": 6,
+          "required": true,
+          "item": {
+            "title": {
+              "type": "text",
+              "max": 80,
+              "required": true
+            },
+            "text": {
+              "type": "text",
+              "max": 160,
+              "required": false
+            },
+            "date": {
+              "type": "text",
+              "max": 30,
+              "required": false
+            },
+            "tag": {
+              "type": "text",
+              "max": 24,
+              "required": false
+            },
+            "href": {
+              "type": "link"
+            },
+            "image": {
+              "type": "image"
+            },
+            "brief": {
+              "type": "text",
+              "max": 200,
+              "required": false
+            },
+            "image_alt": {
+              "type": "text",
+              "max": 100,
+              "required": false,
+              "fallback": [
+                "brief",
+                "title"
+              ]
+            }
+          }
+        },
+        "cta_label": {
+          "type": "text",
+          "max": 30,
+          "required": false
+        },
+        "cta_href": {
+          "type": "link"
+        }
+      },
       "aliases": [
         "news",
         "articles",
@@ -1924,13 +2106,48 @@
           4.5
         ],
         [
+          "text",
+          "surface",
+          4.5
+        ],
+        [
+          "muted",
+          "surface",
+          4.5
+        ],
+        [
+          "primary",
+          "bg",
+          4.5
+        ],
+        [
+          "primary",
+          "surface",
+          4.5
+        ],
+        [
           "on-primary",
           "primary",
           4.5
         ],
         [
+          "on-dark",
+          "dark",
+          4.5
+        ],
+        [
+          "on-dark-muted",
+          "dark",
+          4.5
+        ],
+        [
           "focus",
           "bg",
+          3.0
+        ],
+        [
+          "focus",
+          "surface",
           3.0
         ]
       ],
@@ -1938,7 +2155,7 @@
         "light",
         "dark"
       ],
-      "status": "planned"
+      "status": "built"
     },
     {
       "id": "cta",
@@ -1949,7 +2166,34 @@
         "b",
         "c"
       ],
-      "slots": null,
+      "slots": {
+        "title": {
+          "type": "text",
+          "max": 80,
+          "required": true
+        },
+        "text": {
+          "type": "text",
+          "max": 200,
+          "required": false
+        },
+        "cta1_label": {
+          "type": "text",
+          "max": 30,
+          "required": false
+        },
+        "cta1_href": {
+          "type": "link"
+        },
+        "cta2_label": {
+          "type": "text",
+          "max": 30,
+          "required": false
+        },
+        "cta2_href": {
+          "type": "link"
+        }
+      },
       "aliases": [
         "call to action",
         "banner"
@@ -1972,13 +2216,48 @@
           4.5
         ],
         [
+          "text",
+          "surface",
+          4.5
+        ],
+        [
+          "muted",
+          "surface",
+          4.5
+        ],
+        [
+          "primary",
+          "bg",
+          4.5
+        ],
+        [
+          "primary",
+          "surface",
+          4.5
+        ],
+        [
           "on-primary",
           "primary",
           4.5
         ],
         [
+          "on-dark",
+          "dark",
+          4.5
+        ],
+        [
+          "on-dark-muted",
+          "dark",
+          4.5
+        ],
+        [
           "focus",
           "bg",
+          3.0
+        ],
+        [
+          "focus",
+          "surface",
           3.0
         ]
       ],
@@ -1986,7 +2265,7 @@
         "light",
         "dark"
       ],
-      "status": "planned"
+      "status": "built"
     },
     {
       "id": "newsletter",
@@ -1997,7 +2276,38 @@
         "b",
         "c"
       ],
-      "slots": null,
+      "slots": {
+        "eyebrow": {
+          "type": "text",
+          "max": 40,
+          "required": false
+        },
+        "title": {
+          "type": "text",
+          "max": 80,
+          "required": true
+        },
+        "intro": {
+          "type": "text",
+          "max": 200,
+          "required": false
+        },
+        "action": {
+          "type": "link",
+          "https": true
+        },
+        "button_label": {
+          "type": "text",
+          "max": 24,
+          "required": false,
+          "placeholder": "Subscribe"
+        },
+        "privacy": {
+          "type": "text",
+          "max": 160,
+          "required": false
+        }
+      },
       "aliases": [
         "subscribe",
         "mailing list"
@@ -2018,13 +2328,48 @@
           4.5
         ],
         [
+          "text",
+          "surface",
+          4.5
+        ],
+        [
+          "muted",
+          "surface",
+          4.5
+        ],
+        [
+          "primary",
+          "bg",
+          4.5
+        ],
+        [
+          "primary",
+          "surface",
+          4.5
+        ],
+        [
           "on-primary",
           "primary",
           4.5
         ],
         [
+          "on-dark",
+          "dark",
+          4.5
+        ],
+        [
+          "on-dark-muted",
+          "dark",
+          4.5
+        ],
+        [
           "focus",
           "bg",
+          3.0
+        ],
+        [
+          "focus",
+          "surface",
           3.0
         ]
       ],
@@ -2032,7 +2377,7 @@
         "light",
         "dark"
       ],
-      "status": "planned"
+      "status": "built"
     },
     {
       "id": "footer",
