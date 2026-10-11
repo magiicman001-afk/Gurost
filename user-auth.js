@@ -122,6 +122,12 @@ function hashResetToken(token) {
 }
 
 async function requestPasswordReset(email) {
+  // Bug CC: with no email service connected, nothing can ever be sent. Say so, to everyone alike (this check comes before
+  // any account lookup, so it tells nobody which emails have accounts), and do not create a token nobody can receive.
+  if (!emailClient.isConfigured()) {
+    console.error("[password-reset] Email is not configured (POSTMARK_SERVER_TOKEN / POSTMARK_API_KEY and POSTMARK_FROM_EMAIL): no reset email can be sent.");
+    return { sent: false, configured: false };
+  }
   const { data } = await supabase.from("api_keys").select("user_id").eq("email", email).maybeSingle();
 
   // Deliberately the same response whether or not the email exists —
@@ -148,7 +154,7 @@ async function requestPasswordReset(email) {
     return { sent: true };
   }
 
-  const baseUrl = process.env.FRONTEND_BASE_URL || "http://localhost:3000";
+  const baseUrl = process.env.FRONTEND_BASE_URL || process.env.PUBLIC_URL || "https://gurost.onrender.com"; // never a localhost link in a real email
   const resetUrl = `${baseUrl}/reset-password.html?token=${rawToken}`;
 
   await emailClient.sendPasswordReset(email, resetUrl).catch((err) => {

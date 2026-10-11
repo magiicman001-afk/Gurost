@@ -19,16 +19,21 @@ const postmark = require("postmark");
 let _client = null;
 function getClient() {
   if (_client) return _client;
-  if (!process.env.POSTMARK_SERVER_TOKEN) {
-    throw new Error("POSTMARK_SERVER_TOKEN not configured — required to send any real email.");
-  }
-  _client = new postmark.ServerClient(process.env.POSTMARK_SERVER_TOKEN);
+  const token = serverToken();
+  if (!token) throw new Error("POSTMARK_SERVER_TOKEN not configured — required to send any real email.");
+  _client = new postmark.ServerClient(token);
   return _client;
 }
 
-const FROM = process.env.POSTMARK_FROM_EMAIL;
+// The token has been called POSTMARK_SERVER_TOKEN here and POSTMARK_API_KEY elsewhere in this app (Bug CC: setting
+// one of them left password reset silently broken). Either name works; both are read when needed, not at start-up.
+const serverToken = (env = process.env) => String(env.POSTMARK_SERVER_TOKEN || env.POSTMARK_API_KEY || "").trim();
+const fromAddress = (env = process.env) => String(env.POSTMARK_FROM_EMAIL || "").trim();
+/** True only when email can really be sent: a token AND a sender address are set. */
+const isConfigured = (env = process.env) => !!(serverToken(env) && fromAddress(env));
 
 async function send({ to, subject, htmlBody, textBody, messageStream = "outbound" }) {
+  const FROM = fromAddress();
   if (!FROM) throw new Error("POSTMARK_FROM_EMAIL not configured — must be a verified sender in your Postmark account.");
   return getClient().sendEmail({
     From: FROM,
@@ -95,4 +100,4 @@ async function sendPasswordReset(to, resetUrl) {
   });
 }
 
-module.exports = { send, sendWelcome, sendWaitlist, sendLaunchAnnouncement, sendNewsletter, sendBatch, sendPasswordReset };
+module.exports = { isConfigured, send, sendWelcome, sendWaitlist, sendLaunchAnnouncement, sendNewsletter, sendBatch, sendPasswordReset };
