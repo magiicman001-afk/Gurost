@@ -1,0 +1,29 @@
+/* Scroll motion. Only a page that ran motion.js carries .g-motion on <html>, so nothing is hidden without the script
+   (and never for visitors who ask for reduced motion: the script does not start for them). */
+.g-motion [data-g-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+}
+.g-motion [data-g-reveal="fade"],
+.g-motion [data-g-reveal][data-gsap-fade] {
+  transform: translate3d(0, 10px, 0);
+}
+.g-motion [data-g-reveal][data-gsap-slide] {
+  transform: translate3d(0, 26px, 0);
+}
+.g-motion:not(.g-gsap) [data-g-reveal] {
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--g-i, 0) * 70ms);
+}
+.g-motion [data-g-reveal].is-in {
+  opacity: 1;
+  transform: none;
+}
+/* already above the fold when the page was opened by a jump link: no animation, just there */
+.g-motion [data-g-reveal].is-instant {
+  transition: none;
+}
+.g-motion [data-g-parallax] img,
+.g-motion [data-g-parallax] > :first-child {
+  will-change: transform;
+}

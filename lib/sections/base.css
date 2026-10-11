@@ -275,3 +275,71 @@
 .g-hero__trust {
   font-variant-numeric: tabular-nums lining-nums;
 }
+
+/* micro-interactions: small, quick, and only for people who can hover and have not asked for reduced motion */
+@media (prefers-reduced-motion: no-preference) {
+  .g-btn {
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+  }
+  .g-btn:active {
+    transform: translateY(1px) scale(0.98);
+  }
+  .g-features__item,
+  .g-services__item,
+  .g-pricing__plan,
+  .g-blog__post,
+  .g-team__member,
+  .g-process__step,
+  .g-loc__card,
+  .g-booking__card,
+  .g-quotes__fig,
+  .g-gallery__fig {
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  }
+  .g-gallery__img,
+  .g-blog__img,
+  .g-about__img,
+  .g-team__img {
+    transition: transform 0.5s ease;
+  }
+  .g-faq__mark {
+    transition: transform 0.2s ease;
+  }
+  .g-news__input {
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .g-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--g-shadow);
+  }
+  .g-btn:active:hover {
+    transform: translateY(1px) scale(0.98);
+  }
+  .g-features__item:hover,
+  .g-services__item:hover,
+  .g-pricing__plan:hover,
+  .g-blog--a .g-blog__post:hover,
+  .g-team--a .g-team__member:hover,
+  .g-process--a .g-process__step:hover,
+  .g-loc__card:hover,
+  .g-quotes__fig:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--g-shadow);
+  }
+  .g-gallery__fig:hover .g-gallery__img,
+  .g-blog__post:hover .g-blog__img {
+    transform: scale(1.04);
+  }
+  .g-faq__q:hover .g-faq__qtext {
+    color: var(--g-primary);
+  }
+}
+/* form focus: a clear ring plus a tinted border, for everyone */
+.g-news__input:focus {
+  border-color: var(--g-primary);
+}
+.g-news[data-tone="dark"] .g-news__input:focus {
+  border-color: var(--g-on-dark);
+}
