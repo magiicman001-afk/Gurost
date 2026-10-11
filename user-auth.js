@@ -27,6 +27,12 @@ function verifyPassword(password, hash, salt) {
   return crypto.timingSafeEqual(Buffer.from(hash, "hex"), Buffer.from(check, "hex"));
 }
 
+// Bug CC2: a phone capitalises the first letter of an email ("Irfank3971@..."), and the lookup was case-sensitive, so a
+// correct login failed with "Invalid email or password". Emails are matched without regard to case or stray spaces.
+function normalizeEmail(email) {
+  return String(email == null ? "" : email).trim().toLowerCase();
+}
+
 function generateApiKey() {
   return `gur_${crypto.randomBytes(24).toString("hex")}`;
 }
@@ -41,7 +47,8 @@ function hashApiKey(key) {
 // (e.g. the admin dashboard's user list).
 const EMAIL_RE = /^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/;
 
-async function signup(email, password) {
+async function signup(rawEmail, password) {
+  const email = normalizeEmail(rawEmail);
   if (!email || !password || password.length < 8) {
     throw new Error("Email and a password of at least 8 characters are required.");
   }
@@ -74,7 +81,8 @@ async function signup(email, password) {
   return { userId, email, apiKey };
 }
 
-async function login(email, password) {
+async function login(rawEmail, password) {
+  const email = normalizeEmail(rawEmail);
   const { data, error } = await supabase
     .from("api_keys")
     .select("user_id, email, password_hash, password_salt, plan, revoked")
@@ -85,7 +93,11 @@ async function login(email, password) {
     throw new Error("Invalid email or password.");
   }
   if (data.revoked) throw new Error("Invalid email or password.");
-  if (!verifyPassword(password, data.password_hash, data.password_salt)) {
+  // As typed first. If that fails and the only difference is a space at either end (a copy and paste often adds one),
+  // try it without. A password that really has spaces at its ends still works as typed.
+  const typed = String(password == null ? "" : password);
+  const ok = verifyPassword(typed, data.password_hash, data.password_salt) || (typed !== typed.trim() && verifyPassword(typed.trim(), data.password_hash, data.password_salt));
+  if (!ok) {
     throw new Error("Invalid email or password.");
   }
 
@@ -121,7 +133,8 @@ function hashResetToken(token) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
-async function requestPasswordReset(email) {
+async function requestPasswordReset(rawEmail) {
+  const email = normalizeEmail(rawEmail);
   // Bug CC: with no email service connected, nothing can ever be sent. Say so, to everyone alike (this check comes before
   // any account lookup, so it tells nobody which emails have accounts), and do not create a token nobody can receive.
   if (!emailClient.isConfigured()) {
@@ -195,4 +208,4 @@ async function resetPassword(rawToken, newPassword) {
   return { reset: true };
 }
 
-module.exports = { signup, login, requestPasswordReset, resetPassword };
+module.exports = { normalizeEmail, signup, login, requestPasswordReset, resetPassword };
