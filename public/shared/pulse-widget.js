@@ -562,8 +562,10 @@
             <button class="pulse-action-btn" id="actImage" data-action="image"><span class="material-symbols-outlined">image</span>Image</button>
             <button class="pulse-action-btn" id="actHistory" data-action="history"><span class="material-symbols-outlined">history</span>History</button>
             <button class="pulse-action-btn" id="actSubmissions" data-action="submissions"><span class="material-symbols-outlined">inbox</span>Submissions</button>
+            <button class="pulse-action-btn" id="actSite" data-action="site"><span class="material-symbols-outlined">language</span>Full site</button>
             <button class="pulse-action-btn" id="actDesignMode" data-action="designMode"><span class="material-symbols-outlined">ads_click</span>Design</button>
           </div>
+          <div id="pulseSitePanel" aria-live="polite"></div>
           <div id="pulseImagePanel" class="hidden">
             <textarea id="pulseImagePrompt" placeholder="Describe the image you want…" rows="2"></textarea>
             <button id="pulseImageGenerate">Generate</button>
@@ -1034,6 +1036,21 @@
 
     // Submissions: website projects only (forms live on generated websites).
     show('actSubmissions', /\/(builder|amend_website)(\.html)?$/.test(location.pathname));
+    show('actSite', /\/builder(\.html)?$/.test(location.pathname)); // Website Builder: the draft and live addresses + Launch
+    document.getElementById('actSite').addEventListener('click', () => {
+      const projectId = gb.getProjectId?.();
+      if (!projectId) { logStatus('Start a build first - then your full site opens here.'); return; }
+      const panel = document.getElementById('pulseSitePanel');
+      panel.classList.toggle('visible');
+      if (!panel.classList.contains('visible')) return;
+      const go = () => window.GurostSitePanel.render(panel, projectId);
+      if (window.GurostSitePanel) return go();
+      const sc = document.createElement('script');
+      sc.src = 'shared/site-panel.js';
+      sc.onload = go;
+      sc.onerror = () => { panel.textContent = 'Could not load the site panel.'; };
+      document.head.appendChild(sc);
+    });
     document.getElementById('actSubmissions').addEventListener('click', () => {
       const projectId = gb.getProjectId?.();
       if (!projectId) { logStatus('Start a build first - submissions belong to a site.'); return; }

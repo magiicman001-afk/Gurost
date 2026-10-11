@@ -48,6 +48,7 @@ const webBot = require("./bots/web-bot");
 const variantBot = require("./bots/variant-bot");
 const libraryBot = require("./bots/library-bot");
 const sandboxLink = require("./lib/sandbox-link");
+const publishedSites = require("./lib/published-sites");
 const pulseBrain = require("./bots/pulse-brain");
 const { normalizeBusinessInfo, describeBusinessInfo, applyBusinessInfoUpdate } = require("./lib/business-info");
 const { finalizeSite } = require("./lib/finalize-site");
@@ -249,6 +250,25 @@ app.post("/api/whatsapp/webhook", express.raw({ type: "application/json" }), asy
     console.error("[whatsapp webhook] Processing failed:", err.message);
     if (!res.headersSent) res.status(500).json({ error: err.message });
   }
+});
+
+// Website Builder V2: customer sites. "<slug>.gurost.com" is answered here, before anything else (no cookies, no
+// app limiters, no auth); every other host falls through to the app. "/sites/<slug>/" is the same frozen site on the
+// app host, which works before DNS is pointed (see lib/published-sites.js).
+const siteStore = publishedSites.createStore(require("./lib/db").supabase);
+const PUBLIC_ORIGIN = process.env.PUBLIC_URL || "https://gurost.onrender.com";
+app.use(publishedSites.hostMiddleware({ store: siteStore, appOrigin: PUBLIC_ORIGIN }));
+app.get(/^\/sites\/([a-z0-9-]{3,40})(\/.*)?$/, async (req, res) => {
+  const slug = req.params[0];
+  const row = publishedSites.validateSlug(slug).ok ? await siteStore.bySlug(slug) : null;
+  const base = `/sites/${slug}`;
+  const rel = req.params[1] || "/";
+  let out;
+  if (rel === "/robots.txt") out = { status: 200, type: "text/plain", body: "User-agent: *\nDisallow: /\n" };
+  else if (rel === "/sitemap.xml") out = { status: 404, type: "text/plain", body: "Not found" };
+  else out = publishedSites.serveFrozen(row, rel, { base });
+  res.set(publishedSites.siteHeaders(row, { connectOrigin: PUBLIC_ORIGIN, noindex: true }));
+  res.status(out.status).type(out.type).send(out.body);
 });
 
 app.use(express.json({ limit: "5mb" }));
@@ -657,6 +677,26 @@ app.post("/api/admin/users/:userId/block", requireAdminAuth, security.rejectUnkn
       .eq("user_id", req.params.userId);
     if (error) throw error;
     res.json({ blocked: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Takedown switch: takes a customer site offline at once (visitors get a plain 404), or puts it back.
+app.post("/api/admin/sites/:slug/takedown", requireAdminAuth, security.rejectUnknownFields(["reason"]), async (req, res) => {
+  try {
+    const row = await siteStore.setStatusBySlug(req.params.slug, "taken_down", String(req.body.reason || "No reason given.").slice(0, 300));
+    if (!row) return res.status(404).json({ error: "No such site." });
+    res.json({ slug: row.slug, status: row.status });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.post("/api/admin/sites/:slug/restore", requireAdminAuth, async (req, res) => {
+  try {
+    const row = await siteStore.setStatusBySlug(req.params.slug, "live", null);
+    if (!row) return res.status(404).json({ error: "No such site." });
+    res.json({ slug: row.slug, status: row.status });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -4863,6 +4903,87 @@ app.get("/api/project/:id/site", (req, res) => {
     pages: site.pages.map((p) => ({ file: p.file, label: p.label, title: p.title })),
     previews: previewDocs(site.files)
   });
+});
+
+// ---- Website Builder V2: draft + live addresses, Launch, Unpublish ----
+const siteUrls = (slug) => ({
+  hostUrl: `https://${slug}.${publishedSites.rootDomain()}/`,
+  pathUrl: `${PUBLIC_ORIGIN}/sites/${slug}/`,
+  hostReady: process.env.SITES_DNS_READY === "1", // true once the wildcard DNS points at this server
+});
+const publishedView = (row) => (row ? { slug: row.slug, status: row.status, version: row.version, publishedAt: row.published_at, ...siteUrls(row.slug) } : null);
+
+app.get("/api/project/:id/site-links", async (req, res) => {
+  const project = getProject(req.params.id, req, res);
+  if (!project) return;
+  let published = null;
+  let ready = true;
+  try {
+    published = publishedView(await siteStore.byProject(req.params.id));
+  } catch (err) {
+    ready = err.code !== "not-ready";
+  }
+  const built = !!project.currentHtml;
+  res.json({
+    built,
+    sandbox: built ? { url: `/builder/sandbox/${req.params.id}/${sandboxLink.makeToken(req.params.id)}/`, expiresInHours: sandboxLink.TTL_MS / 3600000, editable: true } : null,
+    published,
+    publishingReady: ready,
+    suggestedSlug: publishedSites.suggestSlug(project.businessInfo?.name || ""),
+    publicOrigin: PUBLIC_ORIGIN,
+  });
+});
+
+app.get("/api/sites/check-slug", async (req, res) => {
+  const v = publishedSites.validateSlug(req.query.slug);
+  if (!v.ok) return res.json({ available: false, reason: v.reason });
+  try {
+    const row = await siteStore.bySlug(v.slug, { fresh: true });
+    const mine = row && typeof req.query.projectId === "string" && row.project_id === req.query.projectId;
+    res.json(row && !mine ? { available: false, reason: "That site name is already taken." } : { available: true, slug: v.slug });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/project/:id/publish", security.rejectUnknownFields(["slug"]), async (req, res) => {
+  const project = getProject(req.params.id, req, res);
+  if (!project) return;
+  if (project.type !== "website") return res.status(400).json({ error: "Only websites can be launched." });
+  try {
+    const out = await publishedSites.launch({
+      store: siteStore,
+      project,
+      projectId: req.params.id,
+      userId: req.user.id,
+      slug: req.body.slug,
+      includeBranding: !PLANS[req.user.plan]?.whiteLabel,
+      formEndpoint: `${PUBLIC_ORIGIN}/api/site-forms/${req.params.id}`,
+      buildSite,
+    });
+    project.published = { slug: out.row.slug, version: out.row.version, publishedAt: out.row.published_at, status: out.row.status };
+    project.history.push({ type: "publish", summary: `Launched version ${out.row.version} at ${out.row.slug}`, ts: Date.now() });
+    persistInBackground(req.params.id, project);
+    res.json({ published: publishedView(out.row), placeholders: out.placeholders, pages: out.pages });
+  } catch (err) {
+    const status = { "bad-slug": 400, "slug-taken": 409, "quality-gate": 422, "nothing-built": 400, "not-ready": 503 }[err.code] || 500;
+    if (status === 500) console.error("[publish] failed:", err.message);
+    res.status(status).json({ error: err.message, code: err.code || "error", failures: err.failures ? err.failures.slice(0, 5) : undefined });
+  }
+});
+
+app.post("/api/project/:id/unpublish", async (req, res) => {
+  const project = getProject(req.params.id, req, res);
+  if (!project) return;
+  try {
+    const row = await siteStore.setStatus(req.params.id, "unpublished");
+    if (!row) return res.status(404).json({ error: "This project is not launched." });
+    project.published = { slug: row.slug, version: row.version, publishedAt: row.published_at, status: row.status };
+    persistInBackground(req.params.id, project);
+    res.json({ published: publishedView(row) });
+  } catch (err) {
+    res.status(err.code === "not-ready" ? 503 : 500).json({ error: err.message });
+  }
 });
 
 // A draft link for the signed-in owner (12 hours): the site on real pages, to open on a phone or share for feedback.
