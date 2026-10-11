@@ -42,3 +42,10 @@
 .g-stats--a .g-stats__item + .g-stats__item {
   border-left: 0;
 }
+
+/* B: cards are narrower than the plain row, so the figure is a step smaller on a desktop (a long value never breaks mid-card) */
+@media (min-width: 880px) {
+  .g-stats--b .g-stats__value {
+    font-size: var(--g-t-32);
+  }
+}

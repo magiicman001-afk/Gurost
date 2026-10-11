@@ -113,3 +113,40 @@
   flex: 1;
   min-width: 0;
 }
+
+/* C: no lonely tile. The picture count decides how the last tiles stretch so every row is full. */
+@media (max-width: 879px) {
+  /* two columns under the full-width first picture: an even total leaves one tile alone, so it takes the full row */
+  .g-gallery--c .g-gallery__item:last-child:nth-child(even) {
+    grid-column: 1 / -1;
+  }
+  .g-gallery--c .g-gallery__item:last-child:nth-child(even) .g-gallery__img {
+    aspect-ratio: 2 / 1;
+  }
+}
+@media (min-width: 880px) {
+  /* four columns: the first picture is 2x2, the rest fill the remaining cells row by row */
+  .g-gallery--c .g-gallery__item:nth-child(2):nth-last-child(2),
+  .g-gallery--c .g-gallery__item:nth-child(3):last-child,
+  .g-gallery--c .g-gallery__item:nth-child(4):last-child,
+  .g-gallery--c .g-gallery__item:nth-child(6):nth-last-child(2),
+  .g-gallery--c .g-gallery__item:nth-child(7):last-child,
+  .g-gallery--c .g-gallery__item:nth-child(8):last-child {
+    grid-column: span 2;
+  }
+  .g-gallery--c .g-gallery__item:nth-child(2):nth-last-child(2) .g-gallery__img,
+  .g-gallery--c .g-gallery__item:nth-child(3):last-child .g-gallery__img,
+  .g-gallery--c .g-gallery__item:nth-child(4):last-child .g-gallery__img,
+  .g-gallery--c .g-gallery__item:nth-child(6):nth-last-child(2) .g-gallery__img,
+  .g-gallery--c .g-gallery__item:nth-child(7):last-child .g-gallery__img,
+  .g-gallery--c .g-gallery__item:nth-child(8):last-child .g-gallery__img {
+    aspect-ratio: 2 / 1;
+  }
+  .g-gallery--c .g-gallery__item:last-child:nth-child(6),
+  .g-gallery--c .g-gallery__item:last-child:nth-child(10) {
+    grid-column: 1 / -1;
+  }
+  .g-gallery--c .g-gallery__item:last-child:nth-child(6) .g-gallery__img {
+    aspect-ratio: 4 / 1;
+  }
+}

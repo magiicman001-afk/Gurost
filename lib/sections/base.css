@@ -36,6 +36,9 @@
 /* page shell: the assembler puts class="g-page" on <body> */
 .g-page {
   margin: 0;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-kerning: normal;
   font-family: var(--g-font-body, system-ui, sans-serif);
   font-size: var(--g-t-16);
   line-height: 1.6;
@@ -252,4 +255,23 @@
 }
 .g-sec p {
   overflow-wrap: anywhere;
+}
+
+/* typography polish: balanced headings, no one-word last lines, steady numbers (all progressive: ignored where unsupported) */
+:where([data-gurost-section]) :where(h1, h2, h3) {
+  text-wrap: balance;
+}
+:where([data-gurost-section]) :where(p, li, blockquote) {
+  text-wrap: pretty;
+}
+.g-title,
+.g-hero__title {
+  letter-spacing: -0.01em;
+}
+.g-stats__value,
+.g-pricing__amount,
+.g-prod__amount,
+.g-loc__time,
+.g-hero__trust {
+  font-variant-numeric: tabular-nums lining-nums;
 }
