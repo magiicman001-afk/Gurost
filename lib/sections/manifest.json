@@ -1,0 +1,1195 @@
+{
+  "version": 1,
+  "note": "Slot schema is defined (status planned -> built) only when a section is built. Sections with slots=null have no schema yet: nothing is invented ahead of the build. Source of truth for built sections: docs/SECTION_LIBRARY_SLICE_1_PLAN.md.",
+  "flag": "SECTION_LIBRARY",
+  "sections": [
+    {
+      "id": "navbar",
+      "name": "Navbar",
+      "element": "header",
+      "variants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "slots": {
+        "brand": {
+          "type": "text",
+          "max": 32,
+          "required": true,
+          "label": "brand name"
+        },
+        "logo": {
+          "type": "image"
+        },
+        "links": {
+          "type": "list",
+          "required": true,
+          "min": 3,
+          "max": 6,
+          "item": {
+            "label": {
+              "type": "text",
+              "max": 16,
+              "required": true
+            },
+            "href": {
+              "type": "link",
+              "required": true
+            }
+          }
+        },
+        "cta_label": {
+          "type": "text",
+          "max": 20,
+          "required": true,
+          "label": "button text"
+        },
+        "cta_href": {
+          "type": "link",
+          "required": true
+        },
+        "phone": {
+          "type": "text",
+          "max": 20,
+          "required": false
+        },
+        "sticky": {
+          "type": "flag"
+        }
+      },
+      "aliases": [
+        "nav",
+        "header",
+        "menu bar",
+        "top bar"
+      ],
+      "pageTypes": [
+        "landing",
+        "local-business",
+        "professional",
+        "portfolio"
+      ],
+      "palettePairs": [
+        [
+          "text",
+          "surface",
+          4.5
+        ],
+        [
+          "on-primary",
+          "primary",
+          4.5
+        ],
+        [
+          "primary",
+          "surface",
+          3.0
+        ],
+        [
+          "focus",
+          "surface",
+          3.0
+        ],
+        [
+          "on-dark",
+          "dark",
+          4.5
+        ]
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "hero",
+      "name": "Hero",
+      "element": "section",
+      "variants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "slots": {
+        "eyebrow": {
+          "type": "text",
+          "max": 40,
+          "required": false
+        },
+        "headline": {
+          "type": "text",
+          "max": 70,
+          "required": true,
+          "label": "headline"
+        },
+        "subhead": {
+          "type": "text",
+          "max": 160,
+          "required": true,
+          "label": "subheading"
+        },
+        "cta1_label": {
+          "type": "text",
+          "max": 24,
+          "required": true,
+          "label": "button text"
+        },
+        "cta1_href": {
+          "type": "link",
+          "required": true
+        },
+        "cta2_label": {
+          "type": "text",
+          "max": 24,
+          "required": false
+        },
+        "cta2_href": {
+          "type": "link",
+          "required": false
+        },
+        "image": {
+          "type": "image"
+        },
+        "image_brief": {
+          "type": "text",
+          "max": 200,
+          "required": false
+        },
+        "image_alt": {
+          "type": "text",
+          "max": 100,
+          "required": false
+        },
+        "trust_line": {
+          "type": "text",
+          "max": 60,
+          "required": false
+        }
+      },
+      "aliases": [
+        "banner",
+        "top section",
+        "header section",
+        "intro"
+      ],
+      "pageTypes": [
+        "landing",
+        "local-business",
+        "professional",
+        "portfolio"
+      ],
+      "palettePairs": [
+        [
+          "text",
+          "bg",
+          4.5
+        ],
+        [
+          "muted",
+          "bg",
+          4.5
+        ],
+        [
+          "on-primary",
+          "primary",
+          4.5
+        ],
+        [
+          "primary",
+          "bg",
+          4.5
+        ],
+        [
+          "on-dark",
+          "dark",
+          4.5
+        ],
+        [
+          "focus",
+          "bg",
+          3.0
+        ]
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "trust-bar",
+      "name": "Trust Bar",
+      "element": "section",
+      "variants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "slots": null,
+      "aliases": [
+        "logos",
+        "clients",
+        "as seen in",
+        "partners"
+      ],
+      "pageTypes": [
+        "landing",
+        "professional"
+      ],
+      "palettePairs": [
+        [
+          "text",
+          "bg",
+          4.5
+        ],
+        [
+          "muted",
+          "bg",
+          4.5
+        ],
+        [
+          "on-primary",
+          "primary",
+          4.5
+        ],
+        [
+          "focus",
+          "bg",
+          3.0
+        ]
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "features",
+      "name": "Features",
+      "element": "section",
+      "variants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "slots": null,
+      "aliases": [
+        "benefits",
+        "why choose us",
+        "highlights"
+      ],
+      "pageTypes": [
+        "landing",
+        "professional",
+        "portfolio"
+      ],
+      "palettePairs": [
+        [
+          "text",
+          "bg",
+          4.5
+        ],
+        [
+          "muted",
+          "bg",
+          4.5
+        ],
+        [
+          "on-primary",
+          "primary",
+          4.5
+        ],
+        [
+          "focus",
+          "bg",
+          3.0
+        ]
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "about",
+      "name": "About",
+      "element": "section",
+      "variants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "slots": null,
+      "aliases": [
+        "our story",
+        "who we are",
+        "about us"
+      ],
+      "pageTypes": [
+        "landing",
+        "local-business",
+        "professional",
+        "portfolio"
+      ],
+      "palettePairs": [
+        [
+          "text",
+          "bg",
+          4.5
+        ],
+        [
+          "muted",
+          "bg",
+          4.5
+        ],
+        [
+          "on-primary",
+          "primary",
+          4.5
+        ],
+        [
+          "focus",
+          "bg",
+          3.0
+        ]
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "services",
+      "name": "Services",
+      "element": "section",
+      "variants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "slots": null,
+      "aliases": [
+        "what we do",
+        "offerings",
+        "treatments",
+        "menu of services"
+      ],
+      "pageTypes": [
+        "local-business",
+        "professional"
+      ],
+      "palettePairs": [
+        [
+          "text",
+          "bg",
+          4.5
+        ],
+        [
+          "muted",
+          "bg",
+          4.5
+        ],
+        [
+          "on-primary",
+          "primary",
+          4.5
+        ],
+        [
+          "focus",
+          "bg",
+          3.0
+        ]
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "gallery",
+      "name": "Gallery",
+      "element": "section",
+      "variants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "slots": null,
+      "aliases": [
+        "photos",
+        "portfolio images",
+        "work"
+      ],
+      "pageTypes": [
+        "local-business",
+        "portfolio"
+      ],
+      "palettePairs": [
+        [
+          "text",
+          "bg",
+          4.5
+        ],
+        [
+          "muted",
+          "bg",
+          4.5
+        ],
+        [
+          "on-primary",
+          "primary",
+          4.5
+        ],
+        [
+          "focus",
+          "bg",
+          3.0
+        ]
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "testimonials",
+      "name": "Testimonials",
+      "element": "section",
+      "variants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "slots": null,
+      "aliases": [
+        "reviews",
+        "what customers say",
+        "quotes"
+      ],
+      "pageTypes": [
+        "landing",
+        "local-business",
+        "professional",
+        "portfolio"
+      ],
+      "palettePairs": [
+        [
+          "text",
+          "bg",
+          4.5
+        ],
+        [
+          "muted",
+          "bg",
+          4.5
+        ],
+        [
+          "on-primary",
+          "primary",
+          4.5
+        ],
+        [
+          "focus",
+          "bg",
+          3.0
+        ]
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "pricing",
+      "name": "Pricing",
+      "element": "section",
+      "variants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "slots": null,
+      "aliases": [
+        "plans",
+        "packages",
+        "rates"
+      ],
+      "pageTypes": [
+        "landing",
+        "professional"
+      ],
+      "palettePairs": [
+        [
+          "text",
+          "bg",
+          4.5
+        ],
+        [
+          "muted",
+          "bg",
+          4.5
+        ],
+        [
+          "on-primary",
+          "primary",
+          4.5
+        ],
+        [
+          "focus",
+          "bg",
+          3.0
+        ]
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "team",
+      "name": "Team",
+      "element": "section",
+      "variants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "slots": null,
+      "aliases": [
+        "our people",
+        "meet the team",
+        "staff"
+      ],
+      "pageTypes": [
+        "professional",
+        "local-business"
+      ],
+      "palettePairs": [
+        [
+          "text",
+          "bg",
+          4.5
+        ],
+        [
+          "muted",
+          "bg",
+          4.5
+        ],
+        [
+          "on-primary",
+          "primary",
+          4.5
+        ],
+        [
+          "focus",
+          "bg",
+          3.0
+        ]
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "process",
+      "name": "Process",
+      "element": "section",
+      "variants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "slots": null,
+      "aliases": [
+        "how it works",
+        "steps"
+      ],
+      "pageTypes": [
+        "landing",
+        "professional"
+      ],
+      "palettePairs": [
+        [
+          "text",
+          "bg",
+          4.5
+        ],
+        [
+          "muted",
+          "bg",
+          4.5
+        ],
+        [
+          "on-primary",
+          "primary",
+          4.5
+        ],
+        [
+          "focus",
+          "bg",
+          3.0
+        ]
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "stats",
+      "name": "Stats",
+      "element": "section",
+      "variants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "slots": null,
+      "aliases": [
+        "numbers",
+        "figures",
+        "by the numbers"
+      ],
+      "pageTypes": [
+        "landing",
+        "professional"
+      ],
+      "palettePairs": [
+        [
+          "text",
+          "bg",
+          4.5
+        ],
+        [
+          "muted",
+          "bg",
+          4.5
+        ],
+        [
+          "on-primary",
+          "primary",
+          4.5
+        ],
+        [
+          "focus",
+          "bg",
+          3.0
+        ]
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "faq",
+      "name": "FAQ",
+      "element": "section",
+      "variants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "slots": null,
+      "aliases": [
+        "questions",
+        "questions and answers"
+      ],
+      "pageTypes": [
+        "landing",
+        "local-business",
+        "professional",
+        "portfolio"
+      ],
+      "palettePairs": [
+        [
+          "text",
+          "bg",
+          4.5
+        ],
+        [
+          "muted",
+          "bg",
+          4.5
+        ],
+        [
+          "on-primary",
+          "primary",
+          4.5
+        ],
+        [
+          "focus",
+          "bg",
+          3.0
+        ]
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "booking",
+      "name": "Booking",
+      "element": "section",
+      "variants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "slots": null,
+      "aliases": [
+        "book",
+        "reservations",
+        "appointments",
+        "contact form"
+      ],
+      "pageTypes": [
+        "local-business",
+        "professional"
+      ],
+      "palettePairs": [
+        [
+          "text",
+          "bg",
+          4.5
+        ],
+        [
+          "muted",
+          "bg",
+          4.5
+        ],
+        [
+          "on-primary",
+          "primary",
+          4.5
+        ],
+        [
+          "focus",
+          "bg",
+          3.0
+        ]
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "location",
+      "name": "Location",
+      "element": "section",
+      "variants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "slots": null,
+      "aliases": [
+        "find us",
+        "map",
+        "visit us",
+        "hours"
+      ],
+      "pageTypes": [
+        "local-business"
+      ],
+      "palettePairs": [
+        [
+          "text",
+          "bg",
+          4.5
+        ],
+        [
+          "muted",
+          "bg",
+          4.5
+        ],
+        [
+          "on-primary",
+          "primary",
+          4.5
+        ],
+        [
+          "focus",
+          "bg",
+          3.0
+        ]
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "blog",
+      "name": "Blog",
+      "element": "section",
+      "variants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "slots": null,
+      "aliases": [
+        "news",
+        "articles",
+        "journal"
+      ],
+      "pageTypes": [
+        "landing",
+        "portfolio"
+      ],
+      "palettePairs": [
+        [
+          "text",
+          "bg",
+          4.5
+        ],
+        [
+          "muted",
+          "bg",
+          4.5
+        ],
+        [
+          "on-primary",
+          "primary",
+          4.5
+        ],
+        [
+          "focus",
+          "bg",
+          3.0
+        ]
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "cta",
+      "name": "CTA",
+      "element": "section",
+      "variants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "slots": null,
+      "aliases": [
+        "call to action",
+        "banner"
+      ],
+      "pageTypes": [
+        "landing",
+        "local-business",
+        "professional",
+        "portfolio"
+      ],
+      "palettePairs": [
+        [
+          "text",
+          "bg",
+          4.5
+        ],
+        [
+          "muted",
+          "bg",
+          4.5
+        ],
+        [
+          "on-primary",
+          "primary",
+          4.5
+        ],
+        [
+          "focus",
+          "bg",
+          3.0
+        ]
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "newsletter",
+      "name": "Newsletter",
+      "element": "section",
+      "variants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "slots": null,
+      "aliases": [
+        "subscribe",
+        "mailing list"
+      ],
+      "pageTypes": [
+        "landing",
+        "portfolio"
+      ],
+      "palettePairs": [
+        [
+          "text",
+          "bg",
+          4.5
+        ],
+        [
+          "muted",
+          "bg",
+          4.5
+        ],
+        [
+          "on-primary",
+          "primary",
+          4.5
+        ],
+        [
+          "focus",
+          "bg",
+          3.0
+        ]
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "footer",
+      "name": "Footer",
+      "element": "footer",
+      "variants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "slots": {
+        "brand": {
+          "type": "text",
+          "max": 32,
+          "required": true,
+          "label": "brand name"
+        },
+        "tagline": {
+          "type": "text",
+          "max": 90,
+          "required": false
+        },
+        "link_groups": {
+          "type": "list",
+          "required": true,
+          "min": 1,
+          "max": 3,
+          "item": {
+            "title": {
+              "type": "text",
+              "max": 20,
+              "required": true
+            },
+            "links": {
+              "type": "list",
+              "required": true,
+              "max": 5,
+              "item": {
+                "label": {
+                  "type": "text",
+                  "max": 20,
+                  "required": true
+                },
+                "href": {
+                  "type": "link",
+                  "required": true
+                }
+              }
+            }
+          }
+        },
+        "address": {
+          "type": "text",
+          "max": 120,
+          "required": false
+        },
+        "phone": {
+          "type": "text",
+          "max": 20,
+          "required": false
+        },
+        "email": {
+          "type": "text",
+          "max": 60,
+          "required": false
+        },
+        "hours": {
+          "type": "text",
+          "max": 80,
+          "required": false,
+          "placeholder": "[Add your opening hours]"
+        },
+        "socials": {
+          "type": "list",
+          "max": 5,
+          "derive": "social_icon",
+          "item": {
+            "platform": {
+              "type": "enum",
+              "values": [
+                "instagram",
+                "facebook",
+                "tiktok",
+                "youtube",
+                "x"
+              ],
+              "required": true
+            },
+            "url": {
+              "type": "link",
+              "required": true
+            }
+          }
+        },
+        "legal_extra": {
+          "type": "text",
+          "max": 100,
+          "required": false
+        },
+        "cta_title": {
+          "type": "text",
+          "max": 50,
+          "required": false
+        },
+        "cta_label": {
+          "type": "text",
+          "max": 24,
+          "required": false
+        },
+        "cta_href": {
+          "type": "link",
+          "required": false
+        },
+        "show_gurost_credit": {
+          "type": "flag"
+        }
+      },
+      "aliases": [
+        "bottom bar",
+        "page bottom",
+        "site footer"
+      ],
+      "pageTypes": [
+        "landing",
+        "local-business",
+        "professional",
+        "portfolio"
+      ],
+      "palettePairs": [
+        [
+          "on-dark",
+          "dark",
+          4.5
+        ],
+        [
+          "on-dark-muted",
+          "dark",
+          4.5
+        ],
+        [
+          "text",
+          "surface",
+          4.5
+        ],
+        [
+          "muted",
+          "surface",
+          4.5
+        ],
+        [
+          "on-primary",
+          "primary",
+          4.5
+        ],
+        [
+          "on-dark",
+          "dark",
+          3.0
+        ]
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "product-highlight",
+      "name": "Product Highlight",
+      "element": "section",
+      "variants": [
+        "a",
+        "b",
+        "c"
+      ],
+      "slots": null,
+      "aliases": [
+        "featured product",
+        "showcase",
+        "best seller"
+      ],
+      "pageTypes": [
+        "landing",
+        "local-business",
+        "portfolio"
+      ],
+      "palettePairs": [
+        [
+          "text",
+          "bg",
+          4.5
+        ],
+        [
+          "muted",
+          "bg",
+          4.5
+        ],
+        [
+          "on-primary",
+          "primary",
+          4.5
+        ],
+        [
+          "focus",
+          "bg",
+          3.0
+        ]
+      ],
+      "tones": [
+        "light",
+        "dark"
+      ],
+      "status": "planned"
+    }
+  ]
+}

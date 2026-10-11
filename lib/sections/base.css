@@ -1,0 +1,164 @@
+/* Gurost section library: base styles shared by every section.
+   Colours come ONLY from the palette variables (--g-bg, --g-text, ...) which the assembler sets once on :root
+   (see render.js paletteCss). This file contains no colour values on purpose (a test enforces it). */
+
+:root {
+  /* type scale (fluid on phones for the large sizes) */
+  --g-t-12: 0.75rem;
+  --g-t-14: 0.875rem;
+  --g-t-16: 1rem;
+  --g-t-20: 1.25rem;
+  --g-t-24: 1.5rem;
+  --g-t-32: clamp(1.75rem, 1.2rem + 2vw, 2rem);
+  --g-t-48: clamp(2rem, 1.2rem + 4vw, 3rem);
+  --g-t-64: clamp(2.25rem, 1rem + 6vw, 4rem);
+  /* spacing, 8px grid */
+  --g-s1: 8px;
+  --g-s2: 16px;
+  --g-s3: 24px;
+  --g-s4: 32px;
+  --g-s6: 48px;
+  --g-s8: 64px;
+  --g-s12: 96px;
+  /* shape */
+  --g-radius: 12px;
+  --g-radius-btn: 999px;
+  --g-shadow: 0 8px 24px -12px var(--g-border);
+  --g-max: 1200px;
+  --g-tap: 44px;
+}
+@supports (color: color-mix(in srgb, red, blue)) {
+  :root {
+    --g-shadow: 0 8px 24px -12px color-mix(in srgb, var(--g-text) 35%, transparent);
+  }
+}
+
+/* page shell: the assembler puts class="g-page" on <body> */
+.g-page {
+  margin: 0;
+  font-family: var(--g-font-body, system-ui, sans-serif);
+  font-size: var(--g-t-16);
+  line-height: 1.6;
+  color: var(--g-text);
+  background: var(--g-bg);
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+.g-page *,
+.g-page *::before,
+.g-page *::after {
+  box-sizing: border-box;
+}
+
+/* zero-specificity element reset inside sections */
+:where([data-gurost-section]) :where(h1, h2, h3, h4, p, ul, ol, figure, blockquote) {
+  margin: 0;
+}
+:where([data-gurost-section]) :where(ul, ol) {
+  padding: 0;
+  list-style: none;
+}
+:where([data-gurost-section]) :where(img, svg, video) {
+  display: block;
+  max-width: 100%;
+}
+:where([data-gurost-section]) :where(a) {
+  color: inherit;
+  text-decoration: none;
+}
+:where([data-gurost-section]) :where(h1, h2, h3, h4) {
+  font-family: var(--g-font-head, inherit);
+  line-height: 1.15;
+}
+
+.g-container {
+  width: 100%;
+  max-width: var(--g-max);
+  margin-inline: auto;
+  padding-inline: var(--g-s2);
+}
+@media (min-width: 880px) {
+  .g-container {
+    padding-inline: var(--g-s4);
+  }
+}
+
+/* buttons shared by all sections */
+.g-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--g-tap);
+  padding: 0 var(--g-s3);
+  border: 2px solid transparent;
+  border-radius: var(--g-radius-btn);
+  font-family: var(--g-font-body, inherit);
+  font-size: var(--g-t-16);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+.g-btn--primary {
+  background: var(--g-primary);
+  color: var(--g-on-primary);
+}
+.g-btn--accent {
+  background: var(--g-accent);
+  color: var(--g-on-accent);
+}
+.g-btn--ghost {
+  background: transparent;
+  color: var(--g-primary);
+  border-color: var(--g-primary);
+}
+.g-btn--inverse {
+  background: var(--g-on-primary);
+  color: var(--g-primary);
+}
+
+/* keyboard focus */
+.g-page :focus-visible {
+  outline: 2px solid var(--g-focus);
+  outline-offset: 2px;
+}
+[data-tone="dark"] :focus-visible {
+  outline-color: var(--g-on-dark);
+}
+
+/* skip link and screen-reader-only text */
+.g-skip,
+.g-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.g-skip:focus {
+  position: fixed;
+  top: var(--g-s1);
+  left: var(--g-s1);
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: var(--g-s1) var(--g-s2);
+  clip: auto;
+  z-index: 100;
+  background: var(--g-primary);
+  color: var(--g-on-primary);
+  border-radius: var(--g-radius);
+}
+
+/* motion hooks: content is visible by default; only a page that adds .g-js may start hidden */
+@media (prefers-reduced-motion: reduce) {
+  .g-js [data-g-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+}

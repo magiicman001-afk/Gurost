@@ -1,0 +1,1113 @@
+{
+  "version": 1,
+  "note": "Locked 2026-10-09 by Irfan. Source of truth: docs/INDUSTRY_PALETTES_SPEC.md. Values are checked by test/section-palettes.test.js.",
+  "tokens": [
+    "primary",
+    "on-primary",
+    "bg",
+    "surface",
+    "text",
+    "muted",
+    "accent",
+    "on-accent",
+    "border",
+    "dark",
+    "on-dark",
+    "on-dark-muted",
+    "focus"
+  ],
+  "palettes": {
+    "cafe": {
+      "name": "Cafe / Bakery",
+      "industries": [
+        "Bakery/Cafe",
+        "Coffee shop",
+        "Restaurant"
+      ],
+      "footerTone": "light",
+      "fonts": {
+        "heading": "Playfair Display SC",
+        "headingFallback": "Georgia, 'Times New Roman', serif",
+        "headingWeights": [
+          400,
+          700
+        ],
+        "body": "Karla",
+        "bodyFallback": "system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "bodyWeights": [
+          400,
+          600
+        ]
+      },
+      "colors": {
+        "primary": "#92400E",
+        "on-primary": "#FFFFFF",
+        "bg": "#FFFBEB",
+        "surface": "#FEF3C7",
+        "text": "#292524",
+        "muted": "#6B5B4E",
+        "accent": "#B45309",
+        "on-accent": "#FFFFFF",
+        "border": "#E7D5B3",
+        "dark": "#451A03",
+        "on-dark": "#FEF3C7",
+        "on-dark-muted": "#E7CFA0",
+        "focus": "#92400E"
+      },
+      "pairs": [
+        {
+          "fg": "text",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "text",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "on-primary",
+          "bg": "primary",
+          "min": 4.5
+        },
+        {
+          "fg": "on-accent",
+          "bg": "accent",
+          "min": 4.5
+        },
+        {
+          "fg": "primary",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "primary",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "on-dark",
+          "bg": "dark",
+          "min": 4.5
+        },
+        {
+          "fg": "on-dark-muted",
+          "bg": "dark",
+          "min": 4.5
+        },
+        {
+          "fg": "focus",
+          "bg": "bg",
+          "min": 3.0
+        },
+        {
+          "fg": "on-dark",
+          "bg": "dark",
+          "min": 3.0
+        }
+      ],
+      "testPairs": [
+        {
+          "fg": "text",
+          "bg": "bg",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 14.63
+        },
+        {
+          "fg": "text",
+          "bg": "surface",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 13.62
+        },
+        {
+          "fg": "muted",
+          "bg": "bg",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 6.27
+        },
+        {
+          "fg": "on-primary",
+          "bg": "primary",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 7.09
+        },
+        {
+          "fg": "on-accent",
+          "bg": "accent",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 5.02
+        },
+        {
+          "fg": "primary",
+          "bg": "bg",
+          "kind": "large",
+          "min": 3.0,
+          "expected": 6.84
+        },
+        {
+          "fg": "on-dark",
+          "bg": "dark",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 13.45
+        },
+        {
+          "fg": "on-dark-muted",
+          "bg": "dark",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 9.86
+        },
+        {
+          "fg": "primary",
+          "bg": "surface",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 6.37
+        }
+      ],
+      "defaults": {
+        "navbar": "a",
+        "hero": "a",
+        "footer": "a"
+      },
+      "mood": "Warm, welcoming and a little nostalgic, like a bakery window in the morning. Cream and toasted brown make food look appetising and the page feel local, not corporate.",
+      "cta": "Call (orders/reservations); secondary: View menu"
+    },
+    "law": {
+      "name": "Law / Finance",
+      "industries": [
+        "Law firm",
+        "Accounting",
+        "Finance"
+      ],
+      "footerTone": "dark",
+      "fonts": {
+        "heading": "Libre Baskerville",
+        "headingFallback": "Georgia, 'Times New Roman', serif",
+        "headingWeights": [
+          400,
+          700
+        ],
+        "body": "Source Sans 3",
+        "bodyFallback": "system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "bodyWeights": [
+          400,
+          600
+        ]
+      },
+      "colors": {
+        "primary": "#1E3A5F",
+        "on-primary": "#FFFFFF",
+        "bg": "#FFFFFF",
+        "surface": "#F1F5F9",
+        "text": "#0F172A",
+        "muted": "#475569",
+        "accent": "#92400E",
+        "on-accent": "#FFFFFF",
+        "border": "#CBD5E1",
+        "dark": "#0B1B33",
+        "on-dark": "#E2E8F0",
+        "on-dark-muted": "#A9B8CC",
+        "focus": "#1E3A5F"
+      },
+      "pairs": [
+        {
+          "fg": "text",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "text",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "on-primary",
+          "bg": "primary",
+          "min": 4.5
+        },
+        {
+          "fg": "on-accent",
+          "bg": "accent",
+          "min": 4.5
+        },
+        {
+          "fg": "primary",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "primary",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "on-dark",
+          "bg": "dark",
+          "min": 4.5
+        },
+        {
+          "fg": "on-dark-muted",
+          "bg": "dark",
+          "min": 4.5
+        },
+        {
+          "fg": "focus",
+          "bg": "bg",
+          "min": 3.0
+        },
+        {
+          "fg": "on-dark",
+          "bg": "dark",
+          "min": 3.0
+        }
+      ],
+      "testPairs": [
+        {
+          "fg": "text",
+          "bg": "bg",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 17.85
+        },
+        {
+          "fg": "text",
+          "bg": "surface",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 16.3
+        },
+        {
+          "fg": "muted",
+          "bg": "bg",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 7.58
+        },
+        {
+          "fg": "muted",
+          "bg": "surface",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 6.92
+        },
+        {
+          "fg": "on-primary",
+          "bg": "primary",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 11.5
+        },
+        {
+          "fg": "on-accent",
+          "bg": "accent",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 7.09
+        },
+        {
+          "fg": "accent",
+          "bg": "bg",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 7.09
+        },
+        {
+          "fg": "on-dark",
+          "bg": "dark",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 13.98
+        },
+        {
+          "fg": "on-dark-muted",
+          "bg": "dark",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 8.55
+        }
+      ],
+      "defaults": {
+        "navbar": "a",
+        "hero": "c",
+        "footer": "a"
+      },
+      "mood": "Calm, authoritative and trustworthy. Navy and restrained bronze say experience and discretion, with no flash.",
+      "cta": "Contact (Book a consultation)"
+    },
+    "salon": {
+      "name": "Salon / Beauty",
+      "industries": [
+        "Hair salon",
+        "Beauty",
+        "Spa"
+      ],
+      "footerTone": "light",
+      "fonts": {
+        "heading": "Cormorant Garamond",
+        "headingFallback": "Georgia, 'Times New Roman', serif",
+        "headingWeights": [
+          600,
+          700
+        ],
+        "body": "Jost",
+        "bodyFallback": "system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "bodyWeights": [
+          400,
+          600
+        ]
+      },
+      "colors": {
+        "primary": "#831843",
+        "on-primary": "#FFFFFF",
+        "bg": "#FFF8F6",
+        "surface": "#FCE7F3",
+        "text": "#2A1A20",
+        "muted": "#6B4A57",
+        "accent": "#9D174D",
+        "on-accent": "#FFFFFF",
+        "border": "#F3CFE0",
+        "dark": "#3B0A22",
+        "on-dark": "#FCE7F3",
+        "on-dark-muted": "#E9B5CE",
+        "focus": "#831843"
+      },
+      "pairs": [
+        {
+          "fg": "text",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "text",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "on-primary",
+          "bg": "primary",
+          "min": 4.5
+        },
+        {
+          "fg": "on-accent",
+          "bg": "accent",
+          "min": 4.5
+        },
+        {
+          "fg": "primary",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "primary",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "on-dark",
+          "bg": "dark",
+          "min": 4.5
+        },
+        {
+          "fg": "on-dark-muted",
+          "bg": "dark",
+          "min": 4.5
+        },
+        {
+          "fg": "focus",
+          "bg": "bg",
+          "min": 3.0
+        },
+        {
+          "fg": "on-dark",
+          "bg": "dark",
+          "min": 3.0
+        }
+      ],
+      "testPairs": [
+        {
+          "fg": "text",
+          "bg": "bg",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 15.79
+        },
+        {
+          "fg": "text",
+          "bg": "surface",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 14.1
+        },
+        {
+          "fg": "muted",
+          "bg": "bg",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 7.3
+        },
+        {
+          "fg": "muted",
+          "bg": "surface",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 6.51
+        },
+        {
+          "fg": "on-primary",
+          "bg": "primary",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 9.65
+        },
+        {
+          "fg": "on-accent",
+          "bg": "accent",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 7.88
+        },
+        {
+          "fg": "primary",
+          "bg": "bg",
+          "kind": "large",
+          "min": 3.0,
+          "expected": 9.19
+        },
+        {
+          "fg": "on-dark",
+          "bg": "dark",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 14.26
+        },
+        {
+          "fg": "on-dark-muted",
+          "bg": "dark",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 9.55
+        }
+      ],
+      "defaults": {
+        "navbar": "b",
+        "hero": "b",
+        "footer": "a"
+      },
+      "mood": "Airy, stylish and personal. Soft blush with a deep berry anchor feels premium without being cold.",
+      "cta": "Book (Book an appointment)"
+    },
+    "trades": {
+      "name": "Trades / Construction",
+      "industries": [
+        "Plumber",
+        "Electrician",
+        "Construction"
+      ],
+      "footerTone": "light",
+      "fonts": {
+        "heading": "Barlow Condensed",
+        "headingFallback": "'Arial Narrow', Arial, sans-serif",
+        "headingWeights": [
+          600,
+          700
+        ],
+        "body": "Barlow",
+        "bodyFallback": "system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "bodyWeights": [
+          400,
+          600
+        ]
+      },
+      "colors": {
+        "primary": "#1F2937",
+        "on-primary": "#FFFFFF",
+        "bg": "#FFFFFF",
+        "surface": "#F3F4F6",
+        "text": "#111827",
+        "muted": "#4B5563",
+        "accent": "#C2410C",
+        "on-accent": "#FFFFFF",
+        "border": "#D1D5DB",
+        "dark": "#111827",
+        "on-dark": "#F3F4F6",
+        "on-dark-muted": "#B4BCC8",
+        "focus": "#C2410C"
+      },
+      "pairs": [
+        {
+          "fg": "text",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "text",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "on-primary",
+          "bg": "primary",
+          "min": 4.5
+        },
+        {
+          "fg": "on-accent",
+          "bg": "accent",
+          "min": 4.5
+        },
+        {
+          "fg": "primary",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "primary",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "on-dark",
+          "bg": "dark",
+          "min": 4.5
+        },
+        {
+          "fg": "on-dark-muted",
+          "bg": "dark",
+          "min": 4.5
+        },
+        {
+          "fg": "focus",
+          "bg": "bg",
+          "min": 3.0
+        },
+        {
+          "fg": "on-dark",
+          "bg": "dark",
+          "min": 3.0
+        }
+      ],
+      "testPairs": [
+        {
+          "fg": "text",
+          "bg": "bg",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 17.74
+        },
+        {
+          "fg": "text",
+          "bg": "surface",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 16.12
+        },
+        {
+          "fg": "muted",
+          "bg": "bg",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 7.56
+        },
+        {
+          "fg": "muted",
+          "bg": "surface",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 6.87
+        },
+        {
+          "fg": "on-primary",
+          "bg": "primary",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 14.68
+        },
+        {
+          "fg": "on-accent",
+          "bg": "accent",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 5.18
+        },
+        {
+          "fg": "accent",
+          "bg": "bg",
+          "kind": "large",
+          "min": 3.0,
+          "expected": 5.18
+        },
+        {
+          "fg": "on-dark",
+          "bg": "dark",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 16.12
+        },
+        {
+          "fg": "on-dark-muted",
+          "bg": "dark",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 9.27
+        }
+      ],
+      "defaults": {
+        "navbar": "a",
+        "hero": "b",
+        "footer": "a"
+      },
+      "mood": "Solid, dependable and no-nonsense. Charcoal with a safety-orange action colour makes the phone button impossible to miss.",
+      "cta": "Call (Call {{phone}}); secondary: Get a quote"
+    },
+    "health": {
+      "name": "Health / Clinic",
+      "industries": [
+        "Clinic",
+        "Dentist",
+        "Wellness"
+      ],
+      "footerTone": "light",
+      "fonts": {
+        "heading": "Nunito",
+        "headingFallback": "system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "headingWeights": [
+          600,
+          700
+        ],
+        "body": "Open Sans",
+        "bodyFallback": "system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "bodyWeights": [
+          400,
+          600
+        ]
+      },
+      "colors": {
+        "primary": "#0F766E",
+        "on-primary": "#FFFFFF",
+        "bg": "#F7FFFD",
+        "surface": "#E6F7F4",
+        "text": "#10302D",
+        "muted": "#40605C",
+        "accent": "#0369A1",
+        "on-accent": "#FFFFFF",
+        "border": "#BFE3DD",
+        "dark": "#0B3B37",
+        "on-dark": "#E6F7F4",
+        "on-dark-muted": "#A9D3CD",
+        "focus": "#0F766E"
+      },
+      "pairs": [
+        {
+          "fg": "text",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "text",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "on-primary",
+          "bg": "primary",
+          "min": 4.5
+        },
+        {
+          "fg": "on-accent",
+          "bg": "accent",
+          "min": 4.5
+        },
+        {
+          "fg": "primary",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "primary",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "on-dark",
+          "bg": "dark",
+          "min": 4.5
+        },
+        {
+          "fg": "on-dark-muted",
+          "bg": "dark",
+          "min": 4.5
+        },
+        {
+          "fg": "focus",
+          "bg": "bg",
+          "min": 3.0
+        },
+        {
+          "fg": "on-dark",
+          "bg": "dark",
+          "min": 3.0
+        }
+      ],
+      "testPairs": [
+        {
+          "fg": "text",
+          "bg": "bg",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 13.95
+        },
+        {
+          "fg": "text",
+          "bg": "surface",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 12.8
+        },
+        {
+          "fg": "muted",
+          "bg": "bg",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 6.79
+        },
+        {
+          "fg": "muted",
+          "bg": "surface",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 6.23
+        },
+        {
+          "fg": "on-primary",
+          "bg": "primary",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 5.47
+        },
+        {
+          "fg": "on-accent",
+          "bg": "accent",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 5.93
+        },
+        {
+          "fg": "primary",
+          "bg": "bg",
+          "kind": "large",
+          "min": 3.0,
+          "expected": 5.39
+        },
+        {
+          "fg": "on-dark",
+          "bg": "dark",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 11.19
+        },
+        {
+          "fg": "on-dark-muted",
+          "bg": "dark",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 7.6
+        }
+      ],
+      "defaults": {
+        "navbar": "a",
+        "hero": "a",
+        "footer": "c"
+      },
+      "mood": "Clean, calm and reassuring. Soft teal and clear blue feel clinical enough to trust and gentle enough to relax.",
+      "cta": "Call (appointments); secondary: Book online"
+    },
+    "tech": {
+      "name": "Tech / SaaS",
+      "industries": [
+        "SaaS",
+        "Software",
+        "Startup"
+      ],
+      "footerTone": "dark",
+      "fonts": {
+        "heading": "Space Grotesk",
+        "headingFallback": "system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "headingWeights": [
+          600,
+          700
+        ],
+        "body": "Inter",
+        "bodyFallback": "system-ui, -apple-system, 'Segoe UI', sans-serif",
+        "bodyWeights": [
+          400,
+          600
+        ]
+      },
+      "colors": {
+        "primary": "#4338CA",
+        "on-primary": "#FFFFFF",
+        "bg": "#FFFFFF",
+        "surface": "#F5F7FF",
+        "text": "#0F172A",
+        "muted": "#475569",
+        "accent": "#0E7490",
+        "on-accent": "#FFFFFF",
+        "border": "#E0E7FF",
+        "dark": "#0F172A",
+        "on-dark": "#E2E8F0",
+        "on-dark-muted": "#A3B1C6",
+        "focus": "#4338CA"
+      },
+      "pairs": [
+        {
+          "fg": "text",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "text",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "muted",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "on-primary",
+          "bg": "primary",
+          "min": 4.5
+        },
+        {
+          "fg": "on-accent",
+          "bg": "accent",
+          "min": 4.5
+        },
+        {
+          "fg": "primary",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "primary",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "bg",
+          "min": 4.5
+        },
+        {
+          "fg": "accent",
+          "bg": "surface",
+          "min": 4.5
+        },
+        {
+          "fg": "on-dark",
+          "bg": "dark",
+          "min": 4.5
+        },
+        {
+          "fg": "on-dark-muted",
+          "bg": "dark",
+          "min": 4.5
+        },
+        {
+          "fg": "focus",
+          "bg": "bg",
+          "min": 3.0
+        },
+        {
+          "fg": "on-dark",
+          "bg": "dark",
+          "min": 3.0
+        }
+      ],
+      "testPairs": [
+        {
+          "fg": "text",
+          "bg": "bg",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 17.85
+        },
+        {
+          "fg": "text",
+          "bg": "surface",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 16.69
+        },
+        {
+          "fg": "muted",
+          "bg": "bg",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 7.58
+        },
+        {
+          "fg": "muted",
+          "bg": "surface",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 7.08
+        },
+        {
+          "fg": "on-primary",
+          "bg": "primary",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 7.9
+        },
+        {
+          "fg": "on-accent",
+          "bg": "accent",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 5.36
+        },
+        {
+          "fg": "primary",
+          "bg": "bg",
+          "kind": "large",
+          "min": 3.0,
+          "expected": 7.9
+        },
+        {
+          "fg": "on-dark",
+          "bg": "dark",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 14.48
+        },
+        {
+          "fg": "on-dark-muted",
+          "bg": "dark",
+          "kind": "body",
+          "min": 4.5,
+          "expected": 8.21
+        }
+      ],
+      "defaults": {
+        "navbar": "c",
+        "hero": "c",
+        "footer": "b"
+      },
+      "mood": "Modern, precise and confident. Indigo with a teal accent feels like a product, not a brochure.",
+      "cta": "Contact (Get started / Book a demo)"
+    }
+  }
+}

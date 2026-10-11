@@ -1,0 +1,36 @@
+{
+  "xssPayloads": [
+    "<img src=x onerror=alert(1)>",
+    "\"><script>alert(1)</script>",
+    "<script>alert(1)</script>",
+    "' onmouseover='alert(1)",
+    "</title><svg onload=alert(1)>"
+  ],
+  "hrefCases": [
+    ["https://example.com/a?b=1", "https://example.com/a?b=1"],
+    ["http://example.com", "http://example.com"],
+    ["mailto:hello@example.com", "mailto:hello@example.com"],
+    ["tel:+441234567890", "tel:+441234567890"],
+    ["#menu", "#menu"],
+    ["/contact", "/contact"],
+    ["menu/cakes", "menu/cakes"],
+    ["javascript:alert(1)", "#"],
+    ["JaVaScRiPt:alert(1)", "#"],
+    ["java\nscript:alert(1)", "#"],
+    ["  javascript:alert(1)", "#"],
+    ["data:text/html,<script>alert(1)</script>", "#"],
+    ["vbscript:msgbox(1)", "#"],
+    ["//evil.example.com", "#"],
+    ["file:///etc/passwd", "#"],
+    ["", ""]
+  ],
+  "unicode": ["Café Éclair ☕", "北京烤鸭", "🥐 Bakery 🥖", "مخبز"],
+  "toyDefs": {
+    "title": { "type": "text", "max": 20, "required": true, "label": "title" },
+    "note": { "type": "text", "max": 40 },
+    "href": { "type": "link", "required": true },
+    "photo": { "type": "image" },
+    "show": { "type": "flag" },
+    "items": { "type": "list", "max": 3, "item": { "label": { "type": "text", "max": 10, "required": true }, "url": { "type": "link", "required": true } } }
+  }
+}
