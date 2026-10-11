@@ -1,0 +1,6 @@
+<section class="g-sec g-sec--surface g-team g-team--b" id="team" data-gurost-section="team" data-variant="b" data-tone="light">
+  <div class="g-container">
+    <div class="g-head" data-g-reveal="up" data-gsap-fade>{{#if eyebrow}}<p class="g-eyebrow">{{eyebrow}}</p>{{/if}}<h2 class="g-title">{{title}}</h2>{{#if intro}}<p class="g-lead">{{intro}}</p>{{/if}}</div>
+    <ul class="g-team__list">{{#each members}}<li class="g-team__member" data-g-reveal="up" data-g-stagger data-gsap-slide>{{#if image}}<img class="g-team__photo" src="{{image}}" alt="{{image_alt}}" data-gurost-image="{{name}}" data-gurost-image-role="team" loading="lazy" decoding="async">{{/if}}{{#unless image}}<span class="g-team__avatar" aria-hidden="true">{{initial}}</span>{{/unless}}<div class="g-team__info"><h3 class="g-team__name">{{name}}</h3>{{#if role}}<p class="g-team__role">{{role}}</p>{{/if}}{{#if bio}}<p class="g-team__bio">{{bio}}</p>{{/if}}</div></li>{{/each}}</ul>
+  </div>
+</section>

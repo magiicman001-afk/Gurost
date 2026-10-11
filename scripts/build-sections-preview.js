@@ -10,8 +10,8 @@ const R = require("../lib/sections/render");
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "public", "sections-preview.html");
 // Page order of the preview, and the display names. Add a section here when it is built.
-const SECTION_IDS = ["navbar", "hero", "trust-bar", "features", "about", "services", "footer"];
-const NAMES = { navbar: "Navbar", hero: "Hero", "trust-bar": "Trust Bar", features: "Features", about: "About", services: "Services", footer: "Footer" };
+const SECTION_IDS = ["navbar", "hero", "trust-bar", "features", "about", "services", "gallery", "testimonials", "pricing", "team", "footer"];
+const NAMES = { navbar: "Navbar", hero: "Hero", "trust-bar": "Trust Bar", features: "Features", about: "About", services: "Services", gallery: "Gallery", testimonials: "Testimonials", pricing: "Pricing", team: "Team", footer: "Footer" };
 const ORDER = SECTION_IDS.flatMap((id) => ["a", "b", "c"].map((v) => `${id}-${v}`));
 const FIXED_NOW = new Date(Date.UTC(2026, 0, 1)); // keeps the build reproducible (the copyright year in the preview)
 
@@ -122,8 +122,17 @@ function renderFor(palId) {
   const features = { eyebrow: "Why choose us", title: "What makes us different", intro: "", items: x.features.map((f) => { const [title, text, icon] = pair(f); return { icon, title, text }; }) };
   const about = { eyebrow: x.about[0], title: x.about[1], body: x.about[2], body2: x.about[3], points: x.about[4].map((text) => ({ text })), image: "IMG_1", image_brief: s.brief || "Photo placeholder", image_alt: s.brief || "Photo placeholder", cta_label: "Get in touch", cta_href: "#contact" };
   const services = { eyebrow: "What we do", title: "Our services", intro: "", items: x.services.map((v) => { const [title, text, icon, href] = pair(v); return { icon, title, text, href }; }) };
+  const briefs = { cafe: ["Fresh loaves cooling", "Flaky croissants", "Celebration cake", "Coffee and a bun", "Baker at work", "Shop counter"], law: ["Reception", "Meeting room", "Office exterior", "Desk and documents", "Team meeting", "Waiting area"], salon: ["Styling chair", "Colour in progress", "Finished cut", "Products shelf", "Salon interior", "Blow-dry"], trades: ["Fuse board upgrade", "New lighting", "Tidy cabling", "Van and tools", "Finished kitchen", "Safety test"], health: ["Treatment room", "Reception", "Exercise area", "Clinic exterior", "Consultation", "Waiting room"], tech: ["Product screenshot", "Team workshop", "Dashboard", "Mobile view", "Office", "Prototype"] }[palId];
+  const gallery = { eyebrow: "Gallery", title: "A look around", intro: "", images: briefs.map((b, i) => ({ image: "IMG_" + (i + 1), brief: b, alt: b, caption: i % 2 ? "" : b })) };
+  const testimonials = { eyebrow: "Kind words", title: "What customers say", intro: "", items: [1, 2, 3].map(() => ({ quote: "[Add a real customer review]", name: "[Add customer name]", role: "" })) };
+  const pricing = { eyebrow: "Pricing", title: "Simple, clear pricing", intro: "", note: "[Add your pricing note]", plans: x.services.slice(0, 3).map((v, i) => ({ name: pair(v)[0], text: pair(v)[1], features: [{ text: "[Add what is included]" }, { text: "[Add what is included]" }], cta_label: s.cta, cta_href: "#contact", featured: i === 1 })) };
+  const team = { eyebrow: "The team", title: "Meet the people", intro: "", members: [1, 2, 3].map((n) => ({ name: "[Add team member " + n + "]", role: "[Add role]", bio: "" })) };
   const out = {};
   for (const v of ["a", "b", "c"]) {
+    out["gallery-" + v] = R.renderSection("gallery", v, gallery, { now: FIXED_NOW }).html;
+    out["testimonials-" + v] = R.renderSection("testimonials", v, testimonials, { now: FIXED_NOW }).html;
+    out["pricing-" + v] = R.renderSection("pricing", v, pricing, { now: FIXED_NOW }).html;
+    out["team-" + v] = R.renderSection("team", v, team, { now: FIXED_NOW }).html;
     out["trust-bar-" + v] = R.renderSection("trust-bar", v, trust, { now: FIXED_NOW }).html;
     out["features-" + v] = R.renderSection("features", v, features, { now: FIXED_NOW }).html;
     out["about-" + v] = R.renderSection("about", v, about, { now: FIXED_NOW }).html;
@@ -221,7 +230,7 @@ const TEMPLATE = `<!doctype html>
     var ids = state.only === "all" ? DATA.order : [state.only];
     var img = placeholderImage(state.palette);
     var body = ids.map(function (id) {
-      var html = pal.sections[id].split('src="IMG_1"').join('src="' + img + '"').split("g-nav-panel").join("g-nav-panel-" + id);
+      var html = pal.sections[id].replace(/src="IMG_\\d+"/g, 'src="' + img + '"').split("g-nav-panel").join("g-nav-panel-" + id);
       var wrap = id === "navbar-c" ? '<div class="pv-stub">' + html + '<p class="pv-stubnote">Transparent navbar sits over a hero photo</p></div>' : html;
       return '<div class="pv-label">' + label(id) + "</div>" + wrap;
     }).join("");

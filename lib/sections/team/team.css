@@ -1,0 +1,126 @@
+/* Team A (photo cards) / B (rows) / C (compact, dark band). People and photos come from the owner; initials stand in until then. */
+.g-team__list {
+  display: grid;
+  gap: var(--g-s4);
+  grid-template-columns: 1fr;
+}
+.g-team__member {
+  display: flex;
+  gap: var(--g-s2);
+  min-width: 0;
+}
+.g-team__info {
+  min-width: 0;
+}
+.g-team__photo,
+.g-team__avatar {
+  flex: none;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: cover;
+  overflow: hidden;
+}
+.g-team__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--g-primary);
+  color: var(--g-on-primary);
+  font-family: var(--g-font-head);
+  font-size: var(--g-t-32);
+  font-weight: 700;
+}
+.g-team__role {
+  font-size: var(--g-t-14);
+  font-weight: 600;
+  color: var(--g-primary);
+  overflow-wrap: anywhere;
+}
+.g-team__bio {
+  margin-top: var(--g-s1);
+  color: var(--g-muted);
+  overflow-wrap: anywhere;
+}
+.g-team[data-tone="dark"] .g-team__role {
+  color: var(--g-on-dark);
+}
+.g-team[data-tone="dark"] .g-team__bio {
+  color: var(--g-on-dark-muted);
+}
+.g-team[data-tone="dark"] .g-team__avatar {
+  background: var(--g-on-dark);
+  color: var(--g-dark);
+}
+
+/* A: centred cards in a grid */
+.g-team--a .g-team__member {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.g-team--a .g-team__photo,
+.g-team--a .g-team__avatar {
+  width: 120px;
+  height: 120px;
+}
+@media (min-width: 640px) {
+  .g-team--a .g-team__list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 960px) {
+  .g-team--a .g-team__list {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* B: photo beside the text, two columns on a desktop */
+.g-team--b .g-team__member {
+  align-items: flex-start;
+}
+.g-team--b .g-team__photo {
+  border-radius: var(--g-radius);
+  width: 96px;
+  height: 120px;
+}
+.g-team--b .g-team__avatar {
+  border-radius: var(--g-radius);
+  width: 96px;
+  height: 120px;
+}
+@media (min-width: 880px) {
+  .g-team--b .g-team__list {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--g-s6);
+  }
+}
+
+/* C: compact, bio hidden to keep it a quick roll call */
+.g-team--c .g-team__list {
+  gap: var(--g-s3);
+}
+.g-team--c .g-team__bio {
+  display: none;
+}
+.g-team--c .g-team__photo,
+.g-team--c .g-team__avatar {
+  width: 64px;
+  height: 64px;
+  font-size: var(--g-t-24);
+}
+@media (min-width: 640px) {
+  .g-team--c .g-team__list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 960px) {
+  .g-team--c .g-team__list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+[data-industry="law"] .g-team--b .g-team__photo,
+[data-industry="law"] .g-team--b .g-team__avatar {
+  border-radius: 2px;
+}

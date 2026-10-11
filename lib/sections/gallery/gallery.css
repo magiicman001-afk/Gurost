@@ -1,0 +1,115 @@
+/* Gallery A (even grid) / B (masonry columns) / C (one large + thumbnails). Palette variables only. */
+.g-gallery__list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--g-s1);
+}
+.g-gallery__item {
+  min-width: 0;
+}
+.g-gallery__fig {
+  margin: 0;
+  overflow: hidden;
+  border-radius: var(--g-radius);
+  background: var(--g-surface);
+}
+.g-gallery__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  overflow: hidden;
+}
+.g-gallery__cap {
+  padding: var(--g-s1) var(--g-s2);
+  font-size: var(--g-t-14);
+  color: var(--g-muted);
+  overflow-wrap: anywhere;
+}
+.g-gallery--c .g-gallery__fig {
+  background: var(--g-bg);
+}
+
+/* A: square tiles */
+.g-gallery--a .g-gallery__img {
+  aspect-ratio: 1 / 1;
+}
+@media (min-width: 640px) {
+  .g-gallery--a .g-gallery__list {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--g-s2);
+  }
+}
+
+/* B: masonry with CSS columns (images keep their own height rhythm) */
+.g-gallery--b .g-gallery__list {
+  display: block;
+  columns: 2;
+  column-gap: var(--g-s1);
+}
+.g-gallery--b .g-gallery__item {
+  break-inside: avoid;
+  margin-bottom: var(--g-s1);
+}
+.g-gallery--b .g-gallery__item:nth-child(3n + 1) .g-gallery__img {
+  aspect-ratio: 3 / 4;
+}
+.g-gallery--b .g-gallery__item:nth-child(3n + 2) .g-gallery__img {
+  aspect-ratio: 1 / 1;
+}
+.g-gallery--b .g-gallery__item:nth-child(3n) .g-gallery__img {
+  aspect-ratio: 4 / 3;
+}
+@media (min-width: 880px) {
+  .g-gallery--b .g-gallery__list {
+    columns: 3;
+    column-gap: var(--g-s2);
+  }
+  .g-gallery--b .g-gallery__item {
+    margin-bottom: var(--g-s2);
+  }
+}
+
+/* C: the first picture is large */
+.g-gallery--c .g-gallery__img {
+  aspect-ratio: 4 / 3;
+}
+.g-gallery--c .g-gallery__item:first-child {
+  grid-column: 1 / -1;
+}
+.g-gallery--c .g-gallery__item:first-child .g-gallery__img {
+  aspect-ratio: 16 / 9;
+}
+@media (min-width: 880px) {
+  .g-gallery--c .g-gallery__list {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--g-s2);
+  }
+  .g-gallery--c .g-gallery__item:first-child {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+  .g-gallery--c .g-gallery__item:first-child .g-gallery__img {
+    aspect-ratio: 1 / 1;
+  }
+  .g-gallery--c .g-gallery__img {
+    aspect-ratio: 1 / 1;
+  }
+}
+
+[data-industry="law"] .g-gallery__fig {
+  border-radius: 2px;
+}
+[data-industry="cafe"] .g-gallery__fig {
+  border-radius: 12px;
+}
+
+/* A and C: equal tile heights even when only some pictures have a caption */
+.g-gallery--a .g-gallery__item,
+.g-gallery--c .g-gallery__item {
+  display: flex;
+}
+.g-gallery--a .g-gallery__fig,
+.g-gallery--c .g-gallery__fig {
+  flex: 1;
+  min-width: 0;
+}

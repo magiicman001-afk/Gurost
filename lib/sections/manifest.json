@@ -828,7 +828,55 @@
         "b",
         "c"
       ],
-      "slots": null,
+      "slots": {
+        "eyebrow": {
+          "type": "text",
+          "max": 40,
+          "required": false
+        },
+        "title": {
+          "type": "text",
+          "max": 60,
+          "required": true,
+          "label": "section title"
+        },
+        "intro": {
+          "type": "text",
+          "max": 160,
+          "required": false
+        },
+        "images": {
+          "type": "list",
+          "required": true,
+          "min": 3,
+          "max": 9,
+          "item": {
+            "image": {
+              "type": "image",
+              "required": true
+            },
+            "brief": {
+              "type": "text",
+              "max": 200,
+              "required": false
+            },
+            "alt": {
+              "type": "text",
+              "max": 100,
+              "required": false,
+              "fallback": [
+                "brief",
+                "caption"
+              ]
+            },
+            "caption": {
+              "type": "text",
+              "max": 60,
+              "required": false
+            }
+          }
+        }
+      },
       "aliases": [
         "photos",
         "portfolio images",
@@ -850,13 +898,48 @@
           4.5
         ],
         [
+          "text",
+          "surface",
+          4.5
+        ],
+        [
+          "muted",
+          "surface",
+          4.5
+        ],
+        [
+          "primary",
+          "bg",
+          4.5
+        ],
+        [
+          "primary",
+          "surface",
+          4.5
+        ],
+        [
           "on-primary",
           "primary",
           4.5
         ],
         [
+          "on-dark",
+          "dark",
+          4.5
+        ],
+        [
+          "on-dark-muted",
+          "dark",
+          4.5
+        ],
+        [
           "focus",
           "bg",
+          3.0
+        ],
+        [
+          "focus",
+          "surface",
           3.0
         ]
       ],
@@ -864,7 +947,7 @@
         "light",
         "dark"
       ],
-      "status": "planned"
+      "status": "built"
     },
     {
       "id": "testimonials",
@@ -875,7 +958,48 @@
         "b",
         "c"
       ],
-      "slots": null,
+      "slots": {
+        "eyebrow": {
+          "type": "text",
+          "max": 40,
+          "required": false
+        },
+        "title": {
+          "type": "text",
+          "max": 60,
+          "required": true,
+          "label": "section title"
+        },
+        "intro": {
+          "type": "text",
+          "max": 160,
+          "required": false
+        },
+        "items": {
+          "type": "list",
+          "required": true,
+          "min": 1,
+          "max": 6,
+          "item": {
+            "quote": {
+              "type": "text",
+              "max": 240,
+              "required": true,
+              "kind": "review"
+            },
+            "name": {
+              "type": "text",
+              "max": 40,
+              "required": true
+            },
+            "role": {
+              "type": "text",
+              "max": 40,
+              "required": false
+            }
+          }
+        }
+      },
       "aliases": [
         "reviews",
         "what customers say",
@@ -899,13 +1023,48 @@
           4.5
         ],
         [
+          "text",
+          "surface",
+          4.5
+        ],
+        [
+          "muted",
+          "surface",
+          4.5
+        ],
+        [
+          "primary",
+          "bg",
+          4.5
+        ],
+        [
+          "primary",
+          "surface",
+          4.5
+        ],
+        [
           "on-primary",
           "primary",
           4.5
         ],
         [
+          "on-dark",
+          "dark",
+          4.5
+        ],
+        [
+          "on-dark-muted",
+          "dark",
+          4.5
+        ],
+        [
           "focus",
           "bg",
+          3.0
+        ],
+        [
+          "focus",
+          "surface",
           3.0
         ]
       ],
@@ -913,7 +1072,7 @@
         "light",
         "dark"
       ],
-      "status": "planned"
+      "status": "built"
     },
     {
       "id": "pricing",
@@ -924,7 +1083,80 @@
         "b",
         "c"
       ],
-      "slots": null,
+      "slots": {
+        "eyebrow": {
+          "type": "text",
+          "max": 40,
+          "required": false
+        },
+        "title": {
+          "type": "text",
+          "max": 60,
+          "required": true,
+          "label": "section title"
+        },
+        "intro": {
+          "type": "text",
+          "max": 160,
+          "required": false
+        },
+        "note": {
+          "type": "text",
+          "max": 160,
+          "required": false
+        },
+        "plans": {
+          "type": "list",
+          "required": true,
+          "min": 1,
+          "max": 4,
+          "item": {
+            "name": {
+              "type": "text",
+              "max": 30,
+              "required": true
+            },
+            "price": {
+              "type": "text",
+              "max": 20,
+              "required": false,
+              "placeholder": "[Add price]"
+            },
+            "period": {
+              "type": "text",
+              "max": 20,
+              "required": false
+            },
+            "text": {
+              "type": "text",
+              "max": 120,
+              "required": false
+            },
+            "features": {
+              "type": "list",
+              "max": 6,
+              "item": {
+                "text": {
+                  "type": "text",
+                  "max": 60,
+                  "required": true
+                }
+              }
+            },
+            "cta_label": {
+              "type": "text",
+              "max": 24,
+              "required": false
+            },
+            "cta_href": {
+              "type": "link"
+            },
+            "featured": {
+              "type": "flag"
+            }
+          }
+        }
+      },
       "aliases": [
         "plans",
         "packages",
@@ -946,13 +1178,48 @@
           4.5
         ],
         [
+          "text",
+          "surface",
+          4.5
+        ],
+        [
+          "muted",
+          "surface",
+          4.5
+        ],
+        [
+          "primary",
+          "bg",
+          4.5
+        ],
+        [
+          "primary",
+          "surface",
+          4.5
+        ],
+        [
           "on-primary",
           "primary",
           4.5
         ],
         [
+          "on-dark",
+          "dark",
+          4.5
+        ],
+        [
+          "on-dark-muted",
+          "dark",
+          4.5
+        ],
+        [
           "focus",
           "bg",
+          3.0
+        ],
+        [
+          "focus",
+          "surface",
           3.0
         ]
       ],
@@ -960,7 +1227,7 @@
         "light",
         "dark"
       ],
-      "status": "planned"
+      "status": "built"
     },
     {
       "id": "team",
@@ -971,7 +1238,59 @@
         "b",
         "c"
       ],
-      "slots": null,
+      "slots": {
+        "eyebrow": {
+          "type": "text",
+          "max": 40,
+          "required": false
+        },
+        "title": {
+          "type": "text",
+          "max": 60,
+          "required": true,
+          "label": "section title"
+        },
+        "intro": {
+          "type": "text",
+          "max": 160,
+          "required": false
+        },
+        "members": {
+          "type": "list",
+          "required": true,
+          "min": 1,
+          "max": 8,
+          "derive": "initial",
+          "item": {
+            "name": {
+              "type": "text",
+              "max": 40,
+              "required": true
+            },
+            "role": {
+              "type": "text",
+              "max": 40,
+              "required": false
+            },
+            "bio": {
+              "type": "text",
+              "max": 140,
+              "required": false
+            },
+            "image": {
+              "type": "image"
+            },
+            "image_alt": {
+              "type": "text",
+              "max": 100,
+              "required": false,
+              "fallback": [
+                "name"
+              ]
+            }
+          }
+        }
+      },
       "aliases": [
         "our people",
         "meet the team",
@@ -993,13 +1312,48 @@
           4.5
         ],
         [
+          "text",
+          "surface",
+          4.5
+        ],
+        [
+          "muted",
+          "surface",
+          4.5
+        ],
+        [
+          "primary",
+          "bg",
+          4.5
+        ],
+        [
+          "primary",
+          "surface",
+          4.5
+        ],
+        [
           "on-primary",
           "primary",
           4.5
         ],
         [
+          "on-dark",
+          "dark",
+          4.5
+        ],
+        [
+          "on-dark-muted",
+          "dark",
+          4.5
+        ],
+        [
           "focus",
           "bg",
+          3.0
+        ],
+        [
+          "focus",
+          "surface",
           3.0
         ]
       ],
@@ -1007,7 +1361,7 @@
         "light",
         "dark"
       ],
-      "status": "planned"
+      "status": "built"
     },
     {
       "id": "process",

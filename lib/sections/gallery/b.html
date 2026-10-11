@@ -1,0 +1,6 @@
+<section class="g-sec g-gallery g-gallery--b" id="gallery" data-gurost-section="gallery" data-variant="b" data-tone="light">
+  <div class="g-container">
+    <div class="g-head" data-g-reveal="up" data-gsap-fade>{{#if eyebrow}}<p class="g-eyebrow">{{eyebrow}}</p>{{/if}}<h2 class="g-title">{{title}}</h2>{{#if intro}}<p class="g-lead">{{intro}}</p>{{/if}}</div>
+    <ul class="g-gallery__list">{{#each images}}<li class="g-gallery__item" data-g-reveal="up" data-g-stagger data-gsap-fade><figure class="g-gallery__fig"><img class="g-gallery__img" src="{{image}}" alt="{{alt}}" {{#if brief}}data-gurost-image="{{brief}}" {{/if}}data-gurost-image-role="gallery" loading="lazy" decoding="async">{{#if caption}}<figcaption class="g-gallery__cap">{{caption}}</figcaption>{{/if}}</figure></li>{{/each}}</ul>
+  </div>
+</section>

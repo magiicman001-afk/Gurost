@@ -1,0 +1,107 @@
+/* Testimonials A (cards) / B (featured quote + others) / C (stacked on a dark band). Real customer words only. */
+.g-quotes__list {
+  display: grid;
+  gap: var(--g-s3);
+  grid-template-columns: 1fr;
+}
+.g-quotes__item {
+  min-width: 0;
+}
+.g-quotes__fig {
+  margin: 0;
+  height: 100%;
+}
+.g-quotes__quote {
+  margin: 0;
+}
+.g-quotes__quote p {
+  position: relative;
+  font-size: var(--g-t-20);
+  line-height: 1.5;
+}
+.g-quotes__quote p::before {
+  content: "\201C";
+}
+.g-quotes__quote p::after {
+  content: "\201D";
+}
+.g-quotes__who {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--g-s2);
+}
+.g-quotes__name {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.g-quotes__role {
+  font-size: var(--g-t-14);
+  color: var(--g-muted);
+  overflow-wrap: anywhere;
+}
+.g-testimonials[data-tone="dark"] .g-quotes__role {
+  color: var(--g-on-dark-muted);
+}
+
+/* A: three cards on a desktop */
+.g-testimonials--a .g-quotes__fig {
+  padding: var(--g-s3);
+  background: var(--g-surface);
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-radius);
+}
+@media (min-width: 720px) {
+  .g-testimonials--a .g-quotes__list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1000px) {
+  .g-testimonials--a .g-quotes__list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* B: first quote large and centred, the rest below in two columns */
+.g-testimonials--b .g-quotes__fig {
+  padding: var(--g-s3);
+  background: var(--g-bg);
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-radius);
+}
+.g-testimonials--b .g-quotes__item:first-child .g-quotes__fig {
+  text-align: center;
+  padding: var(--g-s4) var(--g-s3);
+}
+.g-testimonials--b .g-quotes__item:first-child .g-quotes__quote p {
+  font-size: var(--g-t-24);
+}
+@media (min-width: 720px) {
+  .g-testimonials--b .g-quotes__list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .g-testimonials--b .g-quotes__item:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* C: one column of large quotes with hairlines */
+.g-testimonials--c .g-quotes__list {
+  max-width: 820px;
+  gap: 0;
+}
+.g-testimonials--c .g-quotes__item {
+  padding-block: var(--g-s4);
+  border-top: 1px solid var(--g-on-dark-muted);
+}
+.g-testimonials--c .g-quotes__item:last-child {
+  border-bottom: 1px solid var(--g-on-dark-muted);
+}
+.g-testimonials--c .g-quotes__quote p {
+  font-family: var(--g-font-head);
+  font-size: var(--g-t-24);
+}
+
+[data-industry="law"] .g-testimonials--a .g-quotes__fig,
+[data-industry="law"] .g-testimonials--b .g-quotes__fig {
+  border-radius: 2px;
+}

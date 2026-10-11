@@ -1,0 +1,149 @@
+/* Pricing A (plan cards) / B (rows) / C (price list). Prices are always the owner's own, never invented. */
+.g-pricing__list {
+  display: grid;
+  gap: var(--g-s3);
+  grid-template-columns: 1fr;
+}
+.g-pricing__plan {
+  min-width: 0;
+}
+.g-pricing__name {
+  overflow-wrap: anywhere;
+}
+.g-pricing__text {
+  margin-top: var(--g-s1);
+  color: var(--g-muted);
+}
+.g-pricing__price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--g-s1);
+  overflow-wrap: anywhere;
+}
+.g-pricing__amount {
+  font-family: var(--g-font-head);
+  font-size: var(--g-t-32);
+  font-weight: 700;
+}
+.g-pricing__period {
+  font-size: var(--g-t-14);
+  color: var(--g-muted);
+}
+.g-pricing__features {
+  display: grid;
+  gap: var(--g-s1);
+}
+.g-pricing__features li {
+  position: relative;
+  padding-left: var(--g-s3);
+  overflow-wrap: anywhere;
+}
+.g-pricing__features li::before {
+  position: absolute;
+  left: 3px;
+  top: 0.3em;
+  width: 7px;
+  height: 12px;
+  border: solid var(--g-primary);
+  border-width: 0 2px 2px 0;
+  transform: rotate(40deg);
+  content: "";
+}
+.g-pricing__note {
+  margin-top: var(--g-s3);
+  font-size: var(--g-t-14);
+  color: var(--g-muted);
+  overflow-wrap: anywhere;
+}
+
+/* A: cards; the featured plan has a heavier outline in the primary colour */
+.g-pricing--a .g-pricing__plan {
+  display: flex;
+  flex-direction: column;
+  gap: var(--g-s2);
+  padding: var(--g-s3);
+  background: var(--g-surface);
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-radius);
+}
+.g-pricing--a .g-pricing__plan.is-featured {
+  border: 2px solid var(--g-primary);
+  background: var(--g-bg);
+}
+.g-pricing--a .g-pricing__cta {
+  margin-top: auto;
+}
+@media (min-width: 720px) {
+  .g-pricing--a .g-pricing__list {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+}
+
+/* B: rows on a surface band: name and text left, price and button right */
+.g-pricing--b .g-pricing__list {
+  gap: 0;
+}
+.g-pricing--b .g-pricing__plan {
+  display: grid;
+  gap: var(--g-s2);
+  padding-block: var(--g-s3);
+  border-top: 1px solid var(--g-border);
+}
+.g-pricing--b .g-pricing__plan:last-child {
+  border-bottom: 1px solid var(--g-border);
+}
+.g-pricing--b .g-pricing__plan.is-featured .g-pricing__name::after {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-left: var(--g-s1);
+  border-radius: 50%;
+  background: var(--g-primary);
+  content: "";
+}
+@media (min-width: 880px) {
+  .g-pricing--b .g-pricing__plan {
+    grid-template-columns: 1.4fr 1fr auto;
+    align-items: center;
+    gap: var(--g-s4);
+  }
+  .g-pricing--b .g-pricing__features {
+    grid-column: 1 / 2;
+  }
+}
+
+/* C: a plain price list, name and price on one line */
+.g-pricing--c .g-pricing__list {
+  max-width: 760px;
+  gap: 0;
+}
+.g-pricing--c .g-pricing__plan {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: var(--g-s2);
+  row-gap: var(--g-s1);
+  padding-block: var(--g-s3);
+  border-bottom: 1px dashed var(--g-border);
+}
+.g-pricing--c .g-pricing__top {
+  min-width: 0;
+}
+.g-pricing--c .g-pricing__price {
+  justify-content: flex-end;
+  text-align: right;
+}
+.g-pricing--c .g-pricing__amount {
+  font-size: var(--g-t-24);
+}
+.g-pricing--c .g-pricing__features,
+.g-pricing--c .g-pricing__cta {
+  grid-column: 1 / -1;
+}
+.g-pricing--c .g-pricing__cta {
+  justify-self: start;
+}
+
+[data-industry="law"] .g-pricing--a .g-pricing__plan {
+  border-radius: 2px;
+}

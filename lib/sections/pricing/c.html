@@ -1,0 +1,7 @@
+<section class="g-sec g-pricing g-pricing--c" id="pricing" data-gurost-section="pricing" data-variant="c" data-tone="light">
+  <div class="g-container">
+    <div class="g-head" data-g-reveal="up" data-gsap-fade>{{#if eyebrow}}<p class="g-eyebrow">{{eyebrow}}</p>{{/if}}<h2 class="g-title">{{title}}</h2>{{#if intro}}<p class="g-lead">{{intro}}</p>{{/if}}</div>
+    <ul class="g-pricing__list">{{#each plans}}<li class="g-pricing__plan{{#if featured}} is-featured{{/if}}" data-g-reveal="up" data-g-stagger data-gsap-slide><div class="g-pricing__top"><h3 class="g-pricing__name">{{name}}</h3>{{#if text}}<p class="g-pricing__text">{{text}}</p>{{/if}}</div><p class="g-pricing__price"><span class="g-pricing__amount">{{price}}</span>{{#if period}}<span class="g-pricing__period">{{period}}</span>{{/if}}</p>{{#if features}}<ul class="g-pricing__features">{{#each features}}<li>{{text}}</li>{{/each}}</ul>{{/if}}{{#if cta_label}}{{#if cta_href}}<a class="g-btn {{#if featured}}g-btn--primary{{/if}}{{#unless featured}}g-btn--ghost{{/unless}} g-pricing__cta" href="{{cta_href}}">{{cta_label}}</a>{{/if}}{{/if}}</li>{{/each}}</ul>
+    {{#if note}}<p class="g-pricing__note">{{note}}</p>{{/if}}
+  </div>
+</section>
