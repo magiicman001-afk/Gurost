@@ -1,0 +1,17 @@
+<header class="g-navbar g-navbar--b{{#if sticky}} g-navbar--sticky{{/if}}" data-gurost-section="navbar" data-variant="b" data-tone="{{tone}}">
+  <a class="g-skip" href="#main">Skip to content</a>
+  <div class="g-navbar__inner g-container">
+    <nav class="g-navbar__nav" aria-label="Main">
+      <a class="g-navbar__brand" href="#top">{{#if logo}}<img class="g-navbar__logo" src="{{logo}}" alt="" width="32" height="32">{{/if}}<span>{{brand}}</span></a>
+      <button class="g-navbar__menu-btn" type="button" aria-expanded="false" aria-controls="g-nav-panel" aria-label="Menu"><span class="g-navbar__bars" aria-hidden="true"></span></button>
+      <div class="g-navbar__panel" id="g-nav-panel">
+        <ul class="g-navbar__links g-navbar__links--left">{{#each links}}{{#if @firsthalf}}<li><a href="{{href}}">{{label}}</a></li>{{/if}}{{/each}}</ul>
+        <div class="g-navbar__right">
+          <ul class="g-navbar__links g-navbar__links--right">{{#each links}}{{#unless @firsthalf}}<li><a href="{{href}}">{{label}}</a></li>{{/unless}}{{/each}}</ul>
+          <div class="g-navbar__actions">{{#if phone}}<a class="g-navbar__phone" href="{{phone_tel}}">{{phone}}</a>{{/if}}<a class="g-btn g-btn--primary g-navbar__cta" href="{{cta_href}}">{{cta_label}}</a></div>
+        </div>
+      </div>
+    </nav>
+  </div>
+  {{{script}}}
+</header>

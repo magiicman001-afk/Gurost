@@ -52,10 +52,19 @@
         "phone": {
           "type": "text",
           "max": 20,
-          "required": false
+          "required": false,
+          "tel": true
         },
         "sticky": {
           "type": "flag"
+        },
+        "tone": {
+          "type": "enum",
+          "values": [
+            "light",
+            "dark"
+          ],
+          "default": "light"
         }
       },
       "aliases": [
@@ -101,7 +110,7 @@
         "light",
         "dark"
       ],
-      "status": "planned"
+      "status": "built"
     },
     {
       "id": "hero",

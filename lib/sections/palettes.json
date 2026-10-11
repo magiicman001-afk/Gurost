@@ -197,7 +197,11 @@
         "footer": "a"
       },
       "mood": "Warm, welcoming and a little nostalgic, like a bakery window in the morning. Cream and toasted brown make food look appetising and the page feel local, not corporate.",
-      "cta": "Call (orders/reservations); secondary: View menu"
+      "cta": "Call (orders/reservations); secondary: View menu",
+      "shape": {
+        "radius": "12px",
+        "radiusBtn": "999px"
+      }
     },
     "law": {
       "name": "Law / Finance",
@@ -379,7 +383,11 @@
         "footer": "a"
       },
       "mood": "Calm, authoritative and trustworthy. Navy and restrained bronze say experience and discretion, with no flash.",
-      "cta": "Contact (Book a consultation)"
+      "cta": "Contact (Book a consultation)",
+      "shape": {
+        "radius": "4px",
+        "radiusBtn": "2px"
+      }
     },
     "salon": {
       "name": "Salon / Beauty",
@@ -561,7 +569,11 @@
         "footer": "a"
       },
       "mood": "Airy, stylish and personal. Soft blush with a deep berry anchor feels premium without being cold.",
-      "cta": "Book (Book an appointment)"
+      "cta": "Book (Book an appointment)",
+      "shape": {
+        "radius": "12px",
+        "radiusBtn": "999px"
+      }
     },
     "trades": {
       "name": "Trades / Construction",
@@ -743,7 +755,11 @@
         "footer": "a"
       },
       "mood": "Solid, dependable and no-nonsense. Charcoal with a safety-orange action colour makes the phone button impossible to miss.",
-      "cta": "Call (Call {{phone}}); secondary: Get a quote"
+      "cta": "Call (Call {{phone}}); secondary: Get a quote",
+      "shape": {
+        "radius": "6px",
+        "radiusBtn": "4px"
+      }
     },
     "health": {
       "name": "Health / Clinic",
@@ -925,7 +941,11 @@
         "footer": "c"
       },
       "mood": "Clean, calm and reassuring. Soft teal and clear blue feel clinical enough to trust and gentle enough to relax.",
-      "cta": "Call (appointments); secondary: Book online"
+      "cta": "Call (appointments); secondary: Book online",
+      "shape": {
+        "radius": "16px",
+        "radiusBtn": "16px"
+      }
     },
     "tech": {
       "name": "Tech / SaaS",
@@ -1107,7 +1127,11 @@
         "footer": "b"
       },
       "mood": "Modern, precise and confident. Indigo with a teal accent feels like a product, not a brochure.",
-      "cta": "Contact (Get started / Book a demo)"
+      "cta": "Contact (Get started / Book a demo)",
+      "shape": {
+        "radius": "12px",
+        "radiusBtn": "8px"
+      }
     }
   }
 }

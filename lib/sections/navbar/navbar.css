@@ -1,0 +1,290 @@
+/* Navbar A / B / C. Colours come from palette variables only, except the documented top scrim on C. */
+.g-navbar {
+  position: relative;
+  z-index: 50;
+  background: var(--g-surface);
+  color: var(--g-text);
+  border-bottom: 1px solid var(--g-border);
+}
+.g-navbar[data-tone="dark"] {
+  background: var(--g-dark);
+  color: var(--g-on-dark);
+  border-bottom-color: transparent;
+}
+.g-navbar--sticky {
+  position: sticky;
+  top: 0;
+}
+.g-navbar__inner {
+  min-height: 64px;
+}
+.g-navbar__nav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 64px;
+  gap: var(--g-s2);
+}
+.g-navbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--g-s1);
+  min-height: var(--g-tap);
+  font-family: var(--g-font-head);
+  font-size: var(--g-t-20);
+  font-weight: 700;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+.g-navbar__logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+.g-navbar__panel {
+  display: flex;
+  align-items: center;
+  gap: var(--g-s4);
+}
+.g-navbar__links {
+  display: flex;
+  align-items: center;
+  gap: var(--g-s1);
+}
+.g-navbar__links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--g-tap);
+  padding: 0 var(--g-s1);
+  font-size: var(--g-t-16);
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+}
+.g-navbar__links a:hover {
+  border-bottom-color: var(--g-primary);
+}
+.g-navbar[data-tone="dark"] .g-navbar__links a:hover {
+  border-bottom-color: var(--g-on-dark);
+}
+.g-navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--g-s2);
+}
+.g-navbar__phone {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--g-tap);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.g-navbar__cta {
+  white-space: nowrap;
+}
+.g-navbar[data-tone="dark"] .g-btn--primary {
+  background: var(--g-on-dark);
+  color: var(--g-dark);
+}
+
+/* menu button: only exists when the script ran (.g-js) and the screen is small */
+.g-navbar__menu-btn {
+  display: none;
+  position: relative;
+  width: var(--g-tap);
+  height: var(--g-tap);
+  padding: 0;
+  border: 0;
+  border-radius: var(--g-radius-btn);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.g-navbar__bars,
+.g-navbar__bars::before,
+.g-navbar__bars::after {
+  position: absolute;
+  left: 11px;
+  width: 22px;
+  height: 2px;
+  background: currentColor;
+  content: "";
+}
+.g-navbar__bars {
+  top: 21px;
+}
+.g-navbar__bars::before {
+  top: -7px;
+  left: 0;
+}
+.g-navbar__bars::after {
+  top: 7px;
+  left: 0;
+}
+.is-open .g-navbar__bars {
+  background: transparent;
+}
+.is-open .g-navbar__bars::before {
+  top: 0;
+  transform: rotate(45deg);
+}
+.is-open .g-navbar__bars::after {
+  top: 0;
+  transform: rotate(-45deg);
+}
+
+/* variant B: centred brand, links on both sides */
+@media (min-width: 880px) {
+  .g-navbar--b .g-navbar__nav {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+  }
+  .g-navbar--b .g-navbar__panel {
+    display: contents;
+  }
+  .g-navbar--b .g-navbar__brand {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: center;
+  }
+  .g-navbar--b .g-navbar__links--left {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+  }
+  .g-navbar--b .g-navbar__right {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    gap: var(--g-s3);
+  }
+}
+
+/* variant C: transparent over the hero, solid after scrolling */
+.g-navbar--c {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), transparent);
+  color: var(--g-on-dark);
+  border-bottom-color: transparent;
+}
+.g-navbar--c.is-solid {
+  position: fixed;
+  background: var(--g-surface);
+  color: var(--g-text);
+  border-bottom-color: var(--g-border);
+}
+.g-navbar--c.is-solid .g-btn--inverse {
+  background: var(--g-primary);
+  color: var(--g-on-primary);
+}
+.g-navbar--c.is-solid .g-navbar__links a:hover {
+  border-bottom-color: var(--g-primary);
+}
+.g-navbar--c .g-navbar__links a:hover {
+  border-bottom-color: var(--g-on-dark);
+}
+
+/* phones and small tablets: drawer */
+@media (max-width: 879px) {
+  .g-js .g-navbar__menu-btn {
+    display: inline-block;
+  }
+  .g-js .g-navbar--b .g-navbar__menu-btn {
+    order: -1;
+  }
+  .g-js .g-navbar--b .g-navbar__nav {
+    justify-content: flex-start;
+  }
+  .g-js .g-navbar--b .g-navbar__brand {
+    flex: 1;
+    justify-content: center;
+    margin-right: var(--g-tap);
+  }
+  .g-js .g-navbar__panel {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: calc(var(--g-s2) * -1);
+    right: calc(var(--g-s2) * -1);
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--g-s2);
+    padding: var(--g-s2);
+    background: var(--g-surface);
+    color: var(--g-text);
+    border-bottom: 1px solid var(--g-border);
+    box-shadow: var(--g-shadow);
+  }
+  .g-js .g-navbar[data-tone="dark"] .g-navbar__panel,
+  .g-js .g-navbar--c .g-navbar__panel {
+    background: var(--g-dark);
+    color: var(--g-on-dark);
+  }
+  .g-js .g-navbar--c.is-solid .g-navbar__panel {
+    background: var(--g-surface);
+    color: var(--g-text);
+  }
+  .g-js .is-open .g-navbar__panel {
+    display: flex;
+  }
+  /* without script the links simply wrap under the brand */
+  .g-navbar__nav {
+    flex-wrap: wrap;
+  }
+  .g-navbar__panel {
+    flex-wrap: wrap;
+    gap: var(--g-s1) var(--g-s2);
+  }
+  .g-navbar__links {
+    flex-wrap: wrap;
+  }
+  .g-navbar__links,
+  .g-navbar__right,
+  .g-navbar__actions {
+    width: 100%;
+  }
+  .g-js .g-navbar__links {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .g-navbar__right {
+    display: flex;
+    flex-direction: column;
+    gap: var(--g-s2);
+  }
+  .g-js .g-navbar__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* industry character */
+[data-industry="law"] .g-navbar__links a {
+  font-size: var(--g-t-12);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+[data-industry="salon"] .g-navbar__links {
+  gap: var(--g-s2);
+}
+[data-industry="salon"] .g-navbar__brand {
+  letter-spacing: 0.04em;
+}
+[data-industry="tech"] .g-navbar:not(.g-navbar--c) {
+  backdrop-filter: blur(12px);
+}
+[data-industry="trades"] .g-navbar__cta {
+  font-weight: 700;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .g-navbar,
+  .g-navbar__links a {
+    transition: background-color 0.2s, border-color 0.2s;
+  }
+}
