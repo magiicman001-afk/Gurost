@@ -262,7 +262,47 @@
         "b",
         "c"
       ],
-      "slots": null,
+      "slots": {
+        "items": {
+          "type": "list",
+          "required": true,
+          "min": 2,
+          "max": 5,
+          "item": {
+            "icon": {
+              "type": "enum",
+              "values": [
+                "check",
+                "shield",
+                "clock",
+                "leaf",
+                "heart",
+                "truck",
+                "award",
+                "phone",
+                "pin",
+                "sparkle",
+                "tool",
+                "users",
+                "calendar",
+                "home"
+              ],
+              "default": "check"
+            },
+            "label": {
+              "type": "text",
+              "max": 28,
+              "required": true
+            },
+            "detail": {
+              "type": "text",
+              "max": 48,
+              "required": false
+            }
+          },
+          "derive": "icon"
+        }
+      },
       "aliases": [
         "logos",
         "clients",
@@ -285,13 +325,48 @@
           4.5
         ],
         [
+          "text",
+          "surface",
+          4.5
+        ],
+        [
+          "muted",
+          "surface",
+          4.5
+        ],
+        [
+          "primary",
+          "bg",
+          4.5
+        ],
+        [
+          "primary",
+          "surface",
+          4.5
+        ],
+        [
           "on-primary",
           "primary",
           4.5
         ],
         [
+          "on-dark",
+          "dark",
+          4.5
+        ],
+        [
+          "on-dark-muted",
+          "dark",
+          4.5
+        ],
+        [
           "focus",
           "bg",
+          3.0
+        ],
+        [
+          "focus",
+          "surface",
           3.0
         ]
       ],
@@ -299,7 +374,7 @@
         "light",
         "dark"
       ],
-      "status": "planned"
+      "status": "built"
     },
     {
       "id": "features",
@@ -310,7 +385,63 @@
         "b",
         "c"
       ],
-      "slots": null,
+      "slots": {
+        "eyebrow": {
+          "type": "text",
+          "max": 40,
+          "required": false
+        },
+        "title": {
+          "type": "text",
+          "max": 60,
+          "required": true,
+          "label": "section title"
+        },
+        "intro": {
+          "type": "text",
+          "max": 160,
+          "required": false
+        },
+        "items": {
+          "type": "list",
+          "required": true,
+          "min": 3,
+          "max": 6,
+          "derive": "icon",
+          "item": {
+            "icon": {
+              "type": "enum",
+              "values": [
+                "check",
+                "shield",
+                "clock",
+                "leaf",
+                "heart",
+                "truck",
+                "award",
+                "phone",
+                "pin",
+                "sparkle",
+                "tool",
+                "users",
+                "calendar",
+                "home"
+              ],
+              "default": "sparkle"
+            },
+            "title": {
+              "type": "text",
+              "max": 40,
+              "required": true
+            },
+            "text": {
+              "type": "text",
+              "max": 120,
+              "required": true
+            }
+          }
+        }
+      },
       "aliases": [
         "benefits",
         "why choose us",
@@ -333,13 +464,48 @@
           4.5
         ],
         [
+          "text",
+          "surface",
+          4.5
+        ],
+        [
+          "muted",
+          "surface",
+          4.5
+        ],
+        [
+          "primary",
+          "bg",
+          4.5
+        ],
+        [
+          "primary",
+          "surface",
+          4.5
+        ],
+        [
           "on-primary",
           "primary",
           4.5
         ],
         [
+          "on-dark",
+          "dark",
+          4.5
+        ],
+        [
+          "on-dark-muted",
+          "dark",
+          4.5
+        ],
+        [
           "focus",
           "bg",
+          3.0
+        ],
+        [
+          "focus",
+          "surface",
           3.0
         ]
       ],
@@ -347,7 +513,7 @@
         "light",
         "dark"
       ],
-      "status": "planned"
+      "status": "built"
     },
     {
       "id": "about",
@@ -358,7 +524,66 @@
         "b",
         "c"
       ],
-      "slots": null,
+      "slots": {
+        "eyebrow": {
+          "type": "text",
+          "max": 40,
+          "required": false
+        },
+        "title": {
+          "type": "text",
+          "max": 60,
+          "required": true,
+          "label": "section title"
+        },
+        "body": {
+          "type": "text",
+          "max": 500,
+          "required": true,
+          "label": "about text"
+        },
+        "body2": {
+          "type": "text",
+          "max": 400,
+          "required": false
+        },
+        "points": {
+          "type": "list",
+          "max": 4,
+          "item": {
+            "text": {
+              "type": "text",
+              "max": 60,
+              "required": true
+            }
+          }
+        },
+        "image": {
+          "type": "image"
+        },
+        "image_brief": {
+          "type": "text",
+          "max": 200,
+          "required": false
+        },
+        "image_alt": {
+          "type": "text",
+          "max": 100,
+          "required": false,
+          "fallback": [
+            "image_brief",
+            "title"
+          ]
+        },
+        "cta_label": {
+          "type": "text",
+          "max": 24,
+          "required": false
+        },
+        "cta_href": {
+          "type": "link"
+        }
+      },
       "aliases": [
         "our story",
         "who we are",
@@ -382,13 +607,48 @@
           4.5
         ],
         [
+          "text",
+          "surface",
+          4.5
+        ],
+        [
+          "muted",
+          "surface",
+          4.5
+        ],
+        [
+          "primary",
+          "bg",
+          4.5
+        ],
+        [
+          "primary",
+          "surface",
+          4.5
+        ],
+        [
           "on-primary",
           "primary",
           4.5
         ],
         [
+          "on-dark",
+          "dark",
+          4.5
+        ],
+        [
+          "on-dark-muted",
+          "dark",
+          4.5
+        ],
+        [
           "focus",
           "bg",
+          3.0
+        ],
+        [
+          "focus",
+          "surface",
           3.0
         ]
       ],
@@ -396,7 +656,21 @@
         "light",
         "dark"
       ],
-      "status": "planned"
+      "status": "built",
+      "variantRules": {
+        "a": {
+          "needs": [
+            "image"
+          ],
+          "fallback": "b"
+        },
+        "c": {
+          "needs": [
+            "image"
+          ],
+          "fallback": "b"
+        }
+      }
     },
     {
       "id": "services",
@@ -407,7 +681,71 @@
         "b",
         "c"
       ],
-      "slots": null,
+      "slots": {
+        "eyebrow": {
+          "type": "text",
+          "max": 40,
+          "required": false
+        },
+        "title": {
+          "type": "text",
+          "max": 60,
+          "required": true,
+          "label": "section title"
+        },
+        "intro": {
+          "type": "text",
+          "max": 160,
+          "required": false
+        },
+        "items": {
+          "type": "list",
+          "required": true,
+          "min": 2,
+          "max": 8,
+          "derive": "icon",
+          "item": {
+            "icon": {
+              "type": "enum",
+              "values": [
+                "check",
+                "shield",
+                "clock",
+                "leaf",
+                "heart",
+                "truck",
+                "award",
+                "phone",
+                "pin",
+                "sparkle",
+                "tool",
+                "users",
+                "calendar",
+                "home"
+              ],
+              "default": "check"
+            },
+            "title": {
+              "type": "text",
+              "max": 40,
+              "required": true
+            },
+            "text": {
+              "type": "text",
+              "max": 140,
+              "required": false
+            },
+            "href": {
+              "type": "link"
+            },
+            "link_label": {
+              "type": "text",
+              "max": 20,
+              "required": false
+            }
+          }
+        }
+      },
       "aliases": [
         "what we do",
         "offerings",
@@ -430,13 +768,48 @@
           4.5
         ],
         [
+          "text",
+          "surface",
+          4.5
+        ],
+        [
+          "muted",
+          "surface",
+          4.5
+        ],
+        [
+          "primary",
+          "bg",
+          4.5
+        ],
+        [
+          "primary",
+          "surface",
+          4.5
+        ],
+        [
           "on-primary",
           "primary",
           4.5
         ],
         [
+          "on-dark",
+          "dark",
+          4.5
+        ],
+        [
+          "on-dark-muted",
+          "dark",
+          4.5
+        ],
+        [
           "focus",
           "bg",
+          3.0
+        ],
+        [
+          "focus",
+          "surface",
           3.0
         ]
       ],
@@ -444,7 +817,7 @@
         "light",
         "dark"
       ],
-      "status": "planned"
+      "status": "built"
     },
     {
       "id": "gallery",

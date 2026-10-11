@@ -99,6 +99,8 @@
   text-align: center;
   text-decoration: none;
   cursor: pointer;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 .g-btn--primary {
   background: var(--g-primary);
@@ -161,4 +163,93 @@
     opacity: 1;
     transform: none;
   }
+}
+
+/* shared section frame: used by every content section (Trust Bar, Features, About, Services, ...) */
+.g-sec {
+  padding-block: var(--g-s8);
+  background: var(--g-bg);
+  color: var(--g-text);
+}
+.g-sec--tight {
+  padding-block: var(--g-s4);
+}
+.g-sec--surface {
+  background: var(--g-surface);
+}
+.g-sec[data-tone="dark"] {
+  background: var(--g-dark);
+  color: var(--g-on-dark);
+}
+@media (min-width: 880px) {
+  .g-sec {
+    padding-block: var(--g-s12);
+  }
+  .g-sec--tight {
+    padding-block: var(--g-s6);
+  }
+}
+.g-head {
+  max-width: 720px;
+  margin-bottom: var(--g-s6);
+}
+.g-head--center {
+  margin-inline: auto;
+  text-align: center;
+}
+.g-eyebrow {
+  margin-bottom: var(--g-s1);
+  font-size: var(--g-t-14);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--g-primary);
+  overflow-wrap: anywhere;
+}
+.g-title {
+  font-size: var(--g-t-32);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.g-lead {
+  margin-top: var(--g-s2);
+  font-size: var(--g-t-20);
+  color: var(--g-muted);
+  overflow-wrap: anywhere;
+}
+.g-sec[data-tone="dark"] .g-eyebrow {
+  color: var(--g-on-dark);
+}
+.g-sec[data-tone="dark"] .g-lead {
+  color: var(--g-on-dark-muted);
+}
+.g-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: var(--g-tap);
+  height: var(--g-tap);
+  border-radius: var(--g-radius);
+  background: var(--g-surface);
+  color: var(--g-primary);
+}
+.g-icon svg {
+  width: 24px;
+  height: 24px;
+}
+.g-sec--surface .g-icon {
+  background: var(--g-bg);
+}
+.g-sec[data-tone="dark"] .g-icon {
+  background: transparent;
+  color: var(--g-on-dark);
+  border: 1px solid var(--g-on-dark-muted);
+}
+.g-sec :where(h3) {
+  font-size: var(--g-t-20);
+  overflow-wrap: anywhere;
+}
+.g-sec p {
+  overflow-wrap: anywhere;
 }

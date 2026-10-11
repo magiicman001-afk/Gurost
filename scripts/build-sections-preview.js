@@ -9,6 +9,10 @@ const R = require("../lib/sections/render");
 
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "public", "sections-preview.html");
+// Page order of the preview, and the display names. Add a section here when it is built.
+const SECTION_IDS = ["navbar", "hero", "trust-bar", "features", "about", "services", "footer"];
+const NAMES = { navbar: "Navbar", hero: "Hero", "trust-bar": "Trust Bar", features: "Features", about: "About", services: "Services", footer: "Footer" };
+const ORDER = SECTION_IDS.flatMap((id) => ["a", "b", "c"].map((v) => `${id}-${v}`));
 const FIXED_NOW = new Date(Date.UTC(2026, 0, 1)); // keeps the build reproducible (the copyright year in the preview)
 
 const L = (label, href) => ({ label, href });
@@ -60,6 +64,47 @@ const SAMPLES = {
   },
 };
 
+// Sample copy for the content sections (layout only; no prices, ratings, counts or years).
+const T = (label, detail) => ({ label, detail });
+const SECTION_SAMPLES = {
+  cafe: {
+    trust: [{ icon: "leaf", label: "Baked fresh daily", detail: "Small batches, early morning" }, { icon: "heart", label: "Made by hand", detail: "Real ingredients" }, { icon: "truck", label: "Local delivery" }, { icon: "home", label: "Family run" }],
+    features: ["Slow-fermented sourdough|A long, gentle rise for flavour and a proper crust.|leaf", "Pastries from scratch|Butter, flour and patience, nothing from a packet.|heart", "Orders for any occasion|Celebration cakes and party boxes made to order.|calendar"],
+    about: ["Our story", "A neighbourhood bakery with a simple idea", "We bake in small batches every morning, using real ingredients and recipes we have refined by hand.", "Come in for a coffee, stay for the smell of fresh bread.", ["Real butter, always", "Baked every morning", "Made to order"]],
+    services: ["Fresh bread|Loaves baked every morning.|home|#menu", "Pastries|Croissants, buns and seasonal bakes.|heart|#menu", "Celebration cakes|Made to order for your day.|sparkle|#order", "Catering|Boxes and platters for groups.|truck|#contact"],
+  },
+  law: {
+    trust: [{ icon: "shield", label: "Regulated and insured", detail: "Add your regulator" }, { icon: "users", label: "Plain-English advice" }, { icon: "clock", label: "Prompt replies" }, { icon: "check", label: "Clear fixed terms" }],
+    features: ["Advice you can follow|We explain your options without the jargon.|users", "Straight answers|You know the next step after every call.|check", "A named contact|One person who knows your matter.|phone"],
+    about: ["About the firm", "Independent advice, explained properly", "We are a small firm that puts clients first, with clear communication from the first call to the final letter.", "", ["Plain English", "Named contact", "Clear next steps"]],
+    services: ["Property|Buying, selling and leases.|home|#property", "Family|Sensitive matters handled with care.|heart|#family", "Business|Contracts, disputes and advice.|award|#business", "Wills and probate|Planning ahead and settling estates.|shield|#wills"],
+  },
+  salon: {
+    trust: [{ icon: "sparkle", label: "Gentle on your hair" }, { icon: "heart", label: "Friendly studio" }, { icon: "calendar", label: "Easy online booking" }, { icon: "leaf", label: "Kind products" }],
+    features: ["A proper consultation|We listen first, then plan the look together.|users", "Colour with care|Techniques that protect condition and shine.|sparkle", "Time to unwind|A calm space and a cup of tea.|heart"],
+    about: ["Our studio", "A calm place to feel like yourself", "Our stylists take time to understand your hair and your day-to-day, so every visit leaves you looking and feeling good.", "", ["Consultation first", "Kind products", "No rush"]],
+    services: ["Cut and finish|Tailored to you.|sparkle|#book", "Colour|From subtle to bold.|heart|#book", "Treatments|Care for hair and scalp.|leaf|#book", "Occasion styling|For your big day.|calendar|#book"],
+  },
+  trades: {
+    trust: [{ icon: "shield", label: "Fully insured" }, { icon: "clock", label: "On time" }, { icon: "tool", label: "Tidy work" }, { icon: "phone", label: "Free quotes" }],
+    features: ["Safe and certified|Work done to the standard, signed off properly.|shield", "Clear quotes|You know what it covers before we start.|check", "We tidy up|Your home left as we found it.|home"],
+    about: ["About us", "Local electricians you can rely on", "We are a small team that turns up when we say we will, explains the job and leaves things neat.", "Call us for a straight answer and an honest quote.", ["Turn up on time", "Honest quotes", "Tidy finish"]],
+    services: ["Rewires|Full and partial rewires.|tool|#quote", "Repairs|Faults found and fixed.|check|#quote", "Safety checks|Reports for homes and landlords.|shield|#quote", "Lighting|Indoor and outdoor.|sparkle|#quote"],
+  },
+  health: {
+    trust: [{ icon: "shield", label: "Qualified practitioners", detail: "Add your registration" }, { icon: "heart", label: "One-to-one care" }, { icon: "home", label: "Accessible clinic" }, { icon: "calendar", label: "Easy booking" }],
+    features: ["Time to listen|Appointments that are not rushed.|heart", "A plan that fits|Simple steps you can follow at home.|check", "A calm clinic|Welcoming, clean and easy to reach.|home"],
+    about: ["About the clinic", "Friendly care in a calm setting", "We take time to understand how you are, then agree a plan with you, one step at a time.", "", ["Unhurried appointments", "Clear plans", "Easy access"]],
+    services: ["Assessment|A thorough first appointment.|check|#book", "Treatment|Hands-on care and guidance.|heart|#book", "Exercise plans|Simple routines for home.|users|#book", "Follow-up|Check in and adjust.|calendar|#book"],
+  },
+  tech: {
+    trust: [{ icon: "shield", label: "Security first" }, { icon: "clock", label: "Fast setup" }, { icon: "users", label: "Built with teams" }, { icon: "check", label: "No lock-in" }],
+    features: ["Focused by design|Only the tools you use every day.|sparkle", "Works with your stack|Connects to the apps you already have.|tool", "Your data, your control|Export everything, any time.|shield"],
+    about: ["About us", "A small studio building focused tools", "We design and build software for teams that value their time, with a bias for simple, fast and well-made.", "", ["Simple by default", "Fast", "Well made"]],
+    services: ["Product design|From idea to prototype.|sparkle|#contact", "Engineering|Reliable, maintainable code.|tool|#contact", "Integrations|Connect your tools.|check|#contact", "Support|Real people, quick replies.|users|#contact"],
+  },
+};
+
 function renderFor(palId) {
   const s = SAMPLES[palId];
   const pal = R.getPalette(palId);
@@ -71,8 +116,18 @@ function renderFor(palId) {
     socials: [{ platform: "instagram", url: "https://instagram.com/example" }, { platform: "facebook", url: "https://facebook.com/example" }],
     cta_title: s.ctaTitle, cta_label: s.cta, cta_href: "#contact", show_gurost_credit: true, tone,
   };
+  const x = SECTION_SAMPLES[palId];
+  const pair = (str) => str.split("|");
+  const trust = { items: x.trust.map((t) => ({ icon: t.icon, label: t.label, detail: t.detail || "" })) };
+  const features = { eyebrow: "Why choose us", title: "What makes us different", intro: "", items: x.features.map((f) => { const [title, text, icon] = pair(f); return { icon, title, text }; }) };
+  const about = { eyebrow: x.about[0], title: x.about[1], body: x.about[2], body2: x.about[3], points: x.about[4].map((text) => ({ text })), image: "IMG_1", image_brief: s.brief || "Photo placeholder", image_alt: s.brief || "Photo placeholder", cta_label: "Get in touch", cta_href: "#contact" };
+  const services = { eyebrow: "What we do", title: "Our services", intro: "", items: x.services.map((v) => { const [title, text, icon, href] = pair(v); return { icon, title, text, href }; }) };
   const out = {};
   for (const v of ["a", "b", "c"]) {
+    out["trust-bar-" + v] = R.renderSection("trust-bar", v, trust, { now: FIXED_NOW }).html;
+    out["features-" + v] = R.renderSection("features", v, features, { now: FIXED_NOW }).html;
+    out["about-" + v] = R.renderSection("about", v, about, { now: FIXED_NOW }).html;
+    out["services-" + v] = R.renderSection("services", v, services, { now: FIXED_NOW }).html;
     out["navbar-" + v] = R.renderSection("navbar", v, { ...nav, tone: v === "c" ? "dark" : tone === "dark" ? "dark" : "light" }, { now: FIXED_NOW, noSwap: true }).html;
     out["hero-" + v] = R.renderSection("hero", v, hero, { now: FIXED_NOW, noSwap: true }).html;
     out["footer-" + v] = R.renderSection("footer", v, foot, { now: FIXED_NOW }).html;
@@ -89,8 +144,9 @@ function build() {
         return [id, { name: p.name, css: R.paletteCss(id), fonts: R.googleFontsHref(id), tone: p.footerTone, colors: { primary: p.colors.primary, accent: p.colors.accent, surface: p.colors.surface, dark: p.colors.dark }, sections: renderFor(id) }];
       })
     ),
-    css: R.baseCss() + "\n" + ["navbar", "hero", "footer"].map((s) => read(`${s}/${s}.css`)).join("\n"),
-    order: ["navbar-a", "navbar-b", "navbar-c", "hero-a", "hero-b", "hero-c", "footer-a", "footer-b", "footer-c"],
+    css: R.baseCss() + "\n" + SECTION_IDS.map((s) => read(`${s}/${s}.css`)).join("\n"),
+    order: ORDER,
+    names: NAMES,
   };
   // JSON inside a <script>: make "</" and U+2028/9 safe.
   const json = JSON.stringify(data).replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
@@ -130,7 +186,7 @@ const TEMPLATE = `<!doctype html>
 </head>
 <body>
 <header class="pv">
-  <h1>Gurost section library: Navbar, Hero, Footer (A / B / C)</h1>
+  <h1>Gurost section library (A / B / C)</h1>
   <div class="row"><b>Palette</b><span id="pal"></span></div>
   <div class="row"><b>Width</b><span id="wid"></span></div>
   <div class="row"><b>Backdrop</b><span id="bgs"></span></div>
@@ -150,9 +206,9 @@ const TEMPLATE = `<!doctype html>
     bg: q.get("bg") === "dark" ? "dark" : "light",
     only: DATA.order.indexOf(q.get("only")) >= 0 ? q.get("only") : "all"
   };
-  var LABELS = { navbar: "Navbar", hero: "Hero", footer: "Footer" };
+  var NAMES = DATA.names;
 
-  function label(id) { var p = id.split("-"); return LABELS[p[0]] + " " + p[1].toUpperCase(); }
+  function label(id) { var i = id.lastIndexOf("-"); return NAMES[id.slice(0, i)] + " " + id.slice(i + 1).toUpperCase(); }
 
   function placeholderImage(p) {
     var c = DATA.palettes[p].colors;
@@ -205,7 +261,7 @@ const TEMPLATE = `<!doctype html>
     host.innerHTML = "";
     var sel = document.createElement("select");
     sel.className = "pick"; sel.setAttribute("aria-label", "Section");
-    [["all", "All 9 sections"]].concat(DATA.order.map(function (id) { return [id, label(id)]; })).forEach(function (o) {
+    [["all", "All " + DATA.order.length + " sections"]].concat(DATA.order.map(function (id) { return [id, label(id)]; })).forEach(function (o) {
       var op = document.createElement("option"); op.value = o[0]; op.textContent = o[1]; op.selected = state.only === o[0]; sel.appendChild(op);
     });
     sel.addEventListener("change", function () { state.only = sel.value; render(); });
@@ -233,4 +289,4 @@ if (require.main === module) {
   fs.writeFileSync(OUT, build());
   console.log("wrote " + path.relative(ROOT, OUT));
 }
-module.exports = { build, SAMPLES, OUT };
+module.exports = { build, SAMPLES, OUT, SECTION_IDS };

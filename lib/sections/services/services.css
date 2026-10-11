@@ -1,0 +1,95 @@
+/* Services A (card grid) / B (divided rows) / C (icon tiles on a surface band). Palette variables only. */
+.g-services__item {
+  min-width: 0;
+}
+.g-services__name {
+  overflow-wrap: anywhere;
+}
+.g-services__text {
+  margin-top: var(--g-s1);
+  color: var(--g-muted);
+}
+.g-services__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--g-tap);
+  margin-top: var(--g-s1);
+  font-weight: 600;
+  color: var(--g-primary);
+}
+.g-services__link:hover {
+  text-decoration: underline;
+}
+.g-services__grid,
+.g-services__tiles {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--g-s3);
+}
+.g-services__grid .g-services__item,
+.g-services__tiles .g-services__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--g-s2);
+  padding: var(--g-s3);
+  background: var(--g-surface);
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-radius);
+}
+.g-services__grid .g-icon {
+  background: var(--g-bg);
+}
+@media (min-width: 640px) {
+  .g-services__grid,
+  .g-services__tiles {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 960px) {
+  .g-services__grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--g-s4);
+  }
+}
+
+/* B: editorial rows, title left and text right on desktop */
+.g-services__rows .g-services__item {
+  display: grid;
+  gap: var(--g-s1);
+  padding-block: var(--g-s3);
+  border-top: 1px solid var(--g-border);
+}
+.g-services__rows .g-services__item:last-child {
+  border-bottom: 1px solid var(--g-border);
+}
+.g-services__rows .g-services__name {
+  font-size: var(--g-t-24);
+}
+@media (min-width: 880px) {
+  .g-services__rows .g-services__item {
+    grid-template-columns: 1fr 1.4fr;
+    gap: var(--g-s6);
+  }
+}
+
+/* C: icon beside the text */
+.g-services__tiles .g-services__item {
+  flex-direction: row;
+  align-items: flex-start;
+  background: var(--g-bg);
+}
+.g-services__tiles .g-services__body {
+  min-width: 0;
+}
+.g-services__tiles .g-icon {
+  background: var(--g-surface);
+}
+
+[data-industry="law"] .g-services__grid .g-services__item,
+[data-industry="law"] .g-services__tiles .g-services__item {
+  border-radius: 2px;
+}
+[data-industry="trades"] .g-services__name {
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}

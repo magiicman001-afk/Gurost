@@ -1,0 +1,103 @@
+/* About A (photo left) / B (centred text, no photo) / C (photo right, surface band). Palette variables only. */
+.g-about__grid {
+  display: grid;
+  gap: var(--g-s6);
+  align-items: center;
+}
+.g-about__grid > * {
+  min-width: 0;
+}
+.g-about__media {
+  margin: 0;
+  overflow: hidden;
+  border-radius: var(--g-radius);
+}
+.g-about__img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--g-radius);
+}
+.g-about__text {
+  min-width: 0;
+}
+.g-about__body {
+  margin-top: var(--g-s2);
+  font-size: var(--g-t-16);
+  color: var(--g-muted);
+  max-width: 62ch;
+}
+.g-about .g-title + .g-about__body {
+  margin-top: var(--g-s2);
+}
+.g-about__points {
+  display: grid;
+  gap: var(--g-s1);
+  margin-top: var(--g-s3);
+}
+.g-about__points li {
+  position: relative;
+  padding-left: var(--g-s4);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.g-about__points li::before {
+  position: absolute;
+  left: 4px;
+  top: 0.35em;
+  width: 8px;
+  height: 14px;
+  border: solid var(--g-primary);
+  border-width: 0 3px 3px 0;
+  transform: rotate(40deg);
+  content: "";
+}
+.g-about__cta {
+  margin-top: var(--g-s4);
+}
+@media (min-width: 880px) {
+  .g-about__grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--g-s8);
+  }
+  .g-about__grid--reverse .g-about__media {
+    order: 2;
+  }
+}
+
+/* B: a narrow, centred column of text */
+.g-about__text--center {
+  max-width: 720px;
+  margin-inline: auto;
+  text-align: center;
+}
+.g-about__text--center .g-about__body {
+  margin-inline: auto;
+}
+.g-about__text--center .g-about__points {
+  justify-items: center;
+}
+
+/* C: points become chips */
+.g-about--c .g-about__points {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--g-s1);
+}
+.g-about--c .g-about__points li {
+  padding: var(--g-s1) var(--g-s2);
+  background: var(--g-bg);
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-radius-btn);
+  font-size: var(--g-t-14);
+}
+.g-about--c .g-about__points li::before {
+  display: none;
+}
+
+[data-industry="cafe"] .g-about__img {
+  border-radius: 12px;
+}
+[data-industry="health"] .g-about__img {
+  border-radius: 16px;
+}

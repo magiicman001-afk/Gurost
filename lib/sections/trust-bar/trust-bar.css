@@ -1,0 +1,78 @@
+/* Trust Bar A (surface band) / B (centred columns, dividers) / C (dark band). Palette variables only. */
+.g-trustbar__list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--g-s2);
+}
+.g-trustbar__item {
+  display: flex;
+  align-items: center;
+  gap: var(--g-s2);
+  min-width: 0;
+}
+.g-trustbar__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.g-trustbar__label {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.g-trustbar__detail {
+  font-size: var(--g-t-14);
+  color: var(--g-muted);
+  overflow-wrap: anywhere;
+}
+.g-trustbar[data-tone="dark"] .g-trustbar__detail {
+  color: var(--g-on-dark-muted);
+}
+@media (min-width: 560px) {
+  .g-trustbar__list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 880px) {
+  .g-trustbar__list {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--g-s4);
+  }
+}
+
+/* B: centred, icon above, hairline dividers */
+.g-trustbar--b .g-trustbar__item {
+  flex-direction: column;
+  text-align: center;
+  gap: var(--g-s1);
+}
+.g-trustbar--b .g-trustbar__text {
+  align-items: center;
+}
+@media (min-width: 880px) {
+  .g-trustbar--b .g-trustbar__item + .g-trustbar__item {
+    border-left: 1px solid var(--g-border);
+  }
+}
+
+/* C: dark band, always two columns on a phone */
+.g-trustbar--c .g-trustbar__list {
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (min-width: 880px) {
+  .g-trustbar--c .g-trustbar__list {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+@media (max-width: 420px) {
+  .g-trustbar--c .g-trustbar__item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+[data-industry="law"] .g-trustbar .g-icon {
+  border-radius: 2px;
+}
+[data-industry="salon"] .g-trustbar .g-icon {
+  border-radius: 999px;
+}

@@ -98,8 +98,10 @@ test("assemble: missing content shows honest placeholders and warns; optional se
 });
 
 test("assemble: sections that are not built yet are skipped with one warning (recipes name the full library)", () => {
-  const r = build("cafe", { content: { ...contentFor("cafe"), services: { title: "x" } } });
-  assert.ok(r.skipped.includes("services") && r.skipped.includes("gallery"));
+  const planned = R.manifest.sections.filter((x) => x.status !== "built").map((x) => x.id);
+  const r = build("cafe", { content: { ...contentFor("cafe"), [planned[0]]: { title: "x" } } });
+  assert.ok(r.skipped.includes("gallery") || !A.recipes["local-business"].order.includes("gallery"));
+  assert.ok(r.skipped.every((id) => planned.includes(id)), "only unbuilt sections are skipped");
   assert.equal(r.warnings.filter((w) => /not built yet/.test(w)).length, 1);
 });
 

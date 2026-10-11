@@ -1,0 +1,112 @@
+/* Features A (card grid) / B (rows beside the heading) / C (bento). Palette variables only. */
+.g-features__item {
+  min-width: 0;
+}
+.g-features__name {
+  margin-top: var(--g-s2);
+}
+.g-features__text {
+  margin-top: var(--g-s1);
+  color: var(--g-muted);
+}
+.g-features__grid,
+.g-features__bento {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--g-s3);
+}
+.g-features__grid .g-features__item,
+.g-features__bento .g-features__item {
+  padding: var(--g-s3);
+  background: var(--g-surface);
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-radius);
+}
+.g-features__grid .g-icon {
+  background: var(--g-bg);
+}
+@media (min-width: 640px) {
+  .g-features__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .g-features__bento {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 960px) {
+  .g-features__grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--g-s4);
+  }
+  .g-features__bento {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--g-s3);
+  }
+}
+
+/* B: heading on the left, divided rows on the right (stacked on phones) */
+.g-features__layout {
+  display: grid;
+  gap: var(--g-s4);
+}
+.g-features--b .g-head {
+  margin-bottom: 0;
+}
+.g-features__rows .g-features__item {
+  display: grid;
+  grid-template-columns: var(--g-tap) 1fr;
+  column-gap: var(--g-s2);
+  padding-block: var(--g-s3);
+  border-top: 1px solid var(--g-border);
+}
+.g-features__rows .g-features__item:last-child {
+  border-bottom: 1px solid var(--g-border);
+}
+.g-features__rows .g-icon {
+  grid-row: 1 / span 2;
+  background: var(--g-bg);
+}
+.g-features__rows .g-features__name {
+  margin-top: 0;
+}
+@media (min-width: 880px) {
+  .g-features__layout {
+    grid-template-columns: 1fr 1.4fr;
+    gap: var(--g-s8);
+    align-items: start;
+  }
+}
+
+/* C: the first card is large and in the primary colour */
+.g-features__bento .g-features__item:first-child {
+  background: var(--g-primary);
+  color: var(--g-on-primary);
+  border-color: var(--g-primary);
+}
+.g-features__bento .g-features__item:first-child .g-features__text {
+  color: var(--g-on-primary);
+}
+.g-features__bento .g-features__item:first-child .g-icon {
+  background: var(--g-on-primary);
+  color: var(--g-primary);
+}
+@media (min-width: 640px) {
+  .g-features__bento .g-features__item:first-child {
+    grid-column: 1 / -1;
+  }
+}
+@media (min-width: 960px) {
+  .g-features__bento .g-features__item:first-child {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+}
+
+[data-industry="law"] .g-features__grid .g-features__item,
+[data-industry="law"] .g-features__bento .g-features__item {
+  border-radius: 2px;
+}
+[data-industry="trades"] .g-features__name {
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}

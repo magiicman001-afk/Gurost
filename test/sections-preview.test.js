@@ -10,15 +10,17 @@ test("preview page is up to date (run: node scripts/build-sections-preview.js)",
   assert.equal(fs.readFileSync(B.OUT, "utf8"), B.build());
 });
 
-test("preview page carries all 9 sections in all 6 palettes, with controls", () => {
+test("preview page carries every built section (3 variants) in all 6 palettes, with controls", () => {
   const html = fs.readFileSync(B.OUT, "utf8");
   const data = JSON.parse(html.match(/var DATA = (\{[\s\S]*?\});\n  var q/)[1]);
   assert.equal(Object.keys(data.palettes).length, 6);
+  const built = R.manifest.sections.filter((x) => x.status === "built").map((x) => x.id);
+  assert.deepEqual([...built].sort(), [...B.SECTION_IDS].sort(), "the preview lists every built section (add new ones to SECTION_IDS)");
   for (const p of Object.values(data.palettes)) {
-    assert.equal(Object.keys(p.sections).length, 9);
+    assert.equal(Object.keys(p.sections).length, built.length * 3);
     for (const [id, s] of Object.entries(p.sections)) {
       assert.equal(H.leftoverSlots(s), false, id);
-      assert.match(s, new RegExp(`data-variant="${id.split("-")[1]}"`));
+      assert.match(s, new RegExp(`data-variant="${id.slice(id.lastIndexOf("-") + 1)}"`));
     }
   }
   assert.ok(/Phone 375/.test(html) && /Desktop 1440/.test(html) && /"Dark"|>Dark</.test(html) || /html: "Dark"/.test(html));
@@ -35,4 +37,15 @@ test("preview page layout (Bug BB): the controls bar is not sticky, the section 
   assert.ok(!/header\.pv\s*\{[^}]*position:\s*sticky/.test(html), "a sticky controls bar covered the section on phones");
   assert.ok(/select\.pick/.test(html) && /f\.onload/.test(html));
   assert.ok(!/calc\(100vh/.test(html));
+});
+
+test("every section in the preview passes the static quality gate (no invented facts, no leftovers)", () => {
+  const G = require("../lib/sections/quality-gate");
+  const html = fs.readFileSync(B.OUT, "utf8");
+  const data = JSON.parse(html.match(/var DATA = (\{[\s\S]*?\});\n  var q/)[1]);
+  for (const [pal, p] of Object.entries(data.palettes))
+    for (const [id, h] of Object.entries(p.sections)) {
+      const bad = G.checkStatic(h, { now: new Date(Date.UTC(2026, 0, 1)), allowImageTokens: true }).filter((f) => f.severity === "fail");
+      assert.deepEqual(bad, [], `${pal} ${id}`);
+    }
 });
