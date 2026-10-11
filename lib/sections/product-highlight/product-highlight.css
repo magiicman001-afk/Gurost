@@ -1,0 +1,82 @@
+/* Product Highlight A (photo left) / B (photo right on surface) / C (dark band). Price only when the owner gives one. */
+.g-prod__grid {
+  display: grid;
+  gap: var(--g-s6);
+  align-items: center;
+}
+.g-prod__grid > * {
+  min-width: 0;
+}
+.g-prod__grid > :only-child {
+  max-width: 680px;
+}
+.g-prod__media {
+  margin: 0;
+  overflow: hidden;
+  border-radius: var(--g-radius);
+}
+.g-prod__img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+.g-prod__body {
+  margin-top: var(--g-s2);
+  color: var(--g-muted);
+  overflow-wrap: anywhere;
+}
+.g-prod[data-tone="dark"] .g-prod__body {
+  color: var(--g-on-dark-muted);
+}
+.g-prod__features {
+  margin-top: var(--g-s3);
+  display: grid;
+  gap: var(--g-s1);
+}
+.g-prod__features li {
+  position: relative;
+  padding-left: var(--g-s4);
+  overflow-wrap: anywhere;
+}
+.g-prod__features li::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 0.35em;
+  width: 6px;
+  height: 12px;
+  border-right: 2px solid var(--g-primary);
+  border-bottom: 2px solid var(--g-primary);
+  transform: rotate(45deg);
+}
+.g-prod[data-tone="dark"] .g-prod__features li::before {
+  border-color: var(--g-on-dark);
+}
+.g-prod__price {
+  margin-top: var(--g-s3);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--g-s1);
+}
+.g-prod__amount {
+  font-family: var(--g-font-head, inherit);
+  font-size: var(--g-t-32);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.g-prod__period {
+  color: var(--g-muted);
+}
+.g-prod[data-tone="dark"] .g-prod__period {
+  color: var(--g-on-dark-muted);
+}
+.g-prod__btn {
+  margin-top: var(--g-s3);
+}
+@media (min-width: 880px) {
+  .g-prod__grid:has(.g-prod__media) {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--g-s8);
+  }
+}

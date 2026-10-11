@@ -2564,7 +2564,74 @@
         "b",
         "c"
       ],
-      "slots": null,
+      "slots": {
+        "eyebrow": {
+          "type": "text",
+          "max": 40,
+          "required": false
+        },
+        "title": {
+          "type": "text",
+          "max": 80,
+          "required": true
+        },
+        "intro": {
+          "type": "text",
+          "max": 200,
+          "required": false
+        },
+        "body": {
+          "type": "text",
+          "max": 300,
+          "required": false
+        },
+        "features": {
+          "type": "list",
+          "max": 6,
+          "item": {
+            "text": {
+              "type": "text",
+              "max": 80,
+              "required": true
+            }
+          }
+        },
+        "price": {
+          "type": "text",
+          "max": 20,
+          "required": false
+        },
+        "period": {
+          "type": "text",
+          "max": 20,
+          "required": false
+        },
+        "cta_label": {
+          "type": "text",
+          "max": 30,
+          "required": false
+        },
+        "cta_href": {
+          "type": "link"
+        },
+        "image": {
+          "type": "image"
+        },
+        "image_brief": {
+          "type": "text",
+          "max": 200,
+          "required": false
+        },
+        "image_alt": {
+          "type": "text",
+          "max": 100,
+          "required": false,
+          "fallback": [
+            "image_brief",
+            "title"
+          ]
+        }
+      },
       "aliases": [
         "featured product",
         "showcase",
@@ -2587,13 +2654,48 @@
           4.5
         ],
         [
+          "text",
+          "surface",
+          4.5
+        ],
+        [
+          "muted",
+          "surface",
+          4.5
+        ],
+        [
+          "primary",
+          "bg",
+          4.5
+        ],
+        [
+          "primary",
+          "surface",
+          4.5
+        ],
+        [
           "on-primary",
           "primary",
           4.5
         ],
         [
+          "on-dark",
+          "dark",
+          4.5
+        ],
+        [
+          "on-dark-muted",
+          "dark",
+          4.5
+        ],
+        [
           "focus",
           "bg",
+          3.0
+        ],
+        [
+          "focus",
+          "surface",
           3.0
         ]
       ],
@@ -2601,7 +2703,7 @@
         "light",
         "dark"
       ],
-      "status": "planned"
+      "status": "built"
     }
   ]
 }

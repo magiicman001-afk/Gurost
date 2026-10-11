@@ -6,12 +6,12 @@ Last updated: 2026-10-11 by Web Claude.
 | Who | Role | Now |
 |---|---|---|
 | Irfan | Boss, phone tests | Gave the verdict "build on it" on the section preview |
-| Web Claude | Day builder | Section library: next the other 17 sections, then the polish pass |
+| Web Claude | Day builder | Section library: all 20 sections built; waiting for Irfan's phone verdict on the full preview, then the polish pass |
 | Laptop Claude | Evening tester, security | Security S3 (S3a WebSocket auth, S3b sessions table, S3c server side, S3d browser side, S3e admin) |
 | DeepSeek | Strategy, second opinion | Not active today |
 
 ## Current stage
-Sunday plan 2026-10-11 stages 0 to 9 done; stage 10 (summary report) given to Irfan. Next, in this order (Irfan, 2026-10-11): (1) the remaining 17 sections, (2) Layer 2 polish (real fonts, Pixabay images, GSAP, Lenis on published sites only, micro-interactions; test on 5 business types), (3) Website Builder V2.
+Sunday plan 2026-10-11 stages 0 to 9 done; stage 10 (summary report) given to Irfan. Next, in this order (Irfan, 2026-10-11): (1) the remaining 17 sections (DONE, batches 1-5; Irfan reviews the full preview), (2) Layer 2 polish (real fonts, Pixabay images, GSAP, Lenis on published sites only, micro-interactions; test on 5 business types), (3) Website Builder V2.
 
 ## Done
 - Stage 0 `b36973e` memory foundation. Stage 1 `dda80c5` design tools installed globally.
@@ -20,7 +20,7 @@ Sunday plan 2026-10-11 stages 0 to 9 done; stage 10 (summary report) given to Ir
 - Stage 6 `7ab4eb5` preview page `public/sections-preview.html`; Bug BB (controls covered the section on phones) fixed `2008b66`.
 - Stage 7 `3ac25b0` assembler `lib/sections/assemble.js` + `recipes.json` behind `SECTION_LIBRARY=1` (off by default; not wired into the builders yet: that is V2).
 - Stage 8 `2317804` quality gate `lib/sections/quality-gate.js` (static + browser + Impeccable advisory; swap variant, then default content, then ship; never throws).
-- Tests: 828 run, 826 pass (the 2 failures, `cors-policy` and `security-headers`, need `express`, which only the laptop has).
+- Tests: 1503 run, 1501 pass (the 2 failures, `cors-policy` and `security-headers`, need `express`, which only the laptop has).
 
 ## In progress
 - Stage 9 (this commit) and stage 10 (report).

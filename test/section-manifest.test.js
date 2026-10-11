@@ -37,7 +37,8 @@ test("every palette pair named in the manifest passes in all six palettes", () =
 });
 
 test("renderSection refuses a section with no schema or no template instead of guessing", () => {
-  assert.throws(() => R.renderSection("product-highlight", "a", {}), /no slot schema/);
+  const planned = R.manifest.sections.find((x) => x.status !== "built");
+  if (planned) assert.throws(() => R.renderSection(planned.id, "a", {}), /no slot schema/); // none left once all 20 are built
   assert.throws(() => R.renderSection("nope", "a", {}), /unknown section/);
   assert.throws(() => R.renderSection("navbar", "z", {}), /no variant/);
 });

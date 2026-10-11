@@ -73,14 +73,14 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
 - Every code call logs `[code-call] <label> model=... stop=... chars=... secs=... chars/s=...`.
 
 ## Status (2026-10-09)
-- Tests: 828 (826 pass in Web Claude's sandbox; `cors-policy` and `security-headers` need
+- Tests: 1503 (1501 pass in Web Claude's sandbox; `cors-policy` and `security-headers` need
   `express` installed, which only the laptop has).
-- Section library (2026-10-11): BUILT for Navbar, Hero, Footer (A/B/C, 6 palettes) in `lib/sections/`
+- Section library (2026-10-11): ALL 20 sections BUILT (A/B/C each, 6 palettes; batches 1-5, 2026-10-11) in `lib/sections/`
   (`render.js`, `manifest.json` with all 20 sections, `palettes.json`, `base.css`, `assemble.js` +
   `recipes.json`, `quality-gate.js`). Behind `SECTION_LIBRARY=1`, OFF by default and NOT wired into the
   builders yet (that is Website Builder V2). Preview: `/sections-preview.html`
   (`node scripts/build-sections-preview.js` regenerates it; a test checks it is current). Irfan's verdict:
-  build on it. Order: 17 more sections -> Layer 2 polish (real fonts, Pixabay images, GSAP, Lenis on
+  build on it. Order: all 20 built -> Irfan reviews the full preview on his phone (WAIT for his verdict) -> Layer 2 polish (real fonts, Pixabay images, GSAP, Lenis on
   published sites, micro-interactions) -> Website Builder V2. Gate: static checks + 375px/contrast in a
   browser + Impeccable advisory (`IMPECCABLE_CLI`); on failure swap variant, then default content, then ship.
 - Security (audit 2026-10-08): items 1-3 DONE - `/shared/:token` runs sandboxed, security

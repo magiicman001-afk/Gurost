@@ -1,0 +1,5 @@
+<section class="g-sec g-prod g-prod--a" id="product-highlight" data-gurost-section="product-highlight" data-variant="a" data-tone="light">
+  <div class="g-container">
+    <div class="g-prod__grid">{{#if image}}<figure class="g-prod__media" data-g-reveal="up" data-gsap-fade><img class="g-prod__img" src="{{image}}" alt="{{image_alt}}" {{#if image_brief}}data-gurost-image="{{image_brief}}" {{/if}}data-gurost-image-role="product" loading="lazy" decoding="async"></figure>{{/if}}<div class="g-prod__text" data-g-reveal="up" data-gsap-fade>{{#if eyebrow}}<p class="g-eyebrow">{{eyebrow}}</p>{{/if}}<h2 class="g-title">{{title}}</h2>{{#if intro}}<p class="g-lead">{{intro}}</p>{{/if}}{{#if body}}<p class="g-prod__body">{{body}}</p>{{/if}}{{#if features}}<ul class="g-prod__features">{{#each features}}<li>{{text}}</li>{{/each}}</ul>{{/if}}{{#if price}}<p class="g-prod__price"><span class="g-prod__amount">{{price}}</span>{{#if period}}<span class="g-prod__period">{{period}}</span>{{/if}}</p>{{/if}}{{#if cta_label}}{{#if cta_href}}<a class="g-btn g-btn--primary g-prod__btn" href="{{cta_href}}">{{cta_label}}</a>{{/if}}{{/if}}</div></div>
+  </div>
+</section>
