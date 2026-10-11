@@ -105,7 +105,8 @@ const SECTION_SAMPLES = {
   },
 };
 
-function renderFor(palId) {
+/** Sample content for every section of one palette (layout copy only; honest placeholders for facts). */
+function contentFor(palId) {
   const s = SAMPLES[palId];
   const pal = R.getPalette(palId);
   const tone = pal.footerTone === "dark" ? "dark" : "light";
@@ -137,6 +138,16 @@ function renderFor(palId) {
   const cta = { title: s.ctaTitle || "Ready to get started?", text: "[Add one line that tells people what happens next]", cta1_label: s.cta, cta1_href: "#contact", cta2_label: s.phone ? "Call us" : "Learn more", cta2_href: s.phone ? "tel:" + s.phone.replace(/[^\d+]/g, "") : "#services" };
   const newsletter = { eyebrow: "Stay in touch", title: "Get our news by email", intro: "", action: "https://example.com/subscribe", button_label: "Subscribe", privacy: "[Add a line about how you use email addresses]" };
   const product = { eyebrow: "Featured", title: x.services[0].split("|")[0], intro: "", body: "[Add two sentences about this product or service]", features: [{ text: "[Add a key benefit]" }, { text: "[Add a key benefit]" }, { text: "[Add a key benefit]" }], price: "[Add price]", period: "", cta_label: s.cta, cta_href: "#contact", image: "IMG_1", image_brief: s.brief || "Photo placeholder", image_alt: s.brief || "Photo placeholder" };
+  return { tone, nav, hero, foot, trust, features, about, services, gallery, testimonials, pricing, team, process, stats, faq, booking, location, blog, cta, newsletter, product };
+}
+
+function contentMap(palId) {
+  const c = contentFor(palId);
+  return { navbar: c.nav, hero: c.hero, footer: c.foot, "trust-bar": c.trust, features: c.features, about: c.about, services: c.services, gallery: c.gallery, testimonials: c.testimonials, pricing: c.pricing, team: c.team, process: c.process, stats: c.stats, faq: c.faq, booking: c.booking, location: c.location, blog: c.blog, cta: c.cta, newsletter: c.newsletter, "product-highlight": c.product };
+}
+
+function renderFor(palId) {
+  const { tone, nav, hero, foot, trust, features, about, services, gallery, testimonials, pricing, team, process, stats, faq, booking, location, blog, cta, newsletter, product } = contentFor(palId);
   const out = {};
   for (const v of ["a", "b", "c"]) {
     for (const [id, c] of Object.entries({ process, stats, faq, booking, location, blog, cta, newsletter, "product-highlight": product })) out[id + "-" + v] = R.renderSection(id, v, c, { now: FIXED_NOW }).html;
@@ -309,4 +320,4 @@ if (require.main === module) {
   fs.writeFileSync(OUT, build());
   console.log("wrote " + path.relative(ROOT, OUT));
 }
-module.exports = { build, SAMPLES, OUT, SECTION_IDS };
+module.exports = { build, SAMPLES, OUT, SECTION_IDS, contentMap };
