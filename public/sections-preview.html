@@ -9,18 +9,22 @@
   :root { color-scheme: light; --bg:#f4f4f5; --fg:#18181b; --line:#d4d4d8; --ink:#27272a; }
   * { box-sizing: border-box; }
   body { margin:0; font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--bg); color:var(--fg); }
-  header.pv { position:sticky; top:0; z-index:10; background:#fff; border-bottom:1px solid var(--line); padding:12px 16px; }
-  header.pv h1 { margin:0 0 8px; font-size:18px; }
-  .row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:8px; }
-  .row b { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:#52525b; min-width:64px; }
-  button.chip { min-height:44px; padding:0 14px; border:1px solid var(--line); border-radius:999px; background:#fff; font:inherit; cursor:pointer; color:var(--ink); }
+  header.pv { background:#fff; border-bottom:1px solid var(--line); padding:12px 16px; }
+  header.pv h1 { margin:0 0 4px; font-size:17px; }
+  .row { display:flex; gap:8px; align-items:center; margin-top:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:2px; }
+  .row > span { display:flex; gap:8px; }
+  select.pick { min-height:44px; font:inherit; padding:0 12px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); max-width:100%; }
+  .row b { flex:none; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:#52525b; min-width:64px; }
+  button.chip { flex:none; white-space:nowrap; min-height:44px; padding:0 14px; border:1px solid var(--line); border-radius:999px; background:#fff; font:inherit; cursor:pointer; color:var(--ink); }
   button.chip[aria-pressed="true"] { background:var(--ink); color:#fff; border-color:var(--ink); }
   .dot { display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:6px; vertical-align:-1px; border:1px solid rgba(0,0,0,.2); }
   main.pv { padding:16px; }
-  .note { font-size:14px; color:#52525b; margin:0 0 12px; }
+  .note { font-size:13px; color:#52525b; margin:0 0 12px; }
   .stage { display:flex; justify-content:center; }
-  iframe { border:1px solid var(--line); background:#fff; width:100%; max-width:100%; height:calc(100vh - 220px); min-height:520px; }
-  iframe.w375 { width:375px; }
+  main.pv { padding:12px 0; }
+  .note { padding:0 16px; }
+  iframe { display:block; border:1px solid var(--line); background:#fff; width:100%; max-width:100%; height:400px; }
+  iframe.w375 { width:375px; max-width:100%; }
   iframe.w1440 { width:1440px; }
   .scroll { overflow:auto; }
 </style>
@@ -29,7 +33,8 @@
 <header class="pv">
   <h1>Gurost section library: Navbar, Hero, Footer (A / B / C)</h1>
   <div class="row"><b>Palette</b><span id="pal"></span></div>
-  <div class="row"><b>Width</b><span id="wid"></span><b>Backdrop</b><span id="bgs"></span></div>
+  <div class="row"><b>Width</b><span id="wid"></span></div>
+  <div class="row"><b>Backdrop</b><span id="bgs"></span></div>
   <div class="row"><b>Show</b><span id="sec"></span></div>
 </header>
 <main class="pv">
@@ -97,8 +102,20 @@
     }), "palette");
     chips(document.getElementById("wid"), [{ value: "375", html: "Phone 375" }, { value: "1440", html: "Desktop 1440" }], "width");
     chips(document.getElementById("bgs"), [{ value: "light", html: "Light" }, { value: "dark", html: "Dark" }], "bg");
-    chips(document.getElementById("sec"), [{ value: "all", html: "All 9" }].concat(DATA.order.map(function (id) { return { value: id, html: label(id) }; })), "only");
+    var host = document.getElementById("sec");
+    host.innerHTML = "";
+    var sel = document.createElement("select");
+    sel.className = "pick"; sel.setAttribute("aria-label", "Section");
+    [["all", "All 9 sections"]].concat(DATA.order.map(function (id) { return [id, label(id)]; })).forEach(function (o) {
+      var op = document.createElement("option"); op.value = o[0]; op.textContent = o[1]; op.selected = state.only === o[0]; sel.appendChild(op);
+    });
+    sel.addEventListener("change", function () { state.only = sel.value; render(); });
+    host.appendChild(sel);
     f.className = "w" + state.width;
+    f.onload = function () {
+      try { var d = f.contentDocument; f.style.height = Math.max(d.documentElement.scrollHeight, d.body.scrollHeight) + "px"; } catch (e) {}
+    };
+    f.style.height = Math.max(window.innerHeight, 500) + "px"; // start from a screen-sized frame so vh-based sections measure sensibly
     f.srcdoc = buildDoc();
   }
 

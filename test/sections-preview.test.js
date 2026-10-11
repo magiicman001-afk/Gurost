@@ -29,3 +29,10 @@ test("preview sample copy invents no prices, ratings, years or counts", () => {
   const txt = JSON.stringify(B.SAMPLES);
   assert.ok(!/[£$€]\s?\d|\d\s?(stars?|reviews?|customers|years)|\b(19|20)\d\d\b/i.test(txt));
 });
+
+test("preview page layout (Bug BB): the controls bar is not sticky, the section picker is a select, the frame auto-sizes", () => {
+  const html = fs.readFileSync(B.OUT, "utf8");
+  assert.ok(!/header\.pv\s*\{[^}]*position:\s*sticky/.test(html), "a sticky controls bar covered the section on phones");
+  assert.ok(/select\.pick/.test(html) && /f\.onload/.test(html));
+  assert.ok(!/calc\(100vh/.test(html));
+});
