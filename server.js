@@ -46,6 +46,7 @@ const { packageProject, siteFiles, safePath } = require("./wrapper");
 
 const webBot = require("./bots/web-bot");
 const variantBot = require("./bots/variant-bot");
+const libraryBot = require("./bots/library-bot");
 const pulseBrain = require("./bots/pulse-brain");
 const { normalizeBusinessInfo, describeBusinessInfo, applyBusinessInfoUpdate } = require("./lib/business-info");
 const { finalizeSite } = require("./lib/finalize-site");
@@ -1709,6 +1710,7 @@ app.post("/api/select", security.rejectUnknownFields(["projectId", "variantId"])
   try {
     pushUndoSnapshot(project, "select-design");
     integrator.integrateSelection(project, variantId);
+    { const picked = (project.variants || []).find((v) => v.id === variantId); project.site = picked && picked.site ? picked.site : null; }
     if (project.state !== "DONE") transition(project, "DONE");
     persistInBackground(projectId, project);
     res.json({ projectId, html: project.currentHtml, state: project.state });
@@ -5429,6 +5431,28 @@ app.post("/api/project/:id/history/:index/restore", async (req, res) => {
  * ============================================================
  */
 
+// Website Builder V2: designs come from the section library when SECTION_LIBRARY=1, with the old free-written
+// generator as the fallback (flag off, an error, or no design made). `more` = the "Show 2 more" batch.
+async function generateWebsiteDesigns(prompt, opts) {
+  if (libraryBot.enabled()) {
+    try {
+      const lib = await libraryBot.generateLibraryVariants(prompt, {
+        businessInfo: opts.businessInfo,
+        plan: opts.plan,
+        includeBranding: opts.includeBranding,
+        onStage: opts.onStage,
+        directionIds: opts.more ? libraryBot.MORE_IDS : libraryBot.FIRST_IDS,
+        siteCopy: opts.siteCopy || null,
+      });
+      if (lib.variants.length) return lib;
+      console.warn("[website-builder] section library made no design, using the old generator:", lib.failures[0]?.error);
+    } catch (err) {
+      console.warn("[website-builder] section library failed, using the old generator:", err.message);
+    }
+  }
+  return variantBot.generateVariantsStaged(prompt, opts);
+}
+
 app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt", "businessInfo"]), auth.enforcePlanLimit, async (req, res) => {
   const prompt = security.sanitizeText(req.body.prompt, 2000);
   const businessInfo = normalizeBusinessInfo(req.body.businessInfo);
@@ -5469,7 +5493,7 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt", "
     transition(project, "PLANNING");
     transition(project, "BUILDING");
 
-    const result = await variantBot.generateVariantsStaged(prompt, {
+    const result = await generateWebsiteDesigns(prompt, {
       businessInfo,
       projectId,
       includeBranding: !PLANS[req.user.plan]?.whiteLabel,
@@ -5552,9 +5576,11 @@ app.post("/api/website-builder/more", security.rejectUnknownFields(["projectId"]
   res.json({ ok: true, expectedVariants: project.expectedVariants });
 
   try {
-    const result = await variantBot.generateVariantsStaged(project.prompt, {
+    const result = await generateWebsiteDesigns(project.prompt, {
       businessInfo: project.businessInfo || null,
       projectId,
+      more: true,
+      siteCopy: ((project.variants || []).find((v) => v.site && v.site.copy) || {}).site?.copy || null,
       briefIds: variantBot.MORE_BRIEF_IDS,
       includeBranding: !PLANS[req.user.plan]?.whiteLabel,
       userId: req.user.id,
