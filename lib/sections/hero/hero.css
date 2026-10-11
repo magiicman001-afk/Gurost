@@ -1,0 +1,213 @@
+/* Hero A (split) / B (full-bleed photo) / C (type-led). Palette variables only, except the two documented scrim values on B. */
+.g-hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--g-bg);
+  color: var(--g-text);
+}
+.g-hero__inner {
+  position: relative;
+  padding-block: var(--g-s8);
+}
+.g-hero__eyebrow {
+  margin-bottom: var(--g-s2);
+  font-size: var(--g-t-14);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--g-primary);
+}
+.g-hero__title {
+  font-size: var(--g-t-48);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.g-hero__sub {
+  margin-top: var(--g-s2);
+  max-width: 60ch;
+  font-size: var(--g-t-20);
+  color: var(--g-muted);
+}
+.g-hero__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--g-s2);
+  margin-top: var(--g-s4);
+}
+.g-hero__btn {
+  width: 100%;
+}
+.g-hero__trust {
+  margin-top: var(--g-s3);
+  font-size: var(--g-t-14);
+  color: var(--g-muted);
+}
+@media (min-width: 560px) {
+  .g-hero__actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .g-hero__btn {
+    width: auto;
+  }
+}
+
+/* dark surfaces: B always, C when tone is dark */
+.g-hero[data-tone="dark"] {
+  background: var(--g-dark);
+  color: var(--g-on-dark);
+}
+.g-hero[data-tone="dark"] .g-hero__eyebrow,
+.g-hero[data-tone="dark"] .g-hero__sub,
+.g-hero[data-tone="dark"] .g-hero__trust {
+  color: var(--g-on-dark);
+}
+.g-hero[data-tone="dark"] .g-btn--primary {
+  background: var(--g-on-dark);
+  color: var(--g-dark);
+}
+.g-hero[data-tone="dark"] .g-btn--ghost {
+  color: var(--g-on-dark);
+  border-color: var(--g-on-dark);
+}
+
+/* A: split */
+.g-hero--a .g-hero__inner {
+  display: grid;
+  gap: var(--g-s6);
+  align-items: center;
+}
+.g-hero--a .g-hero__media {
+  margin: 0;
+}
+.g-hero--a .g-hero__img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--g-radius);
+}
+@media (min-width: 880px) {
+  .g-hero--a .g-hero__inner {
+    grid-template-columns: 1.05fr 1fr;
+    gap: var(--g-s8);
+    padding-block: var(--g-s12);
+  }
+  .g-hero--a .g-hero__title {
+    font-size: var(--g-t-48);
+  }
+}
+
+/* B: full-bleed photo with scrim */
+.g-hero--b {
+  display: flex;
+  align-items: flex-end;
+  min-height: 70vh;
+  min-height: 70svh;
+}
+.g-hero__bg {
+  position: absolute;
+  inset: 0;
+}
+.g-hero--b .g-hero__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.g-hero__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.65));
+}
+.g-hero--b .g-hero__inner {
+  width: 100%;
+  padding-block: var(--g-s8);
+}
+.g-hero--b .g-hero__eyebrow {
+  color: var(--g-on-dark);
+}
+@media (min-width: 880px) {
+  .g-hero--b {
+    align-items: center;
+    min-height: 80vh;
+    min-height: 80svh;
+  }
+  .g-hero--b .g-hero__text {
+    max-width: 720px;
+  }
+}
+
+/* C: type only, one decorative CSS shape */
+.g-hero--c .g-hero__inner {
+  padding-block: var(--g-s8);
+}
+.g-hero--c .g-hero__title {
+  font-size: var(--g-t-48);
+}
+.g-hero__shape {
+  position: absolute;
+  top: -120px;
+  right: -120px;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  background: var(--g-accent);
+  opacity: 0.12;
+  pointer-events: none;
+}
+@media (min-width: 880px) {
+  .g-hero--c .g-hero__inner {
+    padding-block: var(--g-s12);
+  }
+  .g-hero--c .g-hero__title {
+    font-size: var(--g-t-64);
+  }
+  .g-hero__shape {
+    top: -160px;
+    right: -80px;
+    width: 520px;
+    height: 520px;
+  }
+}
+
+/* industry character */
+[data-industry="cafe"] .g-hero--a .g-hero__img {
+  border-radius: 12px;
+}
+[data-industry="law"] .g-hero__title {
+  font-weight: 600;
+}
+[data-industry="law"] .g-hero__shape {
+  display: none;
+}
+[data-industry="law"] .g-hero__eyebrow::before {
+  display: block;
+  width: 48px;
+  height: 2px;
+  margin-bottom: var(--g-s2);
+  background: var(--g-accent);
+  content: "";
+}
+[data-industry="salon"] .g-hero--b .g-hero__text {
+  margin-inline: auto;
+  text-align: center;
+}
+[data-industry="salon"] .g-hero--b .g-hero__actions {
+  justify-content: center;
+}
+[data-industry="salon"] .g-hero__title {
+  font-weight: 400;
+}
+[data-industry="trades"] .g-hero__title {
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+[data-industry="health"] .g-hero--a .g-hero__img {
+  border-radius: 16px;
+}
+[data-industry="tech"] .g-hero__shape {
+  background: linear-gradient(135deg, var(--g-primary), var(--g-accent));
+  opacity: 0.25;
+}

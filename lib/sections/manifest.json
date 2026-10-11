@@ -169,12 +169,24 @@
         "image_alt": {
           "type": "text",
           "max": 100,
-          "required": false
+          "required": false,
+          "fallback": [
+            "image_brief",
+            "headline"
+          ]
         },
         "trust_line": {
           "type": "text",
           "max": 60,
           "required": false
+        },
+        "tone": {
+          "type": "enum",
+          "values": [
+            "light",
+            "dark"
+          ],
+          "default": "light"
         }
       },
       "aliases": [
@@ -225,7 +237,21 @@
         "light",
         "dark"
       ],
-      "status": "planned"
+      "status": "built",
+      "variantRules": {
+        "a": {
+          "needs": [
+            "image"
+          ],
+          "fallback": "c"
+        },
+        "b": {
+          "needs": [
+            "image"
+          ],
+          "fallback": "c"
+        }
+      }
     },
     {
       "id": "trust-bar",

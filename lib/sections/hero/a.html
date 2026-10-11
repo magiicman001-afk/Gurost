@@ -1,0 +1,14 @@
+<section class="g-hero g-hero--a" id="top" data-gurost-section="hero" data-variant="a" data-tone="light">
+  <div class="g-hero__inner g-container">
+    <div class="g-hero__text">
+      {{#if eyebrow}}<p class="g-hero__eyebrow" data-g-reveal="up" data-gsap-slide data-g-stagger>{{eyebrow}}</p>{{/if}}
+      <h1 class="g-hero__title" data-g-reveal="up" data-gsap-slide data-g-stagger>{{headline}}</h1>
+      <p class="g-hero__sub" data-g-reveal="up" data-gsap-slide data-g-stagger>{{subhead}}</p>
+      <div class="g-hero__actions" data-g-reveal="up" data-gsap-slide data-g-stagger><a class="g-btn g-btn--primary g-hero__btn g-hero__btn--primary" href="{{cta1_href}}">{{cta1_label}}</a>{{#if cta2_label}}{{#if cta2_href}}<a class="g-btn g-btn--ghost g-hero__btn g-hero__btn--ghost" href="{{cta2_href}}">{{cta2_label}}</a>{{/if}}{{/if}}</div>
+      {{#if trust_line}}<p class="g-hero__trust" data-g-reveal="up" data-gsap-fade>{{trust_line}}</p>{{/if}}
+    </div>
+    <figure class="g-hero__media" data-g-parallax="subtle">
+      <img class="g-hero__img" src="{{image}}" alt="{{image_alt}}" {{#if image_brief}}data-gurost-image="{{image_brief}}" {{/if}}data-gurost-image-role="hero" loading="eager" decoding="async">
+    </figure>
+  </div>
+</section>

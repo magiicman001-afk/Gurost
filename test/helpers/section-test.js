@@ -53,7 +53,9 @@ function leakedPayloads(html, payloads) {
 }
 /** Any element that carries an inline event handler or a script tag from user text. */
 function hasActiveInjection(html) {
-  return /<script\b/i.test(html) || /<[a-z][^<>]*\son[a-z]+\s*=/i.test(html);
+  // quoted attribute values are inert text, so blank them before looking for handler attributes
+  const noValues = html.replace(/="[^"]*"/g, '=""').replace(/='[^']*'/g, "=''");
+  return /<script\b/i.test(noValues) || /<[a-z][^<>]*\son[a-z]+\s*=/i.test(noValues);
 }
 function emptyHrefs(html) {
   return /href=""/.test(html);
