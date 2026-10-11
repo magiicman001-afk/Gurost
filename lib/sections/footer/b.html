@@ -1,0 +1,11 @@
+<footer class="g-footer g-footer--b" data-gurost-section="footer" data-variant="b" data-tone="{{tone}}">
+  <div class="g-footer__inner g-container">
+    <div class="g-footer__row">
+      <div class="g-footer__col g-footer__col--brand"><p class="g-footer__brand">{{brand}}</p>{{#if tagline}}<p class="g-footer__tagline">{{tagline}}</p>{{/if}}</div>
+      <nav class="g-footer__col g-footer__col--links" aria-label="Footer"><ul class="g-footer__links g-footer__links--inline">{{#each link_groups}}{{#each links}}<li><a class="g-footer__link" href="{{href}}">{{label}}</a></li>{{/each}}{{/each}}</ul></nav>
+      <div class="g-footer__col g-footer__col--socials">{{#if socials}}<ul class="g-footer__socials">{{#each socials}}<li><a class="g-footer__social" href="{{url}}" aria-label="{{platform_name}} (opens in a new tab)" target="_blank" rel="noopener noreferrer">{{{icon}}}</a></li>{{/each}}</ul>{{/if}}</div>
+    </div>
+    <div class="g-footer__contact">{{#if address}}<address class="g-footer__address">{{address}}</address>{{/if}}{{#if phone}}<a class="g-footer__link g-footer__phone" href="{{phone_tel}}">{{phone}}</a>{{/if}}{{#if email}}<a class="g-footer__link g-footer__email" href="{{email_mailto}}">{{email}}</a>{{/if}}</div>
+    <div class="g-footer__bottom"><p class="g-footer__legal">© {{year}} {{brand}}{{#if legal_extra}} · {{legal_extra}}{{/if}}</p>{{#if show_gurost_credit}}<a class="g-footer__credit" href="https://gurost.onrender.com" target="_blank" rel="noopener">Built with Gurost</a>{{/if}}</div>
+  </div>
+</footer>

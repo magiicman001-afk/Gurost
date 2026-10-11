@@ -1,0 +1,18 @@
+<footer class="g-footer g-footer--c" data-gurost-section="footer" data-variant="c" data-tone="{{tone}}">
+  {{#if cta_title}}<div class="g-footer__cta-band" data-g-reveal="up">
+    <div class="g-footer__cta-inner g-container">
+      <h2 class="g-footer__cta-title">{{cta_title}}</h2>
+      {{#if cta_label}}{{#if cta_href}}<a class="g-btn g-btn--inverse g-footer__cta-btn" href="{{cta_href}}">{{cta_label}}</a>{{/if}}{{/if}}
+    </div>
+  </div>{{/if}}
+  <div class="g-footer__inner g-container">
+    <div class="g-footer__grid">
+      <div class="g-footer__col g-footer__col--brand" data-g-reveal="up" data-g-stagger><p class="g-footer__brand">{{brand}}</p>{{#if tagline}}<p class="g-footer__tagline">{{tagline}}</p>{{/if}}</div>
+      <div class="g-footer__col g-footer__col--contact" data-g-reveal="up" data-g-stagger>{{#if address}}<address class="g-footer__address">{{address}}</address>{{/if}}{{#if phone}}<a class="g-footer__link g-footer__phone" href="{{phone_tel}}">{{phone}}</a>{{/if}}{{#if email}}<a class="g-footer__link g-footer__email" href="{{email_mailto}}">{{email}}</a>{{/if}}</div>
+      <div class="g-footer__col g-footer__col--hours" data-g-reveal="up" data-g-stagger><p class="g-footer__hours">{{hours}}</p></div>
+      <nav class="g-footer__col g-footer__col--links" aria-label="Footer" data-g-reveal="up" data-g-stagger>{{#each link_groups}}<div class="g-footer__group"><h2 class="g-footer__group-title">{{title}}</h2><ul class="g-footer__links">{{#each links}}<li><a class="g-footer__link" href="{{href}}">{{label}}</a></li>{{/each}}</ul></div>{{/each}}</nav>
+      <div class="g-footer__col g-footer__col--socials" data-g-reveal="up" data-g-stagger>{{#if socials}}<ul class="g-footer__socials">{{#each socials}}<li><a class="g-footer__social" href="{{url}}" aria-label="{{platform_name}} (opens in a new tab)" target="_blank" rel="noopener noreferrer">{{{icon}}}</a></li>{{/each}}</ul>{{/if}}</div>
+    </div>
+    <div class="g-footer__bottom"><p class="g-footer__legal">© {{year}} {{brand}}{{#if legal_extra}} · {{legal_extra}}{{/if}}</p>{{#if show_gurost_credit}}<a class="g-footer__credit" href="https://gurost.onrender.com" target="_blank" rel="noopener">Built with Gurost</a>{{/if}}</div>
+  </div>
+</footer>

@@ -1071,12 +1071,14 @@
         "phone": {
           "type": "text",
           "max": 20,
-          "required": false
+          "required": false,
+          "tel": true
         },
         "email": {
           "type": "text",
           "max": 60,
-          "required": false
+          "required": false,
+          "mail": true
         },
         "hours": {
           "type": "text",
@@ -1102,7 +1104,8 @@
             },
             "url": {
               "type": "link",
-              "required": true
+              "required": true,
+              "https": true
             }
           }
         },
@@ -1127,6 +1130,14 @@
         },
         "show_gurost_credit": {
           "type": "flag"
+        },
+        "tone": {
+          "type": "enum",
+          "values": [
+            "light",
+            "dark"
+          ],
+          "default": "light"
         }
       },
       "aliases": [
@@ -1176,7 +1187,7 @@
         "light",
         "dark"
       ],
-      "status": "planned"
+      "status": "built"
     },
     {
       "id": "product-highlight",
