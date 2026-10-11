@@ -22,6 +22,10 @@
         "logo": {
           "type": "image"
         },
+        "brand_href": {
+          "type": "link",
+          "required": false
+        },
         "links": {
           "type": "list",
           "required": true,

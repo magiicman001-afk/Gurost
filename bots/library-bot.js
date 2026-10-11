@@ -13,6 +13,7 @@
  * Behind SECTION_LIBRARY=1 (see `enabled()`). The caller falls back to the old generator on any error or zero designs.
  * The model call and the photo search are injected, so tests need no network.
  */
+const crypto = require("crypto");
 const A = require("../lib/sections/assemble");
 const R = require("../lib/sections/render");
 const G = require("../lib/sections/quality-gate");
@@ -213,7 +214,11 @@ async function buildDirection(dir, composed, { search, includeBranding, factsAll
   if (!g.ok) {
     // swap variants, then default content (the gate's own repair ladder) - never ship a failing page silently
     const fixed = await G.buildWithGate({ ...input, content: composed.content }, { facts: factsAllow, browserChecks, allowImageTokens: true });
-    page = { ...fixed, credits: page.credits, filled: page.filled };
+    const photos = page.photos || {};
+    let html = fixed.html;
+    for (const [tok, url] of Object.entries(photos)) html = html.replace(new RegExp(`src="${tok}"`, "g"), () => `src="${R.esc(url)}"`);
+    if (/\ssrc="IMG_\d+"/.test(html)) throw new Error("the repaired page still has missing photos");
+    page = { ...fixed, html, credits: page.credits, filled: page.filled, photos };
     g = fixed.gate;
     steps = fixed.steps || [];
     degraded = !!fixed.degraded;
@@ -276,7 +281,7 @@ async function generateLibraryVariants(prompt, o = {}) {
           usage: null,
           verified: true,
           credits: built.page.credits || [],
-          site: { engine: "section-library", palette: composed.palette, recipe: composed.recipe, content: composed.content, variants: dir.set, meta: composed.meta, direction: dir.id, copy: modelOut },
+          site: { engine: "section-library", palette: composed.palette, recipe: composed.recipe, content: composed.content, variants: dir.set, meta: composed.meta, direction: dir.id, copy: modelOut, photos: built.page.photos || {}, baseHash: crypto.createHash("sha1").update(html).digest("hex") },
           gate: { ok: built.gate.ok, warnings: built.gate.warnings.length, degraded: built.degraded },
         };
         variants.push(variant);

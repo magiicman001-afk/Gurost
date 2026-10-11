@@ -47,6 +47,7 @@ const { packageProject, siteFiles, safePath } = require("./wrapper");
 const webBot = require("./bots/web-bot");
 const variantBot = require("./bots/variant-bot");
 const libraryBot = require("./bots/library-bot");
+const sandboxLink = require("./lib/sandbox-link");
 const pulseBrain = require("./bots/pulse-brain");
 const { normalizeBusinessInfo, describeBusinessInfo, applyBusinessInfoUpdate } = require("./lib/business-info");
 const { finalizeSite } = require("./lib/finalize-site");
@@ -459,11 +460,28 @@ const siteFormLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, standardH
   message: { error: "Too many submissions. Please wait a few minutes and try again." } });
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// Website Builder V2 sandbox: the draft on real page URLs. Public by signed link (see lib/sandbox-link.js), so it sits
+// above the /api auth line and a browser can open it directly. Never indexed, never cached.
+app.get(/^\/builder\/sandbox\/([0-9a-f-]{36})\/([\w-]+)(\/.*)?$/i, async (req, res) => {
+  const projectId = req.params[0], token = req.params[1], rel = req.params[2];
+  res.set({ "X-Robots-Tag": "noindex, nofollow", "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" });
+  if (!sandboxLink.verifyToken(projectId, token)) return res.status(403).type("html").send("<!doctype html><title>Link expired</title><p>This draft link has expired. Open the project in Gurost to get a new one.</p>");
+  let project = PROJECTS.get(projectId);
+  if (!project) project = await projectState.hydrateProjectIfMissing(projectId).catch(() => null);
+  if (!project) return res.status(404).type("html").send("<!doctype html><title>Not found</title><p>Project not found.</p>");
+  const out = sandboxLink.serve(project, rel || "/", {
+    base: `/builder/sandbox/${projectId}/${token}`,
+    formEndpoint: `${process.env.PUBLIC_URL || "https://gurost.onrender.com"}/api/site-forms/${projectId}`,
+    buildSite,
+  });
+  res.status(out.status).type(out.type).send(out.body);
+});
+
 app.post("/api/site-forms/:projectId", siteFormLimiter, async (req, res) => {
   const { projectId } = req.params;
   const { kind, fields, website } = req.body || {};
   if (!UUID_RE.test(projectId)) return res.status(400).json({ error: "Invalid form." });
-  if (kind !== "contact" && kind !== "order") return res.status(400).json({ error: "Invalid form." });
+  if (kind !== "contact" && kind !== "order" && kind !== "booking") return res.status(400).json({ error: "Invalid form." });
   if (website) return res.json({ ok: true }); // honeypot filled: a bot. Pretend success, save nothing.
   if (!fields || typeof fields !== "object" || Array.isArray(fields)) return res.status(400).json({ error: "Invalid form." });
 
@@ -4845,6 +4863,15 @@ app.get("/api/project/:id/site", (req, res) => {
     pages: site.pages.map((p) => ({ file: p.file, label: p.label, title: p.title })),
     previews: previewDocs(site.files)
   });
+});
+
+// A draft link for the signed-in owner (12 hours): the site on real pages, to open on a phone or share for feedback.
+app.post("/api/project/:id/sandbox-link", (req, res) => {
+  const project = getProject(req.params.id, req, res);
+  if (!project) return;
+  if (!project.currentHtml) return res.status(400).json({ error: "Pick a design first." });
+  const token = sandboxLink.makeToken(req.params.id);
+  res.json({ url: `/builder/sandbox/${req.params.id}/${token}/`, expiresInHours: sandboxLink.TTL_MS / 3600000 });
 });
 
 // The suggestion box (Website Builder): up to 3 friendly ideas for the finished site, chosen by plain
