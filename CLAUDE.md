@@ -31,6 +31,14 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
 - PowerShell 5.1 mangles `git commit -m` messages containing quotes — commit
   with `git commit -F <file>` from the Bash tool instead.
 
+## GUROST design principles (never break these)
+- The user owns their code from day one.
+- The user gets all keys (signing keys, API keys, database keys).
+- The user can publish anywhere (no lock-in).
+- No hidden lock-in: clear pricing, easy cancel.
+- If we fail, we refund.
+- Why: Irfan was burned by another AI builder (Emergent) that withheld keys; he paid a freelancer GBP 300+ to fix it. We NEVER do this.
+
 ## Layout
 - Builders: Website (`bots/variant-bot.js`, 4 design directions), App
   (`bots/app-bot.js`, schema → backend → frontend), Amend Website
@@ -79,7 +87,8 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
   and blueprint first; no code until the blueprint is approved.
 
 ## Known bugs (open)
-- Bug P: the bots all show as "Gurost Core" - each should speak with its own avatar and name.
+- Bug P: FIXED (`9f42f6c`, `0dbec59`): 8 individual bots, each with its own avatar and name.
+- Bug S: FIXED (`4de6a05`): honest AI error messages, and a free-model rescue when a paid-only chain gets a 402.
 - Bug H - PARTIAL, depends on Bug AA (live test 2026-10-09 20:47 failed): the fix `0d480d5` IS deployed (it is an ancestor of the live commit) and works while the page knows the project (states building / choosing / ready say "Pick a design first" and start nothing). But after a page refresh the page has no project (`projectState` in `public/builder.html` returns `none` when `projectId` is empty), and `none` means "start a new build" by design, so "Start building" opened "Let's get your details right first" even though the company details were already saved. Real fix: persist projects to the database and restore them on refresh (Bug AA); then Bug H closes with it. Do not call Bug H dead before that. (Replaces the old Bug Q.)
 - Bug AA: a refresh (or a server restart) wipes the project: projects live in the in-memory `PROJECTS` map, which also resets on EVERY Render deploy, and the page loses its project state on refresh. Fix: persist projects (and their designs) to Supabase and reload them by project id; part of Website Builder V2. Until then: every push to `clean-main`, even a docs-only one, redeploys and can wipe a build someone is testing live.
 - Bug U (HIGH): built sites use anchor-scroll instead of real page navigation. Clicking an item (e.g. "birthday cake") only scrolls the one page; it should open a real page (e.g. `/order-birthday-cake`) with a pre-filled form. Cause not yet traced (hypothesis: single-file output with `href="#..."` links). Fix inside Website Builder V2 (multi-page output plus a dead-link / `href="#"` check in the quality gate), not as a quick patch. See `docs/ADMIN_AREA_SPEC.md` section 6.
@@ -98,6 +107,17 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
   how the socket is authenticated, and fix the reconnect BEFORE S3a goes live.
 - Unverified live: GLM frontend speed, early app preview (App Builder), Website Builder
   design painting at once, WebSocket reconnect.
+
+## Sunday plan 2026-10-11 (11 stages, in order, each committed and pushed)
+0 memory foundation (this file, `docs/SESSION_MEMORY.md`, `docs/TEAM_STATUS.md`); 1 install design tools globally (UI/UX Pro Max, Taste Skill, Impeccable, DESIGN.md example; Playwright present; ScrollCraft reference only); 2 `lib/sections/` foundation (manifest, palettes, base.css, render.js, test helper); 3 Navbar A/B/C; 4 Hero A/B/C; 5 Footer A/B/C; 6 `public/sections-preview.html` plus screenshots, then WAIT for Irfan's phone verdict; 7 assembler behind `SECTION_LIBRARY=1` (off by default); 8 quality gate with Impeccable detector; 9 documentation; 10 summary report. Status lives in `docs/TEAM_STATUS.md`; the session log in `docs/SESSION_MEMORY.md`. Hold all pushes while Irfan tests live.
+
+## Active specs (read before related work)
+- `docs/SECTION_LIBRARY_SLICE_1_PLAN.md` - Navbar, Hero, Footer detail (slots, CSS, tests).
+- `docs/INDUSTRY_PALETTES_SPEC.md` - the six locked palettes and font pairs (contrast checked).
+- `docs/WEBSITE_BUILDER_V2_SPEC.md` - dummy mode, launch flow, domain plan.
+- `docs/TOOL_STACK_REVIEW.md` - the 20 tools and the 6 active ones.
+- `docs/INSFORGE_INTEGRATION_PLAN.md` - Phase 2 backend (after the Website Builder launch).
+- `docs/ADMIN_AREA_SPEC.md` - Admin Area (Phase 3, before launch; not built yet).
 
 ## Verified live — 2026-09-30 (commit dcab3d1)
 - Website Builder: bakery build produced all 4 designs; thumbnails styled;
