@@ -36,6 +36,10 @@
 const { supabase } = require("./lib/db");
 const { markInterrupted } = require("./lib/app-build-state");
 
+// Version of the saved shape. Rows written before V2 have none (treated as 1). Bump when `context` changes in a way
+// older code could not read; fromRow() keeps reading every older version.
+const SCHEMA_VERSION = 2;
+
 // A project counts towards the plan's project limit once something has
 // been built: a site, the designs to pick from, or an app's files. A build
 // that failed or never started is an empty shell - it doesn't use up the
@@ -75,6 +79,12 @@ function toRow(projectId, userId, project) {
       suggestionLog: project.suggestionLog || null, // Website Builder suggestion box: what was accepted or put off, and when
       githubSave: project.githubSave || null, // its private GitHub repo, last save, and the auto-save choice
       built: isBuilt(project), // counts towards the project limit (see isBuilt)
+      // Website Builder V2: what the section library needs to rebuild the site, and where it is published.
+      // `site` = { palette, recipe, content, variants, pages } (the owner's content, never the rendered HTML);
+      // `published` = { slug, version, publishedAt, status } for the live copy. Both survive refresh and redeploy.
+      site: project.site || null,
+      published: project.published || null,
+      schemaVersion: SCHEMA_VERSION,
     },
     updated_at: new Date().toISOString(),
   };
@@ -107,6 +117,8 @@ function fromRow(row) {
     buildError: ctx.buildError || null,
     suggestionLog: ctx.suggestionLog || null,
     githubSave: ctx.githubSave || null,
+    site: ctx.site || null,
+    published: ctx.published || null,
     assistantHistory: ctx.assistantHistory || [],
     pendingAssistantSuggestion: null,
     codeReview: null,
@@ -205,4 +217,4 @@ async function deleteProjectRows(projectId, userId) {
   if (failed) throw new Error(`Couldn't delete the project: ${failed.error.message}`);
 }
 
-module.exports = { toRow, fromRow, persistProjectState, hydrateProjectIfMissing, listPersistedProjects, isBuilt, builtProjectIds, ownerOf, deleteProjectRows };
+module.exports = { SCHEMA_VERSION, toRow, fromRow, persistProjectState, hydrateProjectIfMissing, listPersistedProjects, isBuilt, builtProjectIds, ownerOf, deleteProjectRows };

@@ -146,6 +146,7 @@ if (window.self !== window.top) { window.stop(); document.documentElement.innerH
 </footer>
 
 <script src="shared/api-client.js"></script>
+<script src="shared/last-project.js"></script>
 <script src="shared/pulse-voice.js"></script>
 <script src="shared/pulse-inspector.js"></script>
 <script src="shared/pulse-build-brain.js"></script>
@@ -768,6 +769,7 @@ async function generateWebsite(description, options = {}) {
     projectId = result.projectId;
     designsExpected = result.expectedVariants || 2;
     window.history.replaceState({}, '', `builder.html?projectId=${projectId}`);
+    LastProject.remember(localStorage, projectId);
     connectGenerationSocket(projectId);
     lastPartialHtml = null;
     PulseBuildBrain.start({ projectId, getFrame: currentLiveFrame, getHtml: () => lastPartialHtml });
@@ -941,6 +943,8 @@ async function loadExistingProject(id) {
   try {
     const project = await GurostAPI.call(`/api/project/${id}`);
     projectId = id;
+    LastProject.remember(localStorage, id);
+    if (!new URLSearchParams(window.location.search).get('projectId')) window.history.replaceState({}, '', `builder.html?projectId=${id}`);
     // Joining late (reload, second tab) still gets the full bot log: the
     // server replays this project's recent events on connect.
     connectGenerationSocket(id);
@@ -962,6 +966,8 @@ async function loadExistingProject(id) {
     }
   } catch (err) {
     console.error('[builder] loadExistingProject failed:', err.message);
+    // A project that is gone (deleted, or not this account's) must not be reopened on every visit.
+    if (/not found|404/i.test(String(err && err.message))) LastProject.forget(localStorage);
   }
 }
 
@@ -1039,6 +1045,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const pending = JSON.parse(localStorage.getItem('gurost_pending_generate') || 'null');
       // Removed by generateWebsite once the details modal is answered.
       if (pending && pending.mode === 'website') generateWebsite(pending.prompt);
+      else {
+        // A refresh or a return visit: reopen the project this browser was working on (Bug H / Bug AA).
+        const last = LastProject.recall(localStorage);
+        if (last) loadExistingProject(last);
+      }
     }
   } catch (err) {
     console.error('[builder] Project handoff/restore setup failed, continuing without it:', err.message);
