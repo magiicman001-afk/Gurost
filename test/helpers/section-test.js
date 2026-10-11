@@ -117,7 +117,31 @@ async function checkNoOverflow375({ html, css, paletteId = "cafe", width = 375 }
   }
 }
 
+/** Same check for a complete page (assembler output). Optionally reuse one browser via opts.browser. */
+async function checkPageNoOverflow({ html, width = 375, browser }) {
+  let own = null;
+  try {
+    if (!browser) {
+      const { chromium } = require("playwright");
+      own = browser = await chromium.launch();
+    }
+  } catch (err) {
+    return { skipped: true, reason: "chromium not available: " + String(err.message).split("\n")[0] };
+  }
+  try {
+    const page = await browser.newPage({ viewport: { width, height: 800 } });
+    await page.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+    await page.setContent(html, { waitUntil: "load" });
+    const m = await page.evaluate(() => ({ scrollWidth: document.documentElement.scrollWidth, innerWidth: window.innerWidth, h1: document.querySelectorAll("h1").length }));
+    await page.close();
+    return { skipped: false, ok: m.scrollWidth <= m.innerWidth, ...m };
+  } finally {
+    if (own) await own.close();
+  }
+}
+
 module.exports = {
+  checkPageNoOverflow,
   contrast,
   underScrim,
   lum,

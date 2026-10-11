@@ -1,0 +1,33 @@
+{
+  "_note": "Recipes list sections in page order. Sections whose manifest status is not 'built' are skipped (with a warning), so recipes can name the full library and pages grow as sections are built. 'required' sections are always rendered, with honest placeholders when content is missing.",
+  "recipes": {
+    "landing": {
+      "name": "Landing page",
+      "pageTypes": ["landing"],
+      "palettes": ["tech"],
+      "order": ["navbar", "hero", "trust-bar", "features", "product-highlight", "stats", "testimonials", "pricing", "faq", "cta", "newsletter", "footer"],
+      "required": ["navbar", "hero", "footer"]
+    },
+    "local-business": {
+      "name": "Local business (cafe, salon, trades, clinic)",
+      "pageTypes": ["local-business"],
+      "palettes": ["cafe", "salon", "trades", "health"],
+      "order": ["navbar", "hero", "trust-bar", "services", "about", "gallery", "testimonials", "process", "booking", "location", "faq", "cta", "footer"],
+      "required": ["navbar", "hero", "footer"]
+    },
+    "professional": {
+      "name": "Professional services (law, accounting, finance)",
+      "pageTypes": ["professional"],
+      "palettes": ["law"],
+      "order": ["navbar", "hero", "trust-bar", "services", "about", "team", "process", "testimonials", "faq", "booking", "location", "cta", "footer"],
+      "required": ["navbar", "hero", "footer"]
+    },
+    "portfolio": {
+      "name": "Portfolio",
+      "pageTypes": ["portfolio"],
+      "palettes": [],
+      "order": ["navbar", "hero", "about", "gallery", "services", "testimonials", "blog", "cta", "footer"],
+      "required": ["navbar", "hero", "footer"]
+    }
+  }
+}
