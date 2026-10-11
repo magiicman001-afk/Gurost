@@ -1,6 +1,12 @@
 # Section library, slice 1: Navbar, Hero, Footer (build plan)
 
-Status: PLAN ONLY (2026-10-09). Nothing here is built. Build starts after security S3a-d lands and Irfan says go.
+Status: BUILT 2026-10-11 (Sunday plan stages 2 to 8). Irfan's phone verdict on the preview: build on it.
+- DONE stage 2 foundation `a731c2a` (render.js, base.css, palettes.json, manifest, test helper).
+- DONE stage 3 Navbar `d045748`. DONE stage 4 Hero `fdbb332`. DONE stage 5 Footer `c230068`.
+- DONE stage 6 preview page `7ab4eb5` (+ Bug BB fix `2008b66`). DONE stage 7 assembler `3ac25b0`. DONE stage 8 quality gate `2317804`.
+- Built differently from this plan (by decision, all tested): hero scrim is 0.6 to 0.65 (0.55 failed 4.5:1 for the cream text); the hero also carries the command's `data-gsap-fade` / `data-gsap-slide` next to `data-g-reveal`; footer and hero take a `tone` slot (the assembler sets it from the palette); variants A/B of the hero are swapped to C when there is no image (`variantRules` in the manifest).
+- Still to build: the other 17 sections, then the Layer 2 polish pass (real fonts, images, GSAP, Lenis, micro-interactions), then Website Builder V2.
+(Original status line: PLAN ONLY, 2026-10-09.)
 Parent plans: the approved blueprint (20 sections x 3 variants, 6 palettes, quality gate) and the implementation plan
 (plain scoped CSS, server-side templates, one batch AI-fill call, honest slots). This file is the detail for the first 3 sections.
 

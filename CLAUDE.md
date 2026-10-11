@@ -73,8 +73,16 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
 - Every code call logs `[code-call] <label> model=... stop=... chars=... secs=... chars/s=...`.
 
 ## Status (2026-10-09)
-- Tests: 609 (607 pass in Web Claude's sandbox; `cors-policy` and `security-headers` need
+- Tests: 828 (826 pass in Web Claude's sandbox; `cors-policy` and `security-headers` need
   `express` installed, which only the laptop has).
+- Section library (2026-10-11): BUILT for Navbar, Hero, Footer (A/B/C, 6 palettes) in `lib/sections/`
+  (`render.js`, `manifest.json` with all 20 sections, `palettes.json`, `base.css`, `assemble.js` +
+  `recipes.json`, `quality-gate.js`). Behind `SECTION_LIBRARY=1`, OFF by default and NOT wired into the
+  builders yet (that is Website Builder V2). Preview: `/sections-preview.html`
+  (`node scripts/build-sections-preview.js` regenerates it; a test checks it is current). Irfan's verdict:
+  build on it. Order: 17 more sections -> Layer 2 polish (real fonts, Pixabay images, GSAP, Lenis on
+  published sites, micro-interactions) -> Website Builder V2. Gate: static checks + 375px/contrast in a
+  browser + Impeccable advisory (`IMPECCABLE_CLI`); on failure swap variant, then default content, then ship.
 - Security (audit 2026-10-08): items 1-3 DONE - `/shared/:token` runs sandboxed, security
   headers on every page (CSP in report-only mode until `CSP_ENFORCE=1`), CORS allowlist
   (form route stays open). Item 4 (S3: sessions table, short tokens, cookie login, logout
@@ -88,6 +96,7 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
 
 ## Known bugs (open)
 - Bug P: FIXED (`9f42f6c`, `0dbec59`): 8 individual bots, each with its own avatar and name.
+- Bug BB: FIXED (`2008b66`): the preview page's sticky controls covered the section on phones.
 - Bug S: FIXED (`4de6a05`): honest AI error messages, and a free-model rescue when a paid-only chain gets a 402.
 - Bug H - PARTIAL, depends on Bug AA (live test 2026-10-09 20:47 failed): the fix `0d480d5` IS deployed (it is an ancestor of the live commit) and works while the page knows the project (states building / choosing / ready say "Pick a design first" and start nothing). But after a page refresh the page has no project (`projectState` in `public/builder.html` returns `none` when `projectId` is empty), and `none` means "start a new build" by design, so "Start building" opened "Let's get your details right first" even though the company details were already saved. Real fix: persist projects to the database and restore them on refresh (Bug AA); then Bug H closes with it. Do not call Bug H dead before that. (Replaces the old Bug Q.)
 - Bug AA: a refresh (or a server restart) wipes the project: projects live in the in-memory `PROJECTS` map, which also resets on EVERY Render deploy, and the page loses its project state on refresh. Fix: persist projects (and their designs) to Supabase and reload them by project id; part of Website Builder V2. Until then: every push to `clean-main`, even a docs-only one, redeploys and can wipe a build someone is testing live.
@@ -112,7 +121,7 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
 0 memory foundation (this file, `docs/SESSION_MEMORY.md`, `docs/TEAM_STATUS.md`); 1 install design tools globally (UI/UX Pro Max, Taste Skill, Impeccable, DESIGN.md example; Playwright present; ScrollCraft reference only); 2 `lib/sections/` foundation (manifest, palettes, base.css, render.js, test helper); 3 Navbar A/B/C; 4 Hero A/B/C; 5 Footer A/B/C; 6 `public/sections-preview.html` plus screenshots, then WAIT for Irfan's phone verdict; 7 assembler behind `SECTION_LIBRARY=1` (off by default); 8 quality gate with Impeccable detector; 9 documentation; 10 summary report. Status lives in `docs/TEAM_STATUS.md`; the session log in `docs/SESSION_MEMORY.md`. Hold all pushes while Irfan tests live.
 
 ## Active specs (read before related work)
-- `docs/SECTION_LIBRARY_SLICE_1_PLAN.md` - Navbar, Hero, Footer detail (slots, CSS, tests).
+- `docs/SECTION_LIBRARY_SLICE_1_PLAN.md` - Navbar, Hero, Footer detail (slots, CSS, tests); BUILT, see its status block.
 - `docs/INDUSTRY_PALETTES_SPEC.md` - the six locked palettes and font pairs (contrast checked).
 - `docs/WEBSITE_BUILDER_V2_SPEC.md` - dummy mode, launch flow, domain plan.
 - `docs/TOOL_STACK_REVIEW.md` - the 20 tools and the 6 active ones.
@@ -182,9 +191,9 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
   the .ics in a calendar app, a real admin login, `DEEPGRAM_API_KEY` on Render.
 
 ## Parked (do NOT build yet)
-- Section library (blueprint stage only): 15-25 sections x 3 variations, industry palettes,
-  GSAP + Lenis + React Bits animation. Taste Skill, Impeccable and awesome-design.md are
-  being researched as inputs. Nothing is built until Irfan approves the blueprint.
+- Section library, Layer 2 polish (after the 20 sections exist): real fonts, Pixabay images, GSAP
+  scroll-reveal / stagger / counters (hooks `data-g-*` and `data-gsap-*` already in the templates),
+  Lenis smooth scroll on published sites only (OFF in the preview), micro-interactions. Layer 3 after launch.
 - Cookie sessions / httpOnly (security S3): Laptop Claude's piece; do not start it from here.
 - Multi-language support (language picker, translated UI + Core messages, start
   with 10 languages). About a 2-3 day build; after the three builders are done.
