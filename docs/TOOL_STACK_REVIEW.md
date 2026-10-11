@@ -132,3 +132,19 @@ General notes: slash commands (`/plugin ...`) run inside Claude Code on whicheve
 7. **Install commands approved to run Sunday**, when the section library starts, **globally, never into the repo**: UI/UX Pro Max (`npm i -g ui-ux-pro-max-cli`; `uipro init --ai claude --global`), Taste Skill (`npx skills add https://github.com/Leonxlnx/taste-skill --skill "design-taste-frontend"`), Impeccable (`npx impeccable install`; `/impeccable init`), Awesome DESIGN.md (no install, copy the format), Playwright (already installed), ScrollCraft (no install).
 
 Sunday kickoff order: Laptop Claude pushes S3a; Web Claude pulls and verifies the reconnect; install the active design tools; then Navbar, Hero, Footer.
+
+## 6. Install log 2026-10-11 (Web Claude sandbox, Stage 1)
+
+npm (`registry.npmjs.org`) is not reachable from the sandbox, so the `npm i -g` / `npx` routes failed. GitHub is reachable, so each tool was installed from a clone of its repo into the **global** `~/.claude` (nothing was written into the Gurost repo; no `.claude/` file is tracked; `.claude/settings.local.json` is gitignored).
+
+| Tool | Result | How verified |
+|---|---|---|
+| UI/UX Pro Max | Installed to `~/.claude/skills/ui-ux-pro-max` (copied from the repo's ready-made skill folder) | `python3 .../scripts/search.py "bakery cafe warm friendly" --design-system` printed a design system; its Bakery palette is `#92400E` on `#FEF3C7`, matching ours. Run WITHOUT `python -I` (the script imports its sibling `core.py`) |
+| Taste Skill | Installed to `~/.claude/skills/design-taste-frontend` (the `taste-skill` folder, install name `design-taste-frontend`) | Listed as an available skill |
+| Impeccable | Skill copied to `~/.claude/skills/impeccable`; the detector engine v0.1.14 was downloaded with `curl` (Node's built-in fetch ignores the proxy) from the project's `engine-v0.1.14` release and its SHA-256 matched the published `.sha256`; cached at `~/.impeccable/bin/0.1.14/impeccable` | `node cli/bin/cli.js detect t.html` flagged a deliberate 1.2:1 contrast pair and exited 2 (findings). **No hook installed in the sandbox** (the approved hook is for the laptop) |
+| Awesome DESIGN.md | One example file in `docs/design-md-reference/` (format only) | file present |
+| Playwright | Already installed, version 1.56.0 | `npx playwright --version` |
+| ScrollCraft | Not installed (reference only) | n/a |
+
+On the laptop (npm works there), the original commands still apply: `npm i -g ui-ux-pro-max-cli` then `uipro init --ai claude --global`; `npx skills add https://github.com/Leonxlnx/taste-skill --skill "design-taste-frontend"`; `npx impeccable install` then `/impeccable init`.
+Each machine has its own `~/.claude`; the sandbox copies do not reach the laptop.
