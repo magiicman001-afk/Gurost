@@ -10,8 +10,8 @@ const R = require("../lib/sections/render");
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "public", "sections-preview.html");
 // Page order of the preview, and the display names. Add a section here when it is built.
-const SECTION_IDS = ["navbar", "hero", "trust-bar", "features", "about", "services", "gallery", "testimonials", "pricing", "team", "footer"];
-const NAMES = { navbar: "Navbar", hero: "Hero", "trust-bar": "Trust Bar", features: "Features", about: "About", services: "Services", gallery: "Gallery", testimonials: "Testimonials", pricing: "Pricing", team: "Team", footer: "Footer" };
+const SECTION_IDS = ["navbar", "hero", "trust-bar", "features", "about", "services", "gallery", "testimonials", "pricing", "team", "process", "stats", "faq", "booking", "footer"];
+const NAMES = { navbar: "Navbar", hero: "Hero", "trust-bar": "Trust Bar", features: "Features", about: "About", services: "Services", gallery: "Gallery", testimonials: "Testimonials", pricing: "Pricing", team: "Team", process: "Process", stats: "Stats", faq: "FAQ", booking: "Booking", footer: "Footer" };
 const ORDER = SECTION_IDS.flatMap((id) => ["a", "b", "c"].map((v) => `${id}-${v}`));
 const FIXED_NOW = new Date(Date.UTC(2026, 0, 1)); // keeps the build reproducible (the copyright year in the preview)
 
@@ -127,8 +127,14 @@ function renderFor(palId) {
   const testimonials = { eyebrow: "Kind words", title: "What customers say", intro: "", items: [1, 2, 3].map(() => ({ quote: "[Add a real customer review]", name: "[Add customer name]", role: "" })) };
   const pricing = { eyebrow: "Pricing", title: "Simple, clear pricing", intro: "", note: "[Add your pricing note]", plans: x.services.slice(0, 3).map((v, i) => ({ name: pair(v)[0], text: pair(v)[1], features: [{ text: "[Add what is included]" }, { text: "[Add what is included]" }], cta_label: s.cta, cta_href: "#contact", featured: i === 1 })) };
   const team = { eyebrow: "The team", title: "Meet the people", intro: "", members: [1, 2, 3].map((n) => ({ name: "[Add team member " + n + "]", role: "[Add role]", bio: "" })) };
+  const steps = { cafe: ["Choose", "Order", "Collect"], law: ["Call us", "We advise", "We act"], salon: ["Book", "Consult", "Enjoy"], trades: ["Get in touch", "Free quote", "We do the work"], health: ["Book", "Assessment", "Your plan"], tech: ["Sign up", "Connect", "Go live"] }[palId];
+  const process = { eyebrow: "How it works", title: "Three simple steps", intro: "", steps: steps.map((title) => ({ title, text: "[Add a short description]" })) };
+  const stats = { eyebrow: "", title: "In numbers", intro: "", items: ["Customers", "Years open", "Projects"].map((label) => ({ value: "[Add number]", label })) };
+  const faq = { eyebrow: "FAQ", title: "Common questions", intro: "", items: [1, 2, 3, 4].map((n) => ({ question: "[Add question " + n + "]", answer: "[Add the answer your customers need]" })) };
+  const booking = { eyebrow: "Get in touch", title: "Ready when you are", intro: "", methods: [{ label: "Call", value: s.phone || "[Add phone]", href: "#contact" }, { label: "Email", value: s.email || "[Add email]", href: "#contact" }, { label: "Hours", value: s.hours || "[Add your opening hours]" }], cta_label: s.cta, cta_href: "#contact", note: "" };
   const out = {};
   for (const v of ["a", "b", "c"]) {
+    for (const [id, c] of Object.entries({ process, stats, faq, booking })) out[id + "-" + v] = R.renderSection(id, v, c, { now: FIXED_NOW }).html;
     out["gallery-" + v] = R.renderSection("gallery", v, gallery, { now: FIXED_NOW }).html;
     out["testimonials-" + v] = R.renderSection("testimonials", v, testimonials, { now: FIXED_NOW }).html;
     out["pricing-" + v] = R.renderSection("pricing", v, pricing, { now: FIXED_NOW }).html;

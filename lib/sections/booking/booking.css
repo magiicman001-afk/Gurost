@@ -1,0 +1,80 @@
+/* Booking A (centred card) / B (text beside contact panel) / C (dark band). No form: it points at the owner's own booking page, phone or email. */
+.g-booking__list {
+  display: grid;
+  gap: var(--g-s2);
+}
+.g-booking__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--g-s1) var(--g-s2);
+  align-items: baseline;
+  min-width: 0;
+}
+.g-booking__k {
+  flex: none;
+  min-width: 64px;
+  font-size: var(--g-t-14);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--g-muted);
+}
+.g-booking__v {
+  min-width: 0;
+  font-size: var(--g-t-20);
+  overflow-wrap: anywhere;
+}
+a.g-booking__v {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.g-booking__btn {
+  margin-top: var(--g-s3);
+}
+.g-booking__note {
+  margin-top: var(--g-s2);
+  font-size: var(--g-t-14);
+  color: var(--g-muted);
+  overflow-wrap: anywhere;
+}
+.g-booking__card {
+  max-width: 720px;
+  margin-inline: auto;
+  padding: var(--g-s4) var(--g-s3);
+  background: var(--g-surface);
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-radius);
+}
+.g-booking__card .g-head {
+  margin-bottom: var(--g-s4);
+}
+.g-booking__split {
+  display: grid;
+  gap: var(--g-s4);
+}
+.g-booking__split > * {
+  min-width: 0;
+}
+.g-booking--b .g-booking__panel {
+  padding: var(--g-s4) var(--g-s3);
+  background: var(--g-bg);
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-radius);
+}
+.g-booking--c .g-booking__k,
+.g-booking--c .g-booking__note {
+  color: var(--g-on-dark-muted);
+}
+.g-booking__split .g-head {
+  margin-bottom: 0;
+}
+@media (min-width: 880px) {
+  .g-booking__split {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--g-s8);
+    align-items: center;
+  }
+  .g-booking__card {
+    padding: var(--g-s6);
+  }
+}

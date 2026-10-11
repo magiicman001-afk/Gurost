@@ -1,0 +1,6 @@
+<section class="g-sec g-faq g-faq--a" id="faq" data-gurost-section="faq" data-variant="a" data-tone="light">
+  <div class="g-container">
+    <div class="g-head g-head--center" data-g-reveal="up" data-gsap-fade>{{#if eyebrow}}<p class="g-eyebrow">{{eyebrow}}</p>{{/if}}<h2 class="g-title">{{title}}</h2>{{#if intro}}<p class="g-lead">{{intro}}</p>{{/if}}</div>
+    <ul class="g-faq__list">{{#each items}}<li class="g-faq__item" data-g-reveal="up" data-g-stagger data-gsap-fade><details class="g-faq__details"><summary class="g-faq__q"><span class="g-faq__qtext">{{question}}</span><span class="g-faq__mark" aria-hidden="true"></span></summary><p class="g-faq__a">{{answer}}</p></details></li>{{/each}}</ul>
+  </div>
+</section>

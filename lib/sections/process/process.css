@@ -1,0 +1,97 @@
+/* Process A (numbered cards) / B (vertical steps beside the heading) / C (numbered rows on a dark band). Steps are numbered by position only. */
+.g-process__list {
+  display: grid;
+  gap: var(--g-s3);
+  grid-template-columns: 1fr;
+  counter-reset: none;
+}
+.g-process__step {
+  display: flex;
+  gap: var(--g-s2);
+  min-width: 0;
+}
+.g-process__body {
+  min-width: 0;
+}
+.g-process__num {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--g-primary);
+  color: var(--g-on-primary);
+  font-family: var(--g-font-head, inherit);
+  font-weight: 700;
+}
+.g-process__name {
+  font-size: var(--g-t-20);
+  overflow-wrap: anywhere;
+}
+.g-process__text {
+  margin-top: var(--g-s1);
+  color: var(--g-muted);
+  overflow-wrap: anywhere;
+}
+/* A */
+.g-process--a .g-process__step {
+  flex-direction: column;
+  padding: var(--g-s3);
+  background: var(--g-surface);
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-radius);
+}
+@media (min-width: 720px) {
+  .g-process--a .g-process__list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (min-width: 1000px) {
+  .g-process--a .g-process__list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+/* B */
+.g-process__layout {
+  display: grid;
+  gap: var(--g-s4);
+}
+.g-process__layout > * {
+  min-width: 0;
+}
+.g-process--b .g-process__step {
+  padding-bottom: var(--g-s3);
+  border-bottom: 1px solid var(--g-border);
+}
+.g-process--b .g-process__step:last-child {
+  border-bottom: 0;
+}
+.g-process--b .g-head {
+  margin-bottom: 0;
+}
+@media (min-width: 880px) {
+  .g-process__layout {
+    grid-template-columns: 1fr 1.4fr;
+    gap: var(--g-s8);
+    align-items: start;
+  }
+}
+/* C */
+.g-process--c .g-process__num {
+  background: var(--g-on-dark);
+  color: var(--g-dark);
+}
+.g-process--c .g-process__text {
+  color: var(--g-on-dark-muted);
+}
+.g-process--c .g-process__step {
+  padding-top: var(--g-s3);
+  border-top: 1px solid var(--g-on-dark-muted);
+}
+@media (min-width: 880px) {
+  .g-process--c .g-process__list {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--g-s4);
+  }
+}

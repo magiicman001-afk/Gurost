@@ -1,0 +1,6 @@
+<section class="g-sec g-process g-process--c" id="process" data-gurost-section="process" data-variant="c" data-tone="dark">
+  <div class="g-container">
+    <div class="g-head" data-g-reveal="up" data-gsap-fade>{{#if eyebrow}}<p class="g-eyebrow">{{eyebrow}}</p>{{/if}}<h2 class="g-title">{{title}}</h2>{{#if intro}}<p class="g-lead">{{intro}}</p>{{/if}}</div>
+    <ol class="g-process__list">{{#each steps}}<li class="g-process__step" data-g-reveal="up" data-g-stagger data-gsap-slide><span class="g-process__num" aria-hidden="true">{{@n}}</span><div class="g-process__body"><h3 class="g-process__name">{{title}}</h3>{{#if text}}<p class="g-process__text">{{text}}</p>{{/if}}</div></li>{{/each}}</ol>
+  </div>
+</section>

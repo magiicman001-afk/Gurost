@@ -1,0 +1,6 @@
+<section class="g-sec g-stats g-stats--a" id="stats" data-gurost-section="stats" data-variant="a" data-tone="light">
+  <div class="g-container">
+    {{#if title}}<div class="g-head g-head--center" data-g-reveal="up" data-gsap-fade>{{#if eyebrow}}<p class="g-eyebrow">{{eyebrow}}</p>{{/if}}<h2 class="g-title">{{title}}</h2>{{#if intro}}<p class="g-lead">{{intro}}</p>{{/if}}</div>{{/if}}
+    <ul class="g-stats__list">{{#each items}}<li class="g-stats__item" data-g-reveal="up" data-g-stagger data-gsap-fade><p class="g-stats__value">{{value}}</p><p class="g-stats__label">{{label}}</p></li>{{/each}}</ul>
+  </div>
+</section>

@@ -1,0 +1,5 @@
+<section class="g-sec g-sec--surface g-booking g-booking--b" id="booking" data-gurost-section="booking" data-variant="b" data-tone="light">
+  <div class="g-container">
+    <div class="g-booking__split"><div class="g-head" data-g-reveal="up" data-gsap-fade>{{#if eyebrow}}<p class="g-eyebrow">{{eyebrow}}</p>{{/if}}<h2 class="g-title">{{title}}</h2>{{#if intro}}<p class="g-lead">{{intro}}</p>{{/if}}</div><div class="g-booking__panel" data-g-reveal="up" data-gsap-fade><ul class="g-booking__list">{{#each methods}}<li class="g-booking__row"><span class="g-booking__k">{{label}}</span>{{#if href}}<a class="g-booking__v" href="{{href}}">{{value}}</a>{{/if}}{{#unless href}}<span class="g-booking__v">{{value}}</span>{{/unless}}</li>{{/each}}</ul>{{#if cta_label}}{{#if cta_href}}<a class="g-btn g-btn--primary g-booking__btn" href="{{cta_href}}">{{cta_label}}</a>{{/if}}{{/if}}{{#if note}}<p class="g-booking__note">{{note}}</p>{{/if}}</div></div>
+  </div>
+</section>

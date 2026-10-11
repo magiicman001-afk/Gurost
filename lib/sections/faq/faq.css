@@ -1,0 +1,81 @@
+/* FAQ A (accordion) / B (heading beside the accordion) / C (every answer open). Native <details>: works without JavaScript. */
+.g-faq__list {
+  display: grid;
+  gap: var(--g-s1);
+  max-width: 820px;
+  margin-inline: auto;
+}
+.g-faq__item {
+  min-width: 0;
+  background: var(--g-surface);
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-radius);
+}
+.g-faq--b .g-faq__item {
+  background: var(--g-bg);
+}
+.g-faq__q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--g-s2);
+  min-height: var(--g-tap);
+  padding: var(--g-s2) var(--g-s3);
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+.g-faq__q::-webkit-details-marker {
+  display: none;
+}
+.g-faq__qtext {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.g-faq__mark {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-right: 2px solid var(--g-primary);
+  border-bottom: 2px solid var(--g-primary);
+  transform: rotate(45deg);
+  margin-top: -4px;
+}
+.g-faq__details[open] .g-faq__mark {
+  transform: rotate(-135deg);
+  margin-top: 4px;
+}
+.g-faq__a {
+  padding: 0 var(--g-s3) var(--g-s3);
+  color: var(--g-muted);
+  overflow-wrap: anywhere;
+}
+.g-faq__q-open {
+  padding: var(--g-s3) var(--g-s3) 0;
+  font-size: var(--g-t-20);
+  overflow-wrap: anywhere;
+}
+.g-faq__list--open .g-faq__a {
+  padding-top: var(--g-s1);
+}
+.g-faq__layout {
+  display: grid;
+  gap: var(--g-s4);
+}
+.g-faq__layout > * {
+  min-width: 0;
+}
+.g-faq--b .g-head {
+  margin-bottom: 0;
+}
+.g-faq--b .g-faq__list {
+  max-width: none;
+  margin-inline: 0;
+}
+@media (min-width: 880px) {
+  .g-faq__layout {
+    grid-template-columns: 1fr 1.6fr;
+    gap: var(--g-s8);
+    align-items: start;
+  }
+}

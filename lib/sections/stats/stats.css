@@ -1,0 +1,44 @@
+/* Stats A (plain row) / B (cards on a surface band) / C (dark band). Every number is the owner's own. */
+.g-stats__list {
+  display: grid;
+  gap: var(--g-s4) var(--g-s3);
+  grid-template-columns: repeat(2, 1fr);
+}
+.g-stats__item {
+  min-width: 0;
+  text-align: center;
+}
+.g-stats__value {
+  font-family: var(--g-font-head, inherit);
+  font-size: var(--g-t-48);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--g-primary);
+  overflow-wrap: anywhere;
+}
+.g-stats__label {
+  margin-top: var(--g-s1);
+  color: var(--g-muted);
+  overflow-wrap: anywhere;
+}
+@media (min-width: 880px) {
+  .g-stats__list {
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    grid-auto-flow: column;
+  }
+}
+.g-stats--b .g-stats__item {
+  padding: var(--g-s3);
+  background: var(--g-bg);
+  border: 1px solid var(--g-border);
+  border-radius: var(--g-radius);
+}
+.g-stats--c .g-stats__value {
+  color: var(--g-on-dark);
+}
+.g-stats--c .g-stats__label {
+  color: var(--g-on-dark-muted);
+}
+.g-stats--a .g-stats__item + .g-stats__item {
+  border-left: 0;
+}
