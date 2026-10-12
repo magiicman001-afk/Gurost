@@ -291,3 +291,16 @@ test("server wiring: user route is owner-checked and switchable, admin route nee
   assert.match(src, /const \{ user_id, \.\.\.pub \} = entry/, "the owner's user id is not streamed to the page");
   assert.equal((src.match(/logger: makeBuildLogger\(/g) || []).length, 2, "both build routes log");
 });
+
+test("nav and footer links only point at sections the look really has (a real defect the senior engineer found)", async () => {
+  const content = { navbar: { links: [{ label: "About", href: "#about" }, { label: "FAQ", href: "#faq" }, { label: "Visit", href: "#location" }] }, footer: { link_groups: [{ title: "x", links: [{ label: "FAQ", href: "#faq" }] }] } };
+  const out = L.fitLinks(content, ["navbar", "hero", "about", "location", "footer"]);
+  assert.deepEqual(out.navbar.links.map((l) => l.href), ["#about", "#location", "#top"]);
+  assert.deepEqual(out.footer.link_groups[0].links, [{ label: "Back to top", href: "#top" }]);
+  assert.equal(content.navbar.links.length, 3, "the original content is not changed");
+  // and in a real build, no design has a dead in-page link
+  const orig = console.log; console.log = () => {};
+  let r;
+  try { r = await L.generateLibraryVariants("a plumber in Leeds", { businessInfo: { name: "Pipes Ltd", phone: "0113 496 0000" }, premium: true, browserChecks: false, previewStepMs: 0, callModel: async () => H.sampleModel("trades"), search: H.search }); } finally { console.log = orig; }
+  for (const v of r.variants) assert.equal(SR.checkLinks(v.html).ok, true, `${v.id}: ${SR.checkLinks(v.html).detail}`);
+});

@@ -41,10 +41,12 @@ if (window.self !== window.top) { window.stop(); document.documentElement.innerH
     <span class="text-[var(--line)] flex-shrink-0">|</span>
     <span class="font-display font-semibold text-sm truncate">Build Website</span>
   </div>
+  <div class="flex items-center flex-shrink-0" id="headerActions">
   <a href="dashboard.html" class="flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-none border border-[var(--line)] hover:border-[var(--gurost-primary)] transition-colors flex items-center gap-1">
     <span class="material-symbols-outlined text-[16px]">arrow_back</span>
     Dashboard
   </a>
+  </div>
 </header>
 
 <!-- Real, visible credit message - genuinely seen by the person,
@@ -146,6 +148,7 @@ if (window.self !== window.top) { window.stop(); document.documentElement.innerH
 </footer>
 
 <script src="shared/api-client.js"></script>
+<script src="shared/build-log-ui.js"></script>
 <script src="shared/last-project.js"></script>
 <script src="shared/pulse-voice.js"></script>
 <script src="shared/pulse-inspector.js"></script>
@@ -167,6 +170,7 @@ if (window.self !== window.top) { window.stop(); document.documentElement.innerH
  */
 
 let projectId = null;
+BuildLogUI.mount({ host: document.getElementById('headerActions'), getProjectId: () => projectId, call: GurostAPI.call });
 let currentHtml = null;
 
 function setPreviewStatus(active) {
@@ -541,6 +545,7 @@ function connectGenerationSocket(id) {
   generationSocket.addEventListener('message', (event) => {
     let msg;
     try { msg = JSON.parse(event.data); } catch { return; }
+    if (msg.type === 'build_log') { BuildLogUI.push(msg.entry); return; } // every bot action, live (the log screen dedupes replays)
     if (!['stage_progress', 'error', 'credibility_check'].includes(msg.type)) return;
     const key = JSON.stringify([msg.at, msg.type, msg.stage, msg.status, msg.data?.variantId, msg.data?.sectionCount, msg.error, msg.credibility?.missing]);
     if (seen.has(key)) return;
@@ -595,6 +600,9 @@ function connectGenerationSocket(id) {
       } else if (msg.status === 'reviewing') {
         // Premium Pipeline: every design is scored out of 100 before the person sees it.
         log('Reviewer', `Checked the ${d.label} look: quality ${d.score}/100${d.pass ? ' - passes' : ' - below the premium mark'}.`, d.pass ? 'ok' : 'work');
+      } else if (msg.status === 'escalating') {
+        const who = { fixer: 'The Fixer', manager: 'The Manager', senior: 'The Senior engineer' }[d.bot] || 'The next bot';
+        log('Builder', `${who} is taking over the ${d.label} look: ${d.why}.`, 'work');
       } else if (msg.status === 'swapping') {
         log('Designer', `Swapping to the ${d.label} look (${d.why}).`, 'work');
       } else if (msg.status === 'images-running') {

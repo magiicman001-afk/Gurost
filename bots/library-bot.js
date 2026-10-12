@@ -258,16 +258,39 @@ async function growPreview({ dir, composed, notify, state, stepMs, order }) {
   }
 }
 
+/**
+ * Navigation and footer links may only point at sections this particular look actually has (a look can leave out the FAQ
+ * the words were written for). Found by the senior engineer's link check: before this, such a link went nowhere.
+ */
+function fitLinks(content, order) {
+  const on = new Set(order);
+  const keep = (l) => !/^#/.test(l.href) || l.href === "#top" || on.has(l.href.slice(1));
+  const c = { ...content };
+  if (c.navbar && Array.isArray(c.navbar.links)) {
+    const links = c.navbar.links.filter(keep);
+    while (links.length < 3) links.push(links.length === 0 ? { label: "Home", href: "#top" } : { label: "Top", href: "#top" });
+    c.navbar = { ...c.navbar, links };
+  }
+  if (c.footer && Array.isArray(c.footer.link_groups)) {
+    c.footer = { ...c.footer, link_groups: c.footer.link_groups.map((g) => {
+      const links = (g.links || []).filter(keep);
+      return { ...g, links: links.length ? links : [{ label: "Back to top", href: "#top" }] };
+    }) };
+  }
+  return c;
+}
+
 // ---------------------------------------------------------------- one direction -> one finished design
 async function buildDirection(dir, composed, { search, includeBranding, factsAllow, browserChecks, recipe, browser }) {
-  const input = { palette: composed.palette, recipe: recipe || composed.recipe, content: composed.content, variants: dir.set, includeBranding, meta: composed.meta };
+  const content = fitLinks(composed.content, (recipe && recipe.order) || A.recipes[composed.recipe].order);
+  const input = { palette: composed.palette, recipe: recipe || composed.recipe, content, variants: dir.set, includeBranding, meta: composed.meta };
   let page = await assembleWithImages(input, { search });
   let g = await G.gate(page, { facts: factsAllow, browserChecks, browser });
   let degraded = false;
   let steps = [];
   if (!g.ok) {
     // swap variants, then default content (the gate's own repair ladder) - never ship a failing page silently
-    const fixed = await G.buildWithGate({ ...input, content: composed.content }, { facts: factsAllow, browserChecks, browser, allowImageTokens: true });
+    const fixed = await G.buildWithGate({ ...input, content }, { facts: factsAllow, browserChecks, browser, allowImageTokens: true });
     const photos = page.photos || {};
     let html = fixed.html;
     for (const [tok, url] of Object.entries(photos)) html = html.replace(new RegExp(`src="${tok}"`, "g"), () => `src="${R.esc(url)}"`);
@@ -453,4 +476,4 @@ function defaultCallModel(plan) {
   };
 }
 
-module.exports = { generateLibraryVariants, composeContent, cleanSection, systemPrompt, describeSlots, DIRECTIONS, FIRST_IDS, MORE_IDS, COPY_SECTIONS, enabled: A.enabled };
+module.exports = { generateLibraryVariants, fitLinks, composeContent, cleanSection, systemPrompt, describeSlots, DIRECTIONS, FIRST_IDS, MORE_IDS, COPY_SECTIONS, enabled: A.enabled };

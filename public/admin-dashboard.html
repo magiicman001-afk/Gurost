@@ -90,6 +90,7 @@ const TABS = [
   { id: 'models', label: 'Models & APIs', section: 'models' },
   { id: 'projects', label: 'Projects', section: 'projects' },
   { id: 'builds', label: 'Builds log', section: 'builds' },
+  { id: 'buildlogs', label: 'Build Logs', section: 'builds' },
   { id: 'memory', label: 'Design memory', section: 'builds' },
   { id: 'users', label: 'Users', section: 'users' },
   { id: 'usage', label: 'API Usage', section: 'models' },
@@ -178,6 +179,7 @@ async function loadTab(tab) {
     else if (tab === 'inventory') await renderInventory(el);
     else if (tab === 'models') await renderModels(el);
     else if (tab === 'builds') await renderBuilds(el);
+    else if (tab === 'buildlogs') await renderBuildLogs(el);
     else if (tab === 'memory') await renderMemory(el);
     else if (tab === 'users') await renderUsers(el);
     else if (tab === 'projects') await renderProjects(el);
@@ -277,6 +279,47 @@ async function renderBuilds(el) {
         <tr><td>${new Date(b.created_at).toLocaleString()}</td><td>${escapeHtml(b.status)}</td><td>${b.designs ?? '—'}</td><td>${b.best_score ?? '—'}</td><td>${b.seconds ?? '—'}</td><td>${escapeHtml(b.error || '')}</td></tr>`).join('')}</tbody>
     </table>
     <p class="text-xs text-[var(--muted)] mt-3">${escapeHtml(d.note)}</p>`;
+}
+
+const BL_COLOURS = { success: '#15803d', fail: '#c2410c', escalate: '#1d4ed8' };
+async function renderBuildLogs(el) {
+  el.innerHTML = `
+    <div class="flex flex-wrap gap-2 mb-3 text-sm">
+      <input id="blProject" class="border border-[var(--line)] rounded px-2 py-1" placeholder="Project id">
+      <input id="blUser" class="border border-[var(--line)] rounded px-2 py-1" placeholder="User id">
+      <select id="blBot" class="border border-[var(--line)] rounded px-2 py-1"><option value="">All bots</option>${['builder','fixer','manager','senior','copywriter','photographer','reviewer'].map((b) => `<option>${b}</option>`).join('')}</select>
+      <select id="blResult" class="border border-[var(--line)] rounded px-2 py-1"><option value="">All results</option><option>success</option><option>fail</option><option>escalate</option></select>
+      <button id="blGo" class="tab-btn">Search</button>
+      <button id="blExport" class="tab-btn">Export JSON</button>
+    </div>
+    <p id="blNote" class="text-xs text-[var(--muted)] mb-2"></p>
+    <div id="blList"></div>`;
+  let last = null;
+  async function load() {
+    const q = new URLSearchParams();
+    [['projectId', 'blProject'], ['userId', 'blUser'], ['bot', 'blBot'], ['result', 'blResult']].forEach(([k, id]) => { const v = document.getElementById(id).value.trim(); if (v) q.set(k, v); });
+    const out = document.getElementById('blList');
+    out.textContent = 'Loading…';
+    try {
+      last = await adminCall(`/api/admin/build-logs?${q}`);
+    } catch (err) { out.textContent = err.message; return; }
+    document.getElementById('blNote').textContent = `${last.builds.length} builds shown (${last.rows} actions). Orange-flagged builds need a person.`;
+    out.innerHTML = last.builds.map((b) => `
+      <details class="border border-[var(--line)] rounded-xl bg-white p-3 mb-2" ${b.flagged ? 'open' : ''}>
+        <summary class="cursor-pointer text-sm"><b>${new Date(b.startedAt).toLocaleString()}</b> · project ${escapeHtml(String(b.projectId || '—').slice(0, 8))} · user ${escapeHtml(String(b.userId || '—').slice(0, 8))} · ${b.entries.length} actions · bots: ${escapeHtml(b.bots.join(' > '))}${b.escalated ? ' · <span style="color:#1d4ed8">escalated</span>' : ''}${b.flagged ? ' · <b style="color:#c2410c">FLAGGED</b>' : ''}</summary>
+        <table class="mt-2"><thead><tr><th>Bot</th><th>Result</th><th>Task</th><th>Decision</th><th>Why</th><th>ms</th><th>Next</th></tr></thead>
+        <tbody>${b.entries.map((e) => `<tr><td>${escapeHtml(e.bot)}</td><td style="color:${BL_COLOURS[e.result] || '#000'};font-weight:600">${escapeHtml(e.result)}</td><td>${escapeHtml(e.task || '')}</td><td>${escapeHtml(e.decision || '')}</td><td>${escapeHtml(e.reason || '')}${e.details && e.details.report ? `<pre class="text-xs whitespace-pre-wrap mt-1">${escapeHtml(e.details.report)}</pre>` : ''}</td><td>${e.time_ms ?? ''}</td><td>${escapeHtml(e.next_bot || '')}</td></tr>`).join('')}</tbody></table>
+      </details>`).join('') || '<p class="text-sm text-[var(--muted)]">No build logs yet. They appear from the next library build.</p>';
+  }
+  document.getElementById('blGo').addEventListener('click', load);
+  document.getElementById('blExport').addEventListener('click', () => {
+    if (!last) return;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(last, null, 2)], { type: 'application/json' }));
+    a.download = 'gurost-build-logs.json';
+    a.click();
+  });
+  await load();
 }
 
 async function renderMemory(el) {
