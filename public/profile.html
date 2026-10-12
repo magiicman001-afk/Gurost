@@ -237,9 +237,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     formData.append('avatar', file);
 
     try {
-      const res = await fetch(`${GurostAPI.API_BASE}/api/me/avatar`, {
+      const res = await GurostAPI.fetch(`${GurostAPI.API_BASE}/api/me/avatar`, {
         method: 'POST',
-        headers: GurostAPI.authHeaders(),
         body: formData,
       });
       const data = await res.json();

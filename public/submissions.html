@@ -206,7 +206,7 @@
   });
   $('exportCsv').addEventListener('click', async function () {
     try {
-      var res = await fetch(location.origin + '/api/project/' + encodeURIComponent(projectId) + '/submissions.csv?' + qs(), { headers: GurostAPI.authHeaders ? GurostAPI.authHeaders() : {} });
+      var res = await GurostAPI.fetch(location.origin + '/api/project/' + encodeURIComponent(projectId) + '/submissions.csv?' + qs());
       if (!res.ok) throw new Error('export failed (' + res.status + ')');
       var url = URL.createObjectURL(await res.blob());
       var a = el('a', { href: url, download: 'submissions.csv' });
