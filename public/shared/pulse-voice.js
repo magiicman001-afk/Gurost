@@ -364,6 +364,39 @@ function holdToTalk(button, handlers = {}) {
   return { press, release };
 }
 
+/**
+ * Tap-to-talk: one tap starts listening, the next tap stops and sends. Same recording session, voice-status check,
+ * short-recording rule and error texts as holdToTalk. Uses "click" only (a finger and a mouse both produce it once),
+ * and starts the recording straight from the tap with nothing awaited first, which iOS needs for the microphone prompt.
+ */
+function tapToTalk(button, handlers = {}) {
+  if (!button) return null;
+  let session = null;
+  let starting = false;
+  prefetchVoiceStatus();
+  button.style.touchAction = "manipulation";
+
+  function finish(s) {
+    session = null;
+    handlers.onRelease?.();
+    s.stop().then((t) => handlers.onResult?.(t || "")).catch((err) => handlers.onError?.(err && err.message ? err.message : "Couldn't transcribe. You can type instead."));
+  }
+
+  function tap() {
+    if (starting) return;
+    if (session) { finish(session); return; }
+    if (voiceStatus === false) { handlers.onUnavailable?.(VOICE_NOT_SET_UP); return; }
+    starting = true;
+    handlers.onPress?.();
+    startRecordingSession()
+      .then((s) => { starting = false; session = s; handlers.onStart?.(s); })
+      .catch((err) => { starting = false; handlers.onRelease?.(); handlers.onError?.(micErrorText(err)); });
+  }
+
+  button.addEventListener("click", tap);
+  return { tap };
+}
+
 async function speakTextViaRest(text) {
   const response = await fetch("/api/voice/speak", {
     method: "POST",
