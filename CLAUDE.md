@@ -44,6 +44,15 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
   escaped or carry `// xss-ok: reason`), input validation (`lib/validate.js`, on every admin write route), rate-limit table
   (`lib/rate-limits.js`), exact-pinned dependencies + Dependabot, secret scanner (`lib/secret-scan.js`; pre-commit hook
   `.githooks/pre-commit`, enabled by `npm install`; CI `.github/workflows/security.yml`; mark fake test keys `secret-scan-ok: why`).
+- CI (`security.yml`) status 2026-10-12: secret scans and the full test suite PASS on GitHub. The "Dependency audit" step is RED:
+  0 critical, 12 high, 25 moderate. The two direct packages are `aislop` (0.14.1 -> 0.18.1 per npm) and `lighthouse` (12.8.2; its
+  high findings are transitive: `@puppeteer/browsers`, `basic-ftp`, `get-uri`, `extract-zip`, `braces`, `micromatch`). Needs the npm
+  registry, which Web Claude's sandbox cannot reach: LAPTOP CLAUDE does `npm install aislop@<fixed> --save-exact`, checks that
+  `aislop-check.js` and `bots/revamp-bot.js` still work, re-runs `npm audit`, commits `package.json` + lock. Do not weaken the gate.
+  The raw job log is unreadable from the sandbox, so the workflow prints failures as annotations (`gh api .../check-runs/<job>/annotations`).
+  `.secret-scan-history-ok` lists reviewed harmless history findings (history cannot be rewritten).
+- Sandbox-only test failures: in Web Claude's sandbox ~30 tests fail only because packages are missing (`@supabase/supabase-js`,
+  `archiver`, `ipaddr.js`, `jsonwebtoken`); they pass on GitHub CI. Tests must not depend on the network (CDN scripts are stubbed in browser tests).
 - NOT done yet: CSP enforcement (report-only; allows inline scripts, so escaping is the real XSS defence), 2FA for admin, cookie
   sessions (S3, Laptop Claude), email alerts (needs Postmark env on Render), log scanner, config auditor, auto-block/revert, views.
 - Next (week 2): log scanner, dependency report in admin, config auditor, alert system.
