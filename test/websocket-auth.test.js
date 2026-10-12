@@ -79,9 +79,9 @@ async function withServer(opts, fn) {
   await new Promise((r) => srv.listen(0, r));
   try { return await fn(`ws://127.0.0.1:${srv.address().port}/ws/guide?projectId=p-owner`); } finally { srv.close(); }
 }
-function closeCode(url, send) {
+function closeCode(url, send, headers) {
   return new Promise((resolve) => {
-    const ws = new WebSocket(url);
+    const ws = new WebSocket(url, headers ? { headers } : undefined);
     ws.on("open", () => ws.send(JSON.stringify(send)));
     ws.on("message", () => { ws.close(); resolve("admitted"); });
     ws.on("close", (code) => resolve(code));
@@ -159,4 +159,17 @@ test("a socket that closes while its login is being checked never joins the room
   const { presenceList } = require("../guide/websocket-server");
   assert.deepEqual(presenceList("p-owner"), [], "no dead entry left in the room");
   slowServer.close();
+});
+
+test("cookie login (no token in the message): honoured only from Gurost's own origin", async () => {
+  const opts = {
+    authenticate: async ({ token, cookie }) => (token ? USERS[token] || null : cookie === "gurost_at=good" ? { id: "u-owner" } : null),
+    loadProject: async (id) => PROJECTS.get(id),
+    cookieOriginAllowed: (req) => req.headers.origin === "https://gurost.onrender.com",
+    authTimeoutMs: 300
+  };
+  const own = await withServer(opts, (url) => closeCode(url, { type: "auth" }, { cookie: "gurost_at=good", origin: "https://gurost.onrender.com" }));
+  assert.equal(own, "admitted");
+  const evil = await withServer(opts, (url) => closeCode(url, { type: "auth" }, { cookie: "gurost_at=good", origin: "https://evil.example" }));
+  assert.equal(evil, 4401, "another site's socket gets nothing from the visitor's cookie");
 });

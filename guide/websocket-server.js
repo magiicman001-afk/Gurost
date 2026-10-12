@@ -91,7 +91,10 @@ function attachGuideBotSocket(httpServer, PROJECTS, {
     if (restored) PROJECTS.set(id, restored);
     return restored;
   },
-  authTimeoutMs = AUTH_TIMEOUT_MS
+  authTimeoutMs = AUTH_TIMEOUT_MS,
+  // The login cookie is only honoured on a socket opened by one of Gurost's own pages: browsers send
+  // cookies on any site's WebSocket, so without this another site could act as the visitor.
+  cookieOriginAllowed = (req) => require("../auth").sessions().originAllowed(req)
 } = {}) {
   // noServer + a path-checked upgrade listener, not { server, path }: with
   // ws's { server } option every WebSocketServer on the same HTTP server
@@ -148,7 +151,8 @@ function attachGuideBotSocket(httpServer, PROJECTS, {
       clearTimeout(authTimer); // the login has arrived - a slow check is not a missing login
       let user, project;
       try {
-        user = await authenticate({ token: msg.token, apiKey: msg.apiKey });
+        const cookie = !msg.token && !msg.apiKey && cookieOriginAllowed(req) ? req.headers.cookie : undefined;
+        user = await authenticate({ token: msg.token, apiKey: msg.apiKey, cookie });
         project = user ? await loadProject(projectId) : null;
       } catch (err) {
         // Database or network trouble, not the person's login: never answer it with "log in again".
