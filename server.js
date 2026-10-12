@@ -1823,6 +1823,11 @@ app.post("/api/pulse/analyze", security.rejectUnknownFields(["projectId", "facts
   }
 });
 
+// An edit that runs longer than this gives up and says so (Bug GG): a silent request of several minutes is dropped by phones
+// and proxies, and the person then sees only "Failed to fetch". The page is left exactly as it was.
+const PULSE_EDIT_TIMEOUT_MS = Number(process.env.PULSE_EDIT_TIMEOUT_MS) || 75000;
+const PULSE_EDIT_TOO_SLOW = "That edit took too long (the AI is slow right now), so I stopped it. Your page is unchanged. Try a smaller change, or try again in a minute.";
+
 app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "instruction"]), async (req, res) => {
   const { projectId, action } = req.body;
   const instruction = req.body.instruction ? security.sanitizeText(req.body.instruction, 2000) : undefined;
@@ -1870,7 +1875,7 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
       // one's result — see lib/project-lock.js for the real bug this fixes.
       const result = await withProjectLock(projectId, async () => {
         const before = project.currentHtml;
-        const r = await correctionBot.applyCorrection(project.currentHtml, videoClip ? videoRequest.buildInstruction(instruction, videoClip) : instruction, { plan: req.user.plan });
+        const r = await correctionBot.applyCorrection(project.currentHtml, videoClip ? videoRequest.buildInstruction(instruction, videoClip) : instruction, { plan: req.user.plan, deadline: Date.now() + PULSE_EDIT_TIMEOUT_MS });
         if (videoClip && !videoRequest.hasClip(r.html, videoClip)) throw new Error(videoRequest.NOT_APPLIED); // nothing is saved
         pushUndoSnapshot(project, "correct");
         integrator.integrateCorrection(project, r);
@@ -1956,7 +1961,10 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
       transition(project, "RESUMING");
       transition(project, recoverTo);
     }
-    res.status(500).json({ error: err.message });
+    // Every failed edit is logged (it used to leave no trace) and answered with a plain message.
+    const tooSlow = !!(err && (err.deadlineExceeded || /deadline/i.test(String(err.name || ""))));
+    console.error(`[pulse] ${action} failed on ${projectId}${tooSlow ? " (too slow)" : ""}: ${err && err.message}`);
+    res.status(tooSlow ? 504 : 500).json({ error: tooSlow ? PULSE_EDIT_TOO_SLOW : err.message });
   }
 });
 

@@ -579,7 +579,8 @@ function connectGenerationSocket(id) {
           liveGenericLogged.clear();
           log('Builder', `Building the ${d.label} design live on the left…`, 'work');
         }
-        if (!pickerVisible()) {
+        // Once a design is picked (currentHtml is set) a late or replayed partial must never paint over the finished page.
+        if (!pickerVisible() && !currentHtml) {
           renderLivePartial(d.html); // once the picker is up, the log keeps going but the left panel stays on it
           if (typeof d.progress === 'number') setBuildProgress(d.progress);
         }
@@ -910,6 +911,21 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+// After a dropped connection: ask the server every 2s (up to ~100s) whether the edit finished and was saved.
+// Returns { html, summary } once the saved page differs from `before` and no edit is still running; null when the
+// server is idle with the page unchanged (the edit failed) or the wait ran out.
+async function waitForSavedEdit(before, { tries = 50, every = 2000 } = {}) {
+  for (let i = 0; i < tries; i++) {
+    await new Promise((r) => setTimeout(r, every));
+    try {
+      const p = await GurostAPI.call(`/api/project/${projectId}`);
+      if (p && p.currentHtml && p.currentHtml !== before) return { html: p.currentHtml, summary: 'Your edit went through.' };
+      if (p && p.state !== 'CORRECTING' && i >= 2) return null;
+    } catch (e) { /* the network is still down: keep trying */ }
+  }
+  return null;
+}
+
 async function sendCorrection(instruction) {
   // Real, critical fix: these used to silently return with no error at
   // all when a precondition wasn't met - Pulse's widget has no way to
@@ -926,11 +942,22 @@ async function sendCorrection(instruction) {
   // the white panel updates with the result.
   logBot('Pulse', `Applying edit: "${instruction.split(' (earlier changes this session:')[0]}"…`, 'work');
 
+  const before = currentHtml;
   try {
-    const result = await GurostAPI.call('/api/pulse', { method: 'POST', body: { projectId, action: 'correct', instruction } });
+    let result;
+    try {
+      result = await GurostAPI.call('/api/pulse', { method: 'POST', body: { projectId, action: 'correct', instruction } });
+    } catch (err) {
+      // No status = the connection dropped (the phone's, or a proxy's) while the server may still be working.
+      // Never leave the person guessing, and never show the old page as if the edit was lost: ask the server.
+      if (err && err.status) throw err;
+      logBot('Pulse', 'Saving… the connection dropped, so I am checking whether your edit went through.', 'work');
+      result = await waitForSavedEdit(before);
+      if (!result) throw new Error("The connection dropped and the edit did not go through. Your page is unchanged - please try again.");
+    }
     currentHtml = result.html;
     renderPreview(currentHtml, { keepScroll: true });
-    logBot('Pulse', result.summary || 'Change applied.', 'ok');
+    logBot('Pulse', (result.summary || 'Change applied.') + ' Saved \u2713', 'ok');
   } catch (err) {
     logBot('Pulse', err.message, 'fail');
     throw err;

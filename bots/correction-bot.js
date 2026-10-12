@@ -26,12 +26,14 @@ Output ONLY valid JSON: {"html": "<complete updated document>", "summary": "one 
 
 ${HONEST_CONTENT}`;
 
-async function applyCorrection(currentCode, instruction, { plan } = {}) {
+// `deadline` (ms since epoch) is shared by both model calls, so a slow free-model chain gives up instead of running for minutes.
+async function applyCorrection(currentCode, instruction, { plan, deadline } = {}) {
   const primary = await callClaude({
     system: PATCH_SYSTEM,
     messages: [{ role: "user", content: `Current code:\n${currentCode}\n\nInstruction: ${instruction}` }],
     maxTokens: 2000,
-    model: modelForTier(plan, { complex: false })
+    model: modelForTier(plan, { complex: false }),
+    deadline
   });
 
   const { find, replace } = primary.parsed.patch;
@@ -53,7 +55,8 @@ async function applyCorrection(currentCode, instruction, { plan } = {}) {
     system: FULL_EDIT_SYSTEM,
     messages: [{ role: "user", content: `Current code:\n${currentCode}\n\nInstruction: ${instruction}` }],
     maxTokens: 8000,
-    model: modelForTier(plan, { complex: true })
+    model: modelForTier(plan, { complex: true }),
+    deadline
   });
   const newCode = fallback.parsed.html;
   const patches = dmp.patch_make(currentCode, newCode);
