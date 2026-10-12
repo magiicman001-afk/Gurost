@@ -69,6 +69,11 @@ sandbox 5 of those fail only because `@supabase/supabase-js` is not installed he
    with 402 until OpenRouter is topped up, so none of the above can be tested on real models today.
 9. **No test that a generated app actually runs for a user** beyond the backend sandbox start: the frontend is not executed in CI.
 
+## 4b. Mobile apps (not built; plan in `docs/MOBILE_APP_ROADMAP.md`)
+Web apps only today. Not built and not to be claimed: native iOS (Swift), native Android (Kotlin), Flutter, "McDonald's-level" animation, PWA install,
+iPhone builds, store publishing. A Capacitor-to-Android path exists in `lib/android-build.js` and has never been run. Agreed order after launch: PWA,
+Android wrapper, iPhone wrapper; React Native only if customers ask; no Flutter/Swift/Kotlin pipelines.
+
 ## 5. Realistic timeline
 
 Honest framing: I can size the work I can see; the unknowns are in the live checks (4.1) and deploy (Vercel/Render), which have never
