@@ -27,7 +27,7 @@ Sunday plan 2026-10-11 stages 0 to 9 done; stage 10 (summary report) given to Ir
 - Stage 2 `a731c2a` foundation (manifest of 20 sections, 6 palettes, base.css, render.js, test helper).
 - Stage 3 `d045748` Navbar A/B/C. Stage 4 `fdbb332` Hero A/B/C. Stage 5 `c230068` Footer A/B/C.
 - Stage 6 `7ab4eb5` preview page `public/sections-preview.html`; Bug BB (controls covered the section on phones) fixed `2008b66`.
-- Stage 7 `3ac25b0` assembler `lib/sections/assemble.js` + `recipes.json` behind `SECTION_LIBRARY=1` (off by default; not wired into the builders yet: that is V2).
+- Stage 7 `3ac25b0` assembler `lib/sections/assemble.js` + `recipes.json` behind `SECTION_LIBRARY=1` (off by default; wired into the Website Builder afterwards by V2 commit 2, `81916cf`).
 - Stage 8 `2317804` quality gate `lib/sections/quality-gate.js` (static + browser + Impeccable advisory; swap variant, then default content, then ship; never throws).
 - Tests: 1503 run, 1501 pass (the 2 failures, `cors-policy` and `security-headers`, need `express`, which only the laptop has).
 
