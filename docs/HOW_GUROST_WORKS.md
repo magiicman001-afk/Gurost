@@ -60,8 +60,10 @@ hero, footer, pricing, and so on). Each has three variants (A, B, C) and works i
 and fills in sections; it does not draw them. All 20 are built. They live in `lib/sections/`, and you can look at all of
 them on your phone at `/sections-preview.html`.
 
-It is switched off by default (`SECTION_LIBRARY=1` turns it on) and is not yet connected to the builders. Connecting it
-is called **Website Builder V2** (`docs/WEBSITE_BUILDER_V2_SPEC.md`).
+It is switched off by default (`SECTION_LIBRARY=1` turns it on). **Website Builder V2** (`docs/WEBSITE_BUILDER_V2_SPEC.md`) has connected it to the
+Website Builder (the AI writes only the words; if anything fails the older generator takes over), made library sites real separate pages, and built a
+"Launch" step that freezes a copy at a public address. Launch is not switched on until the published-sites database table is created and DNS is set up;
+none of V2 has been tested on a live phone yet.
 
 A **quality gate** (`lib/sections/quality-gate.js`) checks every page before anyone sees it: static checks, a 375px phone
 width check, colour contrast, and an advisory check by a tool called Impeccable. If a page fails, the gate swaps the
@@ -250,7 +252,7 @@ yet.
 
 None of this is built: a privacy policy line about audit rows and a review by a qualified adviser; a "delete my account
 data" route that clears every user row; per-user GitHub login (today every user's project lands in the owner's GitHub);
-checking that all older backup repos are private (new ones always are); testing voice on a real iPhone; real page navigation in built sites (Bug U); and the Website Builder V2 work.
+checking that all older backup repos are private (new ones always are); testing voice on a real iPhone; the published-sites database table and DNS for Launch; and a live phone test of Website Builder V2.
 
 ## 12. Evening checklist for Irfan
 
