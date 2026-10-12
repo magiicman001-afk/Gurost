@@ -182,8 +182,12 @@
 
     try {
       const result = await GurostAPI.call('/api/auth/signup', { method: 'POST', body: { email, password } });
-      localStorage.setItem('gurost_api_key', result.apiKey);
-      localStorage.setItem('gurost_user_id', result.userId);
+      // Signed in by httpOnly cookie: the API key is no longer kept in the browser. It is only stored
+      // when the server could not start a cookie session (before its database table exists).
+      localStorage.removeItem('gurost_jwt');
+      localStorage.removeItem('gurost_api_key');
+      if (!result.cookieSession) localStorage.setItem('gurost_api_key', result.apiKey);
+      localStorage.setItem('gurost_user_id', result.userId); // not a secret: keys this account's dashboard cache
       await redirectAfterAuth();
     } catch (err) {
       showError('signupError', err.message);

@@ -331,10 +331,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
   document.getElementById('dashGoBtn').addEventListener('click', goAction);
 
-  const logout = () => {
-    localStorage.removeItem('gurost_jwt');
-    localStorage.removeItem('gurost_api_key');
-    localStorage.removeItem('gurost_user_id');
+  // The server ends this browser's session and clears its login cookies; the stored copies go too.
+  const logout = async () => {
+    await GurostAPI.logout();
     window.location.href = 'index.html';
   };
   document.getElementById('sidebarLogoutBtn').addEventListener('click', logout);
