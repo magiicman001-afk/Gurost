@@ -1,0 +1,4 @@
+#!/bin/sh
+# Blocks a commit that contains a secret (security spec 2.1). Enabled by: git config core.hooksPath .githooks
+# (npm install does this through the "prepare" script). Bypass is possible with --no-verify, and CI checks again.
+node scripts/secret-scan.js --staged || exit 1

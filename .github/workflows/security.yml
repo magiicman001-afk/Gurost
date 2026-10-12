@@ -1,0 +1,34 @@
+# Security checks on every push and pull request (security spec 2.1, 2.3, 2.5).
+# Secret scan blocks leaked keys; the test suite includes the XSS scan and the pinning check; npm audit reports known
+# vulnerabilities in dependencies (high and above fail the run).
+name: security
+on:
+  push:
+    branches: [clean-main]
+  pull_request:
+    branches: [clean-main]
+  schedule:
+    - cron: "17 6 * * *"   # daily, so a newly published vulnerability is noticed without a push
+permissions:
+  contents: read
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Secret scan (tracked files)
+        run: node scripts/secret-scan.js --all
+      - name: Secret scan (git history)
+        run: node scripts/secret-scan.js --history
+      - run: npm ci
+      - name: Tests (includes XSS scan and dependency pinning)
+        run: node --test test/*.test.js
+        env:
+          OPENROUTER_API_KEY: ci-placeholder
+      - name: Dependency audit
+        run: npm audit --audit-level=high
