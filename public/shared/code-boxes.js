@@ -151,6 +151,7 @@ function injectCodeBoxScript(htmlDocument, { scrollY = 0, hash = '' } = {}) {
   const openId = String(hash || '').replace(/^#/, '').replace(/[^\w\-.:]/g, '');
   const head = PREVIEW_BASE_TAG
     + (scrollY > 0 ? `<script>window.__gurostRestoreY = ${Math.round(scrollY)};</script>` : '')
+    // xss-ok: openId was reduced to word characters, dots, dashes and colons above
     + (openId ? `<script>window.__gurostOpenHash = ${JSON.stringify(openId)};</script>` : '');
   doc = /<head\b[^>]*>/i.test(doc) ? doc.replace(/<head\b[^>]*>/i, (m) => m + head) : head + doc;
   // Pulse's inspector rides along when the page has loaded it.

@@ -243,6 +243,7 @@ function inFrameInspector() {
 
 // Injected into every preview by injectCodeBoxScript (shared/code-boxes.js).
 // A plain </script>: this file is loaded via <script src>, not inline.
+// xss-ok: the source of a function in this file, not user input
 const PULSE_INSPECTOR_SCRIPT = '<script data-gurost-inspector>(' + inFrameInspector.toString() + ')()</script>';
 
 // ----- Builder page side. -----
