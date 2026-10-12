@@ -98,3 +98,16 @@ test("the tour has five steps and names only this role's tabs", () => {
   assert.ok(!viewerStep.includes("Ops") && !viewerStep.includes("Team"));
   assert.ok(G.tourFor("owner")[1].body.includes("Ops"));
 });
+
+test("server wiring: the guide route needs a signed-in admin only and answers for the caller's own role", () => {
+  const src = fs.readFileSync(path.join(__dirname, "..", "server.js"), "utf8");
+  assert.match(src, /app\.get\("\/api\/admin\/guide", requireAdminAuth, \(req, res\) => \{\s*res\.json\(adminGuide\.guideFor\(req\.admin\.role\)\);/);
+});
+
+test("page wiring: ? button, Guide tab for every role, tour started after sign-in", () => {
+  assert.match(page, /id="helpBtn"/);
+  assert.match(page, /\{ id: 'guide', label: 'Guide', section: null \}/);
+  assert.match(page, /t\.section === null \|\| me\.sections\.includes\(t\.section\)/);
+  assert.match(page, /AdminGuide\.init\(/);
+  assert.match(page, /<script src="\/shared\/admin-guide-ui\.js">/);
+});
