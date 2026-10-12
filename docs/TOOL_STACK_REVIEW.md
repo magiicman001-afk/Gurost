@@ -95,7 +95,7 @@ General notes: slash commands (`/plugin ...`) run inside Claude Code on whicheve
 ### 3.4 Awesome DESIGN.md
 - **Install** [read]: nothing to install. Copy a brand's `DESIGN.md` into a project root and tell the agent to build from it. Each folder also has `preview.html` and `preview-dark.html`.
 - **Dependencies:** none.
-- **Where it fits:** use the **format** (colour palette, typography, components, layout, depth, do's and don'ts, responsive behaviour, agent prompt guide) to write one `DESIGN.md` per Gurost industry from our locked palettes. These become the human-readable design brief next to `lib/sections/palettes.js`.
+- **Where it fits:** use the **format** (colour palette, typography, components, layout, depth, do's and don'ts, responsive behaviour, agent prompt guide) to write one `DESIGN.md` per Gurost industry from our locked palettes. These become the human-readable design brief next to `lib/sections/palettes.json`.
 - **What it changes:** nothing in the repo unless we write our own `DESIGN.md` files (docs only, small).
 - **Caveat:** the repo says the tokens are public CSS values and claims no ownership of any brand's identity. Gurost must **not** ship a look-alike of a real brand (our own policy and the clone tool's README both say so). Use for structure, never to copy a brand.
 

@@ -446,9 +446,9 @@ Best hero variant: C (type-led, product-first); A when a real product screenshot
 | 9 | #A3B1C6 (`on_dark_muted`) | #0F172A (`dark`) | body | 4.5 | 8.21 (test: ratio >= 4.5 and within 0.01 of 8.21) |
 
 ## 8. Test file contract
-- `test/industry-palettes.test.js` reads `lib/sections/palettes.js` (the single source, generated from this spec) and, for each industry, recomputes every pair in the "Test colours" tables with the WCAG formula, asserting `ratio >= min` and `|ratio - expected| < 0.01`.
+- `test/section-palettes.test.js` reads `lib/sections/palettes.json` (the single source, generated from this spec) and, for each industry, recomputes every pair in the "Test colours" tables with the WCAG formula, asserting `ratio >= min` and `|ratio - expected| < 0.01`.
 - It also asserts: every token exists for all 6 industries; hex values are 6-digit uppercase; fonts are in the allowed Google Fonts list; footer tone matches the table (Law and Tech dark; Cafe, Salon, Trades, Health light).
-- Palette changes are made in this spec first, then in `palettes.js`, then the expected ratios are regenerated; a change that breaks 4.5:1 or 3:1 cannot merge.
+- Palette changes are made in this spec first, then in `palettes.json`, then the expected ratios are regenerated; a change that breaks 4.5:1 or 3:1 cannot merge.
 
 ## 9. Fonts and licence
 All eight fonts are on Google Fonts under the SIL Open Font License or Apache 2.0 (free for commercial use). Check the licence line again at build time. Fonts are the only external request the sections make; if Google Fonts is blocked the fallback stacks above apply and must not break the layout (tested at 375px).

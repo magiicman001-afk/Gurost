@@ -1,4 +1,4 @@
-<!-- Saved 2026-10-09 from Irfan's spec, unchanged. Status: PLANNED, not started. Build starts only after security S3a-d lands. -->
+<!-- Saved 2026-10-09 from Irfan's spec, unchanged. Status: PLANNED (original). 2026-10-12 docs sweep: PARTLY STARTED. Done: projects saved and restored after refresh (`0c3a008`), published-site store and page/link modules (`lib/published-sites.js`, `lib/site-pages.js`, `lib/site-links.js`), cookie login pieces S3b to S3d-6 on the Laptop side. Not done: wiring the section library into the builders, dummy mode as written, the launch flow, real page navigation (Bug U). Check `git log` for the latest. -->
 
 SPEC — Website Builder V2: Dummy Mode + Launch Flow
 
