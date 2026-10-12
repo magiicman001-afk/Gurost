@@ -26,20 +26,19 @@ for (const [file, src] of Object.entries(PAGES)) {
     for (const u of urls) assert.doesNotMatch(u, /userId|token|apiKey|jwt/i, u);
   });
 
-  test(`${file}: sends { type: 'auth' } on open, reading the login at that moment`, () => {
-    assert.match(src, /addEventListener\(["']open["'],\s*\(\)\s*=>\s*\{\s*const h = (window\.)?GurostAPI(\?\.authHeaders \? window\.GurostAPI)?\.authHeaders\(\)/);
-    assert.match(src, /type:\s*["']auth["']/);
+  test(`${file}: sends the API client's login message on open, built at that moment`, () => {
+    assert.match(src, /addEventListener\(["']open["'],\s*\(\)\s*=>\s*\{?\s*(socket|socketForLogin)\.send\((window\.GurostAPI\?\.socketAuthMessage \? window\.)?GurostAPI\.socketAuthMessage\(\)/);
   });
 
-  test(`${file}: a 4401 close goes to the login page`, () => {
-    assert.match(src, /event\.code === 4401/);
-    assert.match(src, /login\.html\?expired=1/);
+  test(`${file}: a 4401 close hands over to the API client (one refresh, else the login page)`, () => {
+    assert.match(src, /event\.code === 4401\)\s*(return socketLoginExpired\(id\)|window\.GurostAPI\?\.socketLoginExpired\?\.\(\))/);
+    assert.doesNotMatch(src, /localStorage\.(get|set|remove)Item\(['"]gurost_jwt/, "no page reads or clears the token itself");
   });
 }
 
 for (const [file, fn] of [["app-builder.html", "connectGenerationSocket"], ["builder.html", "connectGenerationSocket"]]) {
   test(`${file}: the login is read inside ${fn}, so every reconnect sends a fresh one`, () => {
-    assert.match(connectBody(PAGES[file], fn), /GurostAPI\.authHeaders\(\)/);
+    assert.match(connectBody(PAGES[file], fn), /GurostAPI\.socketAuthMessage\(\)/);
   });
 
   test(`${file}: 4401 / 4403 / 1008 return before scheduleReconnect`, () => {
@@ -57,3 +56,9 @@ test("app-builder.html: back-off resets when the server lets the socket in, not 
   assert.match(body, /addEventListener\('message', \(\) => \{ if \(buildWatch\) buildWatch\.attempts = 0; \}, \{ once: true \}\)/);
   assert.doesNotMatch(body, /addEventListener\('open', \(\) => \{ if \(buildWatch\) buildWatch\.attempts = 0/);
 });
+
+for (const file of ["app-builder.html", "builder.html"]) {
+  test(`${file}: after a refresh the socket reconnects; if the session is over the page stops waiting`, () => {
+    assert.match(PAGES[file], /GurostAPI\.socketLoginExpired\(\)\.then\(\(again\) => \(again \? scheduleReconnect\(id\) : stopWatchingBuild\(\)\)\)/);
+  });
+}
