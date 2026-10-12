@@ -1,6 +1,15 @@
 # Team status (shared by Web Claude and Laptop Claude; update at the end of every stage)
 
-Last updated: 2026-10-11 by Web Claude.
+Last updated: 2026-10-12 (night) by Web Claude.
+
+## FILE OWNERSHIP (agreed by Irfan 2026-10-12; check this file BEFORE editing; if a clash is possible, write it here and one waits)
+| Owner | Files |
+|---|---|
+| **Laptop Claude** | `server.js`; `lib/*` for security, auth and sessions; all security files; dependencies (`package.json`, the lock file); CI (`.github/`) |
+| **Web Claude** | `public/*` (all UI, including the admin UI); `lib/sections/*`; `bots/*`; `docs/*` (specs, plans); `scripts/build-*-preview.js` |
+| Shared, tell the other first | `CLAUDE.md` (small, dated additions only), `test/*` (each side tests its own files) |
+Generated files (`public/sections-preview.html`, `public/premium-looks-preview.html`) are made by scripts: change the SCRIPT, then regenerate. A hand edit of the output is lost. (Case 2026-10-12 23:35: a hand edit of the premium preview was found uncommitted; it was not Web Claude's. The same two fixes were made in the generator, `9078e87`.)
+Known overlaps right now: Week 2 security is Laptop Claude's to build (plan: `docs/WEEK_2_SECURITY_PLAN.md`; Web Claude only helps when asked, and owns the admin screens for it); the admin Guide text (`lib/admin-guide-*.js`, Web Claude) must be updated by whoever adds an admin tab.
 
 ## Who is working on what
 | Who | Role | Now |
