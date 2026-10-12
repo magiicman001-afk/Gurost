@@ -484,48 +484,82 @@ async function renderMemory(el) {
   }).join('');
 }
 
+// Small shared pieces for the older tabs: every value is escaped; empty states say what is missing.
+const tile = (label, value, sub, tone) => `<div class="bg-white border border-[var(--line)] rounded-xl p-4"><p class="text-xs text-[var(--muted)] mb-1">${escapeHtml(label)}</p><p class="font-display font-bold text-xl" style="${tone ? 'color:' + tone : ''}">${escapeHtml(value)}</p>${sub ? `<p class="text-xs text-[var(--muted)] mt-1">${escapeHtml(sub)}</p>` : ''}</div>`;
+const pill = (text, bg, fg) => `<span class="badge" style="background:${bg};color:${fg}">${escapeHtml(text)}</span>`;
+const empty = (text) => `<p class="text-sm text-[var(--muted)] border border-dashed border-[var(--line)] rounded-xl p-4 bg-white">${escapeHtml(text)}</p>`;
+const num = (n) => (Number.isFinite(Number(n)) ? Number(n).toLocaleString('en-US') : '-');
+const money = (n) => '$' + (Number(n) || 0).toFixed(2);
+
 async function renderUsage(el) {
   const { byModel, totalCost, recentCalls } = await adminCall('/api/admin/api-usage');
+  const rows = Object.entries(byModel || {}).sort((x, y) => y[1].cost - x[1].cost);
+  const calls = rows.reduce((t, [, d]) => t + d.calls, 0);
+  const tokens = rows.reduce((t, [, d]) => t + d.inputTokens + d.outputTokens, 0);
+  if (!rows.length) { el.innerHTML = empty('No AI calls recorded yet.'); return; }
   el.innerHTML = `
-    <p class="font-display font-bold text-2xl mb-4">$${totalCost.toFixed(2)} <span class="text-sm font-normal text-[var(--muted)]">total (last 500 calls)</span></p>
-    <table class="mb-6">
-      <thead><tr><th>Model</th><th>Calls</th><th>Input tokens</th><th>Output tokens</th><th>Cost</th></tr></thead>
-      <tbody>${Object.entries(byModel).map(([model, d]) => `
-        <tr><td>${model}</td><td>${d.calls}</td><td>${d.inputTokens.toLocaleString()}</td><td>${d.outputTokens.toLocaleString()}</td><td>$${d.cost.toFixed(2)}</td></tr>`).join('')}</tbody>
-    </table>`;
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      ${tile('Total cost', money(totalCost), 'last 500 calls')}${tile('Calls', num(calls))}${tile('Tokens', num(tokens))}${tile('Models used', String(rows.length))}
+    </div>
+    <div class="overflow-x-auto"><table>
+      <thead><tr><th>Model</th><th>Calls</th><th>Input tokens</th><th>Output tokens</th><th>Cost</th><th>Share</th></tr></thead>
+      <tbody>${rows.map(([model, d]) => {
+        const share = totalCost > 0 ? Math.round((d.cost / totalCost) * 100) : 0;
+        return `<tr><td style="word-break:break-word">${escapeHtml(model)}</td><td>${num(d.calls)}</td><td>${num(d.inputTokens)}</td><td>${num(d.outputTokens)}</td><td>${money(d.cost)}</td><td style="min-width:90px"><div style="background:#e2e8f0;border-radius:4px;height:8px"><div style="background:#0f766e;width:${share}%;height:8px;border-radius:4px"></div></div><span class="text-xs text-[var(--muted)]">${share}%</span></td></tr>`;
+      }).join('')}</tbody>
+    </table></div>`;
 }
 
 async function renderHealth(el) {
   const data = await adminCall('/api/admin/system-health');
-  const hours = Math.floor(data.processUptimeSeconds / 3600);
+  const h = data.lastHour || {};
+  const secs = Number(data.processUptimeSeconds) || 0;
+  const up = secs >= 86400 ? `${Math.floor(secs / 86400)}d ${Math.floor((secs % 86400) / 3600)}h` : secs >= 3600 ? `${Math.floor(secs / 3600)}h ${Math.floor((secs % 3600) / 60)}m` : `${Math.floor(secs / 60)}m`;
+  const err = Number(h.errorRate) || 0, ms = Number(h.avgDurationMs) || 0;
+  const errTone = err >= 5 ? '#c2410c' : err >= 1 ? '#b45309' : '#15803d';
+  const msTone = ms >= 3000 ? '#c2410c' : ms >= 1000 ? '#b45309' : '#15803d';
+  const status = err >= 5 || ms >= 3000 ? pill('Needs attention', '#ffedd5', '#9a3412') : err >= 1 || ms >= 1000 ? pill('Watch', '#fef3c7', '#92400e') : pill('Healthy', '#dcfce7', '#166534');
   el.innerHTML = `
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="bg-white border border-[var(--line)] rounded-xl p-4"><p class="text-xs text-[var(--muted)] mb-1">Uptime</p><p class="font-display font-bold text-xl">${hours}h</p></div>
-      <div class="bg-white border border-[var(--line)] rounded-xl p-4"><p class="text-xs text-[var(--muted)] mb-1">Requests (1h)</p><p class="font-display font-bold text-xl">${data.lastHour.totalRequests}</p></div>
-      <div class="bg-white border border-[var(--line)] rounded-xl p-4"><p class="text-xs text-[var(--muted)] mb-1">Error rate</p><p class="font-display font-bold text-xl">${data.lastHour.errorRate}%</p></div>
-      <div class="bg-white border border-[var(--line)] rounded-xl p-4"><p class="text-xs text-[var(--muted)] mb-1">Avg response</p><p class="font-display font-bold text-xl">${data.lastHour.avgDurationMs}ms</p></div>
-    </div>`;
+    <p class="mb-3">${status} <span class="text-xs text-[var(--muted)]">Based on the last hour. Amber from 1% errors or 1s responses; red from 5% or 3s.</span></p>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      ${tile('Uptime', up, 'since the last deploy')}${tile('Requests (1h)', num(h.totalRequests))}${tile('Error rate', err + '%', 'server errors (5xx)', errTone)}${tile('Avg response', ms + ' ms', null, msTone)}
+    </div>
+    ${Number(h.totalRequests) === 0 ? '<p class="text-xs text-[var(--muted)] mt-3">No requests in the last hour, so the rates above are not meaningful yet.</p>' : ''}`;
 }
 
 async function renderPayments(el) {
   const { payments, honestNote } = await adminCall('/api/admin/payments');
+  const list = payments || [];
+  const paid = list.filter((p) => p.plan && p.plan !== 'free');
+  const planStyle = { free: ['#f1f5f9', '#475569'] };
+  const counts = {};
+  list.forEach((p) => { counts[p.plan || 'free'] = (counts[p.plan || 'free'] || 0) + 1; });
   el.innerHTML = `
-    <p class="text-xs text-[var(--muted)] mb-3">${honestNote}</p>
-    <table>
+    <p class="text-xs text-[var(--muted)] mb-3">${escapeHtml(honestNote || '')}</p>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      ${tile('Accounts', num(list.length))}${tile('On a paid plan', num(paid.length))}${tile('With a Stripe account', num(list.filter((p) => p.hasStripeAccount).length))}${tile('Plans', Object.entries(counts).map(([k, v]) => k + ' ' + v).join(', ') || '-')}
+    </div>
+    ${list.length ? `<div class="overflow-x-auto"><table>
       <thead><tr><th>Email</th><th>Plan</th><th>Stripe account</th></tr></thead>
-      <tbody>${payments.map((p) => `
-        <tr><td>${p.email || '—'}</td><td>${p.plan}</td><td>${p.hasStripeAccount ? 'Yes' : 'No'}</td></tr>`).join('')}</tbody>
-    </table>`;
+      <tbody>${list.map((p) => { const [bg, fg] = planStyle[p.plan] || ['#dbeafe', '#1d4ed8']; return `<tr><td style="word-break:break-word">${escapeHtml(p.email || '—')}</td><td>${pill(p.plan || 'free', bg, fg)}</td><td>${p.hasStripeAccount ? pill('Yes', '#dcfce7', '#166534') : pill('No', '#f1f5f9', '#475569')}</td></tr>`; }).join('')}</tbody>
+    </table></div>` : empty('No accounts yet.')}`;
 }
 
 async function renderBots(el) {
   const { activity } = await adminCall('/api/admin/bot-activity');
+  const list = activity || [];
+  if (!list.length) { el.innerHTML = empty('No bot activity recorded yet.'); return; }
+  const kinds = {};
+  list.forEach((a) => { kinds[a.action_type] = (kinds[a.action_type] || 0) + 1; });
+  const users = new Set(list.map((a) => a.user_id)).size;
   el.innerHTML = `
-    <table>
-      <thead><tr><th>User</th><th>Action</th><th>Prompt</th><th>When</th></tr></thead>
-      <tbody>${activity.map((a) => `
-        <tr><td>${a.user_id.slice(0, 8)}…</td><td>${a.action_type}</td><td>${(a.prompt || '').slice(0, 60)}</td><td>${new Date(a.created_at).toLocaleString()}</td></tr>`).join('')}</tbody>
-    </table>`;
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      ${tile('Recent actions', num(list.length))}${tile('Different users', num(users))}${tile('Most common', Object.entries(kinds).sort((x, y) => y[1] - x[1])[0][0], Object.entries(kinds).sort((x, y) => y[1] - x[1])[0][1] + ' times')}
+    </div>
+    <div class="overflow-x-auto"><table>
+      <thead><tr><th>When</th><th>User</th><th>Action</th><th>Prompt</th></tr></thead>
+      <tbody>${list.map((a) => `<tr><td style="white-space:nowrap">${escapeHtml(new Date(a.created_at).toLocaleString())}</td><td>${escapeHtml(String(a.user_id || '').slice(0, 8))}…</td><td>${pill(a.action_type || '-', '#e0f2fe', '#075985')}</td><td style="word-break:break-word">${escapeHtml((a.prompt || '').slice(0, 80))}</td></tr>`).join('')}</tbody>
+    </table></div>`;
 }
 
 // Business Assistant audit trail: newest first, with filters. Every value is
@@ -567,12 +601,18 @@ async function renderAudit(el) {
         const tr = mk('tr');
         [new Date(r.created_at).toLocaleString(), (r.user_id || '').slice(0, 8) + '…', r.bot_type || '-', r.event, r.tool_used || '-', r.ok === null ? '-' : r.ok ? 'yes' : 'no',
           r.model_requested || '-', r.model_used || '-', r.approved_by_user === null ? '-' : r.approved_by_user ? 'approved' : 'cancelled', r.input || '-', r.output || '-', r.ip_address || '-']
-          .forEach((v) => tr.appendChild(mk('td', null, v)));
+          .forEach((v, i) => {
+            const td = mk('td', null, v);
+            if (i === 5 && v === 'no') td.style.cssText = 'color:#c2410c;font-weight:700';
+            if (i === 5 && v === 'yes') td.style.color = '#15803d';
+            if (i === 3 && v === 'error') td.style.cssText = 'color:#c2410c;font-weight:700';
+            tr.appendChild(td);
+          });
         body.appendChild(tr);
       });
       if (entries.length) oldest = entries[entries.length - 1].created_at;
       more.hidden = entries.length < 50;
-      if (!append && !entries.length) msg.textContent = 'Nothing recorded yet for this filter.';
+      if (!append && !entries.length) { msg.className = 'text-sm text-[var(--muted)] mb-2'; msg.textContent = 'Nothing recorded yet for this filter.'; } else msg.className = 'text-sm text-red-600 mb-2';
     } catch (err) { msg.textContent = err.message; }
   }
   go.addEventListener('click', () => { oldest = null; load(false); });
