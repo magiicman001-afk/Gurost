@@ -1,0 +1,19 @@
+# Weekly dependency check (security spec 1.5 / 2.3). Dependabot opens the pull requests that fix known vulnerabilities
+# and bumps versions; nothing merges by itself. Versions are pinned exactly in package.json.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    target-branch: "clean-main"
+    groups:
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "clean-main"
