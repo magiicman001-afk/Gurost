@@ -87,7 +87,7 @@ test("content is plain text: no markup and no secrets", () => {
 test("it never claims what is not built", () => {
   const text = JSON.stringify(G.guideFor("owner"));
   assert.match(text, /not built yet/i);
-  assert.match(text, /Publishing it to a public web address is not built yet/);
+  assert.match(text, /Launch is built but not switched on/);
   assert.match(text, /automatic alert system[^"]*is planned[^"]*not built yet/i);
 });
 
