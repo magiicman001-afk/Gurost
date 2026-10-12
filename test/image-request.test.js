@@ -37,3 +37,16 @@ test("the edit only counts when the photo is really an <img> on the page", () =>
   assert.equal(R.hasImage(`<p>${PHOTO.url}</p>`, PHOTO), false, "the address as text is not a photo");
   assert.equal(R.hasImage(`<div style="background:url(${PHOTO.url})"></div>`, PHOTO), false);
 });
+
+// Both Pulse edit paths use it: the typed /api/pulse route and the voice/text socket.
+const fs = require("fs");
+const path = require("path");
+test("wired into /api/pulse and the /ws/guide edit: no photo -> 422 / plain error, photo missing after -> nothing saved", () => {
+  const server = fs.readFileSync(path.join(__dirname, "..", "server.js"), "utf8");
+  assert.match(server, /if \(!photo\) return res\.status\(422\)\.json\(\{ error: imageRequest\.NOT_AVAILABLE \}\);/);
+  assert.match(server, /if \(photo && !imageRequest\.hasImage\(r\.html, photo\)\) throw new Error\(imageRequest\.NOT_APPLIED\);/);
+  const ws = fs.readFileSync(path.join(__dirname, "..", "guide", "websocket-server.js"), "utf8");
+  assert.match(ws, /if \(!photo\) throw new Error\(imageRequest\.NOT_AVAILABLE\);/);
+  const lock = ws.slice(ws.indexOf("imageRequest.buildInstruction"));
+  assert.ok(lock.indexOf("imageRequest.hasImage") < lock.indexOf("integrator.integrateCorrection"), "checked before the page is saved");
+});

@@ -25,6 +25,7 @@ const voiceClient = require("./voice-client");
 const correctionBot = require("../bots/correction-bot");
 const integrator = require("../bots/integrator-bot");
 const { withProjectLock } = require("../lib/project-lock");
+const imageRequest = require("../lib/image-request");
 
 // A socket has this long to send { type: "auth", token | apiKey } before it is closed.
 const AUTH_TIMEOUT_MS = 10000;
@@ -248,8 +249,15 @@ function attachGuideBotSocket(httpServer, PROJECTS, {
           pendingSuggestion = null;
         } else {
           const instruction = classified.instruction || transcript;
+          // "Add a photo" (Bug II): a real stock photo first, or a plain answer and no change (lib/image-request.js).
+          let photo = null;
+          if (project.type !== "app" && imageRequest.wantsImage(instruction)) {
+            photo = await imageRequest.findImage(project, instruction).catch(() => null);
+            if (!photo) throw new Error(imageRequest.NOT_AVAILABLE);
+          }
           result = await withProjectLock(projectId, async () => {
-            const r = await correctionBot.applyCorrection(project.currentHtml, instruction);
+            const r = await correctionBot.applyCorrection(project.currentHtml, photo ? imageRequest.buildInstruction(instruction, photo) : instruction);
+            if (photo && !imageRequest.hasImage(r.html, photo)) throw new Error(imageRequest.NOT_APPLIED); // nothing is saved
             integrator.integrateCorrection(project, r);
             return r;
           });

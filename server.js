@@ -49,6 +49,7 @@ const { packageProject, siteFiles, safePath } = require("./wrapper");
 const variantBot = require("./bots/variant-bot");
 const libraryBot = require("./bots/library-bot");
 const videoRequest = require("./lib/video-request");
+const imageRequest = require("./lib/image-request");
 const designMemory = require("./lib/design-memory");
 const adminAccess = require("./lib/admin-access");
 const adminData = require("./lib/admin-data");
@@ -2122,6 +2123,13 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
         videoClip = await videoRequest.findClip(project, instruction).catch(() => null);
         if (!videoClip) return res.status(422).json({ error: videoRequest.NOT_AVAILABLE });
       }
+      // "Add a photo" (Bug II): the same, with a real stock photo. The model alone could only invent an address,
+      // so the page showed the alt text under a green tick.
+      let photo = null;
+      if (project.type !== "app" && !videoClip && imageRequest.wantsImage(instruction)) {
+        photo = await imageRequest.findImage(project, instruction).catch(() => null);
+        if (!photo) return res.status(422).json({ error: imageRequest.NOT_AVAILABLE });
+      }
       // One correction at a time. A second one arriving mid-edit used to
       // fail its own transition and then, in its error handler, reset the
       // project to DONE under the first - whose finished edit was then
@@ -2142,8 +2150,10 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
       // one's result — see lib/project-lock.js for the real bug this fixes.
       const result = await withProjectLock(projectId, async () => {
         const before = project.currentHtml;
-        const r = await correctionBot.applyCorrection(project.currentHtml, videoClip ? videoRequest.buildInstruction(instruction, videoClip) : instruction, { plan: req.user.plan, deadline: Date.now() + PULSE_EDIT_TIMEOUT_MS });
+        const editInstruction = videoClip ? videoRequest.buildInstruction(instruction, videoClip) : photo ? imageRequest.buildInstruction(instruction, photo) : instruction;
+        const r = await correctionBot.applyCorrection(project.currentHtml, editInstruction, { plan: req.user.plan, deadline: Date.now() + PULSE_EDIT_TIMEOUT_MS });
         if (videoClip && !videoRequest.hasClip(r.html, videoClip)) throw new Error(videoRequest.NOT_APPLIED); // nothing is saved
+        if (photo && !imageRequest.hasImage(r.html, photo)) throw new Error(imageRequest.NOT_APPLIED); // nothing is saved
         pushUndoSnapshot(project, "correct");
         integrator.integrateCorrection(project, r);
         // An edit can't invent prices, years, ratings or statistics either: a
