@@ -18,6 +18,7 @@
  */
 
 (function () {
+  const escapeText = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   let currentState = 'idle'; // idle | building | paused | recording | correcting | done
   let isExpanded = false;
   let activeRecording = null;
@@ -1128,7 +1129,7 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Image generation failed.');
       const dataUrl = `data:${data.mimeType};base64,${data.base64}`;
-      resultEl.innerHTML = `<img src="${dataUrl}" alt="${prompt}"/><button id="pulseImageCopyUrl">Copy as data URL</button>`;
+      resultEl.innerHTML = `<img src="${escapeText(dataUrl)}" alt="${escapeText(prompt)}"/><button id="pulseImageCopyUrl">Copy as data URL</button>`;
       document.getElementById('pulseImageCopyUrl').addEventListener('click', () => {
         navigator.clipboard?.writeText(dataUrl);
         logStatus('Image copied — paste its data URL into an <img> tag via a correction.');
@@ -1158,7 +1159,7 @@
 
       listEl.innerHTML = data.history.slice().reverse().map((h) => `
         <button class="pulse-history-item" data-index="${h.index}">
-          <span>${h.action}</span>
+          <span>${escapeText(h.action)}</span>
           <span class="pulse-history-time">${new Date(h.ts).toLocaleTimeString()}</span>
         </button>
       `).join('');

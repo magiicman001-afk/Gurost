@@ -26,6 +26,8 @@ const GurostCheckpoints = (function () {
   let onRestore = () => {};
   let panelEl = null;
 
+  const escapeText = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
   function timeAgo(isoString) {
     const diffMs = Date.now() - new Date(isoString).getTime();
     const mins = Math.floor(diffMs / 60000);
@@ -59,7 +61,7 @@ const GurostCheckpoints = (function () {
             <p class="text-sm font-medium text-on-surface">${i === 0 ? "Most recent" : timeAgo(cp.created_at)}</p>
             <p class="text-xs text-on-surface-variant">${new Date(cp.created_at).toLocaleString()}${cp.build_minutes ? ` &middot; ${Math.round(cp.build_minutes)} min into build` : ""}</p>
           </div>
-          <button class="px-4 py-2 text-sm rounded-full border border-outline-variant/50 hover:bg-surface-container-low transition-colors" data-restore-id="${cp.id}">
+          <button class="px-4 py-2 text-sm rounded-full border border-outline-variant/50 hover:bg-surface-container-low transition-colors" data-restore-id="${escapeText(cp.id)}">
             Restore this version
           </button>
         </div>`
@@ -70,7 +72,7 @@ const GurostCheckpoints = (function () {
         btn.addEventListener("click", () => restoreCheckpoint(btn.getAttribute("data-restore-id"), btn));
       });
     } catch (err) {
-      listEl.innerHTML = `<p class="text-sm text-red-600 p-4">Couldn't load version history: ${err.message}</p>`;
+      listEl.innerHTML = `<p class="text-sm text-red-600 p-4">Couldn't load version history: ${escapeText(err.message)}</p>`;
     }
   }
 

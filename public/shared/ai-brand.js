@@ -127,6 +127,7 @@
   // looks the same on every page and needs no image file. px is the width and height.
   function avatar(px) {
     var n = Math.max(12, Math.min(64, Number(px) || 24));
+    // xss-ok: NAME and AVATAR are constants from brand-config.js (committed code), never user input
     return '<span role="img" aria-label="' + NAME + '" style="display:inline-flex;align-items:center;justify-content:center;width:' + n + "px;height:" + n + "px;border-radius:50%;background:linear-gradient(135deg,#FEB246,#FF8C00);font-size:" + Math.round(n * 0.58) + 'px;line-height:1;flex-shrink:0">' + AVATAR + "</span>";
   }
 
