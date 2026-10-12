@@ -23,7 +23,9 @@
 // process.env.FOO, evaluated the instant that file is require()'d),
 // and if dotenv.config() runs even one require() late, those values
 // won't exist yet when those lines execute.
+require("./lib/log-redact").install(); // secrets never reach stdout/stderr (Render logs)
 require("dotenv").config();
+require("./lib/log-redact").refresh(); // pick up the secrets dotenv just loaded
 
 const express = require("express");
 const crypto = require("crypto");
