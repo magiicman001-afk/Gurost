@@ -6,7 +6,11 @@ const assert = require("node:assert/strict");
 const S = require("../lib/xss-scan");
 
 if (!S.hasParser()) {
-  test("xss scanner (needs acorn installed)", { skip: "acorn not installed here" }, () => {});
+  // acorn is a pinned dependency. It once came only through lighthouse 12, and the 13 upgrade dropped
+  // it, which silently turned this gate into a skip. In CI a missing parser is a failure.
+  test("xss scanner (needs acorn installed)", { skip: !process.env.CI && "acorn not installed here" }, () => {
+    assert.fail("acorn is not installed - the XSS scan cannot run (npm ci should install it)");
+  });
   return;
 }
 const scan = (code) => S.scanSource(code, "t.js");

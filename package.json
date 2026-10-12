@@ -16,6 +16,7 @@
   "dependencies": {
     "@octokit/rest": "22.0.1",
     "@supabase/supabase-js": "2.116.0",
+    "acorn": "8.18.0",
     "aislop": "0.18.1",
     "archiver": "7.0.1",
     "chrome-launcher": "1.2.1",
