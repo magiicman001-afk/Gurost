@@ -1,6 +1,6 @@
 # Admin Area spec: role-based, key-auth, weekly reports, plus Bug U
 
-Written 2026-10-09 by Web Claude from Irfan's instructions (attached spec, verbatim intent). Planning only: no code, nothing built.
+Written 2026-10-09 by Web Claude from Irfan's instructions (attached spec, verbatim intent). **STATUS 2026-10-12 (docs sweep): PARTLY BUILT.** Built and in use: roles with the deny-by-default matrix (`lib/admin-access.js`), role-filtered dashboard, inventory, models, projects, builds and build logs, memory, code and deploy, docs links, team management with audit log, security status, owner-only ops actions, and the Help and Guide system (`docs/ADMIN_GUIDE_SPEC.md`). Not built (no code found): the weekly report (section 4), the email-plus-key sign-in (section 2), TOTP, suspicious-login flags. The text below is the original plan and its "nothing built" wording is out of date. Original line: Planning only: no code, nothing built.
 Build order is locked by Irfan: 1 Security S3a-d, 2 Section library, 3 Website Builder V2 + Bug U, 4 App Builder + InsForge, 5 **Admin Area (all 12 sections, must-have before launch)**, 6 Launch prep.
 
 Note on the count: the brief says "10 sections" in one heading but lists 12. This spec covers all 12.

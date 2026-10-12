@@ -1,5 +1,7 @@
 # Escalation hierarchy and full build logging
 
+Status 2026-10-12 (docs sweep): **BUILT** (`lib/sections/escalation.js`, `senior.js`, `lib/build-log.js`, `docs/migrations/2026-10-12_build_logs.sql`, admin Build Logs tab). Switch: `ESCALATION_HIERARCHY` (set to 0 to return to the plain premium loop). It only matters while `PREMIUM_PIPELINE=1`. Not yet verified with real builds.
+
 Written 2026-10-12 by Web Claude from Irfan's brief. Applies to **library builds** (the Website Builder section library). It rides on the Premium Pipeline: while `PREMIUM_PIPELINE` is off there is no quality score, so there is nothing to escalate; the logging still works (builder, copywriter, photographer, reviewer entries).
 
 ## 1. The chain (each level gets ONE attempt per design slot)

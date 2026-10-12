@@ -1,6 +1,6 @@
-# Design Memory ("the shelf") - SPEC ONLY, NOT BUILT
+# Design Memory ("the shelf")
 
-Status: spec written 2026-10-12 for Irfan's review. No code, no table yet.
+Status 2026-10-12 (docs sweep): **BUILT** behind `DESIGN_MEMORY=1` (off by default): `lib/design-memory.js`, table `build_memory` (`docs/migrations/2026-10-12_build_memory.sql`, must be run in Supabase), wired in `bots/library-bot.js`, admin Memory tab. Not yet verified with real builds. Original status: spec written 2026-10-12, no code yet.
 Depends on: `docs/PREMIUM_PIPELINE_SPEC.md` (the 0-100 premium score). Without that score there is nothing honest to learn from.
 
 ## 1. What it does, in one paragraph
