@@ -267,7 +267,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('noProjectsMsg').classList.remove('hidden');
       select.disabled = true;
     } else {
-      select.innerHTML = projects.map((p) => `<option value="${p.id}">${GurostAPI.escapeHtml((p.prompt || p.id).slice(0, 60))}</option>`).join('');
+      select.innerHTML = projects.map((p) => `<option value="${GurostAPI.escapeHtml(p.id)}">${GurostAPI.escapeHtml((p.prompt || p.id).slice(0, 60))}</option>`).join('');
     }
   } catch (err) {
     console.error('[assistant] Failed to load real projects:', err.message);
@@ -315,7 +315,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const projectId = select.value;
     if (!projectId) return;
     const listEl = document.getElementById('assistantSuggestionsList');
-    listEl.innerHTML = `<p class="text-sm text-[var(--muted)]">${GurostAI.STATUS.thinking}</p>`;
+    listEl.innerHTML = `<p class="text-sm text-[var(--muted)]">${GurostAPI.escapeHtml(GurostAI.STATUS.thinking)}</p>`;
     try {
       const { suggestions } = await GurostAPI.call('/api/assistant/suggest', { method: 'POST', body: { projectId } });
       if (!suggestions || !suggestions.length) {
@@ -352,10 +352,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       let html = `<p class="mb-3"><strong>${result.totalIssues}</strong> real issue${result.totalIssues === 1 ? '' : 's'} found right now.</p>`;
       if (result.newIssues.length) {
-        html += `<p class="font-semibold text-red-700 mb-1">New since last check:</p><ul class="list-disc list-inside mb-3">${result.newIssues.map((i) => `<li>${i.description}</li>`).join('')}</ul>`;
+        html += `<p class="font-semibold text-red-700 mb-1">New since last check:</p><ul class="list-disc list-inside mb-3">${result.newIssues.map((i) => `<li>${GurostAPI.escapeHtml(i.description)}</li>`).join('')}</ul>`;
       }
       if (result.resolvedIssues.length) {
-        html += `<p class="font-semibold text-green-700 mb-1">Genuinely fixed since last check:</p><ul class="list-disc list-inside">${result.resolvedIssues.map((i) => `<li>${i.description}</li>`).join('')}</ul>`;
+        html += `<p class="font-semibold text-green-700 mb-1">Genuinely fixed since last check:</p><ul class="list-disc list-inside">${result.resolvedIssues.map((i) => `<li>${GurostAPI.escapeHtml(i.description)}</li>`).join('')}</ul>`;
       }
       if (!result.newIssues.length && !result.resolvedIssues.length && !result.isFirstCheck) {
         html += `<p class="text-[var(--muted)]">No real change since the last check.</p>`;

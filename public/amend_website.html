@@ -240,7 +240,7 @@ function renderIssues(issues) {
   document.getElementById('issuesHeading').textContent = GurostAI.STATUS.found(issues.length);
 
   if (!issues.length) {
-    list.innerHTML = `<li class="text-on-surface-variant">${GurostAI.VOICE.cleanAudit}</li>`;
+    list.innerHTML = `<li class="text-on-surface-variant">${GurostAPI.escapeHtml(GurostAI.VOICE.cleanAudit)}</li>`;
     document.getElementById('fixAllBtn').style.display = 'none';
     return;
   }
@@ -249,8 +249,8 @@ function renderIssues(issues) {
   list.innerHTML = issues
     .map((issue) => `
       <li class="flex items-start gap-3">
-        <span class="material-symbols-outlined text-outline mt-0.5 text-sm">${ISSUE_ICONS[issue.category] || 'info'}</span>
-        <span><strong class="text-on-surface">[${issue.severity}]</strong> ${issue.description}</span>
+        <span class="material-symbols-outlined text-outline mt-0.5 text-sm">${GurostAPI.escapeHtml(ISSUE_ICONS[issue.category] || 'info')}</span>
+        <span><strong class="text-on-surface">[${GurostAPI.escapeHtml(issue.severity)}]</strong> ${GurostAPI.escapeHtml(issue.description)}</span>
       </li>`)
     .join('');
 }
