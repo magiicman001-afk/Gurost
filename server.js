@@ -374,8 +374,9 @@ const startCookieSession = (req, userId) => (!req.headers.origin || auth.session
 app.post("/api/auth/signup", authLimiter, security.rejectUnknownFields(["email", "password"]), async (req, res) => {
   try {
     const result = await userAuth.signup(req.body.email, req.body.password);
-    await startCookieSession(req, result.userId);
-    res.json(result);
+    // cookieSession tells the page it may stop storing the token (false until the user_sessions table exists).
+    const cookieSession = await startCookieSession(req, result.userId);
+    res.json({ ...result, cookieSession });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -384,8 +385,9 @@ app.post("/api/auth/signup", authLimiter, security.rejectUnknownFields(["email",
 app.post("/api/auth/login", authLimiter, security.rejectUnknownFields(["email", "password"]), async (req, res) => {
   try {
     const result = await userAuth.login(req.body.email, req.body.password);
-    await startCookieSession(req, result.userId);
-    res.json(result);
+    // cookieSession tells the page it may stop storing the token (false until the user_sessions table exists).
+    const cookieSession = await startCookieSession(req, result.userId);
+    res.json({ ...result, cookieSession });
   } catch (err) {
     res.status(401).json({ error: err.message });
   }

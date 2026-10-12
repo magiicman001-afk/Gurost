@@ -13,9 +13,10 @@ const requireAuthLine = at('app.use("/api", auth.requireAuth);');
 test("login and signup start a cookie session, only for Gurost's own pages (or no Origin)", () => {
   assert.match(src, /const startCookieSession = \(req, userId\) => \(!req\.headers\.origin \|\| auth\.sessions\(\)\.originAllowed\(req\) \?/);
   const login = src.slice(at('app.post("/api/auth/login"'), at('app.post("/api/auth/refresh"'));
-  assert.match(login, /await startCookieSession\(req, result\.userId\);\s*res\.json\(result\)/);
+  const started = /const cookieSession = await startCookieSession\(req, result\.userId\);\s*res\.json\(\{ \.\.\.result, cookieSession \}\)/;
+  assert.match(login, started, "the page is told whether it may stop storing the token");
   const signup = src.slice(at('app.post("/api/auth/signup"'), at('app.post("/api/auth/login"'));
-  assert.match(signup, /await startCookieSession\(req, result\.userId\);/);
+  assert.match(signup, started);
 });
 
 test("refresh and logout are reachable with an expired access cookie (before requireAuth)", () => {
