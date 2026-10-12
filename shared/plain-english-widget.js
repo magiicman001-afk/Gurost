@@ -15,7 +15,7 @@
  */
 
 (function () {
-  const STORAGE_KEY = 'gurost_plain_english_enabled';
+  const STORAGE_KEY = 'gurost_plain_english_enabled';  // secret-scan-ok: localStorage key name, not a secret
   let glossary = null;
 
   async function loadGlossary() {

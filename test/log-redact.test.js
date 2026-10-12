@@ -3,21 +3,21 @@ const test = require("node:test");
 const assert = require("node:assert");
 const R = require("../lib/log-redact");
 
-const SB = "sb_secret_AbCdEf0123456789xyzABCDEF";
-const OR = "sk-or-v1-0123456789abcdef0123456789abcdef";
-const GM = "AIzaSyA1234567890abcdefghijklmnopqrstuv";
-const JWT = "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoic2VydmljZSJ9.abcdefghij1234567890";
+const SB = "sb_secret_AbCdEf0123456789xyzABCDEF";  // secret-scan-ok: fake key to test redaction
+const OR = "sk-or-v1-0123456789abcdef0123456789abcdef";  // secret-scan-ok: fake key to test redaction
+const GM = "AIzaSyA1234567890abcdefghijklmnopqrstuv";  // secret-scan-ok: fake key to test redaction
+const JWT = "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoic2VydmljZSJ9.abcdefghij1234567890";  // secret-scan-ok: fake key to test redaction
 
 test("key shapes become short markers", () => {
   assert.strictEqual(R.redactText(`key ${SB} used`), "key sb_secret_*** used");
   assert.strictEqual(R.redactText(OR), "sk-or-***");
-  assert.strictEqual(R.redactText("sk-abcdefghijklmnopqrstuvwx"), "sk-***");
+  assert.strictEqual(R.redactText("sk-abcdefghijklmnopqrstuvwx"), "sk-***");  // secret-scan-ok: fake key to test redaction
   assert.strictEqual(R.redactText(GM), "AIza***");
   assert.strictEqual(R.redactText(`token=${JWT}`), "token=eyJ***");
   assert.strictEqual(R.redactText(JWT), "eyJ***");
   assert.strictEqual(R.redactText("Authorization: Bearer abcdefghijklmnop1234"), "Authorization: Bearer ***");
   assert.strictEqual(R.redactText("GET /x?api_key=abcdefgh12345&a=1"), "GET /x?api_key=***&a=1");
-  assert.strictEqual(R.redactText("postgres://u:hunter2hunter2@h/db"), "postgres://u:***@h/db");
+  assert.strictEqual(R.redactText("postgres://u:hunter2hunter2@h/db"), "postgres://u:***@h/db");  // secret-scan-ok: fake key to test redaction
 });
 
 test("exact env values are hidden whatever their shape", () => {

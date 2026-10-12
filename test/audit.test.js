@@ -31,7 +31,7 @@ function fakeDb({ failInsert = false } = {}) {
 
 test("secrets are hidden: passwords, keys, card numbers", () => {
   assert.equal(audit.redact("password: hunter2"), "password: [hidden]");
-  assert.match(audit.redact("key sk-abcdefghijklmnopqrstuvwxyz123456 end"), /\[key hidden\]/);
+  assert.match(audit.redact("key sk-abcdefghijklmnopqrstuvwxyz123456 end"), /\[key hidden\]/);  // secret-scan-ok: fake key to test redaction
   assert.match(audit.redact("card 4111 1111 1111 1111 ok"), /\[number hidden\]/);
   assert.ok(!audit.redact("Authorization: Bearer abc123").includes("abc123"));
   assert.equal(audit.redact("a normal sentence about shipping"), "a normal sentence about shipping");
