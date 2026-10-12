@@ -34,22 +34,52 @@ function stubFetch() {
   return calls;
 }
 
-test("createRepo is public by default (the backend-deploy path needs that)", async () => {
-  const calls = stubFetch();
-  await github.createRepo("gurost-abc");
-  assert.equal(calls.find((c) => c.url.endsWith("/user/repos")).body.private, false);
+test("createRepo is ALWAYS private, with no argument, with private:true, and even when someone asks for public", async () => {
+  for (const args of [[], [{ private: true }], [{ private: false }], [{ private: "no" }], [{ public: true }], [{ visibility: "public" }]]) {
+    const calls = stubFetch();
+    await github.createRepo("gurost-abc", ...args);
+    const body = calls.find((c) => c.url.endsWith("/user/repos")).body;
+    assert.strictEqual(body.private, true, JSON.stringify(args));
+    assert.ok(!("visibility" in body) && !("public" in body));
+  }
 });
 
-test("createRepo can make a private repo", async () => {
+test("the backend-deploy path (pushGeneratedRepo) creates a private repo", async () => {
   const calls = stubFetch();
-  await github.createRepo("gurost-abc", { private: true });
-  assert.equal(calls.find((c) => c.url.endsWith("/user/repos")).body.private, true);
+  const out = await github.pushGeneratedRepo([{ path: "index.js", content: "x" }], "abcdef12-0000");
+  const create = calls.find((c) => c.url.endsWith("/user/repos"));
+  assert.ok(create, "a repo was created");
+  assert.strictEqual(create.body.private, true);
+  assert.match(out.repoUrl, /gurost-abcdef12$/);
 });
 
-test("anything other than an explicit true stays public-by-default, not accidentally private or truthy", async () => {
-  const calls = stubFetch();
-  await github.createRepo("x", { private: "yes" });
-  assert.equal(calls.find((c) => c.url.endsWith("/user/repos")).body.private, false);
+test("source guard: repos can only be created in lib/github.js, and that file never says private:false", () => {
+  const fs = require("fs");
+  const path = require("path");
+  const root = path.join(__dirname, "..");
+  const skip = new Set(["node_modules", ".git", "test", "docs", "public"]);
+  const files = [];
+  (function walk(dir) {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (skip.has(e.name)) continue;
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) walk(full);
+      else if (/\.(js|mjs|cjs)$/.test(e.name)) files.push(full);
+    }
+  })(root);
+  const creators = /\/user\/repos|\/orgs\/[^/'"`]+\/repos|repos\.createForAuthenticatedUser|repos\.createInOrg|repos\.createUsingTemplate|repos\.create\(|gh\s+repo\s+create/;
+  const offenders = [];
+  for (const f of files) {
+    const rel = path.relative(root, f).split(path.sep).join("/");
+    const text = fs.readFileSync(f, "utf8");
+    if (rel === "PULSE-PANEL-ROUTE-INSTRUCTIONS.js") { assert.ok(!/private:\s*false/.test(text), rel); continue; } // a notes file; its one call is private:true
+    if (creators.test(text) && rel !== "lib/github.js") offenders.push(rel);
+    assert.ok(!/(private|isPrivate)\s*[:=]\s*false/.test(text) || rel.startsWith("lib/sections") || rel === "lib/xss-scan.js", `${rel}: a repo flag set to false`);
+  }
+  assert.deepEqual(offenders, [], "create repos only through lib/github.js createRepo (always private)");
+  const gh = fs.readFileSync(path.join(root, "lib", "github.js"), "utf8");
+  assert.match(gh, /private: true,/);
+  assert.ok(!/private:\s*(false|isPrivate)/.test(gh));
 });
 
 test("a new checkpoint repo is created private", async () => {
