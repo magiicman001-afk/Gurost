@@ -16,7 +16,7 @@
   "dependencies": {
     "@octokit/rest": "22.0.1",
     "@supabase/supabase-js": "2.116.0",
-    "aislop": "0.14.1",
+    "aislop": "0.18.1",
     "archiver": "7.0.1",
     "chrome-launcher": "1.2.1",
     "cors": "2.8.6",
