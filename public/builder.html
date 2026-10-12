@@ -529,12 +529,10 @@ let lastPromptTried = null; // real, honest memory - lets the Restart button ret
 // Bot conversation helpers (logBot, logActivity, toggleCode...) live in
 // shared/bot-conversation.js.
 
-// Same as the API client on an expired login: clear it and go to the login page.
-function sendToLogin() {
-  stopWatchingBuild();
-  localStorage.removeItem('gurost_jwt');
-  localStorage.removeItem('gurost_user_id');
-  window.location.href = 'login.html?expired=1';
+// The socket was closed for an expired login: one silent refresh, then reconnect; if the session is
+// over, the API client sends the person to log in (and this page stops waiting on the build).
+function socketLoginExpired(id) {
+  GurostAPI.socketLoginExpired().then((again) => (again ? scheduleReconnect(id) : stopWatchingBuild()));
 }
 
 function connectGenerationSocket(id) {
@@ -543,11 +541,9 @@ function connectGenerationSocket(id) {
   generationSocket = new WebSocket(`${protocol}//${window.location.host}/ws/guide?projectId=${id}`);
   const socketForLogin = generationSocket;
   // The socket's first message is the login - never the URL (logs). The server
-  // sends nothing and accepts nothing until it has checked it.
-  socketForLogin.addEventListener('open', () => {
-    const h = GurostAPI.authHeaders();
-    socketForLogin.send(JSON.stringify({ type: 'auth', token: (h.Authorization || '').replace(/^Bearer /, '') || undefined, apiKey: h['x-api-key'] }));
-  });
+  // sends nothing and accepts nothing until it has checked it. Built fresh on
+  // every connect (with a cookie login it is empty and the server reads the cookie).
+  socketForLogin.addEventListener('open', () => socketForLogin.send(GurostAPI.socketAuthMessage()));
 
   const mem = (socketMemory[id] = socketMemory[id] || { finished: 0, seen: new Set() });
   let liveLeadId = null;
@@ -680,9 +676,9 @@ function connectGenerationSocket(id) {
     // Only forget the socket this handler belongs to: closing the old one for a new build fires its
     // close AFTER the new socket is stored, and used to wipe the new one's reference.
     if (generationSocket === thisSocket) generationSocket = null;
-    // 4401: the login is missing or has expired - every retry would be refused, so log in again.
+    // 4401: the login is missing or has expired - refresh it once, else log in again (never retry blindly).
     // 4403 / 1008: not this person's project (or none) - retrying cannot help; the project check reports it.
-    if (event.code === 4401) return sendToLogin();
+    if (event.code === 4401) return socketLoginExpired(id);
     if (event.code === 4403 || event.code === 1008) return;
     scheduleReconnect(id); // only does anything while a build is being waited on
   });
