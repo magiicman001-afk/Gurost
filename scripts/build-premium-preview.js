@@ -50,10 +50,10 @@ async function buildAll() {
 header{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid #d4d4d8;padding:10px 16px}
 header h1{margin:0 0 6px;font-size:17px}header p{margin:0 0 8px;font-size:13px;color:#52525b}
 nav{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}nav a{flex:none;padding:10px 14px;border:1px solid #d4d4d8;border-radius:999px;color:#18181b;text-decoration:none;font-size:14px;min-height:44px;display:flex;align-items:center}
-main{padding:16px;max-width:1500px;margin:0 auto}.pal{margin:0 0 40px;scroll-margin-top:130px}.pal h2{font-size:20px;margin:0 0 12px}
+main{min-width:0;padding:16px;max-width:1500px;margin:0 auto}.pal{margin:0 0 40px;scroll-margin-top:130px}.pal h2{font-size:20px;margin:0 0 12px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(375px,100%),1fr));gap:20px}
-figure{margin:0;background:#fff;border:1px solid #d4d4d8;border-radius:12px;overflow:hidden}
-figcaption{padding:10px 12px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}figcaption small{flex-basis:100%;color:#71717a;font-size:12px}
+figure{margin:0;min-width:0;background:#fff;border:1px solid #d4d4d8;border-radius:12px;overflow:hidden}
+figcaption{overflow-wrap:anywhere;padding:10px 12px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}figcaption small{flex-basis:100%;color:#71717a;font-size:12px}
 .sc{font-size:13px;font-weight:700;padding:2px 8px;border-radius:999px}.sc.ok{background:#dcfce7;color:#14532d}.sc.low{background:#fee2e2;color:#7f1d1d}
 iframe{display:block;width:100%;height:760px;border:0;border-top:1px solid #e4e4e7;background:#fff}
 </style></head><body>
