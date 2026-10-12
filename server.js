@@ -52,6 +52,7 @@ const designMemory = require("./lib/design-memory");
 const adminAccess = require("./lib/admin-access");
 const adminData = require("./lib/admin-data");
 const buildLog = require("./lib/build-log");
+const adminTeam = require("./lib/admin-team");
 const sandboxLink = require("./lib/sandbox-link");
 const publishedSites = require("./lib/published-sites");
 const pulseBrain = require("./bots/pulse-brain");
@@ -848,6 +849,46 @@ app.post("/api/admin/users/:userId/reactivate", requireAdminAuth, adminAccess.ne
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// ---- Admin Area Phase 2A: team management, audit log, security status ----
+// Interim: runs on the current access code + password login. The email + key flow and cookie sessions wait for security S3.
+const forgetAdminRole = (id) => adminRoleCache.delete(id); // a role change or revoke applies to the very next request
+const teamError = (res, err) => res.status(err.status || 500).json({ error: err.message });
+app.get("/api/admin/team", requireAdminAuth, adminAccess.needs("team"), async (req, res) => {
+  try {
+    res.json({ members: await adminTeam.listMembers(supabase), assignable: adminTeam.assignableRoles(req.admin.role), you: req.admin.adminId });
+  } catch (err) { teamError(res, err); }
+});
+app.post("/api/admin/team", requireAdminAuth, adminAccess.needs("team"), security.rejectUnknownFields(["name", "role", "reason"]), async (req, res) => {
+  try {
+    const actor = { adminId: req.admin.adminId, name: req.admin.name, role: req.admin.role };
+    res.json(await adminTeam.createMember(supabase, actor, req.body, hashSecret));
+  } catch (err) { teamError(res, err); }
+});
+app.post("/api/admin/team/:id/role", requireAdminAuth, adminAccess.needs("team"), security.rejectUnknownFields(["role", "reason"]), async (req, res) => {
+  try {
+    const actor = { adminId: req.admin.adminId, name: req.admin.name, role: req.admin.role };
+    res.json(await adminTeam.changeRole(supabase, actor, req.params.id, req.body.role, req.body.reason, forgetAdminRole));
+  } catch (err) { teamError(res, err); }
+});
+app.post("/api/admin/team/:id/active", requireAdminAuth, adminAccess.needs("team"), security.rejectUnknownFields(["active", "reason"]), async (req, res) => {
+  try {
+    const actor = { adminId: req.admin.adminId, name: req.admin.name, role: req.admin.role };
+    res.json(await adminTeam.setActive(supabase, actor, req.params.id, req.body.active === true, req.body.reason, forgetAdminRole));
+  } catch (err) { teamError(res, err); }
+});
+app.post("/api/admin/team/:id/regenerate", requireAdminAuth, adminAccess.needs("team"), security.rejectUnknownFields(["reason"]), async (req, res) => {
+  try {
+    const actor = { adminId: req.admin.adminId, name: req.admin.name, role: req.admin.role };
+    res.json(await adminTeam.regenerate(supabase, actor, req.params.id, req.body.reason, hashSecret, forgetAdminRole));
+  } catch (err) { teamError(res, err); }
+});
+app.get("/api/admin/security", requireAdminAuth, adminAccess.needs("security"), async (req, res) => {
+  try {
+    const [members, audit] = await Promise.all([adminTeam.listMembers(supabase), adminTeam.recentAudit(supabase, 30)]);
+    res.json({ ...(await adminData.securityStatus(supabase, process.env, members)), audit });
+  } catch (err) { teamError(res, err); }
 });
 
 // ---- Admin Area Phase 1 (docs/ADMIN_AREA_SPEC.md): who am I, role-filtered dashboard, inventory, models, builds ----
