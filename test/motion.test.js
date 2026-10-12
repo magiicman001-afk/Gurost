@@ -67,6 +67,9 @@ const open = async (browser, html, { width = 1200, reduced = false, init } = {})
   const ctx = await browser.newContext({ viewport: { width, height: 700 }, reducedMotion: reduced ? "reduce" : "no-preference" });
   const page = await ctx.newPage();
   if (init) await page.addInitScript(init);
+  // The published-site libraries come from a CDN. Tests must not depend on the network: where the CDN is reachable the
+  // real GSAP/Lenis would replace the stand-ins below and the counts would be wrong. Serve every library as empty.
+  await page.route(/^https:\/\/(cdnjs\.cloudflare\.com|cdn\.jsdelivr\.net)\//, (r) => r.fulfill({ contentType: "application/javascript", body: "" }));
   await page.route("http://gurost.test/**", (r) => r.fulfill({ contentType: "text/html", body: html }));
   await page.goto("http://gurost.test/", { waitUntil: "load" });
   return { page, ctx };

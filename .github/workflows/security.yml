@@ -31,8 +31,8 @@ jobs:
         # because the raw job log is not readable from the build machine.
         run: |
           node --test test/*.test.js > test-output.txt 2>&1 || {
-            grep -E "^\s*not ok" test-output.txt | head -20 | while read -r l; do echo "::error::$l"; done
-            grep -E "Error|error:|Cannot find|expected|actual" test-output.txt | head -20 | cut -c1-200 | while read -r l; do echo "::error::$l"; done
+            grep -E "^\s*not ok" test-output.txt | head -5 | while read -r l; do echo "::error::$l"; done
+            grep -E "scrollWidth|Cannot find|error: .(.*)" test-output.txt | head -5 | cut -c1-200 | while read -r l; do echo "::error::$l"; done
             tail -5 test-output.txt
             exit 1
           }
