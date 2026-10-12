@@ -39,6 +39,15 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
 - If we fail, we refund.
 - Why: Irfan was burned by another AI builder (Emergent) that withheld keys; he paid a freelancer GBP 300+ to fix it. We NEVER do this.
 
+## Security system (2026-10-12, spec `docs/SECURITY_SYSTEM_SPEC.md`, 5 layers)
+- Week 1 DONE: log redaction (`lib/log-redact.js`), XSS scanner (`lib/xss-scan.js`, runs in the test suite; a value put in HTML must be
+  escaped or carry `// xss-ok: reason`), input validation (`lib/validate.js`, on every admin write route), rate-limit table
+  (`lib/rate-limits.js`), exact-pinned dependencies + Dependabot, secret scanner (`lib/secret-scan.js`; pre-commit hook
+  `.githooks/pre-commit`, enabled by `npm install`; CI `.github/workflows/security.yml`; mark fake test keys `secret-scan-ok: why`).
+- NOT done yet: CSP enforcement (report-only; allows inline scripts, so escaping is the real XSS defence), 2FA for admin, cookie
+  sessions (S3, Laptop Claude), email alerts (needs Postmark env on Render), log scanner, config auditor, auto-block/revert, views.
+- Next (week 2): log scanner, dependency report in admin, config auditor, alert system.
+
 ## Layout
 - Builders: Website (`bots/variant-bot.js`, 4 design directions), App
   (`bots/app-bot.js`, schema → backend → frontend), Amend Website
