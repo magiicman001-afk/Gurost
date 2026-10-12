@@ -331,7 +331,7 @@ function renderCodeView(appFiles) {
   const contentEl = document.getElementById('codeContent');
 
   tabsEl.innerHTML = allFiles
-    .map((f, i) => `<button class="text-xs px-3 py-1.5 rounded ${i === 0 ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white'}" data-file-index="${i}" type="button">${f.path}</button>`)
+    .map((f, i) => `<button class="text-xs px-3 py-1.5 rounded ${i === 0 ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white'}" data-file-index="${Number(i)}" type="button">${escStage(f.path)}</button>`)
     .join('');
 
   function showFile(i) {
@@ -403,12 +403,12 @@ const escStage = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;
 
 function renderStagePreview() {
   const v = stageView;
-  const step = (label, state) => `<span class="step ${state}">${state === 'done' ? '✓' : state === 'now' ? '●' : '○'} ${label}</span>`;
+  const stepHtml = (label, state) => `<span class="step ${escStage(state)}">${state === 'done' ? '✓' : state === 'now' ? '●' : '○'} ${escStage(label)}</span>`;
   const schemaState = v.schemaDone ? 'done' : 'now';
   const backendState = v.backendDone ? 'done' : v.schemaDone ? 'now' : 'todo';
   const frontendState = v.frontendDone ? 'done' : v.backendDone ? 'now' : 'todo';
   // One plain sentence per stage: what is happening, was done, or is next.
-  const line = (state, now, done, todo) => `<p class="line ${state}">${state === 'done' ? '✓ ' + done : state === 'now' ? now : todo}</p>`;
+  const lineHtml = (state, now, done, todo) => `<p class="line ${escStage(state)}">${escStage(state === 'done' ? '✓ ' + done : state === 'now' ? now : todo)}</p>`;
   const errorHtml = v.error ? `<div class="error">Stopped: ${escStage(v.error)}</div>` : '';
   showStageDocument(`<!DOCTYPE html><html><head><meta charset="utf-8"><style>
     body{margin:0;font-family:Inter,system-ui,sans-serif;color:#1A1A2E;background:#FAFAF9;}
@@ -420,10 +420,10 @@ function renderStagePreview() {
     .error{margin-bottom:16px;padding:10px 12px;border-radius:10px;background:#FEF2F2;color:#B91C1C;font-size:13px;border:1px solid #FECACA;}
   </style></head><body><div class="wrap">
     ${errorHtml}
-    <div class="steps">${step('Database', schemaState)}${step('API', backendState)}${step('App screens', frontendState)}</div>
-    ${line(schemaState, 'Setting up your data structure…', 'Your data structure is set up.', '')}
-    ${line(backendState, 'Building the part that runs your app behind the scenes…', 'The behind-the-scenes part is built.', 'Next: the part that runs your app behind the scenes.')}
-    ${line(frontendState, 'Designing your app screens…', 'Your screens are ready - starting the preview…', 'Last: your app screens.')}
+    <div class="steps">${stepHtml('Database', schemaState)}${stepHtml('API', backendState)}${stepHtml('App screens', frontendState)}</div>
+    ${lineHtml(schemaState, 'Setting up your data structure…', 'Your data structure is set up.', '')}
+    ${lineHtml(backendState, 'Building the part that runs your app behind the scenes…', 'The behind-the-scenes part is built.', 'Next: the part that runs your app behind the scenes.')}
+    ${lineHtml(frontendState, 'Designing your app screens…', 'Your screens are ready - starting the preview…', 'Last: your app screens.')}
   </div></body></html>`);
 }
 
@@ -486,11 +486,11 @@ function renderStageChecklist() {
     .filter((s) => s !== 'fixing' || stageStatuses.fixing !== undefined && stageStatuses.fixing !== 'pending')
     .map((stage) => {
       const status = stageStatuses[stage] || 'pending';
-      const icon = status === 'complete' ? 'check_circle' : status === 'running' ? 'autorenew' : 'radio_button_unchecked';
+      const stageIcon = status === 'complete' ? 'check_circle' : status === 'running' ? 'autorenew' : 'radio_button_unchecked';
       const colorClass = status === 'complete' ? 'text-green-500' : status === 'running' ? 'text-secondary' : 'text-outline-variant';
       return `<div class="flex items-center gap-2 text-sm">
-        <span class="material-symbols-outlined text-lg ${colorClass}">${icon}</span>
-        <span class="${status === 'pending' ? 'text-on-surface-variant' : 'text-on-surface'}">${STAGE_LABELS[stage]}</span>
+        <span class="material-symbols-outlined text-lg ${colorClass}">${stageIcon}</span>
+        <span class="${status === 'pending' ? 'text-on-surface-variant' : 'text-on-surface'}">${escStage(STAGE_LABELS[stage])}</span>
       </div>`;
     })
     .join('');
@@ -987,10 +987,10 @@ function showApiKeyModal(requiredKeys) {
     const wrapper = document.createElement('div');
     wrapper.className = 'mb-4';
     const label = key.service ? `${key.service} — ${key.varName}` : key.varName;
-    const helpLink = key.helpUrl ? `<a href="${key.helpUrl}" target="_blank" class="text-secondary text-xs hover:underline ml-2">Get this key</a>` : '';
+    const helpLink = /^https?:\/\//i.test(key.helpUrl || '') ? `<a href="${escStage(key.helpUrl)}" target="_blank" rel="noopener noreferrer" class="text-secondary text-xs hover:underline ml-2">Get this key</a>` : '';
     wrapper.innerHTML = `
-      <label class="block font-label-sm text-label-sm text-on-surface-variant mb-1">${label}${helpLink}</label>
-      <input type="password" class="w-full px-4 py-2 border border-outline-variant rounded-lg" data-var-name="${key.varName}" placeholder="Paste your real ${label} here"/>
+      <label class="block font-label-sm text-label-sm text-on-surface-variant mb-1">${escStage(label)}${helpLink}</label>
+      <input type="password" class="w-full px-4 py-2 border border-outline-variant rounded-lg" data-var-name="${escStage(key.varName)}" placeholder="Paste your real ${escStage(label)} here"/>
     `;
     fieldsContainer.appendChild(wrapper);
   });

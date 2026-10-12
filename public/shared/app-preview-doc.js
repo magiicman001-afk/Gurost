@@ -77,8 +77,8 @@ function buildPreviewDocument(frontendFiles, options) {
 </div>
 <script>
 (function () {
-  var FILES = ${filesJson};
-  var ENTRY_PATH = ${entryPath};
+  var FILES = ${filesJson}; // xss-ok: JSON with every < written as \u003c, cannot end the script tag
+  var ENTRY_PATH = ${entryPath}; // xss-ok: same escaping as FILES
 
   function renderError(message) {
     document.getElementById('root').innerHTML =
@@ -102,8 +102,8 @@ function buildPreviewDocument(frontendFiles, options) {
       return Promise.resolve({
         ok: false,
         status: 503,
-        json: function () { return Promise.resolve({ error: ${noBackend} }); },
-        text: function () { return Promise.resolve(${noBackend}); }
+        json: function () { return Promise.resolve({ error: ${noBackend} } /* xss-ok: fixed text, JSON-encoded */); },
+        text: function () { return Promise.resolve(${noBackend}) /* xss-ok: fixed text, JSON-encoded */; }
       });
     }
     return realFetch(url, opts);

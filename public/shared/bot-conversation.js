@@ -81,7 +81,7 @@ function logBot(bot, text, tone = 'info', at = Date.now()) {
   if (tone === 'fail' && window.GurostAI && face) text = GurostAI.publicText(text);
   const speaker = face ? face.name : bot;
   const speakerColor = face ? face.color : avatar.color;
-  const status = BOT_TONES[tone] ? `<span class="material-symbols-outlined text-[13px] ${BOT_TONES[tone].color}">${BOT_TONES[tone].icon}</span>` : '';
+  const statusIcon = BOT_TONES[tone] ? `<span class="material-symbols-outlined text-[13px] ${escapeLogText(BOT_TONES[tone].color)}">${escapeLogText(BOT_TONES[tone].icon)}</span>` : '';
   const time = new Date(at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const textClass = tone === 'fail' ? 'text-red-300' : 'text-white/85';
   // Consecutive messages from the same bot read as one turn: no repeated avatar.
@@ -92,11 +92,11 @@ function logBot(bot, text, tone = 'info', at = Date.now()) {
   li.innerHTML = `${sameTurn
       ? '<span class="w-8 flex-shrink-0"></span>'
       : face
-        ? `<img src="/avatars/${face.img}.png" width="32" height="32" alt="${escapeLogText(face.name)}" class="w-8 h-8 flex-shrink-0 object-contain">`
-        : `<span class="w-8 h-8 rounded-full flex items-center justify-center text-[15px] flex-shrink-0" style="background:${avatar.color}26; box-shadow: inset 0 0 0 1px ${avatar.color}55" aria-hidden="true">${avatar.emoji}</span>`}
+        ? `<img src="/avatars/${escapeLogText(face.img)}.png" width="32" height="32" alt="${escapeLogText(face.name)}" class="w-8 h-8 flex-shrink-0 object-contain">`
+        : `<span class="w-8 h-8 rounded-full flex items-center justify-center text-[15px] flex-shrink-0" style="background:${escapeLogText(avatar.color)}26; box-shadow: inset 0 0 0 1px ${escapeLogText(avatar.color)}55" aria-hidden="true">${escapeLogText(avatar.emoji)}</span>`}
     <div class="min-w-0 flex-1">
-      ${sameTurn ? '' : `<div class="flex items-center gap-2 leading-5"><span class="font-semibold text-[12px]" style="color:${speakerColor}">${escapeLogText(speaker)}</span><span class="text-[10px] text-white/30">${time}</span></div>`}
-      <p class="${textClass} text-[12.5px] leading-snug [overflow-wrap:anywhere] flex items-start gap-1.5">${status}<span>${escapeLogText(text)}</span></p>
+      ${sameTurn ? '' : `<div class="flex items-center gap-2 leading-5"><span class="font-semibold text-[12px]" style="color:${escapeLogText(speakerColor)}">${escapeLogText(speaker)}</span><span class="text-[10px] text-white/30">${escapeLogText(time)}</span></div>`}
+      <p class="${escapeLogText(textClass)} text-[12.5px] leading-snug [overflow-wrap:anywhere] flex items-start gap-1.5">${statusIcon}<span>${escapeLogText(text)}</span></p>
     </div>`;
   const follow = isLogAtBottom();
   list.appendChild(li);
@@ -186,8 +186,8 @@ function askBusinessInfo(prompt = '') {
     }
     let saved = {};
     try { saved = JSON.parse(localStorage.getItem(BUSINESS_INFO_KEY)) || {}; } catch { /* nothing saved */ }
-    const field = ([k, label, type, ph, wide]) => `<label class="${wide ? 'gcd-wide' : ''}">${label}
-      <input name="${k}" type="${type}" placeholder="${ph}" maxlength="200" autocomplete="off" value="${escapeLogText(saved[k] || '')}"></label>`;
+    const fieldHtml = ([k, label, type, ph, wide]) => `<label class="${wide ? 'gcd-wide' : ''}">${escapeLogText(label)}
+      <input name="${escapeLogText(k)}" type="${escapeLogText(type)}" placeholder="${escapeLogText(ph)}" maxlength="200" autocomplete="off" value="${escapeLogText(saved[k] || '')}"></label>`;
     const backdrop = document.createElement('div');
     backdrop.className = 'gcd-backdrop';
     backdrop.id = 'companyDetailsModal';
@@ -196,9 +196,9 @@ function askBusinessInfo(prompt = '') {
       <p class="gcd-sub">Optional - skip if you want placeholders. These go in your header, contact section, footer, social icons and Google listing.</p>
       <p class="gcd-for">${prompt ? `For: ${escapeLogText(prompt)}` : ''}</p>
       <div class="gcd-grid">
-        ${BUSINESS_FIELDS.slice(0, 5).map(field).join('')}
+        ${BUSINESS_FIELDS.slice(0, 5).map(fieldHtml).join('')}
         <div class="gcd-section">Social profiles - @handle or link</div>
-        ${BUSINESS_FIELDS.slice(5).map(field).join('')}
+        ${BUSINESS_FIELDS.slice(5).map(fieldHtml).join('')}
       </div>
       <p class="gcd-error" hidden></p>
       <div class="gcd-actions">
