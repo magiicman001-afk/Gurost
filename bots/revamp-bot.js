@@ -1,6 +1,9 @@
 const { chromium } = require("playwright");
 const chromeLauncher = require("chrome-launcher");
-const lighthouse = require("lighthouse");
+// Lighthouse ships as ESM. On Node 22+ (Render runs 26) require() returns the
+// module namespace, so the function is .default; older Node returned it directly.
+const lighthouseModule = require("lighthouse");
+const lighthouse = typeof lighthouseModule === "function" ? lighthouseModule : lighthouseModule.default;
 const { callClaude } = require("../lib/claude-client");
 const { modelForTier } = require("../lib/tier-router");
 
