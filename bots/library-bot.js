@@ -17,7 +17,10 @@ const crypto = require("crypto");
 const A = require("../lib/sections/assemble");
 const R = require("../lib/sections/render");
 const G = require("../lib/sections/quality-gate");
-const { assembleWithImages } = require("../lib/sections/fill-images");
+const { assembleWithImages, PALETTE_WORDS } = require("../lib/sections/fill-images");
+const P = require("../lib/sections/premium");
+const S = require("../lib/sections/premium-score");
+const { runSlot } = require("../lib/sections/premium-loop");
 const manifest = require("../lib/sections/manifest.json");
 
 // Sections the model may write the words for. Everything else is facts (code) or left off the page.
@@ -124,7 +127,8 @@ function factsFrom(businessInfo) {
  * Turns the model's words and the owner's facts into `content` for assemble(): { content, palette, recipe, brand, meta }.
  * Pure. `modelOut` may be anything the model returned; it is cleaned here.
  */
-function composeContent({ prompt, businessInfo, modelOut }) {
+// `copy` (premium looks): extra sections the model wrote words for, beyond the recipe's own order.
+function composeContent({ prompt, businessInfo, modelOut, copy }) {
   const palette = A.paletteForIndustry(`${prompt || ""} ${(businessInfo && businessInfo.name) || ""}`);
   const recipeId = A.pickRecipe(palette);
   const recipe = A.recipes[recipeId];
@@ -137,7 +141,8 @@ function composeContent({ prompt, businessInfo, modelOut }) {
   let img = 0;
   const token = () => `IMG_${++img}`;
 
-  for (const id of recipe.order) {
+  const copyOrder = copy ? [...new Set([...recipe.order, ...copy])] : recipe.order;
+  for (const id of copyOrder) {
     if (!COPY_SECTIONS.includes(id) || !rawSecs[id]) continue;
     const sec = cleanSection(id, rawSecs[id]);
     const raw = rawSecs[id] || {};
@@ -167,8 +172,8 @@ function composeContent({ prompt, businessInfo, modelOut }) {
   const methods = [];
   if (f.phone) methods.push({ label: "Call", value: f.phone, href: "tel:" + f.phone.replace(/[^\d+]/g, "") });
   if (f.email) methods.push({ label: "Email", value: f.email, href: "mailto:" + f.email });
-  if (methods.length && recipe.order.includes("booking")) content.booking = { title: "Get in touch", methods };
-  if (f.address && recipe.order.includes("location")) {
+  if (methods.length && (copy || recipe.order.includes("booking"))) content.booking = { title: "Get in touch", methods };
+  if (f.address && (copy || recipe.order.includes("location"))) {
     content.location = { title: "Find us", address: f.address };
     if (f.phone) content.location.phone = f.phone;
     if (f.email) content.location.email = f.email;
@@ -233,10 +238,9 @@ function skeletonContent(o) {
 const SECTION_LABEL = { navbar: "navigation", hero: "hero", services: "services", features: "features", about: "about", gallery: "gallery", process: "process", faq: "faq", cta: "call to action", booking: "contact", location: "location", footer: "footer" };
 
 /** The page growing one section at a time, once the words exist. Stops as soon as `state.stop` is set. */
-async function growPreview({ dir, composed, notify, state, stepMs }) {
+async function growPreview({ dir, composed, notify, state, stepMs, order }) {
   try {
-    const recipe = A.recipes[composed.recipe];
-    const have = recipe.order.filter((id) => composed.content[id] && id !== "footer");
+    const have = (order || A.recipes[composed.recipe].order).filter((id) => composed.content[id] && id !== "footer");
     // The first frame is navigation + hero together (a page with a bar and nothing under it is not worth showing).
     const first = Math.min(2, have.length);
     for (let i = first; i <= have.length; i++) {
@@ -253,15 +257,15 @@ async function growPreview({ dir, composed, notify, state, stepMs }) {
 }
 
 // ---------------------------------------------------------------- one direction -> one finished design
-async function buildDirection(dir, composed, { search, includeBranding, factsAllow, browserChecks }) {
-  const input = { palette: composed.palette, recipe: composed.recipe, content: composed.content, variants: dir.set, includeBranding, meta: composed.meta };
+async function buildDirection(dir, composed, { search, includeBranding, factsAllow, browserChecks, recipe, browser }) {
+  const input = { palette: composed.palette, recipe: recipe || composed.recipe, content: composed.content, variants: dir.set, includeBranding, meta: composed.meta };
   let page = await assembleWithImages(input, { search });
-  let g = await G.gate(page, { facts: factsAllow, browserChecks });
+  let g = await G.gate(page, { facts: factsAllow, browserChecks, browser });
   let degraded = false;
   let steps = [];
   if (!g.ok) {
     // swap variants, then default content (the gate's own repair ladder) - never ship a failing page silently
-    const fixed = await G.buildWithGate({ ...input, content: composed.content }, { facts: factsAllow, browserChecks, allowImageTokens: true });
+    const fixed = await G.buildWithGate({ ...input, content: composed.content }, { facts: factsAllow, browserChecks, browser, allowImageTokens: true });
     const photos = page.photos || {};
     let html = fixed.html;
     for (const [tok, url] of Object.entries(photos)) html = html.replace(new RegExp(`src="${tok}"`, "g"), () => `src="${R.esc(url)}"`);
@@ -279,7 +283,8 @@ async function buildDirection(dir, composed, { search, includeBranding, factsAll
  * and reports progress through onStage(stage, status, data).
  *
  * @param {string} prompt
- * @param {object} o { businessInfo, plan, includeBranding, onStage, directionIds, callModel, search, siteCopy, browserChecks }
+ * @param {object} o { businessInfo, plan, includeBranding, onStage, directionIds, callModel, search, siteCopy, browserChecks, premium }
+ *   premium: true/false overrides the PREMIUM_PIPELINE flag (tests)
  *   callModel({ system, content }) -> parsed JSON       (default: Claude via the tier router)
  *   search(query) -> { url, credit } | null              (default: the stock-photo step)
  *   siteCopy: words saved on an earlier call (used by "Show 2 more" so no second model call is made)
@@ -288,6 +293,8 @@ async function generateLibraryVariants(prompt, o = {}) {
   const notify = (stage, status, data) => o.onStage && o.onStage(stage, status, data);
   const ids = o.directionIds || FIRST_IDS;
   const dirs = DIRECTIONS.filter((d) => ids.includes(d.id));
+  // Premium Pipeline (PREMIUM_PIPELINE=1): each slot builds a curated look, is scored, and loops until it passes.
+  const premium = o.premium === undefined ? P.enabled() : !!o.premium;
   const failures = [];
   const variants = [];
 
@@ -305,20 +312,24 @@ async function generateLibraryVariants(prompt, o = {}) {
     try {
       if (lead) {
         notify("designing", "thinking", { label: "the words for your site" });
-        notify("designing", "partial", { variantId: lead.id, label: lead.label, html: previewPage(palette, ["navbar", "hero", "footer"], skeletonContent(o), lead.set), sections: ["navigation", "hero"], progress: 8 });
+        const shellLook = premium ? P.looksFor(palette)[DIRECTIONS.findIndex((d) => d.id === lead.id) % P.looksFor(palette).length] : null;
+        notify("designing", "partial", { variantId: lead.id, label: shellLook ? shellLook.label : lead.label, html: previewPage(palette, ["navbar", "hero", "footer"], skeletonContent(o), shellLook ? shellLook.variants : lead.set), sections: ["navigation", "hero"], progress: 8 });
       }
     } catch (err) {
       console.warn("[library-bot] preview shell skipped:", err.message);
     }
     const recipe = A.recipes[A.pickRecipe(palette)];
-    const wanted = recipe.order.filter((id) => COPY_SECTIONS.includes(id));
+    // Premium looks use more sections than the plain recipe (e.g. an "about" on a landing page), so the model writes words for all of them.
+    const wanted = premium ? ["hero", ...P.copyFor(palette)].filter((id, i, a) => COPY_SECTIONS.includes(id) && a.indexOf(id) === i) : recipe.order.filter((id) => COPY_SECTIONS.includes(id));
     const callModel = o.callModel || defaultCallModel(o.plan);
     const extra = require("../lib/business-info").businessInfoPrompt(o.businessInfo);
     modelOut = await callModel({ system: systemPrompt(wanted), content: `${prompt}\n\n${extra || ""}`.trim() });
   }
-  const composed = composeContent({ prompt, businessInfo: o.businessInfo, modelOut });
+  const composed = composeContent({ prompt, businessInfo: o.businessInfo, modelOut, copy: premium ? P.copyFor(palette) : undefined });
   // Runs alongside the real build (photos, quality checks), which takes longer, so it adds no waiting.
-  const growing = lead ? growPreview({ dir: lead, composed, notify, state, stepMs }) : Promise.resolve();
+  // In premium mode the preview grows the lead slot's own look, so what is painted matches what arrives.
+  const leadLook = premium && lead ? P.looksFor(composed.palette)[DIRECTIONS.findIndex((d) => d.id === lead.id) % P.looksFor(composed.palette).length] : null;
+  const growing = lead ? growPreview({ dir: leadLook ? { ...lead, label: leadLook.label, set: leadLook.variants } : lead, composed, notify, state, stepMs, order: leadLook ? leadLook.order : undefined }) : Promise.resolve();
 
   // One photo lookup per distinct brief across all directions.
   const memo = new Map();
@@ -329,26 +340,65 @@ async function generateLibraryVariants(prompt, o = {}) {
   };
   const factsAllow = [prompt, JSON.stringify(o.businessInfo || {})];
 
+  // One browser shared by every gate check and score in this build (started on first use, closed at the end).
+  let browserP = null;
+  const getBrowser = () => {
+    if (o.browserChecks === false) return Promise.resolve(null);
+    if (!browserP) browserP = Promise.resolve().then(() => require("playwright").chromium.launch()).catch(() => null);
+    return browserP;
+  };
+  const used = new Set(); // premium looks already claimed by a slot, so two slots never show the same look
+  const available = new Set(Object.keys(composed.content));
+  const cfg = P.config();
+  const withFallback = (q) => search(q).then((r) => r || search(`${PALETTE_WORDS[composed.palette] || "business"} photo`));
+
   await Promise.all(
     dirs.map(async (dir) => {
       try {
-        const built = await buildDirection(dir, composed, { search, includeBranding: o.includeBranding !== false, factsAllow, browserChecks: o.browserChecks });
+        let built;
+        let label = dir.label;
+        let setUsed = dir.set;
+        let premiumInfo = null;
+        if (premium) {
+          const looks = P.looksFor(composed.palette);
+          const startLook = looks[DIRECTIONS.findIndex((d) => d.id === dir.id) % looks.length];
+          const r = await runSlot({
+            palette: composed.palette, startLook, available, used, cfg,
+            buildOne: async (look, opt) => buildDirection({ id: dir.id, label: look.label, set: look.variants }, composed, { search: opt.fallbackSearch ? withFallback : search, includeBranding: o.includeBranding !== false, factsAllow, browserChecks: o.browserChecks, recipe: P.recipeFor(look, available), browser: await getBrowser() }),
+            review: async (b, look) => {
+              const metrics = await S.measure(b.page.html, { browser: await getBrowser() });
+              return S.score(b.page, { look, metrics, contrastFailed: b.gate.failures.some((f) => f.rule === "text-contrast") });
+            },
+            onReview: ({ attempt, look, score }) => {
+              console.log(`[premium] ${look.id} score=${score.total} ${score.pass ? "pass" : "FAIL"} parts=${JSON.stringify(score.parts)} reasons=${score.reasons.map((x) => x.text).join("; ") || "none"} attempt=${attempt + 1}${score.partial ? " (no browser: partial)" : ""}`);
+              notify("designing", "reviewing", { variantId: dir.id, label: look.label, score: score.total, pass: score.pass });
+            },
+            onSwap: ({ from, to, why }) => notify("designing", "swapping", { variantId: dir.id, label: to.label, why, from: from.label }),
+          });
+          built = r.best.built;
+          label = r.best.look.label;
+          setUsed = r.best.look.variants;
+          premiumInfo = { look: r.best.look.id, score: r.best.score.total, parts: r.best.score.parts, reasons: r.best.score.reasons.map((x) => x.text), attempts: r.attempts.length, passed: r.passed, note: r.note };
+        } else {
+          built = await buildDirection(dir, composed, { search, includeBranding: o.includeBranding !== false, factsAllow, browserChecks: o.browserChecks });
+        }
         const html = built.page.html;
         if (!/<h1\b/i.test(html) || html.length < 2000) throw new Error("the page came out empty");
         const variant = {
           id: dir.id,
-          label: dir.label,
+          label,
           html,
-          summary: `${dir.label}: ${built.page.sections.length} sections, ${composed.palette} palette`,
+          summary: `${label}: ${built.page.sections.length} sections, ${composed.palette} palette${premiumInfo && premiumInfo.note ? `. ${premiumInfo.note}` : ""}`,
           usage: null,
           verified: true,
           credits: built.page.credits || [],
-          site: { engine: "section-library", palette: composed.palette, recipe: composed.recipe, content: composed.content, variants: dir.set, meta: composed.meta, direction: dir.id, copy: modelOut, photos: built.page.photos || {}, baseHash: crypto.createHash("sha1").update(html).digest("hex") },
+          site: { engine: "section-library", palette: composed.palette, recipe: composed.recipe, content: composed.content, variants: setUsed, meta: composed.meta, direction: dir.id, look: premiumInfo ? premiumInfo.look : undefined, copy: modelOut, photos: built.page.photos || {}, baseHash: crypto.createHash("sha1").update(html).digest("hex") },
           gate: { ok: built.gate.ok, warnings: built.gate.warnings.length, degraded: built.degraded },
+          premium: premiumInfo || undefined,
         };
         variants.push(variant);
         state.stop = true; // a finished design is pickable: stop the growing preview
-        notify("designing", "variant-complete", { variantId: dir.id, label: dir.label, summary: variant.summary, variant });
+        notify("designing", "variant-complete", { variantId: dir.id, label, summary: variant.summary, variant });
       } catch (err) {
         console.error(`[library-bot] "${dir.id}" failed:`, err.message);
         failures.push({ variant: dir.id, error: err.message });
@@ -358,6 +408,7 @@ async function generateLibraryVariants(prompt, o = {}) {
   );
   state.stop = true;
   await growing;
+  if (browserP) await browserP.then((b) => b && b.close()).catch(() => {});
   notify("designing", "complete", { count: variants.length });
   notify("done", "complete", { variants, failures });
   return { variants, failures, copy: modelOut };

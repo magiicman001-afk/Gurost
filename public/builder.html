@@ -592,6 +592,11 @@ function connectGenerationSocket(id) {
           }
           log('Designer', `Added ${sectionName(s)}`, 'ok');
         }
+      } else if (msg.status === 'reviewing') {
+        // Premium Pipeline: every design is scored out of 100 before the person sees it.
+        log('Reviewer', `Checked the ${d.label} look: quality ${d.score}/100${d.pass ? ' - passes' : ' - below the premium mark'}.`, d.pass ? 'ok' : 'work');
+      } else if (msg.status === 'swapping') {
+        log('Designer', `Swapping to the ${d.label} look (${d.why}).`, 'work');
       } else if (msg.status === 'images-running') {
         const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
         const label = d.label || 'a design';

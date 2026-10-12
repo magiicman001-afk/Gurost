@@ -1,0 +1,787 @@
+{
+ "_note": "Curated premium looks (docs/PREMIUM_PIPELINE_SPEC.md). A look = a section order + an A/B/C variant per section. The model never designs: it writes words only. Looks are NOT premium until Irfan approves them on his phone (sections-preview.html, Premium looks view). Weights and the threshold are tunable here without a code change.",
+ "threshold": 70,
+ "maxLoops": 2,
+ "weights": {
+  "mix": 25,
+  "whitespace": 20,
+  "typography": 20,
+  "imagery": 20,
+  "harmony": 15
+ },
+ "palettes": {
+  "cafe": {
+   "recipe": "local-business",
+   "copy": [
+    "services",
+    "about",
+    "gallery",
+    "process",
+    "faq",
+    "cta"
+   ],
+   "looks": [
+    {
+     "id": "cafe-editorial",
+     "label": "Warm / Editorial",
+     "variants": {
+      "about": "c",
+      "booking": "a",
+      "cta": "a",
+      "footer": "a",
+      "gallery": "a",
+      "hero": "c",
+      "location": "a",
+      "navbar": "a",
+      "services": "a"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "about",
+      "services",
+      "gallery",
+      "cta",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": [
+      "gallery-3"
+     ]
+    },
+    {
+     "id": "cafe-immersive",
+     "label": "Warm / Immersive",
+     "variants": {
+      "booking": "b",
+      "cta": "b",
+      "footer": "b",
+      "gallery": "b",
+      "hero": "b",
+      "location": "b",
+      "navbar": "c",
+      "process": "b",
+      "services": "b"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "services",
+      "gallery",
+      "process",
+      "cta",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": [
+      "hero-image",
+      "gallery-3"
+     ]
+    },
+    {
+     "id": "cafe-classic",
+     "label": "Warm / Classic",
+     "variants": {
+      "about": "a",
+      "booking": "a",
+      "faq": "a",
+      "footer": "a",
+      "gallery": "b",
+      "hero": "a",
+      "location": "a",
+      "navbar": "a",
+      "services": "c"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "about",
+      "services",
+      "gallery",
+      "faq",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": [
+      "hero-image",
+      "gallery-3"
+     ]
+    },
+    {
+     "id": "cafe-friendly",
+     "label": "Warm / Friendly",
+     "variants": {
+      "about": "b",
+      "booking": "c",
+      "cta": "c",
+      "footer": "c",
+      "hero": "a",
+      "location": "c",
+      "navbar": "b",
+      "process": "c",
+      "services": "b"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "services",
+      "about",
+      "process",
+      "cta",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": [
+      "hero-image"
+     ]
+    }
+   ]
+  },
+  "law": {
+   "recipe": "professional",
+   "copy": [
+    "services",
+    "about",
+    "process",
+    "faq",
+    "cta"
+   ],
+   "looks": [
+    {
+     "id": "law-editorial",
+     "label": "Trusted / Editorial",
+     "variants": {
+      "about": "c",
+      "booking": "a",
+      "cta": "a",
+      "footer": "a",
+      "hero": "c",
+      "location": "a",
+      "navbar": "a",
+      "process": "a",
+      "services": "a"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "services",
+      "about",
+      "process",
+      "cta",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": []
+    },
+    {
+     "id": "law-immersive",
+     "label": "Trusted / Immersive",
+     "variants": {
+      "about": "b",
+      "booking": "b",
+      "cta": "b",
+      "faq": "b",
+      "footer": "b",
+      "hero": "b",
+      "location": "b",
+      "navbar": "c",
+      "services": "b"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "about",
+      "services",
+      "cta",
+      "faq",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": [
+      "hero-image"
+     ]
+    },
+    {
+     "id": "law-classic",
+     "label": "Trusted / Classic",
+     "variants": {
+      "about": "a",
+      "booking": "a",
+      "cta": "a",
+      "faq": "a",
+      "footer": "a",
+      "hero": "a",
+      "location": "a",
+      "navbar": "a",
+      "services": "c"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "services",
+      "about",
+      "faq",
+      "cta",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": [
+      "hero-image"
+     ]
+    },
+    {
+     "id": "law-friendly",
+     "label": "Trusted / Friendly",
+     "variants": {
+      "about": "b",
+      "booking": "c",
+      "cta": "c",
+      "faq": "c",
+      "footer": "c",
+      "hero": "a",
+      "location": "c",
+      "navbar": "b",
+      "process": "c"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "about",
+      "process",
+      "cta",
+      "faq",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": [
+      "hero-image"
+     ]
+    }
+   ]
+  },
+  "salon": {
+   "recipe": "local-business",
+   "copy": [
+    "services",
+    "about",
+    "gallery",
+    "process",
+    "faq",
+    "cta"
+   ],
+   "looks": [
+    {
+     "id": "salon-editorial",
+     "label": "Style / Editorial",
+     "variants": {
+      "about": "c",
+      "booking": "a",
+      "cta": "a",
+      "footer": "a",
+      "gallery": "a",
+      "hero": "c",
+      "location": "a",
+      "navbar": "a",
+      "services": "a"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "gallery",
+      "services",
+      "about",
+      "cta",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": [
+      "gallery-3"
+     ]
+    },
+    {
+     "id": "salon-immersive",
+     "label": "Style / Immersive",
+     "variants": {
+      "booking": "b",
+      "cta": "b",
+      "footer": "b",
+      "gallery": "b",
+      "hero": "b",
+      "location": "b",
+      "navbar": "c",
+      "process": "b",
+      "services": "b"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "services",
+      "gallery",
+      "process",
+      "cta",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": [
+      "hero-image",
+      "gallery-3"
+     ]
+    },
+    {
+     "id": "salon-classic",
+     "label": "Style / Classic",
+     "variants": {
+      "about": "a",
+      "booking": "a",
+      "faq": "a",
+      "footer": "a",
+      "gallery": "b",
+      "hero": "a",
+      "location": "a",
+      "navbar": "a",
+      "services": "c"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "about",
+      "services",
+      "gallery",
+      "faq",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": [
+      "hero-image",
+      "gallery-3"
+     ]
+    },
+    {
+     "id": "salon-friendly",
+     "label": "Style / Friendly",
+     "variants": {
+      "about": "b",
+      "booking": "c",
+      "cta": "c",
+      "footer": "c",
+      "gallery": "c",
+      "hero": "a",
+      "location": "c",
+      "navbar": "b",
+      "process": "c"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "gallery",
+      "process",
+      "about",
+      "cta",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": [
+      "hero-image",
+      "gallery-3"
+     ]
+    }
+   ]
+  },
+  "trades": {
+   "recipe": "local-business",
+   "copy": [
+    "services",
+    "about",
+    "gallery",
+    "process",
+    "faq",
+    "cta"
+   ],
+   "looks": [
+    {
+     "id": "trades-editorial",
+     "label": "Solid / Editorial",
+     "variants": {
+      "about": "c",
+      "booking": "a",
+      "cta": "a",
+      "footer": "a",
+      "hero": "c",
+      "location": "a",
+      "navbar": "a",
+      "process": "a",
+      "services": "a"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "services",
+      "about",
+      "process",
+      "cta",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": []
+    },
+    {
+     "id": "trades-immersive",
+     "label": "Solid / Immersive",
+     "variants": {
+      "booking": "b",
+      "cta": "b",
+      "footer": "b",
+      "gallery": "b",
+      "hero": "b",
+      "location": "b",
+      "navbar": "c",
+      "process": "b",
+      "services": "b"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "services",
+      "gallery",
+      "process",
+      "cta",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": [
+      "hero-image",
+      "gallery-3"
+     ]
+    },
+    {
+     "id": "trades-classic",
+     "label": "Solid / Classic",
+     "variants": {
+      "about": "a",
+      "booking": "a",
+      "faq": "a",
+      "footer": "a",
+      "gallery": "b",
+      "hero": "a",
+      "location": "a",
+      "navbar": "a",
+      "services": "c"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "about",
+      "services",
+      "gallery",
+      "faq",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": [
+      "hero-image",
+      "gallery-3"
+     ]
+    },
+    {
+     "id": "trades-friendly",
+     "label": "Solid / Friendly",
+     "variants": {
+      "about": "b",
+      "booking": "c",
+      "cta": "c",
+      "footer": "c",
+      "hero": "a",
+      "location": "c",
+      "navbar": "b",
+      "process": "c",
+      "services": "b"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "process",
+      "about",
+      "services",
+      "cta",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": [
+      "hero-image"
+     ]
+    }
+   ]
+  },
+  "health": {
+   "recipe": "local-business",
+   "copy": [
+    "services",
+    "about",
+    "gallery",
+    "process",
+    "faq",
+    "cta"
+   ],
+   "looks": [
+    {
+     "id": "health-editorial",
+     "label": "Calm / Editorial",
+     "variants": {
+      "about": "c",
+      "booking": "a",
+      "cta": "a",
+      "footer": "a",
+      "hero": "c",
+      "location": "a",
+      "navbar": "a",
+      "process": "a",
+      "services": "a"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "services",
+      "about",
+      "process",
+      "cta",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": []
+    },
+    {
+     "id": "health-immersive",
+     "label": "Calm / Immersive",
+     "variants": {
+      "about": "b",
+      "booking": "b",
+      "cta": "b",
+      "faq": "b",
+      "footer": "b",
+      "hero": "b",
+      "location": "b",
+      "navbar": "c",
+      "services": "b"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "about",
+      "services",
+      "cta",
+      "faq",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": [
+      "hero-image"
+     ]
+    },
+    {
+     "id": "health-classic",
+     "label": "Calm / Classic",
+     "variants": {
+      "about": "a",
+      "booking": "a",
+      "cta": "a",
+      "faq": "a",
+      "footer": "a",
+      "hero": "a",
+      "location": "a",
+      "navbar": "a",
+      "services": "c"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "services",
+      "about",
+      "faq",
+      "cta",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": [
+      "hero-image"
+     ]
+    },
+    {
+     "id": "health-friendly",
+     "label": "Calm / Friendly",
+     "variants": {
+      "about": "b",
+      "booking": "c",
+      "faq": "c",
+      "footer": "c",
+      "gallery": "c",
+      "hero": "a",
+      "location": "c",
+      "navbar": "b",
+      "process": "c"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "about",
+      "process",
+      "gallery",
+      "faq",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": [
+      "hero-image",
+      "gallery-3"
+     ]
+    }
+   ]
+  },
+  "tech": {
+   "recipe": "landing",
+   "copy": [
+    "features",
+    "services",
+    "about",
+    "process",
+    "faq",
+    "cta"
+   ],
+   "looks": [
+    {
+     "id": "tech-editorial",
+     "label": "Modern / Editorial",
+     "variants": {
+      "about": "c",
+      "booking": "a",
+      "cta": "a",
+      "features": "a",
+      "footer": "a",
+      "hero": "c",
+      "location": "a",
+      "navbar": "a",
+      "process": "a"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "features",
+      "about",
+      "process",
+      "cta",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": []
+    },
+    {
+     "id": "tech-immersive",
+     "label": "Modern / Immersive",
+     "variants": {
+      "about": "b",
+      "booking": "b",
+      "cta": "b",
+      "faq": "b",
+      "features": "b",
+      "footer": "b",
+      "hero": "b",
+      "location": "b",
+      "navbar": "c"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "features",
+      "about",
+      "faq",
+      "cta",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": [
+      "hero-image"
+     ]
+    },
+    {
+     "id": "tech-classic",
+     "label": "Modern / Classic",
+     "variants": {
+      "about": "a",
+      "booking": "a",
+      "cta": "a",
+      "faq": "a",
+      "features": "c",
+      "footer": "a",
+      "hero": "a",
+      "location": "a",
+      "navbar": "a"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "about",
+      "features",
+      "cta",
+      "faq",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": [
+      "hero-image"
+     ]
+    },
+    {
+     "id": "tech-friendly",
+     "label": "Modern / Friendly",
+     "variants": {
+      "about": "b",
+      "booking": "c",
+      "cta": "c",
+      "faq": "c",
+      "features": "b",
+      "footer": "c",
+      "hero": "a",
+      "location": "c",
+      "navbar": "b"
+     },
+     "order": [
+      "navbar",
+      "hero",
+      "features",
+      "about",
+      "faq",
+      "cta",
+      "booking",
+      "location",
+      "footer"
+     ],
+     "needs": [
+      "hero-image"
+     ]
+    }
+   ]
+  }
+ }
+}

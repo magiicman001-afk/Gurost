@@ -1,5 +1,16 @@
 # Website Builder — Premium Pipeline (spec)
 
+> BUILT 2026-10-12 (pieces 1-3 and the preview page), behind `PREMIUM_PIPELINE=1`, OFF by default until Irfan approves the 24 looks
+> on his phone at `/premium-looks-preview.html` (regenerate with `node scripts/build-premium-preview.js`). The flag is named
+> `PREMIUM_PIPELINE` (Irfan's name), not `PREMIUM_GATE`. Decisions 1-4 were answered by Irfan on 2026-10-12: best-with-note,
+> threshold 70, Impeccable on laptop/CI only, library path only.
+> Files: `lib/sections/premium.json` (24 looks), `premium.js`, `premium-score.js`, `premium-loop.js`, wiring in `bots/library-bot.js`,
+> tests in `test/premium.test.js`.
+> NOT done: the Impeccable hard test over the 24 looks (needs the CLI's output format, which can only be seen on the laptop);
+> a gate that "scales over measured parts" is built, but on Render a browser is assumed present.
+> Known limit: single mild flaws (e.g. one tight section) are tolerated by design; the bad-page tests combine the flaw with its
+> usual companions. A look whose `needs` (hero photo, three gallery photos) are unmet fails regardless of its total.
+
 Status: DRAFT for Irfan's approval, 2026-10-12. Written by Web Claude. Pieces 3 (live preview) and 4 (honest video) are
 already built (commits 163e447, a25df9f, held locally until Irfan's test is over). Pieces 1 and 2 are the build this
 document asks to approve.
