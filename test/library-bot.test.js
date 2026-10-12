@@ -120,3 +120,36 @@ test("gate: the demo bakery ships without failures", async () => {
   const out = await L.generateLibraryVariants("a bakery in Leeds", { businessInfo: INFO, callModel: async () => MODEL, search, browserChecks: false });
   for (const v of out.variants) assert.deepEqual({ ok: v.gate.ok, degraded: v.gate.degraded }, { ok: true, degraded: false });
 });
+
+// ---- Bug EE: the Live Preview is not blank while the words are written ----
+test("live preview: a styled shell appears BEFORE the words arrive, then the page grows section by section", async () => {
+  const events = [];
+  let modelAsked = false;
+  const modelOut = { brand: "Luvky Bakes", description: "Bakery.", sections: { hero: { headline: "Fresh bread every morning", subhead: "Sourdough and cakes.", cta1_label: "Order now", image_brief: "bread" }, services: { title: "What we bake", items: [{ icon: "heart", title: "Birthday Cake", text: "Made to order." }, { icon: "leaf", title: "Sourdough", text: "Slow loaves." }, { icon: "sparkle", title: "Pastries", text: "Butter." }] }, about: { title: "Our kitchen", body: "A small bakery.", image_brief: "baker" }, cta: { title: "Say hello", cta1_label: "Visit" } } };
+  const out = await L.generateLibraryVariants("a bakery in Leeds", {
+    businessInfo: { name: "Luvky Bakes", phone: "0113 496 0000" },
+    previewStepMs: 0,
+    browserChecks: false,
+    search: async () => ({ url: "https://cdn.pixabay.com/photo/x.jpg", credit: "P" }),
+    callModel: async () => { modelAsked = true; events.push(["model-called"]); await new Promise((r) => setTimeout(r, 20)); events.push(["model-done"]); return modelOut; },
+    onStage: (stage, status, data) => events.push([stage + "/" + status, data]),
+  });
+  assert.ok(out.variants.length >= 1);
+  const names = events.map((e) => e[0]);
+  const firstPartial = names.indexOf("designing/partial");
+  assert.ok(firstPartial !== -1 && firstPartial < names.indexOf("model-done"), "the shell is shown before the model has answered");
+  const shell = events[firstPartial][1];
+  assert.match(shell.html, /Luvky Bakes/, "the shell carries the owner's business name");
+  assert.match(shell.html, /Writing the words/, "and says honestly that the words are still being written");
+  assert.ok(!/IMG_\d+/.test(shell.html), "no raw image tokens in a preview");
+  assert.equal(shell.progress, 8);
+  const partials = events.filter((e) => e[0] === "designing/partial").map((e) => e[1]);
+  assert.ok(partials.length >= 4, "shell + one step per section, got " + partials.length);
+  const progress = partials.map((p) => p.progress);
+  assert.deepEqual(progress, [...progress].sort((a, b) => a - b), "progress only moves forward");
+  assert.ok(partials.some((p) => p.sections[0] === "services"), "services is announced as it is added");
+  assert.ok(partials.every((p) => /<h1\b/.test(p.html)), "every frame is a whole page");
+  // nothing is announced after a finished design is pickable
+  const firstDone = names.indexOf("designing/variant-complete");
+  assert.ok(names.slice(firstDone + 1).every((n) => n !== "designing/partial"), "no preview frame after a design is ready");
+});
