@@ -49,6 +49,8 @@ const variantBot = require("./bots/variant-bot");
 const libraryBot = require("./bots/library-bot");
 const videoRequest = require("./lib/video-request");
 const designMemory = require("./lib/design-memory");
+const adminAccess = require("./lib/admin-access");
+const adminData = require("./lib/admin-data");
 const sandboxLink = require("./lib/sandbox-link");
 const publishedSites = require("./lib/published-sites");
 const pulseBrain = require("./bots/pulse-brain");
@@ -619,8 +621,9 @@ app.post("/api/admin/login", authLimiter, security.rejectUnknownFields(["accessC
 
     await supabase.from("admin_accounts").update({ last_login_at: new Date().toISOString() }).eq("id", matched.id);
 
-    const token = jwt.sign({ adminId: matched.id, name: matched.name, scope: "admin" }, ADMIN_JWT_SECRET, { expiresIn: "8h" });
-    res.json({ token, name: matched.name });
+    const role = adminAccess.ROLES.includes(matched.role) ? matched.role : "viewer"; // a missing/unknown role never becomes owner
+    const token = jwt.sign({ adminId: matched.id, name: matched.name, role, scope: "admin" }, ADMIN_JWT_SECRET, { expiresIn: "8h" });
+    res.json({ token, name: matched.name, role, sections: adminAccess.sectionsFor(role) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -629,18 +632,38 @@ app.post("/api/admin/login", authLimiter, security.rejectUnknownFields(["accessC
 // Real, genuine middleware - every real /api/admin/* route below this
 // point requires this, checking the separate admin token specifically,
 // not the regular user auth system at all.
-function requireAdminAuth(req, res, next) {
+const adminRoleCache = new Map(); // adminId -> { role, active, at }; 30s, so a role change or revoke takes effect quickly
+async function currentAdminRole(adminId) {
+  const hit = adminRoleCache.get(adminId);
+  if (hit && Date.now() - hit.at < 30000) return hit;
+  const { data, error } = await supabase.from("admin_accounts").select("role,active").eq("id", adminId).maybeSingle();
+  if (error) throw error;
+  const row = { role: data && data.active ? data.role : null, active: !!(data && data.active), at: Date.now() };
+  adminRoleCache.set(adminId, row);
+  return row;
+}
+
+async function requireAdminAuth(req, res, next) {
   const header = req.headers.authorization || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : null;
   if (!token) return res.status(401).json({ error: "Admin authentication required." });
 
+  let decoded;
   try {
-    const decoded = jwt.verify(token, ADMIN_JWT_SECRET);
+    decoded = jwt.verify(token, ADMIN_JWT_SECRET);
     if (decoded.scope !== "admin") throw new Error("Not an admin token.");
-    req.admin = decoded;
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid or expired admin session." });
+  }
+  try {
+    // The role always comes from the database (cached 30s), never from the token alone: a revoked or demoted
+    // person loses access at once, and tokens issued before roles existed still resolve to the stored role.
+    const current = await currentAdminRole(decoded.adminId);
+    if (!current.active) return res.status(401).json({ error: "Invalid or expired admin session." });
+    req.admin = { ...decoded, role: adminAccess.ROLES.includes(current.role) ? current.role : null };
     next();
   } catch (err) {
-    res.status(401).json({ error: "Invalid or expired admin session." });
+    res.status(503).json({ error: "Could not check your admin role right now. Try again in a moment." });
   }
 }
 
@@ -656,7 +679,7 @@ function requireAdminAuth(req, res, next) {
 
 // GET /api/admin/users — real, from the actual users table
 // (api_keys), including the real status columns added tonight.
-app.get("/api/admin/users", requireAdminAuth, async (req, res) => {
+app.get("/api/admin/users", requireAdminAuth, adminAccess.needs("users"), async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("api_keys")
@@ -671,7 +694,7 @@ app.get("/api/admin/users", requireAdminAuth, async (req, res) => {
 
 // POST /api/admin/users/:userId/block — real, honest action, sets the
 // real status + reason columns rather than deleting anything.
-app.post("/api/admin/users/:userId/block", requireAdminAuth, security.rejectUnknownFields(["reason"]), async (req, res) => {
+app.post("/api/admin/users/:userId/block", requireAdminAuth, adminAccess.needs("users"), security.rejectUnknownFields(["reason"]), async (req, res) => {
   try {
     const { error } = await supabase
       .from("api_keys")
@@ -685,7 +708,7 @@ app.post("/api/admin/users/:userId/block", requireAdminAuth, security.rejectUnkn
 });
 
 // Takedown switch: takes a customer site offline at once (visitors get a plain 404), or puts it back.
-app.post("/api/admin/sites/:slug/takedown", requireAdminAuth, security.rejectUnknownFields(["reason"]), async (req, res) => {
+app.post("/api/admin/sites/:slug/takedown", requireAdminAuth, adminAccess.needs("users"), security.rejectUnknownFields(["reason"]), async (req, res) => {
   try {
     const row = await siteStore.setStatusBySlug(req.params.slug, "taken_down", String(req.body.reason || "No reason given.").slice(0, 300));
     if (!row) return res.status(404).json({ error: "No such site." });
@@ -694,7 +717,7 @@ app.post("/api/admin/sites/:slug/takedown", requireAdminAuth, security.rejectUnk
     res.status(500).json({ error: err.message });
   }
 });
-app.post("/api/admin/sites/:slug/restore", requireAdminAuth, async (req, res) => {
+app.post("/api/admin/sites/:slug/restore", requireAdminAuth, adminAccess.needs("users"), async (req, res) => {
   try {
     const row = await siteStore.setStatusBySlug(req.params.slug, "live", null);
     if (!row) return res.status(404).json({ error: "No such site." });
@@ -705,7 +728,7 @@ app.post("/api/admin/sites/:slug/restore", requireAdminAuth, async (req, res) =>
 });
 
 // POST /api/admin/users/:userId/unblock — real, reverses the above.
-app.post("/api/admin/users/:userId/unblock", requireAdminAuth, async (req, res) => {
+app.post("/api/admin/users/:userId/unblock", requireAdminAuth, adminAccess.needs("users"), async (req, res) => {
   try {
     const { error } = await supabase
       .from("api_keys")
@@ -724,7 +747,7 @@ app.post("/api/admin/users/:userId/unblock", requireAdminAuth, async (req, res) 
 // restart, since that's the real, existing architecture for active
 // builds in this codebase (project_state/project_history exist for
 // persistence but aren't the primary real source projects live in).
-app.get("/api/admin/projects", requireAdminAuth, (req, res) => {
+app.get("/api/admin/projects", requireAdminAuth, adminAccess.needs("projects"), (req, res) => {
   const projects = [...PROJECTS.entries()].map(([id, p]) => ({
     id,
     userId: p.userId,
@@ -739,7 +762,7 @@ app.get("/api/admin/projects", requireAdminAuth, (req, res) => {
 
 // GET /api/admin/design-memory - what the builder has learned: per industry, the top design combinations, which section
 // variants win most, and how many builds are still needed before it starts leading with the best one.
-app.get("/api/admin/design-memory", requireAdminAuth, async (req, res) => {
+app.get("/api/admin/design-memory", requireAdminAuth, adminAccess.needs("builds"), async (req, res) => {
   try {
     res.json(await designMemory.adminSummary());
   } catch (err) {
@@ -747,9 +770,42 @@ app.get("/api/admin/design-memory", requireAdminAuth, async (req, res) => {
   }
 });
 
+// ---- Admin Area Phase 1 (docs/ADMIN_AREA_SPEC.md): who am I, role-filtered dashboard, inventory, models, builds ----
+const SERVER_STARTED_AT = Date.now();
+app.get("/api/admin/me", requireAdminAuth, (req, res) => {
+  res.json({ name: req.admin.name, role: req.admin.role, sections: adminAccess.sectionsFor(req.admin.role) });
+});
+app.get("/api/admin/dashboard", requireAdminAuth, adminAccess.needs("dashboard"), async (req, res) => {
+  try {
+    res.json({ role: req.admin.role, cards: adminAccess.dashboardFor(req.admin.role, await adminData.dashboardData(supabase)) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.get("/api/admin/inventory", requireAdminAuth, adminAccess.needs("inventory"), (req, res) => {
+  res.json(adminData.inventory(process.env, SERVER_STARTED_AT));
+});
+app.get("/api/admin/models", requireAdminAuth, adminAccess.needs("models"), (req, res) => {
+  res.json(adminData.modelsStatus(process.env, req.admin.role));
+});
+app.get("/api/admin/projects/saved", requireAdminAuth, adminAccess.needs("projects"), async (req, res) => {
+  try {
+    res.json({ projects: await adminData.projectsList(supabase, PROJECTS, { state: req.query.state, userId: req.query.userId }) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+app.get("/api/admin/builds", requireAdminAuth, adminAccess.needs("builds"), async (req, res) => {
+  try {
+    res.json(await adminData.buildsLog(supabase, { limit: Number(req.query.limit) || 100 }));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/admin/api-usage — real, from claude_usage_log, genuinely
 // aggregated by model.
-app.get("/api/admin/api-usage", requireAdminAuth, async (req, res) => {
+app.get("/api/admin/api-usage", requireAdminAuth, adminAccess.needs("models"), async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("claude_usage_log")
@@ -777,7 +833,7 @@ app.get("/api/admin/api-usage", requireAdminAuth, async (req, res) => {
 
 // GET /api/admin/audit - the Business Assistant audit trail, newest first.
 // Admin only. Optional filters: user, bot, event, limit (max 200), before (ISO time).
-app.get("/api/admin/audit", requireAdminAuth, async (req, res) => {
+app.get("/api/admin/audit", requireAdminAuth, adminAccess.needs("security"), async (req, res) => {
   try {
     const q = (k) => (typeof req.query[k] === "string" ? req.query[k].slice(0, 80) : undefined);
     const rows = await require("./lib/audit").list(supabase, { userId: q("user"), botType: q("bot"), event: q("event"), limit: q("limit"), before: q("before") });
@@ -793,7 +849,7 @@ app.get("/api/admin/audit", requireAdminAuth, async (req, res) => {
 // plus this real process's own uptime. Not a substitute for real
 // server monitoring (Render's own dashboard remains the real, full
 // picture of deploys/restarts), but genuinely real, live numbers.
-app.get("/api/admin/system-health", requireAdminAuth, async (req, res) => {
+app.get("/api/admin/system-health", requireAdminAuth, adminAccess.needs("builds"), async (req, res) => {
   try {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { data, error } = await supabase
@@ -821,7 +877,7 @@ app.get("/api/admin/system-health", requireAdminAuth, async (req, res) => {
 // customer record exists) — NOT detailed invoice/transaction history,
 // since that would need a real, new Stripe API integration this
 // codebase doesn't have yet. Said plainly in the response itself.
-app.get("/api/admin/payments", requireAdminAuth, async (req, res) => {
+app.get("/api/admin/payments", requireAdminAuth, adminAccess.needs("revenue"), async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("user_profiles")
@@ -851,7 +907,7 @@ app.get("/api/admin/payments", requireAdminAuth, async (req, res) => {
 // GET /api/admin/bot-activity — real, from the permanent Pulse
 // learning log built earlier tonight, genuinely showing what real
 // people have asked bots to do, most recent first.
-app.get("/api/admin/bot-activity", requireAdminAuth, async (req, res) => {
+app.get("/api/admin/bot-activity", requireAdminAuth, adminAccess.needs("bots"), async (req, res) => {
   try {
     const { data, error } = await supabase
       .from("pulse_learning_log")
@@ -5681,6 +5737,7 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt", "
     transition(project, "PLANNING");
     transition(project, "BUILDING");
 
+    const buildT0 = Date.now();
     const result = await generateWebsiteDesigns(prompt, {
       businessInfo,
       projectId,
@@ -5709,6 +5766,7 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt", "
     if (!result.variants.length) {
       const realReason = result.failures[0]?.error || "Every real design attempt failed.";
       console.error(`[website-builder] All real variants failed for project ${projectId}:`, realReason);
+      adminData.recordBuildLog(supabase, { projectId, userId: req.user.id, status: "failed", error: realReason, seconds: (Date.now() - buildT0) / 1000 });
       project.buildFinished = true;
       project.failedVariants = result.failures.map((f) => f.variant);
       persistInBackground(projectId, project);
@@ -5721,6 +5779,7 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt", "
     project.failedVariants = result.failures.map((f) => f.variant);
     persistInBackground(projectId, project);
     designMemory.recordBuild(projectId, result.variants); // Design Memory: scored designs only; fire-and-forget
+    adminData.recordBuildLog(supabase, { projectId, userId: req.user.id, status: "ok", variants: result.variants, seconds: (Date.now() - buildT0) / 1000 });
     // Real, same established pattern as the existing generate route -
     // stays in BUILDING until the user actually selects a variant via
     // the real, existing /api/select route, which does the DONE
@@ -5742,6 +5801,7 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt", "
     // state as whatever it validly was.
     console.error("[website-builder] Real staged generation failed:", err.message);
     project.buildFinished = true;
+    adminData.recordBuildLog(supabase, { projectId, userId: req.user.id, status: "failed", error: err.message });
     broadcastProjectUpdate(projectId, { type: "error", error: err.message });
   }
 });

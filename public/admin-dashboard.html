@@ -48,24 +48,10 @@
     <button id="logoutBtn" class="text-xs font-semibold px-3 py-1.5 rounded-full border border-[var(--line)]">Log Out</button>
   </header>
 
-  <div class="px-6 py-4 flex flex-wrap gap-2 border-b border-[var(--line)] bg-white">
-    <button class="tab-btn active" data-tab="users">Users</button>
-    <button class="tab-btn" data-tab="projects">Projects</button>
-    <button class="tab-btn" data-tab="usage">API Usage</button>
-    <button class="tab-btn" data-tab="health">System Health</button>
-    <button class="tab-btn" data-tab="payments">Payments</button>
-    <button class="tab-btn" data-tab="bots">Bot Activity</button>
-    <button class="tab-btn" data-tab="audit">Assistant Audit</button>
-  </div>
+  <div class="px-6 py-4 flex flex-wrap gap-2 border-b border-[var(--line)] bg-white" id="tabBar"></div>
 
   <main class="p-6">
-    <div id="tab-users" class="tab-panel"></div>
-    <div id="tab-projects" class="tab-panel hidden"></div>
-    <div id="tab-usage" class="tab-panel hidden"></div>
-    <div id="tab-health" class="tab-panel hidden"></div>
-    <div id="tab-payments" class="tab-panel hidden"></div>
-    <div id="tab-bots" class="tab-panel hidden"></div>
-    <div id="tab-audit" class="tab-panel hidden"></div>
+    <div id="tabPanels"></div>
   </main>
 </div>
 
@@ -96,11 +82,63 @@ function escapeHtml(str) {
   return String(str == null ? '' : str).replace(/[&<>"']/g, (c) => HTML_ESCAPES[c]);
 }
 
-function showDashboard(name) {
+// Tabs and the server section each one needs. The server enforces access on every route; this only decides
+// which tabs to show.
+const TABS = [
+  { id: 'overview', label: 'Dashboard', section: 'dashboard' },
+  { id: 'inventory', label: 'Software', section: 'inventory' },
+  { id: 'models', label: 'Models & APIs', section: 'models' },
+  { id: 'projects', label: 'Projects', section: 'projects' },
+  { id: 'builds', label: 'Builds log', section: 'builds' },
+  { id: 'memory', label: 'Design memory', section: 'builds' },
+  { id: 'users', label: 'Users', section: 'users' },
+  { id: 'usage', label: 'API Usage', section: 'models' },
+  { id: 'health', label: 'System Health', section: 'builds' },
+  { id: 'payments', label: 'Payments', section: 'revenue' },
+  { id: 'bots', label: 'Bot Activity', section: 'bots' },
+  { id: 'audit', label: 'Assistant Audit', section: 'security' },
+];
+
+function selectTab(id) {
+  document.querySelectorAll('.tab-btn').forEach((b) => b.classList.toggle('active', b.dataset.tab === id));
+  document.querySelectorAll('.tab-panel').forEach((p) => p.classList.toggle('hidden', p.id !== `tab-${id}`));
+  loadTab(id);
+}
+
+async function showDashboard(name) {
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('dashboardScreen').classList.remove('hidden');
-  document.getElementById('welcomeText').textContent = `Logged in as ${name}`;
-  loadTab('users');
+  let me;
+  try {
+    me = await adminCall('/api/admin/me');
+  } catch (err) {
+    // An expired or revoked session: back to the login screen rather than a dead page.
+    localStorage.removeItem('gurost_admin_token');
+    adminToken = null;
+    document.getElementById('dashboardScreen').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('welcomeText').textContent = `Logged in as ${me.name} (${me.role.replace('_', ' ')})`;
+  const allowed = TABS.filter((t) => me.sections.includes(t.section));
+  const bar = document.getElementById('tabBar');
+  const panels = document.getElementById('tabPanels');
+  bar.innerHTML = '';
+  panels.innerHTML = '';
+  allowed.forEach((t) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn';
+    btn.dataset.tab = t.id;
+    btn.textContent = t.label;
+    btn.addEventListener('click', () => selectTab(t.id));
+    bar.appendChild(btn);
+    const panel = document.createElement('div');
+    panel.id = `tab-${t.id}`;
+    panel.className = 'tab-panel hidden';
+    panels.appendChild(panel);
+  });
+  if (allowed.length) selectTab(allowed[0].id);
+  else panels.textContent = 'Your role has no sections yet. Ask the Owner.';
 }
 
 document.getElementById('loginBtn').addEventListener('click', async () => {
@@ -118,7 +156,7 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
     if (!res.ok) throw new Error(data.error || 'Login failed.');
     adminToken = data.token;
     localStorage.setItem('gurost_admin_token', adminToken);
-    showDashboard(data.name);
+    showDashboard();
   } catch (err) {
     errorEl.textContent = err.message;
     errorEl.classList.remove('hidden');
@@ -132,21 +170,16 @@ document.getElementById('logoutBtn').addEventListener('click', () => {
   document.getElementById('loginScreen').classList.remove('hidden');
 });
 
-document.querySelectorAll('.tab-btn').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('.tab-panel').forEach((p) => p.classList.add('hidden'));
-    document.getElementById(`tab-${btn.dataset.tab}`).classList.remove('hidden');
-    loadTab(btn.dataset.tab);
-  });
-});
-
 async function loadTab(tab) {
   const el = document.getElementById(`tab-${tab}`);
   el.innerHTML = '<p class="text-sm text-[var(--muted)]">Loading…</p>';
   try {
-    if (tab === 'users') await renderUsers(el);
+    if (tab === 'overview') await renderOverview(el);
+    else if (tab === 'inventory') await renderInventory(el);
+    else if (tab === 'models') await renderModels(el);
+    else if (tab === 'builds') await renderBuilds(el);
+    else if (tab === 'memory') await renderMemory(el);
+    else if (tab === 'users') await renderUsers(el);
     else if (tab === 'projects') await renderProjects(el);
     else if (tab === 'usage') await renderUsage(el);
     else if (tab === 'health') await renderHealth(el);
@@ -154,7 +187,7 @@ async function loadTab(tab) {
     else if (tab === 'bots') await renderBots(el);
     else if (tab === 'audit') await renderAudit(el);
   } catch (err) {
-    el.innerHTML = `<p class="text-sm text-red-600">${err.message}</p>`;
+    el.innerHTML = `<p class="text-sm text-red-600">${escapeHtml(err.message)}</p>`;
   }
 }
 
@@ -190,14 +223,65 @@ async function renderUsers(el) {
 }
 
 async function renderProjects(el) {
-  const { projects } = await adminCall('/api/admin/projects');
+  const { projects } = await adminCall('/api/admin/projects/saved');
   el.innerHTML = `
-    <p class="text-xs text-[var(--muted)] mb-3">Real, currently active projects in this server's memory since its last restart.</p>
+    <p class="text-xs text-[var(--muted)] mb-3">Saved projects (newest first, up to 200). "Live" means the project is also in the server's memory right now.</p>
     <table>
-      <thead><tr><th>Prompt</th><th>Type</th><th>State</th><th>Started</th></tr></thead>
+      <thead><tr><th>Name</th><th>Type</th><th>State</th><th>Updated</th><th>Live</th></tr></thead>
       <tbody>${projects.map((p) => `
-        <tr><td>${p.prompt || '—'}</td><td>${p.type || '—'}</td><td>${p.state}</td><td>${p.buildStartedAt ? new Date(p.buildStartedAt).toLocaleString() : '—'}</td></tr>`).join('')}</tbody>
+        <tr><td>${escapeHtml(p.name || p.id)}</td><td>${escapeHtml(p.type || '—')}</td><td>${escapeHtml(p.state || '—')}</td><td>${p.updatedAt ? new Date(p.updatedAt).toLocaleString() : '—'}</td><td>${p.inMemory ? 'yes' : ''}</td></tr>`).join('')}</tbody>
     </table>`;
+}
+
+function card(label, c) {
+  const v = c && c.value !== null && c.value !== undefined ? escapeHtml(String(c.value)) : '—';
+  const note = c && c.note ? `<p class="text-xs text-[var(--muted)] mt-1">${escapeHtml(c.note)}</p>` : '';
+  return `<div class="border border-[var(--line)] rounded-xl bg-white p-4"><p class="text-xs text-[var(--muted)]">${escapeHtml(label)}</p><p class="font-display font-bold text-2xl">${v}</p>${note}</div>`;
+}
+
+async function renderOverview(el) {
+  const { cards } = await adminCall('/api/admin/dashboard');
+  const labels = { buildsWeek: 'Builds this week', failedWeek: 'Failed builds this week', activeUsers: 'Active builders', errorsHour: 'Server errors, last hour', spend: 'AI spend this week ($)', revenue: 'Revenue' };
+  el.innerHTML = `<div class="grid grid-cols-2 md:grid-cols-3 gap-3">${Object.keys(labels).filter((k) => cards[k]).map((k) => card(labels[k], cards[k])).join('')}</div>`;
+}
+
+async function renderInventory(el) {
+  const d = await adminCall('/api/admin/inventory');
+  el.innerHTML = `
+    <p class="text-sm mb-3">Version <b>${escapeHtml(d.version)}</b> · running since ${new Date(d.lastDeploy).toLocaleString()}</p>
+    <table>
+      <thead><tr><th>Product</th><th>Status</th><th>Owner</th><th>Switches</th><th>Note</th></tr></thead>
+      <tbody>${d.products.map((p) => `
+        <tr><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.status)}</td><td>${escapeHtml(p.owner)}</td><td>${p.flags.map((f) => `${escapeHtml(f.name)}: ${f.on ? 'ON' : 'off'}`).join('<br>') || '—'}</td><td>${escapeHtml(p.note || '')}</td></tr>`).join('')}</tbody>
+    </table>
+    <p class="text-xs text-[var(--muted)] mt-3">${escapeHtml(d.note)}</p>`;
+}
+
+async function renderModels(el) {
+  const d = await adminCall('/api/admin/models');
+  el.innerHTML = `
+    <table>
+      <thead><tr><th>Provider</th><th>Key</th><th>Balance</th></tr></thead>
+      <tbody>${d.providers.map((p) => `<tr><td>${escapeHtml(p.name)}</td><td>${p.configured ? 'set' : '<b>not set</b>'}</td><td>${escapeHtml(p.balance)}</td></tr>`).join('')}</tbody>
+    </table>
+    <p class="text-xs text-[var(--muted)] mt-3">Key values are never shown. ${escapeHtml(d.note)}</p>`;
+}
+
+async function renderBuilds(el) {
+  const d = await adminCall('/api/admin/builds');
+  el.innerHTML = `
+    <p class="text-sm mb-3">This week: <b>${d.week.total}</b> builds, <b>${d.week.failed}</b> failed.</p>
+    <table>
+      <thead><tr><th>When</th><th>Result</th><th>Designs</th><th>Best score</th><th>Seconds</th><th>Why it failed</th></tr></thead>
+      <tbody>${d.builds.map((b) => `
+        <tr><td>${new Date(b.created_at).toLocaleString()}</td><td>${escapeHtml(b.status)}</td><td>${b.designs ?? '—'}</td><td>${b.best_score ?? '—'}</td><td>${b.seconds ?? '—'}</td><td>${escapeHtml(b.error || '')}</td></tr>`).join('')}</tbody>
+    </table>
+    <p class="text-xs text-[var(--muted)] mt-3">${escapeHtml(d.note)}</p>`;
+}
+
+async function renderMemory(el) {
+  const d = await adminCall('/api/admin/design-memory');
+  el.innerHTML = `<pre class="text-xs whitespace-pre-wrap bg-white border border-[var(--line)] rounded-xl p-4">${escapeHtml(JSON.stringify(d, null, 2))}</pre>`;
 }
 
 async function renderUsage(el) {
@@ -297,7 +381,7 @@ async function renderAudit(el) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (adminToken) showDashboard('Admin');
+  if (adminToken) showDashboard();
 });
 </script>
 </body>
