@@ -60,12 +60,47 @@ test("a stranger with a valid login and the right project id is refused - no his
   assert.equal(r.got.length, 0, "no build history, no presence");
 });
 
-test("a made-up token, or another user's project, gets the same 'Not allowed'", async () => {
+test("a made-up or expired login gets 4401 (the page sends the person to log in)", async () => {
   const bad = await session("projectId=p-owner", [{ type: "auth", token: "nope" }]);
+  assert.equal(bad.code, 4401);
+});
+
+test("a missing project and someone else's get the same 'Not allowed'", async () => {
   const missing = await session("projectId=p-does-not-exist", [{ type: "auth", token: "tok-owner" }]);
-  assert.equal(bad.code, 4403);
+  const other = await session("projectId=p-owner", [{ type: "auth", token: "tok-stranger" }]);
   assert.equal(missing.code, 4403);
-  assert.equal(bad.reason, missing.reason, "no hint whether the project exists");
+  assert.equal(missing.reason, other.reason, "no hint whether the project exists");
+});
+
+// Pages stop reconnecting on 4401/4403, so a server problem must never be reported as one.
+async function withServer(opts, fn) {
+  const srv = http.createServer();
+  attachGuideBotSocket(srv, PROJECTS, opts);
+  await new Promise((r) => srv.listen(0, r));
+  try { return await fn(`ws://127.0.0.1:${srv.address().port}/ws/guide?projectId=p-owner`); } finally { srv.close(); }
+}
+function closeCode(url, send) {
+  return new Promise((resolve) => {
+    const ws = new WebSocket(url);
+    ws.on("open", () => ws.send(JSON.stringify(send)));
+    ws.on("message", () => { ws.close(); resolve("admitted"); });
+    ws.on("close", (code) => resolve(code));
+  });
+}
+
+test("the login check failing (database down) closes 1011 - try again, not 'log in again'", async () => {
+  const code = await withServer({ authenticate: async () => { throw new Error("db down"); }, loadProject: async (id) => PROJECTS.get(id), authTimeoutMs: 300 },
+    (url) => closeCode(url, { type: "auth", token: "tok-owner" }));
+  assert.equal(code, 1011);
+  const code2 = await withServer({ authenticate: async () => ({ id: "u-owner" }), loadProject: async () => { throw new Error("db down"); }, authTimeoutMs: 300 },
+    (url) => closeCode(url, { type: "auth", token: "tok-owner" }));
+  assert.equal(code2, 1011);
+});
+
+test("a login check slower than the timeout still lets the owner in (the timeout is for no login at all)", async () => {
+  const r = await withServer({ authenticate: async () => { await new Promise((res) => setTimeout(res, 250)); return { id: "u-owner" }; }, loadProject: async (id) => PROJECTS.get(id), authTimeoutMs: 100 },
+    (url) => closeCode(url, { type: "auth", token: "tok-owner" }));
+  assert.equal(r, "admitted");
 });
 
 test("a Pulse edit sent before logging in never runs", async () => {

@@ -141,15 +141,26 @@ function attachGuideBotSocket(httpServer, PROJECTS, {
     let checking = false;
     const authTimer = setTimeout(() => ws.close(4401, "Login required"), authTimeoutMs);
 
+    // Close codes the pages act on: 4401 = the login is missing, expired or wrong (go and log in);
+    // 4403 = logged in, but not this project (stop); 1011 = the check itself failed (try again later).
     async function admit(msg) {
       checking = true;
-      const user = await authenticate({ token: msg.token, apiKey: msg.apiKey });
-      const project = user ? await loadProject(projectId).catch(() => null) : null;
-      clearTimeout(authTimer);
-      // Closed (or timed out) while the login was being checked: nothing to join.
+      clearTimeout(authTimer); // the login has arrived - a slow check is not a missing login
+      let user, project;
+      try {
+        user = await authenticate({ token: msg.token, apiKey: msg.apiKey });
+        project = user ? await loadProject(projectId) : null;
+      } catch (err) {
+        // Database or network trouble, not the person's login: never answer it with "log in again".
+        console.warn(`[ws-auth] Login check failed for project ${projectId}:`, err.message);
+        if (ws.readyState === ws.OPEN) ws.close(1011, "Try again");
+        return;
+      }
+      // Closed while the login was being checked: nothing to join.
       if (ws.readyState !== ws.OPEN) return;
+      if (!user) return ws.close(4401, "Login required");
       // One answer whether the project is missing or someone else's - no hint either way.
-      if (!user || !project || (project.userId !== user.id && !user.isAdmin)) return ws.close(4403, "Not allowed");
+      if (!project || (project.userId !== user.id && !user.isAdmin)) return ws.close(4403, "Not allowed");
       userId = user.id;
       room = getRoom(projectId);
       client = { ws, userId };

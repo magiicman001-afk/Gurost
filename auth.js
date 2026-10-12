@@ -110,16 +110,14 @@ function applyAdminTier(user) {
 
 // The same checks as requireAuth, for callers that aren't an HTTP request -
 // the /ws/guide WebSocket's first message ({ type: "auth", token | apiKey }).
-// Returns the user (admin tier applied) or null; never throws.
+// Returns the user (admin tier applied) or null.
+// Throws when the check itself cannot run (database down), like
+// requireAuth's 500 - the WebSocket then says "try again", not "log in again".
 async function authenticateToken({ token, apiKey } = {}) {
-  try {
-    let user = null;
-    if (apiKey) user = await resolveApiKey(String(apiKey));
-    else if (token) user = resolveJwt(String(token)) || (await resolveSSO(String(token)));
-    return user ? applyAdminTier(user) : null;
-  } catch {
-    return null;
-  }
+  let user = null;
+  if (apiKey) user = await resolveApiKey(String(apiKey));
+  else if (token) user = resolveJwt(String(token)) || (await resolveSSO(String(token)));
+  return user ? applyAdminTier(user) : null;
 }
 
 // Accepts `x-api-key: <key>`, `Authorization: Bearer <jwt>` (either this
