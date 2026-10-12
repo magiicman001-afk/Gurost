@@ -284,7 +284,7 @@ async function buildDirection(dir, composed, { search, includeBranding, factsAll
  *
  * @param {string} prompt
  * @param {object} o { businessInfo, plan, includeBranding, onStage, directionIds, callModel, search, siteCopy, browserChecks, premium }
- *   premium: true/false overrides the PREMIUM_PIPELINE flag (tests)
+ *   premium: true/false overrides the PREMIUM_PIPELINE flag (tests); bestLook(industry) -> { look } | null is the Design Memory lookup (tests)
  *   callModel({ system, content }) -> parsed JSON       (default: Claude via the tier router)
  *   search(query) -> { url, credit } | null              (default: the stock-photo step)
  *   siteCopy: words saved on an earlier call (used by "Show 2 more" so no second model call is made)
@@ -348,6 +348,10 @@ async function generateLibraryVariants(prompt, o = {}) {
     return browserP;
   };
   const used = new Set(); // premium looks already claimed by a slot, so two slots never show the same look
+  let learned = null;
+  if (premium && (o.bestLook || require("../lib/design-memory").enabled())) {
+    learned = await Promise.resolve((o.bestLook || ((ind) => require("../lib/design-memory").bestLook(ind)))(composed.palette)).catch(() => null);
+  }
   const available = new Set(Object.keys(composed.content));
   const cfg = P.config();
   const withFallback = (q) => search(q).then((r) => r || search(`${PALETTE_WORDS[composed.palette] || "business"} photo`));
@@ -361,7 +365,9 @@ async function generateLibraryVariants(prompt, o = {}) {
         let premiumInfo = null;
         if (premium) {
           const looks = P.looksFor(composed.palette);
-          const startLook = looks[DIRECTIONS.findIndex((d) => d.id === dir.id) % looks.length];
+          const slotIndex = DIRECTIONS.findIndex((d) => d.id === dir.id);
+          // Design Memory (DESIGN_MEMORY=1): the first slot leads with what has scored and survived best for this industry.
+          const startLook = slotIndex === 0 && learned ? learned.look : looks[slotIndex % looks.length];
           const r = await runSlot({
             palette: composed.palette, startLook, available, used, cfg,
             buildOne: async (look, opt) => buildDirection({ id: dir.id, label: look.label, set: look.variants }, composed, { search: opt.fallbackSearch ? withFallback : search, includeBranding: o.includeBranding !== false, factsAllow, browserChecks: o.browserChecks, recipe: P.recipeFor(look, available), browser: await getBrowser() }),
@@ -378,7 +384,7 @@ async function generateLibraryVariants(prompt, o = {}) {
           built = r.best.built;
           label = r.best.look.label;
           setUsed = r.best.look.variants;
-          premiumInfo = { look: r.best.look.id, score: r.best.score.total, parts: r.best.score.parts, reasons: r.best.score.reasons.map((x) => x.text), attempts: r.attempts.length, passed: r.passed, note: r.note };
+          premiumInfo = { look: r.best.look.id, sections: built.page.sections.map((x) => ({ id: x.id, variant: x.variant })), score: r.best.score.total, parts: r.best.score.parts, reasons: r.best.score.reasons.map((x) => x.text), attempts: r.attempts.length, passed: r.passed, note: r.note };
         } else {
           built = await buildDirection(dir, composed, { search, includeBranding: o.includeBranding !== false, factsAllow, browserChecks: o.browserChecks });
         }

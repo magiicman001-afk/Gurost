@@ -48,6 +48,7 @@ const webBot = require("./bots/web-bot");
 const variantBot = require("./bots/variant-bot");
 const libraryBot = require("./bots/library-bot");
 const videoRequest = require("./lib/video-request");
+const designMemory = require("./lib/design-memory");
 const sandboxLink = require("./lib/sandbox-link");
 const publishedSites = require("./lib/published-sites");
 const pulseBrain = require("./bots/pulse-brain");
@@ -734,6 +735,16 @@ app.get("/api/admin/projects", requireAdminAuth, (req, res) => {
     lastCheckpointAt: p.lastCheckpointAt,
   }));
   res.json({ projects });
+});
+
+// GET /api/admin/design-memory - what the builder has learned: per industry, the top design combinations, which section
+// variants win most, and how many builds are still needed before it starts leading with the best one.
+app.get("/api/admin/design-memory", requireAdminAuth, async (req, res) => {
+  try {
+    res.json(await designMemory.adminSummary());
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // GET /api/admin/api-usage — real, from claude_usage_log, genuinely
@@ -1772,6 +1783,7 @@ app.post("/api/select", security.rejectUnknownFields(["projectId", "variantId"])
     { const picked = (project.variants || []).find((v) => v.id === variantId); project.site = picked && picked.site ? picked.site : null; }
     if (project.state !== "DONE") transition(project, "DONE");
     persistInBackground(projectId, project);
+    designMemory.markPicked(projectId, variantId);
     res.json({ projectId, html: project.currentHtml, state: project.state });
 
     // Real, genuine Credibility Engine - runs after the real,
@@ -1895,6 +1907,7 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
       transition(project, "RESUMING");
       transition(project, "DONE");
       persistInBackground(projectId, project);
+      if (project.type !== "app") designMemory.markEdited(projectId);
 
       // Real, honest logging - every genuine correction a user asks
       // for gets stored permanently, the real, actual basis for
@@ -5707,6 +5720,7 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt", "
     project.buildFinished = true;
     project.failedVariants = result.failures.map((f) => f.variant);
     persistInBackground(projectId, project);
+    designMemory.recordBuild(projectId, result.variants); // Design Memory: scored designs only; fire-and-forget
     // Real, same established pattern as the existing generate route -
     // stays in BUILDING until the user actually selects a variant via
     // the real, existing /api/select route, which does the DONE
@@ -5776,6 +5790,7 @@ app.post("/api/website-builder/more", security.rejectUnknownFields(["projectId"]
     project.history.push({ type: "variants", summary: `${result.variants.length} more design directions generated`, ts: Date.now() });
     project.buildFinished = true;
     persistInBackground(projectId, project);
+    designMemory.recordBuild(projectId, result.variants);
     if (!result.variants.length) {
       broadcastProjectUpdate(projectId, { type: "error", error: result.failures[0]?.error || "The extra designs could not be made." });
       return;
@@ -6039,6 +6054,7 @@ app.delete("/api/project/:id", async (req, res) => {
       return res.status(409).json({ error: "This project is still building or being edited - try again when it has finished." });
     }
     await projectState.deleteProjectRows(id, req.user.id);
+    designMemory.markDeleted(id);
     PROJECTS.delete(id);
     security.auditLog("project_deleted", req, `project=${id}`).catch(() => {});
     res.json({ deleted: id });
