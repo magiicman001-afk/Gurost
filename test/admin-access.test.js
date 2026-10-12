@@ -171,3 +171,17 @@ test("admin page escapes values and builds tabs from the server's section list",
   assert.match(html, /me\.sections\.includes\(t\.section\)/);
   assert.match(html, /escapeHtml\(p\.name \|\| p\.id\)/);
 });
+
+test("Phase 1.5: no /api/admin route uses the old user-login admin check; moved routes carry the right sections", () => {
+  const src = fs.readFileSync(path.join(root, "server.js"), "utf8");
+  assert.doesNotMatch(src, /app\.(get|post|put|delete)\("\/api\/admin\/[^"]*", auth\.requireAdmin/);
+  const want = [
+    ["get", "/api/admin/snapshot", "revenue"], ["get", "/api/admin/workspaces", "users"], ["get", "/api/admin/workspaces/:id", "users"],
+    ["get", "/api/admin/company/:id/usage", "users"], ["post", "/api/admin/developers", "team"], ["get", "/api/admin/developers", "team"],
+    ["put", "/api/admin/developers/:id", "team"], ["post", "/api/admin/users/:userId/deactivate", "users"], ["post", "/api/admin/users/:userId/reactivate", "users"],
+  ];
+  for (const [m, p, sec] of want) assert.ok(src.includes(`app.${m}("${p}", requireAdminAuth, adminAccess.needs("${sec}")`), `${m} ${p} -> ${sec}`);
+  // the admin block (admin-token routes) must come before the user login wall, or the admin token would be refused
+  assert.ok(src.indexOf('app.get("/api/admin/snapshot"') < src.indexOf('\napp.use("/api", auth.requireAuth);'));
+  assert.doesNotMatch(src, /req\.user\.id[^\n]*addDeveloper|addDeveloper\([^)]*req\.user/);
+});

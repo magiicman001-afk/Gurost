@@ -771,6 +771,85 @@ app.get("/api/admin/design-memory", requireAdminAuth, adminAccess.needs("builds"
   }
 });
 
+// ---- Admin Area Phase 1.5: the older admin routes, moved onto the role system ----
+// They used the user-login check (ADMIN_EMAILS) and sat below the user login wall. Now: admin token + role, deny by default.
+// snapshot holds revenue (Owner only); workspaces, company usage and user (de)activation are customer data (Owner, Admin);
+// developers is team management (Owner, Admin).
+app.get("/api/admin/snapshot", requireAdminAuth, adminAccess.needs("revenue"), async (req, res) => {
+  try {
+    const snapshot = await adminDashboard.getFullSnapshot();
+    res.json(snapshot);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/admin/workspaces", requireAdminAuth, adminAccess.needs("users"), async (req, res) => {
+  try {
+    res.json(await adminDashboard.listWorkspaces(req.query.limit ? Number(req.query.limit) : 50));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get("/api/admin/workspaces/:id", requireAdminAuth, adminAccess.needs("users"), async (req, res) => {
+  try {
+    res.json(await adminDashboard.getWorkspaceDetails(req.params.id));
+  } catch (err) {
+    res.status(404).json({ error: err.message });
+  }
+});
+
+app.get("/api/admin/company/:id/usage", requireAdminAuth, adminAccess.needs("users"), async (req, res) => {
+  try {
+    res.json(await usageBilling.getWorkspaceUsage(req.params.id, req.query.month));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/admin/developers", requireAdminAuth, adminAccess.needs("team"), security.rejectUnknownFields(["name", "email"]), async (req, res) => {
+  try {
+    res.json(await developerOnboarding.addDeveloper(req.body.name, req.body.email, req.admin.adminId));
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.get("/api/admin/developers", requireAdminAuth, adminAccess.needs("team"), async (req, res) => {
+  try {
+    res.json(await developerOnboarding.listDevelopers());
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put("/api/admin/developers/:id", requireAdminAuth, adminAccess.needs("team"), security.rejectUnknownFields(["active", "name"]), async (req, res) => {
+  try {
+    res.json(await developerOnboarding.updateDeveloperAccess(req.params.id, req.body));
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post("/api/admin/users/:userId/deactivate", requireAdminAuth, adminAccess.needs("users"), async (req, res) => {
+  try {
+    await adminDashboard.deactivateUser(req.params.userId);
+    res.json({ deactivated: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/api/admin/users/:userId/reactivate", requireAdminAuth, adminAccess.needs("users"), async (req, res) => {
+  try {
+    await adminDashboard.reactivateUser(req.params.userId);
+    res.json({ reactivated: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ---- Admin Area Phase 1 (docs/ADMIN_AREA_SPEC.md): who am I, role-filtered dashboard, inventory, models, builds ----
 const SERVER_STARTED_AT = Date.now();
 app.get("/api/admin/me", requireAdminAuth, (req, res) => {
@@ -3472,30 +3551,8 @@ app.post("/api/checkpoint/resume", security.rejectUnknownFields(["checkpointId"]
 // ADMIN DASHBOARD
 // ---------------------------------------------------------------------------
 
-app.get("/api/admin/snapshot", auth.requireAdmin, async (req, res) => {
-  try {
-    const snapshot = await adminDashboard.getFullSnapshot();
-    res.json(snapshot);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
-app.get("/api/admin/workspaces", auth.requireAdmin, async (req, res) => {
-  try {
-    res.json(await adminDashboard.listWorkspaces(req.query.limit ? Number(req.query.limit) : 50));
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
-app.get("/api/admin/workspaces/:id", auth.requireAdmin, async (req, res) => {
-  try {
-    res.json(await adminDashboard.getWorkspaceDetails(req.params.id));
-  } catch (err) {
-    res.status(404).json({ error: err.message });
-  }
-});
 
 // ---------------------------------------------------------------------------
 // BILLING — Business Assistant usage, invoicing, and history. Access
@@ -3566,13 +3623,6 @@ app.post("/api/billing/update-seats", security.rejectUnknownFields(["companyId",
   }
 });
 
-app.get("/api/admin/company/:id/usage", auth.requireAdmin, async (req, res) => {
-  try {
-    res.json(await usageBilling.getWorkspaceUsage(req.params.id, req.query.month));
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
 // ---------------------------------------------------------------------------
 // UPDATES — real feature-flag announcements. See updates.js's header
@@ -3634,29 +3684,8 @@ app.post("/api/updates/:id/respond", security.rejectUnknownFields(["decision"]),
 // GitHub concerns, not Gurost product concerns).
 // ---------------------------------------------------------------------------
 
-app.post("/api/admin/developers", auth.requireAdmin, security.rejectUnknownFields(["name", "email"]), async (req, res) => {
-  try {
-    res.json(await developerOnboarding.addDeveloper(req.body.name, req.body.email, req.user.id));
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
 
-app.get("/api/admin/developers", auth.requireAdmin, async (req, res) => {
-  try {
-    res.json(await developerOnboarding.listDevelopers());
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
-app.put("/api/admin/developers/:id", auth.requireAdmin, security.rejectUnknownFields(["active", "name"]), async (req, res) => {
-  try {
-    res.json(await developerOnboarding.updateDeveloperAccess(req.params.id, req.body));
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
 
 // Real developer-level (not just admin-level) read access to errors —
 // reuses the SAME getRecentErrors() admin-dashboard.js already has,
@@ -4607,23 +4636,7 @@ app.post("/api/whatsapp/send-order-confirmation", security.rejectUnknownFields([
 
 
 
-app.post("/api/admin/users/:userId/deactivate", auth.requireAdmin, async (req, res) => {
-  try {
-    await adminDashboard.deactivateUser(req.params.userId);
-    res.json({ deactivated: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
-app.post("/api/admin/users/:userId/reactivate", auth.requireAdmin, async (req, res) => {
-  try {
-    await adminDashboard.reactivateUser(req.params.userId);
-    res.json({ reactivated: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 
 // ---------------------------------------------------------------------------
 // BACKUP — IN-PLACE RESTORE
