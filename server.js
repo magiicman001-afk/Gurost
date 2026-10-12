@@ -54,6 +54,7 @@ const adminData = require("./lib/admin-data");
 const buildLog = require("./lib/build-log");
 const adminTeam = require("./lib/admin-team");
 const adminOps = require("./lib/admin-ops");
+const adminOpsActions = require("./lib/admin-ops-actions");
 const sandboxLink = require("./lib/sandbox-link");
 const publishedSites = require("./lib/published-sites");
 const pulseBrain = require("./bots/pulse-brain");
@@ -902,6 +903,29 @@ app.get("/api/admin/docs", requireAdminAuth, adminAccess.needs("docs"), (req, re
 // Read-only: one harmless call per provider. Owner only (ops), so the OpenRouter spend figures are included.
 app.post("/api/admin/ops/test-connections", requireAdminAuth, adminAccess.needs("ops"), async (req, res) => {
   try { res.json({ results: await adminOps.testConnections({ db: supabase, includeBalance: req.admin.role === "owner" }) }); } catch (err) { res.status(500).json({ error: adminOps.redact(err.message) }); }
+});
+
+// ---- Admin Area Phase 2C: ops controls (Owner only; password again, typed reason, cooldown, audit) ----
+const adminOpsRunner = adminOpsActions.createOps({
+  db: supabase,
+  verifyPassword: async (adminId, password) => {
+    const { data } = await supabase.from("admin_accounts").select("password_hash,password_salt,active").eq("id", adminId).maybeSingle();
+    return !!(data && data.active && verifySecret(password, data.password_salt, data.password_hash));
+  },
+  // A website build keeps state BUILDING until a design is picked, so only "not finished" counts as running.
+  busyCount: () => [...PROJECTS.values()].filter((p) => ["PLANNING", "RESUMING", "GENERATING"].includes(p.state) || (p.state === "BUILDING" && (p.type === "app" || p.buildFinished === false))).length,
+  clearCaches: () => { const n = adminRoleCache.size; adminRoleCache.clear(); const m = BUILD_LOG_MEMORY.size; BUILD_LOG_MEMORY.clear(); return [`admin role cache (${n})`, `in-memory build logs (${m}; the saved copies in the database are untouched)`]; },
+});
+app.get("/api/admin/ops", requireAdminAuth, adminAccess.needs("ops"), (req, res) => {
+  res.json({ actions: adminOpsRunner.state(), rotationChecklist: adminOpsActions.ROTATION_CHECKLIST });
+});
+app.post("/api/admin/ops/:action", requireAdminAuth, adminAccess.needs("ops"), security.rejectUnknownFields(["password", "reason", "force"]), async (req, res) => {
+  try {
+    const actor = { adminId: req.admin.adminId, name: req.admin.name, role: req.admin.role };
+    res.json(await adminOpsRunner.run(actor, req.params.action, req.body));
+  } catch (err) {
+    res.status(err.status || 500).json({ error: adminOps.redact(err.message), busy: err.busy, retryInMs: err.retryInMs });
+  }
 });
 
 // ---- Admin Area Phase 1 (docs/ADMIN_AREA_SPEC.md): who am I, role-filtered dashboard, inventory, models, builds ----

@@ -349,7 +349,18 @@ async function renderOps(el) {
     <h3 class="font-display font-bold mb-2">Test connections</h3>
     <p class="text-xs text-[var(--muted)] mb-2">One harmless read-only call per provider. Nothing is changed.</p>
     <button id="opsTest" class="tab-btn mb-3">Run test</button>
-    <div id="opsTestOut"></div>`;
+    <div id="opsTestOut"></div>
+    <h3 class="font-display font-bold mt-6 mb-2">Actions</h3>
+    <p class="text-xs text-[var(--muted)] mb-2">Each action needs your password again and a reason, has a cooldown, and is recorded. A redeploy restarts the site and wipes builds in progress.</p>
+    <div class="flex flex-wrap gap-2 text-sm mb-2">
+      <input id="opsPassword" type="password" autocomplete="current-password" class="border border-[var(--line)] rounded px-2 py-1" placeholder="Your password">
+      <input id="opsReason" class="border border-[var(--line)] rounded px-2 py-1" placeholder="Reason (typed)" style="min-width:220px">
+      <label class="flex items-center gap-1"><input id="opsForce" type="checkbox"> force even if builds are running</label>
+    </div>
+    <div class="flex flex-wrap gap-2 mb-2"><button id="opsRedeploy" class="tab-btn">Redeploy</button><button id="opsClear" class="tab-btn">Clear caches</button></div>
+    <p id="opsMsg" class="text-sm mb-4"></p>
+    <h3 class="font-display font-bold mb-2">Rotate a key (guided, never one click)</h3>
+    <ol id="opsChecklist" class="text-sm list-decimal pl-5 space-y-1"></ol>`;
   document.getElementById('opsTest').addEventListener('click', async (ev) => {
     ev.target.disabled = true;
     const out = document.getElementById('opsTestOut');
@@ -361,6 +372,21 @@ async function renderOps(el) {
     } catch (err) { out.textContent = err.message; }
     ev.target.disabled = false;
   });
+  adminCall('/api/admin/ops').then((o) => { document.getElementById('opsChecklist').innerHTML = o.rotationChecklist.map((t) => `<li>${escapeHtml(t)}</li>`).join(''); }).catch(() => {});
+  const doOp = async (action, label) => {
+    const msg = document.getElementById('opsMsg');
+    const body = { password: document.getElementById('opsPassword').value, reason: document.getElementById('opsReason').value.trim(), force: document.getElementById('opsForce').checked };
+    if (!body.password || body.reason.length < 5) { msg.textContent = 'Enter your password and a reason of at least 5 characters.'; return; }
+    if (!confirm(`${label}? This is recorded.`)) return;
+    msg.textContent = 'Working…';
+    try {
+      const r = await adminCall(`/api/admin/ops/${action}`, { method: 'POST', body });
+      document.getElementById('opsPassword').value = '';
+      msg.textContent = action === 'redeploy' ? `Redeploy started${r.deployId ? ` (${r.deployId})` : ''}. The site restarts in a minute or two.` : `Cleared: ${r.cleared.join('; ')}.`;
+    } catch (err) { msg.textContent = err.message; }
+  };
+  document.getElementById('opsRedeploy').addEventListener('click', () => doOp('redeploy', 'Redeploy the live site now'));
+  document.getElementById('opsClear').addEventListener('click', () => doOp('clear-cache', 'Clear the admin caches'));
 }
 
 const RANK = { viewer: 0, engineer: 1, team_lead: 2, admin: 3, owner: 4 };
