@@ -248,10 +248,23 @@ If anything fails: `git revert` the update commit (small, logged) and write the 
   before real customers.
 - Verify every backup repo is private: checkpoint repos were created PUBLIC
   until commit ac9a16c; any `gurost-checkpoint-*` repo made before then must be
-  switched to private by hand. (`createRepo` is still public by default for the
-  backend-deploy path; saves and checkpoints pass `{ private: true }`.)
+  switched to private by hand. ALSO any `gurost-<8 chars>` repo made by an App Builder backend deploy before commit `0dc0909`
+  (2026-10-12) is PUBLIC and must be switched to private by hand (GitHub > repo > Settings > Danger zone > Change visibility). Since
+  `0dc0909` `createRepo` in `lib/github.js` ALWAYS creates private repos (it ignores any argument), and `test/repo-privacy.test.js`
+  fails if any other file creates a repo or sets a repo flag to false. Open question: Render must be allowed to read a private repo
+  (Render's GitHub connection on the owner's account); never verified live, so the first real backend deploy may fail with the
+  note shown in the deploy result. The fix for that is Render's GitHub connection, NEVER making the repo public.
 - Verify on a real phone: voice (iPhone Safari untested), the real AI replies,
   the .ics in a calendar app, a real admin login, `DEEPGRAM_API_KEY` on Render.
+
+## Phase 2 priorities (after the Website Builder launch; added 2026-10-12 at Irfan's direction)
+- GAP 2: customer code lands in the owner's (Irfan's) GitHub account, because every repo is created with the one server `GITHUB_TOKEN`.
+  This breaks "the user owns their code from day one". Not now. Phase 2 must pick one (or combine):
+  1. OAuth per user: the customer connects their own GitHub and repos are created there.
+  2. A neutral organisation owns the repos and a customer can transfer a repo to their own account.
+  3. Export as a zip: the customer downloads their code and pushes it anywhere.
+  4. Publishing to the customer's own Vercel or Netlify account.
+  Until then repos are private (done, `0dc0909`), which fixes who can READ the code but not who OWNS it.
 
 ## Parked (do NOT build yet)
 - Section library, Layer 2 polish (after the 20 sections exist): real fonts, Pixabay images, GSAP

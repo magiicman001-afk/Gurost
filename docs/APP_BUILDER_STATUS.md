@@ -62,8 +62,8 @@ sandbox 5 of those fail only because `@supabase/supabase-js` is not installed he
    backend and frontend together; target schema + max(backend, frontend), under 3 minutes) is not built and waits for the GLM speed check.
 5. **Per-user GitHub:** deploy pushes the backend to a repo under the one server `GITHUB_TOKEN`, so every customer's code lands in the owner's
    GitHub. That breaks the principle "the user owns their code from day one" and must be per-user (OAuth) **before real customers**.
-6. **Backend repos are created public by default** on the deploy path (`createRepo` default), unlike saves and checkpoints which are private.
-   A customer's backend code (and anything in it) would be world-readable. Fix before launch: pass `{ private: true }`.
+6. **Backend repos were public: FIXED 2026-10-12 (`0dc0909`).** All repos are now private and a test guards it. Still to do by hand: switch any
+   older public `gurost-<8 chars>` repo to private. Open: Render must be able to read a private repo (not verified live).
 7. **Pulse parity:** Analyze with Apply/Skip cards and the file-structure diagram (Mermaid) do not exist in either builder (parked 2026-10-08).
 8. **Limits and money:** free-plan project counting was based on in-memory projects until the persistence fix; re-check it. Paid models fail
    with 402 until OpenRouter is topped up, so none of the above can be tested on real models today.
@@ -89,7 +89,6 @@ your phone-testing evenings, which are the real gate on every release.
 
 ## 6. What I would NOT do
 
-- Start any of this before the Website Builder is launch-ready (your rule), except a fix that is an outright security hole. Item 6 in 4.2
-  (public backend repos) is the one candidate: it is a privacy risk, not a feature, and a one-word fix. It is your call whether to treat it as
-  a "fix that already shipped" exception; I have not touched it.
-- Promise customers deploys yet. Deploy has never been verified live by this team, and the per-user GitHub gap breaks a core principle.
+- Start any of this before the Website Builder is launch-ready (your rule), except an outright security hole. The public backend repos were
+  such a case and were fixed on 2026-10-12 as a one-word exception.
+- Promise customers deploys yet. Deploy has never been verified live by this team, and the shared-GitHub gap (item 5) breaks a core principle.
