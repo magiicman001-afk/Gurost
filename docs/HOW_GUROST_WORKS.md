@@ -36,7 +36,7 @@ There are four. The first is the current priority.
 | Product | What it does | Where the code is |
 |---|---|---|
 | **Website Builder** | Turns a description into a website. Offers four design directions to pick from, then lets you edit by talking to it. | `bots/variant-bot.js` |
-| **App Builder** | Builds a working app in three stages: the data (schema), the server (backend), the screens (frontend). | `bots/app-bot.js` |
+| **App Builder** | Builds a working **web** app in three stages: the data (schema), the server (backend), the screens (frontend). Web apps only today: no iPhone or Android app yet (section 3.8). | `bots/app-bot.js` |
 | **Business Assistant** | Helpers for running a business: Research, Email, Task and Code agents. | `bots/assistant-bot.js` |
 | **Amend Website** | Takes an existing website, audits it, rebuilds it, and keeps the brand. | `bots/revamp-bot.js` |
 
@@ -110,6 +110,24 @@ missing from memory is loaded back from the database when it is asked for. Since
 Website Builder page also remembers the last project in the browser for twelve hours, so a refresh or a redeploy no longer
 loses the build. **Not yet verified on a live phone test**, and the App Builder page does not have the "remember" part yet
 (`docs/APP_BUILDER_STATUS.md`). Until the live check, treat a push while someone is testing as a small risk.
+
+### 3.8 Mobile apps: what exists and the plan
+
+**Today: web apps only.** The App Builder makes apps that run in a browser. A first path that wraps a web app for Android exists in the code but has
+never been run for real. Nothing exists yet for iPhone, and nothing publishes to the App Store or Google Play for customers.
+
+**Plan (agreed 2026-10-12, full detail in `docs/MOBILE_APP_ROADMAP.md`):**
+- **Phase 2 (after the Website Builder and web App Builder launch):** 1) an installable web app (PWA), 1 to 2 days; 2) an Android wrapper (Capacitor),
+  2 to 4 days to prove; 3) an iPhone wrapper (Capacitor), 1 to 2 weeks plus Apple's waiting times, needing a Mac in the build loop and the customer's Apple account.
+- **Phase 3 (only if customers ask):** React Native through Expo, 4 to 8 weeks; it is a second App Builder, not a switch.
+- **Never, for now:** separate Flutter, native iPhone (Swift) and native Android (Kotlin) pipelines.
+
+**Not built, and never to be claimed until proven:** native iOS (Swift), native Android (Kotlin), Flutter, "McDonald's-level" animation, PWA install,
+iPhone builds, store publishing for customers.
+
+**Why a wrapper needs care:** Apple rule 4.2 rejects apps that are just a repackaged website, so a wrapped app needs real native features (push
+notifications, camera, files on the phone, a settings screen). Apple charges $99 a year, Google $25 once; the store accounts and signing keys must be the
+customer's own, which is what keeps "you own your app" true. Approval and dates are Apple's and Google's call; we never promise them.
 
 ## 4. The security system
 
@@ -232,8 +250,7 @@ yet.
 
 None of this is built: a privacy policy line about audit rows and a review by a qualified adviser; a "delete my account
 data" route that clears every user row; per-user GitHub login (today every user's project lands in the owner's GitHub);
-checking that all backup repos are private; testing voice on a real iPhone; saving projects to the database (Bug AA);
-real page navigation in built sites (Bug U); and the Website Builder V2 work.
+checking that all older backup repos are private (new ones always are); testing voice on a real iPhone; real page navigation in built sites (Bug U); and the Website Builder V2 work.
 
 ## 12. Evening checklist for Irfan
 

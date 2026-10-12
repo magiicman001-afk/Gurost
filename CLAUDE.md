@@ -266,6 +266,18 @@ If anything fails: `git revert` the update commit (small, logged) and write the 
   4. Publishing to the customer's own Vercel or Netlify account.
   Until then repos are private (done, `0dc0909`), which fixes who can READ the code but not who OWNS it.
 
+## Phase 2 roadmap: mobile apps (approved by Irfan 2026-10-12; full plan `docs/MOBILE_APP_ROADMAP.md`)
+- Today the App Builder makes WEB apps only. A first Capacitor-to-Android path exists in code (`lib/android-build.js`, `lib/google-play.js`) and has never been run.
+- Order (after the Website Builder and web App Builder launch): 1) installable web app / PWA (1-2 days); 2) Android Capacitor wrapper (2-4 days to
+  prove, needs a Google Play account, a keystore, the E2B Android template); 3) iPhone Capacitor wrapper (1-2 weeks, needs a Mac in the loop and an
+  Apple account, and native features or Apple rule 4.2 rejects it); 4) React Native/Expo ONLY IF customers ask (4-8 weeks, a second App Builder).
+- NEVER (for now): separate Flutter, native iOS (Swift) or native Android (Kotlin) pipelines.
+- NOT BUILT YET, never claim them: native iOS (Swift), native Android (Kotlin), Flutter, "McDonald's-level" animation, any App Store / Google Play
+  publishing for customers, PWA install, iPhone builds.
+- Sales facts (verify numbers on the day, sources are vendor guides): Apple $99/year; Google Play $25 one-time; Apple rule 4.2 = no bare wrappers; native
+  features needed (push, camera, files/offline, settings); Apple review usually 1-3 days, company account up to ~2 weeks; store accounts and keys must be
+  the CUSTOMER's own. Never promise approval or a date.
+
 ## Parked (do NOT build yet)
 - Section library, Layer 2 polish (after the 20 sections exist): real fonts, Pixabay images, GSAP
   scroll-reveal / stagger / counters (hooks `data-g-*` and `data-gsap-*` already in the templates),
