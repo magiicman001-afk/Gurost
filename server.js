@@ -47,6 +47,7 @@ const { packageProject, siteFiles, safePath } = require("./wrapper");
 const webBot = require("./bots/web-bot");
 const variantBot = require("./bots/variant-bot");
 const libraryBot = require("./bots/library-bot");
+const videoRequest = require("./lib/video-request");
 const sandboxLink = require("./lib/sandbox-link");
 const publishedSites = require("./lib/published-sites");
 const pulseBrain = require("./bots/pulse-brain");
@@ -1842,6 +1843,13 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
       if (!project.currentHtml) {
         return res.status(400).json({ error: "No current build to correct yet." });
       }
+      // "Add a video": find a real clip first. No clip = say so and change nothing (no look-alike layout swap that
+      // pretends it worked). With a clip, the model is given the exact <video> and the result is checked below.
+      let videoClip = null;
+      if (project.type !== "app" && videoRequest.wantsVideo(instruction)) {
+        videoClip = await videoRequest.findClip(project, instruction).catch(() => null);
+        if (!videoClip) return res.status(422).json({ error: videoRequest.NOT_AVAILABLE });
+      }
       // One correction at a time. A second one arriving mid-edit used to
       // fail its own transition and then, in its error handler, reset the
       // project to DONE under the first - whose finished edit was then
@@ -1862,7 +1870,8 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
       // one's result — see lib/project-lock.js for the real bug this fixes.
       const result = await withProjectLock(projectId, async () => {
         const before = project.currentHtml;
-        const r = await correctionBot.applyCorrection(project.currentHtml, instruction, { plan: req.user.plan });
+        const r = await correctionBot.applyCorrection(project.currentHtml, videoClip ? videoRequest.buildInstruction(instruction, videoClip) : instruction, { plan: req.user.plan });
+        if (videoClip && !videoRequest.hasClip(r.html, videoClip)) throw new Error(videoRequest.NOT_APPLIED); // nothing is saved
         pushUndoSnapshot(project, "correct");
         integrator.integrateCorrection(project, r);
         // An edit can't invent prices, years, ratings or statistics either: a
