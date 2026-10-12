@@ -47,7 +47,7 @@ function client(pathname, jwt) {
   const ctx = vm.createContext({
     window: { location: loc }, console,
     localStorage: { getItem: (k) => (k in store ? store[k] : null), removeItem: (k) => { delete store[k]; }, setItem: (k, v) => { store[k] = v; } },
-    fetch: async () => ({ ok: false, status: 401, json: async () => ({ error: "x", code: "token_expired" }) })
+    fetch: async () => { const r = { ok: false, status: 401, json: async () => ({ error: "x", code: "token_expired" }) }; r.clone = () => r; return r; }
   });
   vm.runInContext(fs.readFileSync(path.join(__dirname, "../public/shared/api-client.js"), "utf8"), ctx);
   return { api: ctx.window.GurostAPI, store, loc };
