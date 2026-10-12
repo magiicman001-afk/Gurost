@@ -39,12 +39,16 @@ if (mode === "staged") {
   const log = git(["log", "--all", "-p", "--no-color", "--unified=0", "--format=@@COMMIT %h"]);
   let commit = "", file = "";
   const seen = new Set();
+  // reviewed, harmless findings (file@commit); see .secret-scan-history-ok
+  let reviewed = new Set();
+  try { reviewed = new Set(require("fs").readFileSync(".secret-scan-history-ok", "utf8").split("\n").filter((l) => l.trim() && !l.startsWith("#")).map((l) => l.split(/\s+/)[0])); } catch { /* no list */ }
   for (const raw of log.split("\n")) {
     if (raw.startsWith("@@COMMIT ")) { commit = raw.slice(9); continue; }
     if (raw.startsWith("+++ b/")) { file = raw.slice(6); continue; }
     if (!raw.startsWith("+") || raw.startsWith("+++")) continue;
     if (skipped(file)) continue;
     for (const f of scanText(raw.slice(1), `${file}@${commit}`)) {
+      if (reviewed.has(f.file)) continue;
       const key = `${f.kind}|${f.preview}|${file}`;
       if (!seen.has(key)) { seen.add(key); findings.push({ ...f, line: 0 }); }
     }
