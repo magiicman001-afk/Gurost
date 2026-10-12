@@ -149,6 +149,13 @@ const { attachGuideBotSocket, broadcastProjectUpdate, presenceList: guideBotPres
 const { withProjectLock } = require("./lib/project-lock");
 
 const security = require("./security");
+const { adminWriteLimiter } = require("./lib/rate-limits");
+const { validate: validateInput } = require("./lib/validate"); // (server.js has its own validate() for older routes)
+// Shared input rules for admin routes (security spec 1.4): ids and slugs are plain characters, reasons are short text.
+const V_ID = { type: "string", required: true, max: 64, pattern: /^[A-Za-z0-9_-]+$/ };
+const V_SLUG = { type: "string", required: true, max: 80, pattern: /^[A-Za-z0-9-]+$/ };
+const V_REASON = { type: "string", max: 300, multiline: true };
+const V_SECRET = { type: "string", noTrim: true, max: 200 };
 const buildState = require("./lib/app-build-state");
 const { dropPlaceholderFiles, cleanAppFiles } = require("./lib/file-blocks");
 const auth = require("./auth");
@@ -595,7 +602,9 @@ function verifySecret(secret, salt, expectedHash) {
 // BEFORE the real app.use("/api", auth.requireAuth) line (paste it
 // there), since an admin has no regular user JWT to authenticate
 // with in the first place.
-app.post("/api/admin/login", authLimiter, security.rejectUnknownFields(["accessCode", "password"]), async (req, res) => {
+// Admin changes: 30 per 15 min per IP (lib/rate-limits.js lists every limit in one table).
+app.use("/api/admin", adminWriteLimiter(rateLimit));
+app.post("/api/admin/login", authLimiter, security.rejectUnknownFields(["accessCode", "password"]), validateInput({ body: { accessCode: V_SECRET, password: V_SECRET } }), async (req, res) => {
   const { accessCode, password } = req.body;
   if (!accessCode || !password) {
     return res.status(400).json({ error: "accessCode and password are both required." });
@@ -699,7 +708,7 @@ app.get("/api/admin/users", requireAdminAuth, adminAccess.needs("users"), async 
 
 // POST /api/admin/users/:userId/block — real, honest action, sets the
 // real status + reason columns rather than deleting anything.
-app.post("/api/admin/users/:userId/block", requireAdminAuth, adminAccess.needs("users"), security.rejectUnknownFields(["reason"]), async (req, res) => {
+app.post("/api/admin/users/:userId/block", requireAdminAuth, adminAccess.needs("users"), validateInput({ params: { userId: V_ID }, body: { reason: V_REASON } }), security.rejectUnknownFields(["reason"]), async (req, res) => {
   try {
     const { error } = await supabase
       .from("api_keys")
@@ -713,7 +722,7 @@ app.post("/api/admin/users/:userId/block", requireAdminAuth, adminAccess.needs("
 });
 
 // Takedown switch: takes a customer site offline at once (visitors get a plain 404), or puts it back.
-app.post("/api/admin/sites/:slug/takedown", requireAdminAuth, adminAccess.needs("users"), security.rejectUnknownFields(["reason"]), async (req, res) => {
+app.post("/api/admin/sites/:slug/takedown", requireAdminAuth, adminAccess.needs("users"), validateInput({ params: { slug: V_SLUG }, body: { reason: V_REASON } }), security.rejectUnknownFields(["reason"]), async (req, res) => {
   try {
     const row = await siteStore.setStatusBySlug(req.params.slug, "taken_down", String(req.body.reason || "No reason given.").slice(0, 300));
     if (!row) return res.status(404).json({ error: "No such site." });
@@ -722,7 +731,7 @@ app.post("/api/admin/sites/:slug/takedown", requireAdminAuth, adminAccess.needs(
     res.status(500).json({ error: err.message });
   }
 });
-app.post("/api/admin/sites/:slug/restore", requireAdminAuth, adminAccess.needs("users"), async (req, res) => {
+app.post("/api/admin/sites/:slug/restore", requireAdminAuth, adminAccess.needs("users"), validateInput({ params: { slug: V_SLUG } }), async (req, res) => {
   try {
     const row = await siteStore.setStatusBySlug(req.params.slug, "live", null);
     if (!row) return res.status(404).json({ error: "No such site." });
@@ -733,7 +742,7 @@ app.post("/api/admin/sites/:slug/restore", requireAdminAuth, adminAccess.needs("
 });
 
 // POST /api/admin/users/:userId/unblock — real, reverses the above.
-app.post("/api/admin/users/:userId/unblock", requireAdminAuth, adminAccess.needs("users"), async (req, res) => {
+app.post("/api/admin/users/:userId/unblock", requireAdminAuth, adminAccess.needs("users"), validateInput({ params: { userId: V_ID } }), async (req, res) => {
   try {
     const { error } = await supabase
       .from("api_keys")
@@ -812,7 +821,7 @@ app.get("/api/admin/company/:id/usage", requireAdminAuth, adminAccess.needs("use
   }
 });
 
-app.post("/api/admin/developers", requireAdminAuth, adminAccess.needs("team"), security.rejectUnknownFields(["name", "email"]), async (req, res) => {
+app.post("/api/admin/developers", requireAdminAuth, adminAccess.needs("team"), validateInput({ body: { name: { type: "string", required: true, max: 80 }, email: { type: "email", required: true } } }), security.rejectUnknownFields(["name", "email"]), async (req, res) => {
   try {
     res.json(await developerOnboarding.addDeveloper(req.body.name, req.body.email, req.admin.adminId));
   } catch (err) {
@@ -828,7 +837,7 @@ app.get("/api/admin/developers", requireAdminAuth, adminAccess.needs("team"), as
   }
 });
 
-app.put("/api/admin/developers/:id", requireAdminAuth, adminAccess.needs("team"), security.rejectUnknownFields(["active", "name"]), async (req, res) => {
+app.put("/api/admin/developers/:id", requireAdminAuth, adminAccess.needs("team"), validateInput({ params: { id: V_ID }, body: { active: "bool", name: { type: "string", max: 80 } } }), security.rejectUnknownFields(["active", "name"]), async (req, res) => {
   try {
     res.json(await developerOnboarding.updateDeveloperAccess(req.params.id, req.body));
   } catch (err) {
@@ -836,7 +845,7 @@ app.put("/api/admin/developers/:id", requireAdminAuth, adminAccess.needs("team")
   }
 });
 
-app.post("/api/admin/users/:userId/deactivate", requireAdminAuth, adminAccess.needs("users"), async (req, res) => {
+app.post("/api/admin/users/:userId/deactivate", requireAdminAuth, adminAccess.needs("users"), validateInput({ params: { userId: V_ID } }), async (req, res) => {
   try {
     await adminDashboard.deactivateUser(req.params.userId);
     res.json({ deactivated: true });
@@ -845,7 +854,7 @@ app.post("/api/admin/users/:userId/deactivate", requireAdminAuth, adminAccess.ne
   }
 });
 
-app.post("/api/admin/users/:userId/reactivate", requireAdminAuth, adminAccess.needs("users"), async (req, res) => {
+app.post("/api/admin/users/:userId/reactivate", requireAdminAuth, adminAccess.needs("users"), validateInput({ params: { userId: V_ID } }), async (req, res) => {
   try {
     await adminDashboard.reactivateUser(req.params.userId);
     res.json({ reactivated: true });
@@ -863,25 +872,25 @@ app.get("/api/admin/team", requireAdminAuth, adminAccess.needs("team"), async (r
     res.json({ members: await adminTeam.listMembers(supabase), assignable: adminTeam.assignableRoles(req.admin.role), you: req.admin.adminId });
   } catch (err) { teamError(res, err); }
 });
-app.post("/api/admin/team", requireAdminAuth, adminAccess.needs("team"), security.rejectUnknownFields(["name", "role", "reason"]), async (req, res) => {
+app.post("/api/admin/team", requireAdminAuth, adminAccess.needs("team"), validateInput({ body: { name: { type: "string", required: true, min: 2, max: 60 }, role: { type: "string", required: true, max: 20 }, reason: V_REASON } }), security.rejectUnknownFields(["name", "role", "reason"]), async (req, res) => {
   try {
     const actor = { adminId: req.admin.adminId, name: req.admin.name, role: req.admin.role };
     res.json(await adminTeam.createMember(supabase, actor, req.body, hashSecret));
   } catch (err) { teamError(res, err); }
 });
-app.post("/api/admin/team/:id/role", requireAdminAuth, adminAccess.needs("team"), security.rejectUnknownFields(["role", "reason"]), async (req, res) => {
+app.post("/api/admin/team/:id/role", requireAdminAuth, adminAccess.needs("team"), validateInput({ params: { id: V_ID }, body: { role: { type: "string", required: true, max: 20 }, reason: V_REASON } }), security.rejectUnknownFields(["role", "reason"]), async (req, res) => {
   try {
     const actor = { adminId: req.admin.adminId, name: req.admin.name, role: req.admin.role };
     res.json(await adminTeam.changeRole(supabase, actor, req.params.id, req.body.role, req.body.reason, forgetAdminRole));
   } catch (err) { teamError(res, err); }
 });
-app.post("/api/admin/team/:id/active", requireAdminAuth, adminAccess.needs("team"), security.rejectUnknownFields(["active", "reason"]), async (req, res) => {
+app.post("/api/admin/team/:id/active", requireAdminAuth, adminAccess.needs("team"), validateInput({ params: { id: V_ID }, body: { active: { type: "bool", required: true }, reason: V_REASON } }), security.rejectUnknownFields(["active", "reason"]), async (req, res) => {
   try {
     const actor = { adminId: req.admin.adminId, name: req.admin.name, role: req.admin.role };
     res.json(await adminTeam.setActive(supabase, actor, req.params.id, req.body.active === true, req.body.reason, forgetAdminRole));
   } catch (err) { teamError(res, err); }
 });
-app.post("/api/admin/team/:id/regenerate", requireAdminAuth, adminAccess.needs("team"), security.rejectUnknownFields(["reason"]), async (req, res) => {
+app.post("/api/admin/team/:id/regenerate", requireAdminAuth, adminAccess.needs("team"), validateInput({ params: { id: V_ID }, body: { reason: V_REASON } }), security.rejectUnknownFields(["reason"]), async (req, res) => {
   try {
     const actor = { adminId: req.admin.adminId, name: req.admin.name, role: req.admin.role };
     res.json(await adminTeam.regenerate(supabase, actor, req.params.id, req.body.reason, hashSecret, forgetAdminRole));
@@ -920,7 +929,7 @@ const adminOpsRunner = adminOpsActions.createOps({
 app.get("/api/admin/ops", requireAdminAuth, adminAccess.needs("ops"), (req, res) => {
   res.json({ actions: adminOpsRunner.state(), rotationChecklist: adminOpsActions.ROTATION_CHECKLIST });
 });
-app.post("/api/admin/ops/:action", requireAdminAuth, adminAccess.needs("ops"), security.rejectUnknownFields(["password", "reason", "force"]), async (req, res) => {
+app.post("/api/admin/ops/:action", requireAdminAuth, adminAccess.needs("ops"), validateInput({ params: { action: { type: "string", required: true, max: 30, pattern: /^[a-z-]+$/ } }, body: { password: V_SECRET, reason: V_REASON, force: "bool" } }), security.rejectUnknownFields(["password", "reason", "force"]), async (req, res) => {
   try {
     const actor = { adminId: req.admin.adminId, name: req.admin.name, role: req.admin.role };
     res.json(await adminOpsRunner.run(actor, req.params.action, req.body));
@@ -947,7 +956,7 @@ app.get("/api/admin/inventory", requireAdminAuth, adminAccess.needs("inventory")
 app.get("/api/admin/models", requireAdminAuth, adminAccess.needs("models"), (req, res) => {
   res.json(adminData.modelsStatus(process.env, req.admin.role));
 });
-app.get("/api/admin/projects/saved", requireAdminAuth, adminAccess.needs("projects"), async (req, res) => {
+app.get("/api/admin/projects/saved", requireAdminAuth, adminAccess.needs("projects"), validateInput({ query: { state: { type: "string", max: 30, pattern: /^[A-Za-z_]+$/ }, userId: { type: "string", max: 64, pattern: /^[A-Za-z0-9_-]+$/ } } }), async (req, res) => {
   try {
     res.json({ projects: await adminData.projectsList(supabase, PROJECTS, { state: req.query.state, userId: req.query.userId }) });
   } catch (err) {
@@ -955,7 +964,7 @@ app.get("/api/admin/projects/saved", requireAdminAuth, adminAccess.needs("projec
   }
 });
 // Every bot action of every build, grouped into builds so the whole escalation chain reads in order. Always on.
-app.get("/api/admin/build-logs", requireAdminAuth, adminAccess.needs("builds"), async (req, res) => {
+app.get("/api/admin/build-logs", requireAdminAuth, adminAccess.needs("builds"), validateInput({ query: { projectId: { type: "string", max: 64, pattern: /^[A-Za-z0-9_-]+$/ }, userId: { type: "string", max: 64, pattern: /^[A-Za-z0-9_-]+$/ }, bot: { type: "string", max: 20, pattern: /^[a-z]+$/ }, result: { type: "enum", values: ["success", "fail", "escalate"] }, limit: { type: "int", min: 1, max: 1000 } } }), async (req, res) => {
   try {
     const rows = await buildLog.queryLogs(supabase, { projectId: req.query.projectId, userId: req.query.userId, bot: req.query.bot, result: req.query.result, limit: Number(req.query.limit) || 600, newestFirst: true });
     res.json({ builds: buildLog.groupBuilds(rows).slice(0, 60), rows: rows.length });
@@ -963,7 +972,7 @@ app.get("/api/admin/build-logs", requireAdminAuth, adminAccess.needs("builds"), 
     res.status(500).json({ error: err.message });
   }
 });
-app.get("/api/admin/builds", requireAdminAuth, adminAccess.needs("builds"), async (req, res) => {
+app.get("/api/admin/builds", requireAdminAuth, adminAccess.needs("builds"), validateInput({ query: { limit: { type: "int", min: 1, max: 200 } } }), async (req, res) => {
   try {
     res.json(await adminData.buildsLog(supabase, { limit: Number(req.query.limit) || 100 }));
   } catch (err) {
