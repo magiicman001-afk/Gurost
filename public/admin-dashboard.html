@@ -208,18 +208,27 @@ async function loadTab(tab) {
 
 async function renderUsers(el) {
   const { users } = await adminCall('/api/admin/users');
+  const list = users || [];
+  if (!list.length) { el.innerHTML = empty('No users yet.'); return; }
+  const blocked = list.filter((u) => u.status === 'blocked').length;
+  const paid = list.filter((u) => u.plan && u.plan !== 'free').length;
+  const weekAgo = Date.now() - 7 * 86400000;
+  const fresh = list.filter((u) => Date.parse(u.created_at) >= weekAgo).length;
   el.innerHTML = `
-    <table>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      ${tile('Users', num(list.length))}${tile('Joined this week', num(fresh))}${tile('On a paid plan', num(paid))}${tile('Blocked', num(blocked), null, blocked ? '#c2410c' : '')}
+    </div>
+    <div class="overflow-x-auto"><table>
       <thead><tr><th>Email</th><th>Plan</th><th>Status</th><th>Joined</th><th></th></tr></thead>
-      <tbody>${users.map((u) => `
+      <tbody>${list.map((u) => `
         <tr>
-          <td>${escapeHtml(u.email || '—')}</td>
-          <td>${u.plan}</td>
-          <td><span class="badge" style="background:${u.status === 'blocked' ? '#fee2e2' : '#dcfce7'};color:${u.status === 'blocked' ? '#991b1b' : '#166534'};">${u.status || 'active'}${u.status === 'blocked' && u.blocked_reason ? ' — ' + u.blocked_reason : ''}</span></td>
-          <td>${new Date(u.created_at).toLocaleDateString()}</td>
-          <td><button class="text-xs font-semibold underline" data-user="${u.user_id}" data-action="${u.status === 'blocked' ? 'unblock' : 'block'}">${u.status === 'blocked' ? 'Unblock' : 'Block'}</button></td>
+          <td style="word-break:break-word">${escapeHtml(u.email || '—')}</td>
+          <td>${pill(u.plan || 'free', u.plan && u.plan !== 'free' ? '#dbeafe' : '#f1f5f9', u.plan && u.plan !== 'free' ? '#1d4ed8' : '#475569')}</td>
+          <td>${u.status === 'blocked' ? pill('blocked' + (u.blocked_reason ? ' — ' + u.blocked_reason : ''), '#fee2e2', '#991b1b') : pill(u.status || 'active', '#dcfce7', '#166534')}</td>
+          <td style="white-space:nowrap">${escapeHtml(new Date(u.created_at).toLocaleDateString())}</td>
+          <td><button class="text-xs font-semibold underline" data-user="${escapeHtml(u.user_id)}" data-action="${u.status === 'blocked' ? 'unblock' : 'block'}">${u.status === 'blocked' ? 'Unblock' : 'Block'}</button></td>
         </tr>`).join('')}</tbody>
-    </table>`;
+    </table></div>`;
   el.querySelectorAll('[data-action]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const userId = btn.dataset.user;
