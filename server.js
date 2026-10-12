@@ -366,9 +366,15 @@ const PROJECTS = new Map();
 
 // Signup/login must run BEFORE the global auth middleware — a brand new
 // user has no credentials yet, that's the whole point of these routes.
+// S3c cookie login: a correct sign-in also starts a cookie session (lib/user-sessions.js). Only for requests
+// from Gurost's own pages (or with no Origin, e.g. scripts) - another site can't sign a browser in as someone else.
+const sessionRoutes = require("./lib/user-sessions").sessionRoutes(auth.sessions());
+const startCookieSession = (req, userId) => (!req.headers.origin || auth.sessions().originAllowed(req) ? auth.sessions().start(req, req.res, { userId }) : false);
+
 app.post("/api/auth/signup", authLimiter, security.rejectUnknownFields(["email", "password"]), async (req, res) => {
   try {
     const result = await userAuth.signup(req.body.email, req.body.password);
+    await startCookieSession(req, result.userId);
     res.json(result);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -378,11 +384,16 @@ app.post("/api/auth/signup", authLimiter, security.rejectUnknownFields(["email",
 app.post("/api/auth/login", authLimiter, security.rejectUnknownFields(["email", "password"]), async (req, res) => {
   try {
     const result = await userAuth.login(req.body.email, req.body.password);
+    await startCookieSession(req, result.userId);
     res.json(result);
   } catch (err) {
     res.status(401).json({ error: err.message });
   }
 });
+
+// Before requireAuth: both must work once the 15-minute access cookie has expired.
+app.post("/api/auth/refresh", security.rejectUnknownFields([]), sessionRoutes.refresh);
+app.post("/api/auth/logout", security.rejectUnknownFields([]), sessionRoutes.logout);
 
 // Also unauthenticated, same reasoning as signup/login — someone who
 // forgot their password has no valid credentials to authenticate a
@@ -1119,6 +1130,9 @@ app.get("/api/templates/:id/preview", (req, res) => {
 });
 
 app.use("/api", auth.requireAuth);
+
+// Sign out everywhere: ends every cookie session of this account (other phones, other browsers).
+app.post("/api/auth/logout-all", security.rejectUnknownFields([]), sessionRoutes.logoutAll);
 
 // Per-user: 500 requests / hour, keyed by the authenticated user's id.
 const userLimiter = rateLimit({
@@ -5502,6 +5516,9 @@ app.post("/api/auth/change-password", security.rejectUnknownFields(["currentPass
   }
   try {
     await userAuth.changePassword(req.user.id, currentPassword, newPassword);
+    // Every other signed-in browser must sign in again with the new password; this one stays signed in.
+    await auth.sessions().revokeAll(req.user.id, { keep: auth.sessions().currentSessionId(req) })
+      .catch((err) => console.error("[sessions] Could not end other sessions after a password change:", err.message));
     res.json({ changed: true });
   } catch (err) {
     res.status(400).json({ error: err.message });
