@@ -222,3 +222,35 @@ test("browser: every nav, button and footer link opens a real page; forms submit
     server.close();
   }
 });
+
+// ---- Bug U in the builder preview: the Live Preview shows real pages, not one page of anchors ----
+test("previewSite: tabs for the main pages, every page link opens a page file, no anchors, no leftovers", async () => {
+  const p = await cafeProject();
+  const pv = S.previewSite(p.site);
+  assert.deepEqual(pv.pages.map((x) => x.file).slice(0, 4), ["index.html", "menu.html", "about.html", "contact.html"]);
+  assert.ok(pv.pages.every((x) => !/menu-/.test(x.file)), "item pages are not tabs");
+  assert.ok(pv.previews["menu-birthday-cake.html"], "item pages are still reachable");
+  assert.ok(pv.previews["menu-birthday-cake-2.html"], "duplicate titles get their own file");
+  const files = new Set(Object.keys(pv.previews));
+  for (const [file, html] of Object.entries(pv.previews)) {
+    assert.ok(!html.includes("__gp__"), file + " has an unrewritten link");
+    const hrefs = [...html.matchAll(/href="([^"]*)"/g)].map((m) => m[1]);
+    for (const h of hrefs) {
+      if (/^(https?:|mailto:|tel:|#main$)/.test(h) || /\.(css|ico|png|svg)$/.test(h)) continue;
+      assert.ok(files.has(h.split("#")[0]), `${file}: link "${h}" does not open a page`);
+    }
+  }
+  // the home page's nav links to the other pages, and the logo goes home
+  const home = pv.previews["index.html"];
+  assert.match(home, /href="menu\.html"/);
+  assert.match(home, /href="about\.html"/);
+  assert.match(home, /href="index\.html"/);
+  assert.ok(!/<a [^>]*href="#(?!main)/.test(home), "no in-page anchors on the home page");
+});
+
+test("a library design is fresh until it is edited (edited designs use the old page split)", async () => {
+  const p = await cafeProject();
+  assert.equal(SB.isFresh(p), true);
+  const edited = { ...p, currentHtml: p.currentHtml + "<!-- edited -->" };
+  assert.equal(SB.isFresh(edited), false);
+});

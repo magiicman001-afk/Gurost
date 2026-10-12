@@ -4896,6 +4896,16 @@ app.get("/api/project/:id/site", (req, res) => {
     html = v.html;
   }
   if (!html) return res.status(400).json({ error: "Nothing built yet." });
+  // A section-library design that has not been edited shows its REAL pages (home, menu or services, about, contact...),
+  // so a nav link opens a page in the preview instead of scrolling one long page (Bug U).
+  const picked = wanted ? (project.variants || []).find((x) => x.id === wanted) : null;
+  const libSite = wanted ? (picked && picked.site) : (sandboxLink.isFresh(project) ? project.site : null);
+  if (libSite && libSite.engine === "section-library") {
+    try {
+      const lib = require("./lib/sections/site").previewSite(libSite);
+      if (lib.pages.length > 1) return res.json({ multi: true, pages: lib.pages, previews: lib.previews });
+    } catch (e) { console.warn("[site-preview] library pages failed, showing the single page:", e.message); }
+  }
   const site = buildSite(html, { businessInfo: project.businessInfo || null });
   if (!site.multi) return res.json({ multi: false, pages: [], previews: {} });
   res.json({
