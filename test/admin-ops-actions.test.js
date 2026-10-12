@@ -94,7 +94,8 @@ test("rotating keys is a checklist, not an action", () => {
 
 test("server wiring: ops actions are Owner-only, take only password/reason/force, check the password against the account", () => {
   const src = fs.readFileSync(path.join(__dirname, "..", "server.js"), "utf8");
-  assert.ok(src.includes('app.post("/api/admin/ops/:action", requireAdminAuth, adminAccess.needs("ops"), security.rejectUnknownFields(["password", "reason", "force"])'));
+  assert.ok(src.includes('app.post("/api/admin/ops/:action", requireAdminAuth, adminAccess.needs("ops"), validateInput('), "input is validated");
+  assert.ok(src.includes('security.rejectUnknownFields(["password", "reason", "force"])'));
   assert.ok(src.indexOf('"/api/admin/ops/test-connections"') < src.indexOf('"/api/admin/ops/:action"'), "the specific route comes first");
   assert.match(src, /verifySecret\(password, data\.password_salt, data\.password_hash\)/);
   const A = require("../lib/admin-access");

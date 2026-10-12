@@ -69,3 +69,8 @@ test("a missing body is handled", async () => {
   const mw = validate({ body: { reason: { type: "string", required: true } } });
   assert.equal((await run(mw, { params: {} })).code, 400);
 });
+
+test("noTrim keeps a password exactly as typed but still limits it", () => {
+  assert.equal(check("p", " pass word ", { type: "string", noTrim: true, max: 20 }).value, " pass word ");
+  assert.equal(check("p", "x".repeat(21), { type: "string", noTrim: true, max: 20 }).ok, false);
+});
