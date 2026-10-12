@@ -37,15 +37,13 @@
  *                    auto-rewriting Critical/High, so WARN-level
  *                    findings surface as visible warnings rather
  *                    than being silently rewritten)
- * Version note: pinned to ^0.14.0 in package.json, confirmed as the
- * real current npm version directly from npmjs.com's own listing
- * (0.14.0, published 16 days before this was checked). Still genuinely
- * unverified: actually running the CLI end-to-end. This environment
- * has no network access to npm's registry, so the code below was
- * built and tested against the documented, real CLI flags and output
- * shape, but the live command itself hasn't been executed here. First
- * real generation after this deploys is the first real test of it —
- * worth checking logs then, not assuming clean from code review alone.
+ * Version note: pinned to exactly 0.18.1 (2026-10-12). Checked by running
+ * the CLI: `aislop scan --json` writes its findings to `diagnostics`
+ * (each with `filePath`, `rule`, `message`, `severity` "error" or
+ * "warning", `fixable`) and exits 1 when it finds anything. Until
+ * 2026-10-12 this file read `findings` / `file` and an upper-case "ERROR",
+ * so every scan reported no issues - test/aislop-check.test.js now holds
+ * the real output shape.
  */
 
 const { execFile } = require("child_process");
@@ -64,7 +62,15 @@ const execFileAsync = promisify(execFile);
 // fetching @latest every time regardless of what's pinned in
 // package.json, quietly defeating the whole point of pinning a
 // version. An absolute path sidesteps that regardless of cwd.
-const AISLOP_BIN = path.join(__dirname, "node_modules", ".bin", "aislop");
+// aislop's own CLI file, run with this Node. The node_modules/.bin/aislop shim
+// is a shell script that execFile can't start on Windows (ENOENT), which made
+// every local check report "no issues" without running anything.
+function aislopCli() {
+  const dir = path.join(__dirname, "node_modules", "aislop");
+  const pkg = JSON.parse(require("fs").readFileSync(path.join(dir, "package.json"), "utf8"));
+  return path.join(dir, typeof pkg.bin === "string" ? pkg.bin : pkg.bin.aislop);
+}
+const runAislop = (args, options) => execFileAsync(process.execPath, [aislopCli(), ...args], options);
 
 async function writeProjectToTempDir(files) {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "gurost-aislop-"));
@@ -90,7 +96,7 @@ async function readProjectFromTempDir(dir, originalFiles) {
 }
 
 function mapSeverity(level) {
-  return level === "ERROR" ? "High" : "Medium";
+  return String(level || "").toLowerCase() === "error" ? "High" : "Medium";
 }
 
 /**
@@ -107,9 +113,10 @@ function parseAislopFindings(jsonOutput) {
     return {}; // real, honest failure mode — caller treats this as "no findings" rather than crashing the whole generation pipeline over a parse issue in an optional check
   }
   const findingsByFile = {};
-  const findings = parsed.findings || parsed.issues || [];
+  // aislop 0.18 writes `diagnostics`; the older names are kept in case a version changes back.
+  const findings = parsed.diagnostics || parsed.findings || parsed.issues || [];
   for (const f of findings) {
-    const filePath = f.file || f.path;
+    const filePath = f.filePath || f.file || f.path;
     if (!filePath) continue;
     if (!findingsByFile[filePath]) findingsByFile[filePath] = [];
     findingsByFile[filePath].push({
@@ -136,19 +143,21 @@ async function runAislopCheck(files) {
     // no LLM call, just runs. Failure here isn't fatal to the whole
     // check; a project with nothing auto-fixable exits non-zero from
     // some aislop versions, which isn't a real error for our purposes.
-    await execFileAsync(AISLOP_BIN, ["fix"], { cwd: tempDir, timeout: 60000 }).catch(() => {});
+    await runAislop(["fix"], { cwd: tempDir, timeout: 60000 }).catch(() => {});
 
     // Stage 2: scan what's left after auto-fix, to hand real,
     // judgment-needed issues to the existing fix-bot pipeline.
     let scanOutput;
     try {
-      const result = await execFileAsync(AISLOP_BIN, ["scan", "--json"], { cwd: tempDir, timeout: 60000 });
+      const result = await runAislop(["scan", "--json"], { cwd: tempDir, timeout: 60000 });
       scanOutput = result.stdout;
     } catch (err) {
       // aislop's CI-style commands exit non-zero when the score gate
       // fails — that's still real, useful JSON on stdout, not a
-      // genuine execution failure. Use it if present.
-      scanOutput = err.stdout || "";
+      // genuine execution failure. Use it if present. No output at all
+      // means aislop didn't run: say so (skipped), never "no issues".
+      if (!err.stdout) throw new Error(`aislop could not run: ${err.message}`);
+      scanOutput = err.stdout;
     }
 
     const findingsByFile = parseAislopFindings(scanOutput);
@@ -172,4 +181,4 @@ async function runAislopCheck(files) {
   }
 }
 
-module.exports = { runAislopCheck };
+module.exports = { runAislopCheck, parseAislopFindings };
