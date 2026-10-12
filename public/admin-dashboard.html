@@ -19,6 +19,9 @@
   td { padding: 8px 10px; border-bottom: 1px solid var(--line); }
   .tab-btn { padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; border: 1px solid var(--line); background: white; cursor: pointer; }
   .tab-btn.active { background: var(--orange); color: white; border-color: var(--orange); }
+  /* Phone: tables scroll inside their panel instead of widening the page, and the 18 tabs sit on one swipeable row. */
+  .tab-panel { overflow-x: auto; }
+  @media (max-width: 640px) { #tabBar { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; } .tab-btn { white-space: nowrap; flex: none; } main { padding: 16px; } }
   .badge { padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
 </style>
 </head>
@@ -452,7 +455,22 @@ async function renderSecurity(el) {
 
 async function renderMemory(el) {
   const d = await adminCall('/api/admin/design-memory');
-  el.innerHTML = `<pre class="text-xs whitespace-pre-wrap bg-white border border-[var(--line)] rounded-xl p-4">${escapeHtml(JSON.stringify(d, null, 2))}</pre>`;
+  const names = Object.keys(d.industries);
+  if (!names.length) {
+    el.innerHTML = `<p class="text-sm">No builds recorded yet (${d.totalBuilds} so far). Designs are recorded once the Premium Pipeline is on (PREMIUM_PIPELINE=1); after ${d.minIndustryBuilds} builds in an industry, the builder starts leading with what scores and survives best.</p>`;
+    return;
+  }
+  el.innerHTML = `<p class="text-xs text-[var(--muted)] mb-3">${d.totalBuilds} builds recorded. Structure only (industry, sections, palette, score): never a person's words or details.</p>` + names.map((n) => {
+    const i = d.industries[n];
+    const learn = i.learning ? '<span class="badge" style="background:#dcfce7;color:#166534">learning: leads with the best combination</span>' : `<span class="badge" style="background:#ffedd5;color:#9a3412">${i.buildsToLearn} more builds before it learns</span>`;
+    return `<div class="border border-[var(--line)] rounded-xl bg-white p-4 mb-3">
+      <p class="font-display font-bold mb-1">${escapeHtml(n)} <span class="text-sm font-normal text-[var(--muted)]">${i.builds} builds · average score ${i.meanScore}</span></p>
+      <p class="mb-2">${learn}</p>
+      <table><thead><tr><th>Top combination</th><th>Builds</th><th>Score</th><th>Kept</th><th>Deleted</th><th>Value</th></tr></thead>
+      <tbody>${i.topCombos.map((c) => `<tr><td style="word-break:break-word">${escapeHtml(c.sections.map((x) => x.id + '.' + x.variant).join(' '))} · ${escapeHtml(c.palette || '')}</td><td>${c.builds}</td><td>${c.meanScore}</td><td>${Math.round(c.keptRate * 100)}%</td><td>${Math.round(c.deletedRate * 100)}%</td><td>${c.value}</td></tr>`).join('')}</tbody></table>
+      ${i.sectionWins.length ? `<p class="text-xs text-[var(--muted)] mt-2">Sections that win most: ${i.sectionWins.map((w) => escapeHtml(w.section) + ' (' + w.count + ')').join(', ')}</p>` : ''}
+    </div>`;
+  }).join('');
 }
 
 async function renderUsage(el) {
