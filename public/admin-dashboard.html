@@ -92,6 +92,9 @@ const TABS = [
   { id: 'builds', label: 'Builds log', section: 'builds' },
   { id: 'buildlogs', label: 'Build Logs', section: 'builds' },
   { id: 'memory', label: 'Design memory', section: 'builds' },
+  { id: 'code', label: 'Code & deploy', section: 'code' },
+  { id: 'docs', label: 'Docs', section: 'docs' },
+  { id: 'ops', label: 'Ops', section: 'ops' },
   { id: 'team', label: 'Team', section: 'team' },
   { id: 'security', label: 'Security', section: 'security' },
   { id: 'users', label: 'Users', section: 'users' },
@@ -182,6 +185,9 @@ async function loadTab(tab) {
     else if (tab === 'models') await renderModels(el);
     else if (tab === 'builds') await renderBuilds(el);
     else if (tab === 'buildlogs') await renderBuildLogs(el);
+    else if (tab === 'code') await renderCode(el);
+    else if (tab === 'docs') await renderDocs(el);
+    else if (tab === 'ops') await renderOps(el);
     else if (tab === 'team') await renderTeam(el);
     else if (tab === 'security') await renderSecurity(el);
     else if (tab === 'memory') await renderMemory(el);
@@ -324,6 +330,37 @@ async function renderBuildLogs(el) {
     a.click();
   });
   await load();
+}
+
+async function renderCode(el) {
+  const d = await adminCall('/api/admin/code');
+  const dep = d.deploys.connected ? `<table class="mb-5"><thead><tr><th>Deploy</th><th>Status</th><th>Commit</th><th>Started</th></tr></thead><tbody>${d.deploys.items.map((x) => `<tr><td>${escapeHtml(String(x.id).slice(-8))}</td><td>${escapeHtml(x.status)}</td><td>${escapeHtml(x.commit || '')} ${escapeHtml(x.message || '')}</td><td>${x.at ? new Date(x.at).toLocaleString() : ''}</td></tr>`).join('')}</tbody></table>` : `<p class="text-sm text-[var(--muted)] mb-5">${escapeHtml(d.deploys.note)}</p>`;
+  const com = d.commits.connected ? `<table><thead><tr><th>Commit</th><th>Message</th><th>Who</th><th>When</th></tr></thead><tbody>${d.commits.items.map((c) => `<tr><td>${escapeHtml(c.sha)}</td><td>${escapeHtml(c.message)}</td><td>${escapeHtml(c.author)}</td><td>${c.at ? new Date(c.at).toLocaleString() : ''}</td></tr>`).join('')}</tbody></table>` : `<p class="text-sm text-[var(--muted)]">${escapeHtml(d.commits.note)}</p>`;
+  el.innerHTML = `<p class="text-sm mb-3">Running <b>${escapeHtml(d.version)}</b> since ${new Date(d.runningSince).toLocaleString()} · ${escapeHtml(d.repo)} (${escapeHtml(d.branch)})</p><h3 class="font-display font-bold mb-2">Deploys</h3>${dep}<h3 class="font-display font-bold mb-2">Latest commits</h3>${com}`;
+}
+
+async function renderDocs(el) {
+  const { links } = await adminCall('/api/admin/docs');
+  el.innerHTML = `<ul class="text-sm space-y-1">${links.map((l) => `<li><a class="underline" target="_blank" rel="noopener" href="${escapeHtml(l.url)}">${escapeHtml(l.title)}</a></li>`).join('')}</ul>`;
+}
+
+async function renderOps(el) {
+  el.innerHTML = `
+    <h3 class="font-display font-bold mb-2">Test connections</h3>
+    <p class="text-xs text-[var(--muted)] mb-2">One harmless read-only call per provider. Nothing is changed.</p>
+    <button id="opsTest" class="tab-btn mb-3">Run test</button>
+    <div id="opsTestOut"></div>`;
+  document.getElementById('opsTest').addEventListener('click', async (ev) => {
+    ev.target.disabled = true;
+    const out = document.getElementById('opsTestOut');
+    out.textContent = 'Testing…';
+    try {
+      const { results } = await adminCall('/api/admin/ops/test-connections', { method: 'POST', body: {} });
+      const colour = { ok: '#15803d', 'not set': '#64748b', rejected: '#c2410c', failed: '#c2410c' };
+      out.innerHTML = `<table><thead><tr><th>Provider</th><th>Result</th><th>Detail</th></tr></thead><tbody>${results.map((r) => `<tr><td>${escapeHtml(r.name)}</td><td style="color:${colour[r.state] || '#000'};font-weight:600">${escapeHtml(r.state)}${r.ms != null ? ` (${r.ms} ms)` : ''}</td><td>${escapeHtml(r.detail || '')}${r.balance ? escapeHtml(' ' + JSON.stringify(r.balance)) : ''}</td></tr>`).join('')}</tbody></table>`;
+    } catch (err) { out.textContent = err.message; }
+    ev.target.disabled = false;
+  });
 }
 
 const RANK = { viewer: 0, engineer: 1, team_lead: 2, admin: 3, owner: 4 };

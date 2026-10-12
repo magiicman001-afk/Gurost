@@ -53,6 +53,7 @@ const adminAccess = require("./lib/admin-access");
 const adminData = require("./lib/admin-data");
 const buildLog = require("./lib/build-log");
 const adminTeam = require("./lib/admin-team");
+const adminOps = require("./lib/admin-ops");
 const sandboxLink = require("./lib/sandbox-link");
 const publishedSites = require("./lib/published-sites");
 const pulseBrain = require("./bots/pulse-brain");
@@ -889,6 +890,18 @@ app.get("/api/admin/security", requireAdminAuth, adminAccess.needs("security"), 
     const [members, audit] = await Promise.all([adminTeam.listMembers(supabase), adminTeam.recentAudit(supabase, 30)]);
     res.json({ ...(await adminData.securityStatus(supabase, process.env, members)), audit });
   } catch (err) { teamError(res, err); }
+});
+
+// ---- Admin Area Phase 2B: code and deploy, docs links, read-only connection test ----
+app.get("/api/admin/code", requireAdminAuth, adminAccess.needs("code"), async (req, res) => {
+  try { res.json(await adminOps.codeAndDeploy({ startedAt: SERVER_STARTED_AT })); } catch (err) { res.status(500).json({ error: adminOps.redact(err.message) }); }
+});
+app.get("/api/admin/docs", requireAdminAuth, adminAccess.needs("docs"), (req, res) => {
+  res.json({ links: adminOps.docsLinks() });
+});
+// Read-only: one harmless call per provider. Owner only (ops), so the OpenRouter spend figures are included.
+app.post("/api/admin/ops/test-connections", requireAdminAuth, adminAccess.needs("ops"), async (req, res) => {
+  try { res.json({ results: await adminOps.testConnections({ db: supabase, includeBalance: req.admin.role === "owner" }) }); } catch (err) { res.status(500).json({ error: adminOps.redact(err.message) }); }
 });
 
 // ---- Admin Area Phase 1 (docs/ADMIN_AREA_SPEC.md): who am I, role-filtered dashboard, inventory, models, builds ----
