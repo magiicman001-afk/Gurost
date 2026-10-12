@@ -119,7 +119,7 @@ If anything fails: `git revert` the update commit (small, logged) and write the 
   (e.g. Google Fonts URLs) in prompts: `security.detectPromptLeak` rejects
   any output repeating 50+ chars of the system prompt.
 - Project state machine: `lib/state-machine.js`.
-- Projects live in an in-memory `PROJECTS` map (reset on every deploy).
+- Projects live in an in-memory `PROJECTS` map for speed AND are saved to Supabase `project_state`; a project missing from memory is re-loaded from there (`project-state.js`, `0c3a008`). So a deploy no longer loses a project (not yet verified live).
 
 ## Model routing (2026-10-09)
 - App Builder BACKEND, edits, Pulse: Kimi K2.6 first (`modelForAppCode`), then Sonnet 5,
@@ -135,9 +135,8 @@ If anything fails: `git revert` the update commit (small, logged) and write the 
 - Website Builder routing is unchanged; do not move it to Kimi without being asked.
 - Every code call logs `[code-call] <label> model=... stop=... chars=... secs=... chars/s=...`.
 
-## Status (2026-10-09)
-- Tests: 1503 (1501 pass in Web Claude's sandbox; `cors-policy` and `security-headers` need
-  `express` installed, which only the laptop has).
+## Status (2026-10-09; test counts and security lines refreshed 2026-10-12)
+- Tests: about 1,800 on 141 files (2026-10-12; the sandbox run shows ~30 failures that are only missing packages, GitHub CI is the judge).
 - Section library (2026-10-11): ALL 20 sections BUILT (A/B/C each, 6 palettes; batches 1-5, 2026-10-11) in `lib/sections/`
   (`render.js`, `manifest.json` with all 20 sections, `palettes.json`, `base.css`, `assemble.js` +
   `recipes.json`, `quality-gate.js`). Behind `SECTION_LIBRARY=1`, OFF by default and NOT wired into the
@@ -149,8 +148,8 @@ If anything fails: `git revert` the update commit (small, logged) and write the 
 - Security (audit 2026-10-08): items 1-3 DONE - `/shared/:token` runs sandboxed, security
   headers on every page (CSP in report-only mode until `CSP_ENFORCE=1`), CORS allowlist
   (form route stays open). Item 4 (S3: sessions table, short tokens, cookie login, logout
-  everywhere, admin) is IN PROGRESS with Laptop Claude: S3a WebSocket auth, S3b sessions
-  table, S3c server side, S3d browser side, S3e admin dashboard.
+  everywhere, admin) is IN PROGRESS with Laptop Claude: git log shows S3b (user_sessions), S3c-1..4 (cookie login, CSRF origin check, /ws/guide
+  accepts the cookie) and S3d-1..6 (browser side) landed; S3e (admin) and the WebSocket reconnect check below are for him to confirm.
 - Money: OpenRouter balance is negative (paid models fail with 402); Gemini image API
   prepayment is depleted. Both need topping up by Irfan.
 - Design-quality plan: stop asking the model to invent design. Build a section library
@@ -189,7 +188,8 @@ If anything fails: `git revert` the update commit (small, logged) and write the 
 - `docs/WEBSITE_BUILDER_V2_SPEC.md` - dummy mode, launch flow, domain plan.
 - `docs/TOOL_STACK_REVIEW.md` - the 20 tools and the 6 active ones.
 - `docs/INSFORGE_INTEGRATION_PLAN.md` - Phase 2 backend (after the Website Builder launch).
-- `docs/ADMIN_AREA_SPEC.md` - Admin Area (Phase 3, before launch; not built yet).
+- `docs/ADMIN_AREA_SPEC.md` - Admin Area: PARTLY BUILT (roles, dashboard, team, ops, Help and Guide: see the status line at the top of the spec); weekly report, email-plus-key sign-in and TOTP not built.
+- `docs/ADMIN_GUIDE_SPEC.md`, `docs/WEEK_2_SECURITY_PLAN.md`, `docs/PREMIUM_PIPELINE_SPEC.md` + `_POLISH_PLAN.md`, `docs/DESIGN_MEMORY_SPEC.md`, `docs/ESCALATION_HIERARCHY_SPEC.md`, `docs/APP_BUILDER_STATUS.md`, `docs/MOBILE_APP_ROADMAP.md`, `docs/HOW_GUROST_WORKS.md` (master reference), `docs/TEAM_STATUS.md` (file ownership: read before editing).
 
 ## Verified live — 2026-09-30 (commit dcab3d1)
 - Website Builder: bakery build produced all 4 designs; thumbnails styled;
