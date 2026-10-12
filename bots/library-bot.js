@@ -21,6 +21,8 @@ const { assembleWithImages, PALETTE_WORDS } = require("../lib/sections/fill-imag
 const P = require("../lib/sections/premium");
 const S = require("../lib/sections/premium-score");
 const { runSlot } = require("../lib/sections/premium-loop");
+const { runEscalation } = require("../lib/sections/escalation");
+const BL = require("../lib/build-log");
 const manifest = require("../lib/sections/manifest.json");
 
 // Sections the model may write the words for. Everything else is facts (code) or left off the page.
@@ -297,6 +299,8 @@ async function generateLibraryVariants(prompt, o = {}) {
   const premium = o.premium === undefined ? P.enabled() : !!o.premium;
   const failures = [];
   const variants = [];
+  const logger = o.logger || BL.nullLogger; // build log (lib/build-log.js): every bot action is recorded
+  const escalate = premium && BL.escalationOn();
 
   notify("understanding", "running");
   notify("understanding", "complete", { prompt });
@@ -323,7 +327,14 @@ async function generateLibraryVariants(prompt, o = {}) {
     const wanted = premium ? ["hero", ...P.copyFor(palette)].filter((id, i, a) => COPY_SECTIONS.includes(id) && a.indexOf(id) === i) : recipe.order.filter((id) => COPY_SECTIONS.includes(id));
     const callModel = o.callModel || defaultCallModel(o.plan);
     const extra = require("../lib/business-info").businessInfoPrompt(o.businessInfo);
-    modelOut = await callModel({ system: systemPrompt(wanted), content: `${prompt}\n\n${extra || ""}`.trim() });
+    const tCopy = Date.now();
+    try {
+      modelOut = await callModel({ system: systemPrompt(wanted), content: `${prompt}\n\n${extra || ""}`.trim() });
+      logger.log({ bot: "copywriter", task: "write the words for the site", decision: `wrote ${Object.keys((modelOut && modelOut.sections) || {}).length} sections`, reason: null, time_ms: Date.now() - tCopy, result: "success", next_bot: null, details: { industry: palette, sections: wanted } });
+    } catch (err) {
+      logger.log({ bot: "copywriter", task: "write the words for the site", decision: "failed", reason: err.message, time_ms: Date.now() - tCopy, result: "fail", next_bot: null, details: { industry: palette } });
+      throw err;
+    }
   }
   const composed = composeContent({ prompt, businessInfo: o.businessInfo, modelOut, copy: premium ? P.copyFor(palette) : undefined });
   // Runs alongside the real build (photos, quality checks), which takes longer, so it adds no waiting.
@@ -335,7 +346,13 @@ async function generateLibraryVariants(prompt, o = {}) {
   const memo = new Map();
   const rawSearch = o.search || ((q) => require("../image-bot").searchImage(q));
   const search = async (q) => {
-    if (!memo.has(q)) memo.set(q, Promise.resolve().then(() => rawSearch(q)).catch(() => null));
+    if (!memo.has(q)) {
+      const t0 = Date.now();
+      memo.set(q, Promise.resolve().then(() => rawSearch(q)).catch(() => null).then((r) => {
+        logger.log({ bot: "photographer", task: `find a photo: ${String(q).slice(0, 80)}`, decision: r ? "found one" : "nothing found", reason: r && r.credit ? `credit: ${r.credit}` : null, time_ms: Date.now() - t0, result: r ? "success" : "fail", next_bot: null, details: {} });
+        return r;
+      }));
+    }
     return memo.get(q);
   };
   const factsAllow = [prompt, JSON.stringify(o.businessInfo || {})];
@@ -363,14 +380,16 @@ async function generateLibraryVariants(prompt, o = {}) {
         let label = dir.label;
         let setUsed = dir.set;
         let premiumInfo = null;
+        let sitePalette = composed.palette;
         if (premium) {
           const looks = P.looksFor(composed.palette);
           const slotIndex = DIRECTIONS.findIndex((d) => d.id === dir.id);
           // Design Memory (DESIGN_MEMORY=1): the first slot leads with what has scored and survived best for this industry.
           const startLook = slotIndex === 0 && learned ? learned.look : looks[slotIndex % looks.length];
-          const r = await runSlot({
-            palette: composed.palette, startLook, available, used, cfg,
-            buildOne: async (look, opt) => buildDirection({ id: dir.id, label: look.label, set: look.variants }, composed, { search: opt.fallbackSearch ? withFallback : search, includeBranding: o.includeBranding !== false, factsAllow, browserChecks: o.browserChecks, recipe: P.recipeFor(look, available), browser: await getBrowser() }),
+          const run = escalate ? runEscalation : runSlot; // ESCALATION_HIERARCHY=0 returns to the plain premium loop
+          const r = await run({
+            palette: composed.palette, startLook, available, used, cfg, logger, slot: dir.id, content: composed.content, seniorEnabled: BL.seniorOn(),
+            buildOne: async (look, opt) => buildDirection({ id: dir.id, label: look.label, set: look.variants }, opt.palette && opt.palette !== composed.palette ? { ...composed, palette: opt.palette } : composed, { search: opt.fallbackSearch ? withFallback : search, includeBranding: o.includeBranding !== false, factsAllow, browserChecks: o.browserChecks, recipe: P.recipeFor(look, available), browser: await getBrowser() }),
             review: async (b, look) => {
               const metrics = await S.measure(b.page.html, { browser: await getBrowser() });
               return S.score(b.page, { look, metrics, contrastFailed: b.gate.failures.some((f) => f.rule === "text-contrast") });
@@ -380,13 +399,17 @@ async function generateLibraryVariants(prompt, o = {}) {
               notify("designing", "reviewing", { variantId: dir.id, label: look.label, score: score.total, pass: score.pass });
             },
             onSwap: ({ from, to, why }) => notify("designing", "swapping", { variantId: dir.id, label: to.label, why, from: from.label }),
+            onLevel: ({ bot, look, why }) => notify("designing", "escalating", { variantId: dir.id, bot, label: look.label, why }),
           });
+          sitePalette = r.palette || composed.palette;
           built = r.best.built;
           label = r.best.look.label;
           setUsed = r.best.look.variants;
-          premiumInfo = { look: r.best.look.id, sections: built.page.sections.map((x) => ({ id: x.id, variant: x.variant })), score: r.best.score.total, parts: r.best.score.parts, reasons: r.best.score.reasons.map((x) => x.text), attempts: r.attempts.length, passed: r.passed, note: r.note };
+          premiumInfo = { look: r.best.look.id, sections: built.page.sections.map((x) => ({ id: x.id, variant: x.variant })), score: r.best.score.total, parts: r.best.score.parts, reasons: r.best.score.reasons.map((x) => x.text), attempts: r.attempts.length, passed: r.passed, note: r.note, levels: r.chain || undefined, report: r.report || undefined, flagged: r.flagged || undefined };
         } else {
+          const tB = Date.now();
           built = await buildDirection(dir, composed, { search, includeBranding: o.includeBranding !== false, factsAllow, browserChecks: o.browserChecks });
+          logger.log({ bot: "builder", task: `build the ${dir.label} design`, decision: `${built.page.sections.length} sections, ${composed.palette} palette`, reason: built.degraded ? "the quality gate repaired the page" : null, time_ms: Date.now() - tB, result: "success", next_bot: null, details: { slot: dir.id, gateOk: built.gate.ok, steps: built.steps } });
         }
         const html = built.page.html;
         if (!/<h1\b/i.test(html) || html.length < 2000) throw new Error("the page came out empty");
@@ -394,11 +417,11 @@ async function generateLibraryVariants(prompt, o = {}) {
           id: dir.id,
           label,
           html,
-          summary: `${label}: ${built.page.sections.length} sections, ${composed.palette} palette${premiumInfo && premiumInfo.note ? `. ${premiumInfo.note}` : ""}`,
+          summary: `${label}: ${built.page.sections.length} sections, ${sitePalette} palette${premiumInfo && premiumInfo.note ? `. ${premiumInfo.note}` : ""}`,
           usage: null,
           verified: true,
           credits: built.page.credits || [],
-          site: { engine: "section-library", palette: composed.palette, recipe: composed.recipe, content: composed.content, variants: setUsed, meta: composed.meta, direction: dir.id, look: premiumInfo ? premiumInfo.look : undefined, copy: modelOut, photos: built.page.photos || {}, baseHash: crypto.createHash("sha1").update(html).digest("hex") },
+          site: { engine: "section-library", palette: sitePalette, recipe: composed.recipe, content: composed.content, variants: setUsed, meta: composed.meta, direction: dir.id, look: premiumInfo ? premiumInfo.look : undefined, copy: modelOut, photos: built.page.photos || {}, baseHash: crypto.createHash("sha1").update(html).digest("hex") },
           gate: { ok: built.gate.ok, warnings: built.gate.warnings.length, degraded: built.degraded },
           premium: premiumInfo || undefined,
         };
@@ -407,6 +430,7 @@ async function generateLibraryVariants(prompt, o = {}) {
         notify("designing", "variant-complete", { variantId: dir.id, label, summary: variant.summary, variant });
       } catch (err) {
         console.error(`[library-bot] "${dir.id}" failed:`, err.message);
+        logger.log({ bot: "builder", task: `build the ${dir.label} design`, decision: "failed", reason: err.message, time_ms: null, result: "fail", next_bot: null, details: { slot: dir.id } });
         failures.push({ variant: dir.id, error: err.message });
         notify("designing", "variant-failed", { variantId: dir.id, label: dir.label, error: err.message });
       }

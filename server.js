@@ -51,6 +51,7 @@ const videoRequest = require("./lib/video-request");
 const designMemory = require("./lib/design-memory");
 const adminAccess = require("./lib/admin-access");
 const adminData = require("./lib/admin-data");
+const buildLog = require("./lib/build-log");
 const sandboxLink = require("./lib/sandbox-link");
 const publishedSites = require("./lib/published-sites");
 const pulseBrain = require("./bots/pulse-brain");
@@ -791,6 +792,15 @@ app.get("/api/admin/models", requireAdminAuth, adminAccess.needs("models"), (req
 app.get("/api/admin/projects/saved", requireAdminAuth, adminAccess.needs("projects"), async (req, res) => {
   try {
     res.json({ projects: await adminData.projectsList(supabase, PROJECTS, { state: req.query.state, userId: req.query.userId }) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// Every bot action of every build, grouped into builds so the whole escalation chain reads in order. Always on.
+app.get("/api/admin/build-logs", requireAdminAuth, adminAccess.needs("builds"), async (req, res) => {
+  try {
+    const rows = await buildLog.queryLogs(supabase, { projectId: req.query.projectId, userId: req.query.userId, bot: req.query.bot, result: req.query.result, limit: Number(req.query.limit) || 600, newestFirst: true });
+    res.json({ builds: buildLog.groupBuilds(rows).slice(0, 60), rows: rows.length });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -4769,6 +4779,23 @@ app.get("/api/project/:id", (req, res) => {
   res.json(project);
 });
 
+// The build log of one project, for its owner (the ownership middleware above already checked who is asking).
+// BUILD_LOGS_VISIBLE=0 switches the user's view off; the admin view is always on.
+app.get("/api/project/:id/build-log", async (req, res) => {
+  if (!buildLog.logsVisible()) return res.status(404).json({ error: "The build log is switched off." });
+  const project = getProject(req.params.id, req, res);
+  if (!project) return;
+  let rows = [];
+  let source = "database";
+  try {
+    rows = await buildLog.queryLogs(supabase, { projectId: req.params.id });
+  } catch (err) {
+    source = "memory";
+  }
+  if (!rows.length) { rows = BUILD_LOG_MEMORY.get(req.params.id) || []; source = "memory"; }
+  res.json({ projectId: req.params.id, source, entries: rows.map(({ user_id, ...pub }) => pub) });
+});
+
 // Real-time presence for the collaboration UI — who's actually
 // connected to this project's /ws/guide room right now. A page that
 // hasn't opened its own WebSocket yet (e.g. Dashboard showing a
@@ -5675,6 +5702,19 @@ app.post("/api/project/:id/history/:index/restore", async (req, res) => {
  * ============================================================
  */
 
+// Build log (docs/ESCALATION_HIERARCHY_SPEC.md): one logger per build. Entries are kept here (not on the project object,
+// so they never bloat the saved project), written to build_logs, and streamed to the open page.
+const BUILD_LOG_MEMORY = new Map(); // projectId -> entries of this server run (the database is the lasting copy)
+function makeBuildLogger(projectId, userId) {
+  const memory = BUILD_LOG_MEMORY.get(projectId) || [];
+  BUILD_LOG_MEMORY.set(projectId, memory);
+  if (BUILD_LOG_MEMORY.size > 300) BUILD_LOG_MEMORY.delete(BUILD_LOG_MEMORY.keys().next().value);
+  return buildLog.createLogger({
+    projectId, userId, buildId: crypto.randomUUID(), db: supabase, memory,
+    onEntry: (entry) => { if (buildLog.logsVisible()) { const { user_id, ...pub } = entry; broadcastProjectUpdate(projectId, { type: "build_log", entry: pub }); } },
+  });
+}
+
 // Website Builder V2: designs come from the section library when SECTION_LIBRARY=1, with the old free-written
 // generator as the fallback (flag off, an error, or no design made). `more` = the "Show 2 more" batch.
 async function generateWebsiteDesigns(prompt, opts) {
@@ -5687,6 +5727,7 @@ async function generateWebsiteDesigns(prompt, opts) {
         onStage: opts.onStage,
         directionIds: opts.more ? libraryBot.MORE_IDS : libraryBot.FIRST_IDS,
         siteCopy: opts.siteCopy || null,
+        logger: opts.logger,
       });
       if (lib.variants.length) return lib;
       console.warn("[website-builder] section library made no design, using the old generator:", lib.failures[0]?.error);
@@ -5741,6 +5782,7 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt", "
     const result = await generateWebsiteDesigns(prompt, {
       businessInfo,
       projectId,
+      logger: makeBuildLogger(projectId, req.user.id),
       includeBranding: !PLANS[req.user.plan]?.whiteLabel,
       userId: req.user.id,
       plan: req.user.plan,
@@ -5829,6 +5871,7 @@ app.post("/api/website-builder/more", security.rejectUnknownFields(["projectId"]
       businessInfo: project.businessInfo || null,
       projectId,
       more: true,
+      logger: makeBuildLogger(projectId, req.user.id),
       siteCopy: ((project.variants || []).find((v) => v.site && v.site.copy) || {}).site?.copy || null,
       briefIds: variantBot.MORE_BRIEF_IDS,
       includeBranding: !PLANS[req.user.plan]?.whiteLabel,
