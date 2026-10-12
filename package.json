@@ -30,7 +30,7 @@
     "helmet": "7.2.0",
     "ipaddr.js": "2.5.0",
     "jsonwebtoken": "9.0.3",
-    "lighthouse": "12.8.2",
+    "lighthouse": "13.5.0",
     "livekit-server-sdk": "2.19.0",
     "multer": "2.4.0",
     "node-cron": "3.0.3",
