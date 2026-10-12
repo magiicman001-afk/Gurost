@@ -34,6 +34,12 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { supabase } = require("./lib/db");
 const security = require("./security");
+const { createSessions, parseCookies, COOKIE } = require("./lib/user-sessions");
+
+// Cookie login (S3c), one per process so its 60s plan cache is shared.
+let _sessions = null;
+const sessions = () => (_sessions ||= createSessions());
+const useSessions = (s) => { _sessions = s; }; // tests: an in-memory user_sessions
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const PLAN_LIMITS = { free: 3, pro: 30, unlimited: 150, ultimate: Infinity };
@@ -110,13 +116,15 @@ function applyAdminTier(user) {
 
 // The same checks as requireAuth, for callers that aren't an HTTP request -
 // the /ws/guide WebSocket's first message ({ type: "auth", token | apiKey }).
-// Returns the user (admin tier applied) or null.
+// Returns the user (admin tier applied) or null. cookie = the upgrade request's Cookie header, used when
+// the message carries no token (pages that log in by cookie).
 // Throws when the check itself cannot run (database down), like
 // requireAuth's 500 - the WebSocket then says "try again", not "log in again".
-async function authenticateToken({ token, apiKey } = {}) {
+async function authenticateToken({ token, apiKey, cookie } = {}) {
   let user = null;
   if (apiKey) user = await resolveApiKey(String(apiKey));
   else if (token) user = resolveJwt(String(token)) || (await resolveSSO(String(token)));
+  else if (cookie) user = (await sessions().userFromCookie({ headers: { cookie } }))?.user || null;
   return user ? applyAdminTier(user) : null;
 }
 
@@ -128,6 +136,7 @@ async function requireAuth(req, res, next) {
 
   let user = null;
   let why = "no_credentials"; // what was missing or wrong, for the reply and the log
+  let viaCookie = false;
   try {
     if (apiKey) {
       user = await resolveApiKey(apiKey);
@@ -136,6 +145,10 @@ async function requireAuth(req, res, next) {
       const token = authHeader.slice(7);
       user = resolveJwt(token) || (await resolveSSO(token));
       if (!user) why = tokenState(token) === "expired" ? "token_expired" : "token_invalid";
+    } else {
+      const fromCookie = await sessions().userFromCookie(req);
+      if (fromCookie?.user) { user = fromCookie.user; viaCookie = true; }
+      else if (fromCookie?.error) why = fromCookie.error === "token_expired" ? "token_expired" : "token_invalid";
     }
   } catch (err) {
     console.error("Auth check failed:", err.message);
@@ -144,11 +157,21 @@ async function requireAuth(req, res, next) {
 
   if (!user) {
     security.auditLog("auth_failed", req, `No valid credentials (${why})`).catch(() => {});
-    security.trackViolation(req.ip, "auth_failed", req.path).catch(() => {});
+    // A login that simply ran out is normal, not an attack: a page making several calls just after its
+    // 15-minute cookie lapses must not get the person's IP blocked (5 violations an hour blocks it).
+    const signedInBrowser = why === "no_credentials" && parseCookies(req.headers.cookie)[COOKIE.LI] === "1";
+    if (why !== "token_expired" && !signedInBrowser) security.trackViolation(req.ip, "auth_failed", req.path).catch(() => {});
     // An expired or unreadable login says so, with a code the pages use to send the person to log in again.
     if (why === "token_expired") return res.status(401).json({ error: "Your session has expired. Please log in again.", code: why });
     if (why === "token_invalid") return res.status(401).json({ error: "Your login is no longer valid. Please log in again.", code: why });
     return res.status(401).json({ error: "Valid API key (x-api-key header) or JWT (Authorization: Bearer) required.", code: why });
+  }
+
+  // CSRF: a change made with the login cookie must come from one of Gurost's own pages. API keys and
+  // Bearer tokens are never sent automatically by a browser, so they don't need this.
+  if (viaCookie && sessions().needsOriginCheck(req) && !sessions().originAllowed(req)) {
+    security.auditLog("csrf_blocked", req, `Origin ${req.headers.origin || "none"}`).catch(() => {});
+    return res.status(403).json({ error: "This request must come from a Gurost page.", code: "bad_origin" });
   }
 
   req.user = applyAdminTier(user);
@@ -253,6 +276,8 @@ function requireBusinessAssistant(req, res, next) {
 }
 
 module.exports = {
+  sessions,
+  useSessions,
   requireAuth,
   authenticateToken,
   tokenState,
