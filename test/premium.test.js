@@ -7,7 +7,6 @@ const S = require("../lib/sections/premium-score");
 const Loop = require("../lib/sections/premium-loop");
 const G = require("../lib/sections/quality-gate");
 const L = require("../bots/library-bot");
-const A = require("../lib/sections/assemble");
 const { assembleWithImages } = require("../lib/sections/fill-images");
 const H = require("./helpers/premium-sample");
 

@@ -6,7 +6,6 @@
 // final Google fonts (this machine cannot reach either). Run: node scripts/build-premium-preview.js
 const fs = require("fs");
 const path = require("path");
-const P = require("../lib/sections/premium");
 const S = require("../lib/sections/premium-score");
 const R = require("../lib/sections/render");
 const H = require("../test/helpers/premium-sample");
