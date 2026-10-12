@@ -42,7 +42,7 @@ jobs:
         # Findings are also written as annotations (package, severity, fix) because the raw log is not readable from the build machine.
         run: |
           npm audit --audit-level=high > audit-output.txt 2>&1 || {
-            npm audit --json 2>/dev/null | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const v=JSON.parse(s).vulnerabilities||{};Object.values(v).filter(x=>["critical","high"].includes(x.severity)).slice(0,9).forEach(x=>console.log("::error::"+x.severity+" "+x.name+" "+x.range+" fix="+(x.fixAvailable&&x.fixAvailable.name?x.fixAvailable.name+"@"+x.fixAvailable.version:x.fixAvailable)+" direct="+x.isDirect))}catch(e){console.log("::error::could not read audit json")}})'
+            npm audit --json 2>/dev/null | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const j=JSON.parse(s);console.log("::error::totals "+JSON.stringify(j.metadata&&j.metadata.vulnerabilities));const v=j.vulnerabilities||{};Object.values(v).filter(x=>["critical","high"].includes(x.severity)&&x.isDirect).sort((a,b)=>(a.severity<b.severity?-1:1)).slice(0,8).forEach(x=>console.log("::error::"+x.severity+" "+x.name+" "+x.range+" fix="+(x.fixAvailable&&x.fixAvailable.name?x.fixAvailable.name+"@"+x.fixAvailable.version:x.fixAvailable)+" direct="+x.isDirect))}catch(e){console.log("::error::could not read audit json")}})'
             tail -4 audit-output.txt
             exit 1
           }
