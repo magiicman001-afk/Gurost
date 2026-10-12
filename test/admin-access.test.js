@@ -64,12 +64,13 @@ test("dashboardFor: owner sees all, admin no revenue, engineer no money, viewer 
   assert.deepEqual(A.dashboardFor("nobody", data), {});
 });
 
-test("server: every /api/admin route uses requireAdminAuth plus a section guard (except /me)", () => {
+test("server: every /api/admin route uses requireAdminAuth plus a section guard (except /me and /guide)", () => {
   const src = fs.readFileSync(path.join(root, "server.js"), "utf8");
   const lines = src.split("\n").filter((l) => /app\.(get|post|put|delete)\("\/api\/admin\//.test(l) && l.includes("requireAdminAuth"));
   assert.ok(lines.length >= 15);
   for (const l of lines) {
     if (l.includes('"/api/admin/me"')) continue;
+    if (l.includes('"/api/admin/guide"')) continue; // every role gets the guide, filtered for its own role on the server (lib/admin-guide.js)
     assert.ok(l.includes("adminAccess.needs("), "unguarded admin route: " + l.trim());
   }
 });

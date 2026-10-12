@@ -54,6 +54,7 @@ const adminAccess = require("./lib/admin-access");
 const adminData = require("./lib/admin-data");
 const buildLog = require("./lib/build-log");
 const adminTeam = require("./lib/admin-team");
+const adminGuide = require("./lib/admin-guide");
 const adminOps = require("./lib/admin-ops");
 const adminOpsActions = require("./lib/admin-ops-actions");
 const sandboxLink = require("./lib/sandbox-link");
@@ -940,6 +941,11 @@ app.post("/api/admin/ops/:action", requireAdminAuth, adminAccess.needs("ops"), v
 
 // ---- Admin Area Phase 1 (docs/ADMIN_AREA_SPEC.md): who am I, role-filtered dashboard, inventory, models, builds ----
 const SERVER_STARTED_AT = Date.now();
+// Help and Guide (docs/ADMIN_GUIDE_SPEC.md): every signed-in admin gets the guide for THEIR role; the filtering is done here,
+// so a Viewer's browser never receives Owner-only text such as the key-rotation steps.
+app.get("/api/admin/guide", requireAdminAuth, (req, res) => {
+  res.json(adminGuide.guideFor(req.admin.role));
+});
 app.get("/api/admin/me", requireAdminAuth, (req, res) => {
   res.json({ name: req.admin.name, role: req.admin.role, sections: adminAccess.sectionsFor(req.admin.role) });
 });
