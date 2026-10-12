@@ -258,9 +258,9 @@ async function renderProjects(el) {
 }
 
 function card(label, c) {
-  const v = c && c.value !== null && c.value !== undefined ? escapeHtml(String(c.value)) : '—';
-  const note = c && c.note ? `<p class="text-xs text-[var(--muted)] mt-1">${escapeHtml(c.note)}</p>` : '';
-  return `<div class="border border-[var(--line)] rounded-xl bg-white p-4"><p class="text-xs text-[var(--muted)]">${escapeHtml(label)}</p><p class="font-display font-bold text-2xl">${v}</p>${note}</div>`;
+  const cardValue = c && c.value !== null && c.value !== undefined ? escapeHtml(String(c.value)) : '—';
+  const cardNote = c && c.note ? `<p class="text-xs text-[var(--muted)] mt-1">${escapeHtml(c.note)}</p>` : '';
+  return `<div class="border border-[var(--line)] rounded-xl bg-white p-4"><p class="text-xs text-[var(--muted)]">${escapeHtml(label)}</p><p class="font-display font-bold text-2xl">${cardValue}</p>${cardNote}</div>`;
 }
 
 async function renderOverview(el) {
@@ -309,7 +309,7 @@ async function renderBuildLogs(el) {
     <div class="flex flex-wrap gap-2 mb-3 text-sm">
       <input id="blProject" class="border border-[var(--line)] rounded px-2 py-1" placeholder="Project id">
       <input id="blUser" class="border border-[var(--line)] rounded px-2 py-1" placeholder="User id">
-      <select id="blBot" class="border border-[var(--line)] rounded px-2 py-1"><option value="">All bots</option>${['builder','fixer','manager','senior','copywriter','photographer','reviewer'].map((b) => `<option>${b}</option>`).join('')}</select>
+      <select id="blBot" class="border border-[var(--line)] rounded px-2 py-1"><option value="">All bots</option>${['builder','fixer','manager','senior','copywriter','photographer','reviewer'].map((b) => `<option>${escapeHtml(b)}</option>`).join('')}</select>
       <select id="blResult" class="border border-[var(--line)] rounded px-2 py-1"><option value="">All results</option><option>success</option><option>fail</option><option>escalate</option></select>
       <button id="blGo" class="tab-btn">Search</button>
       <button id="blExport" class="tab-btn">Export JSON</button>
@@ -330,7 +330,7 @@ async function renderBuildLogs(el) {
       <details class="border border-[var(--line)] rounded-xl bg-white p-3 mb-2" ${b.flagged ? 'open' : ''}>
         <summary class="cursor-pointer text-sm"><b>${new Date(b.startedAt).toLocaleString()}</b> · project ${escapeHtml(String(b.projectId || '—').slice(0, 8))} · user ${escapeHtml(String(b.userId || '—').slice(0, 8))} · ${b.entries.length} actions · bots: ${escapeHtml(b.bots.join(' > '))}${b.escalated ? ' · <span style="color:#1d4ed8">escalated</span>' : ''}${b.flagged ? ' · <b style="color:#c2410c">FLAGGED</b>' : ''}</summary>
         <table class="mt-2"><thead><tr><th>Bot</th><th>Result</th><th>Task</th><th>Decision</th><th>Why</th><th>ms</th><th>Next</th></tr></thead>
-        <tbody>${b.entries.map((e) => `<tr><td>${escapeHtml(e.bot)}</td><td style="color:${BL_COLOURS[e.result] || '#000'};font-weight:600">${escapeHtml(e.result)}</td><td>${escapeHtml(e.task || '')}</td><td>${escapeHtml(e.decision || '')}</td><td>${escapeHtml(e.reason || '')}${e.details && e.details.report ? `<pre class="text-xs whitespace-pre-wrap mt-1">${escapeHtml(e.details.report)}</pre>` : ''}</td><td>${e.time_ms ?? ''}</td><td>${escapeHtml(e.next_bot || '')}</td></tr>`).join('')}</tbody></table>
+        <tbody>${b.entries.map((e) => `<tr><td>${escapeHtml(e.bot)}</td><td style="color:${escapeHtml(BL_COLOURS[e.result] || '#000')};font-weight:600">${escapeHtml(e.result)}</td><td>${escapeHtml(e.task || '')}</td><td>${escapeHtml(e.decision || '')}</td><td>${escapeHtml(e.reason || '')}${e.details && e.details.report ? `<pre class="text-xs whitespace-pre-wrap mt-1">${escapeHtml(e.details.report)}</pre>` : ''}</td><td>${e.time_ms ?? ''}</td><td>${escapeHtml(e.next_bot || '')}</td></tr>`).join('')}</tbody></table>
       </details>`).join('') || '<p class="text-sm text-[var(--muted)]">No build logs yet. They appear from the next library build.</p>';
   }
   document.getElementById('blGo').addEventListener('click', load);
@@ -346,9 +346,9 @@ async function renderBuildLogs(el) {
 
 async function renderCode(el) {
   const d = await adminCall('/api/admin/code');
-  const dep = d.deploys.connected ? `<table class="mb-5"><thead><tr><th>Deploy</th><th>Status</th><th>Commit</th><th>Started</th></tr></thead><tbody>${d.deploys.items.map((x) => `<tr><td>${escapeHtml(String(x.id).slice(-8))}</td><td>${escapeHtml(x.status)}</td><td>${escapeHtml(x.commit || '')} ${escapeHtml(x.message || '')}</td><td>${x.at ? new Date(x.at).toLocaleString() : ''}</td></tr>`).join('')}</tbody></table>` : `<p class="text-sm text-[var(--muted)] mb-5">${escapeHtml(d.deploys.note)}</p>`;
-  const com = d.commits.connected ? `<table><thead><tr><th>Commit</th><th>Message</th><th>Who</th><th>When</th></tr></thead><tbody>${d.commits.items.map((c) => `<tr><td>${escapeHtml(c.sha)}</td><td>${escapeHtml(c.message)}</td><td>${escapeHtml(c.author)}</td><td>${c.at ? new Date(c.at).toLocaleString() : ''}</td></tr>`).join('')}</tbody></table>` : `<p class="text-sm text-[var(--muted)]">${escapeHtml(d.commits.note)}</p>`;
-  el.innerHTML = `<p class="text-sm mb-3">Running <b>${escapeHtml(d.version)}</b> since ${new Date(d.runningSince).toLocaleString()} · ${escapeHtml(d.repo)} (${escapeHtml(d.branch)})</p><h3 class="font-display font-bold mb-2">Deploys</h3>${dep}<h3 class="font-display font-bold mb-2">Latest commits</h3>${com}`;
+  const depHtml = d.deploys.connected ? `<table class="mb-5"><thead><tr><th>Deploy</th><th>Status</th><th>Commit</th><th>Started</th></tr></thead><tbody>${d.deploys.items.map((x) => `<tr><td>${escapeHtml(String(x.id).slice(-8))}</td><td>${escapeHtml(x.status)}</td><td>${escapeHtml(x.commit || '')} ${escapeHtml(x.message || '')}</td><td>${x.at ? new Date(x.at).toLocaleString() : ''}</td></tr>`).join('')}</tbody></table>` : `<p class="text-sm text-[var(--muted)] mb-5">${escapeHtml(d.deploys.note)}</p>`;
+  const comHtml = d.commits.connected ? `<table><thead><tr><th>Commit</th><th>Message</th><th>Who</th><th>When</th></tr></thead><tbody>${d.commits.items.map((c) => `<tr><td>${escapeHtml(c.sha)}</td><td>${escapeHtml(c.message)}</td><td>${escapeHtml(c.author)}</td><td>${c.at ? new Date(c.at).toLocaleString() : ''}</td></tr>`).join('')}</tbody></table>` : `<p class="text-sm text-[var(--muted)]">${escapeHtml(d.commits.note)}</p>`;
+  el.innerHTML = `<p class="text-sm mb-3">Running <b>${escapeHtml(d.version)}</b> since ${new Date(d.runningSince).toLocaleString()} · ${escapeHtml(d.repo)} (${escapeHtml(d.branch)})</p><h3 class="font-display font-bold mb-2">Deploys</h3>${depHtml}<h3 class="font-display font-bold mb-2">Latest commits</h3>${comHtml}`;
 }
 
 async function renderDocs(el) {
@@ -376,13 +376,13 @@ async function renderOps(el) {
   const usd = (n) => (n < 0 ? '-$' : '$') + Math.abs(Number(n)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   function balanceCard(b) {
     if (!b) return '';
-    const cell = (label, value, tone) => `<div style="flex:1 1 110px;min-width:110px"><div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.04em">${label}</div><div style="font-size:20px;font-weight:700;color:${tone || 'inherit'}">${value}</div></div>`;
+    const cell = (label, value, tone) => `<div style="flex:1 1 110px;min-width:110px"><div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.04em">${escapeHtml(label)}</div><div style="font-size:20px;font-weight:700;color:${escapeHtml(tone || 'inherit')}">${escapeHtml(value)}</div></div>`;
     const low = b.remainingUsd != null && b.remainingUsd <= 5;
-    const body = b.limitUsd == null
+    const cellsHtml = b.limitUsd == null
       ? cell('Spent so far', usd(b.usedUsd)) + cell('Credit limit', 'No limit set')
       : cell('Remaining', usd(b.remainingUsd), b.remainingUsd <= 0 ? '#c2410c' : low ? '#b45309' : '#15803d') + cell('Spent', usd(b.usedUsd)) + cell('Limit', usd(b.limitUsd));
-    const warn = b.remainingUsd != null && b.remainingUsd <= 0 ? '<div style="margin-top:8px;font-size:13px;color:#c2410c;font-weight:600">Out of credit: paid models will fail until it is topped up.</div>' : low ? '<div style="margin-top:8px;font-size:13px;color:#b45309;font-weight:600">Running low: top up soon.</div>' : '';
-    return `<div style="margin-top:12px;border:1px solid var(--line);border-radius:8px;padding:12px;background:#fff"><div style="font-weight:700;margin-bottom:8px">AI credit balance</div><div style="display:flex;flex-wrap:wrap;gap:12px">${body}</div>${warn}</div>`;
+    const warnHtml = b.remainingUsd != null && b.remainingUsd <= 0 ? '<div style="margin-top:8px;font-size:13px;color:#c2410c;font-weight:600">Out of credit: paid models will fail until it is topped up.</div>' : low ? '<div style="margin-top:8px;font-size:13px;color:#b45309;font-weight:600">Running low: top up soon.</div>' : '';
+    return `<div style="margin-top:12px;border:1px solid var(--line);border-radius:8px;padding:12px;background:#fff"><div style="font-weight:700;margin-bottom:8px">AI credit balance</div><div style="display:flex;flex-wrap:wrap;gap:12px">${cellsHtml}</div>${warnHtml}</div>`;
   }
   document.getElementById('opsTest').addEventListener('click', async (ev) => {
     ev.target.disabled = true;
@@ -391,7 +391,7 @@ async function renderOps(el) {
     try {
       const { results } = await adminCall('/api/admin/ops/test-connections', { method: 'POST', body: {} });
       const colour = { ok: '#15803d', 'not set': '#64748b', rejected: '#c2410c', failed: '#c2410c' };
-      out.innerHTML = `<table><thead><tr><th>Provider</th><th>Result</th><th>Detail</th></tr></thead><tbody>${results.map((r) => `<tr><td>${escapeHtml(r.name)}</td><td style="color:${colour[r.state] || '#000'};font-weight:600">${escapeHtml(r.state)}${r.ms != null ? ` (${r.ms} ms)` : ''}</td><td>${escapeHtml(r.detail || '')}</td></tr>`).join('')}</tbody></table>${balanceCard((results.find((r) => r.balance) || {}).balance)}`;
+      out.innerHTML = `<table><thead><tr><th>Provider</th><th>Result</th><th>Detail</th></tr></thead><tbody>${results.map((r) => `<tr><td>${escapeHtml(r.name)}</td><td style="color:${escapeHtml(colour[r.state] || '#000')};font-weight:600">${escapeHtml(r.state)}${r.ms != null ? ` (${r.ms} ms)` : ''}</td><td>${escapeHtml(r.detail || '')}</td></tr>`).join('')}</tbody></table>${balanceCard((results.find((r) => r.balance) || {}).balance)}`;
     } catch (err) { out.textContent = err.message; }
     ev.target.disabled = false;
   });
@@ -425,7 +425,7 @@ async function renderTeam(el) {
       <tbody>${d.members.map((m) => {
         const manage = m.id !== d.you && RANK[m.role] < myRank;
         return `<tr><td>${escapeHtml(m.name)}${m.id === d.you ? ' (you)' : ''}</td><td>${escapeHtml(m.role.replace('_', ' '))}</td><td>${m.active ? 'active' : '<b>revoked</b>'}</td><td>${m.last_login_at ? new Date(m.last_login_at).toLocaleString() : 'never'}</td><td>${manage ? `
-          <select data-role-of="${escapeHtml(m.id)}">${d.assignable.map((r) => `<option ${r === m.role ? 'selected' : ''}>${r}</option>`).join('')}</select>
+          <select data-role-of="${escapeHtml(m.id)}">${d.assignable.map((r) => `<option ${r === m.role ? 'selected' : ''}>${escapeHtml(r)}</option>`).join('')}</select>
           <button class="tab-btn" data-act="role" data-id="${escapeHtml(m.id)}">Set role</button>
           <button class="tab-btn" data-act="${m.active ? 'revoke' : 'restore'}" data-id="${escapeHtml(m.id)}">${m.active ? 'Revoke' : 'Restore'}</button>
           <button class="tab-btn" data-act="regen" data-id="${escapeHtml(m.id)}">New credentials</button>` : ''}</td></tr>`;
@@ -433,7 +433,7 @@ async function renderTeam(el) {
     </table>
     ${d.assignable.length ? `<div class="flex flex-wrap gap-2 text-sm">
       <input id="tmName" class="border border-[var(--line)] rounded px-2 py-1" placeholder="Name">
-      <select id="tmRole" class="border border-[var(--line)] rounded px-2 py-1">${d.assignable.map((r) => `<option>${r}</option>`).join('')}</select>
+      <select id="tmRole" class="border border-[var(--line)] rounded px-2 py-1">${d.assignable.map((r) => `<option>${escapeHtml(r)}</option>`).join('')}</select>
       <button id="tmCreate" class="tab-btn">Add team member</button></div>` : ''}`;
   const showSecret = (r) => {
     document.getElementById('teamSecret').innerHTML = `<div class="border-2 border-[var(--orange)] rounded-xl bg-white p-4 mb-4"><b>${escapeHtml(r.name)}</b>: save these now. They will not be shown again.<br>Access code: <code>${escapeHtml(r.accessCode)}</code><br>Password: <code>${escapeHtml(r.password)}</code></div>`;
@@ -467,7 +467,7 @@ async function renderSecurity(el) {
   el.innerHTML = `
     <table class="mb-5"><thead><tr><th>Protection</th><th>State</th></tr></thead>
       <tbody>${d.layers.map((l) => `<tr><td>${escapeHtml(l.name)}</td><td>${escapeHtml(l.state)}</td></tr>`).join('')}</tbody></table>
-    <p class="text-sm mb-2">Admin accounts: <b>${d.accounts.active}</b> active, <b>${d.accounts.revoked}</b> revoked (${Object.entries(d.accounts.byRole).map(([r, n]) => `${escapeHtml(r)}: ${n}`).join(', ') || 'none'}).${d.neverLoggedIn.length ? ` Never logged in: ${d.neverLoggedIn.map(escapeHtml).join(', ')}.` : ''}</p>
+    <p class="text-sm mb-2">Admin accounts: <b>${d.accounts.active}</b> active, <b>${d.accounts.revoked}</b> revoked (${Object.entries(d.accounts.byRole).map(([r, n]) => `${escapeHtml(r)}: ${escapeHtml(String(n))}`).join(', ') || 'none'}).${d.neverLoggedIn.length ? ` Never logged in: ${d.neverLoggedIn.map(escapeHtml).join(', ')}.` : ''}</p>
     <h3 class="font-display font-bold mt-4 mb-2">Recent admin actions</h3>
     <table><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Reason</th></tr></thead>
       <tbody>${d.audit.map((a) => `<tr><td>${new Date(a.created_at).toLocaleString()}</td><td>${escapeHtml(a.admin_name || '')} (${escapeHtml(a.role || '')})</td><td>${escapeHtml(a.action)}</td><td>${escapeHtml(a.reason || '')}</td></tr>`).join('') || '<tr><td colspan="4">Nothing recorded yet.</td></tr>'}</tbody></table>`;
@@ -482,20 +482,20 @@ async function renderMemory(el) {
   }
   el.innerHTML = `<p class="text-xs text-[var(--muted)] mb-3">${d.totalBuilds} builds recorded. Structure only (industry, sections, palette, score): never a person's words or details.</p>` + names.map((n) => {
     const i = d.industries[n];
-    const learn = i.learning ? '<span class="badge" style="background:#dcfce7;color:#166534">learning: leads with the best combination</span>' : `<span class="badge" style="background:#ffedd5;color:#9a3412">${i.buildsToLearn} more builds before it learns</span>`;
+    const learnBadge = i.learning ? '<span class="badge" style="background:#dcfce7;color:#166534">learning: leads with the best combination</span>' : `<span class="badge" style="background:#ffedd5;color:#9a3412">${i.buildsToLearn} more builds before it learns</span>`;
     return `<div class="border border-[var(--line)] rounded-xl bg-white p-4 mb-3">
       <p class="font-display font-bold mb-1">${escapeHtml(n)} <span class="text-sm font-normal text-[var(--muted)]">${i.builds} builds · average score ${i.meanScore}</span></p>
-      <p class="mb-2">${learn}</p>
+      <p class="mb-2">${learnBadge}</p>
       <table><thead><tr><th>Top combination</th><th>Builds</th><th>Score</th><th>Kept</th><th>Deleted</th><th>Value</th></tr></thead>
-      <tbody>${i.topCombos.map((c) => `<tr><td style="word-break:break-word">${escapeHtml(c.sections.map((x) => x.id + '.' + x.variant).join(' '))} · ${escapeHtml(c.palette || '')}</td><td>${c.builds}</td><td>${c.meanScore}</td><td>${Math.round(c.keptRate * 100)}%</td><td>${Math.round(c.deletedRate * 100)}%</td><td>${c.value}</td></tr>`).join('')}</tbody></table>
+      <tbody>${i.topCombos.map((c) => `<tr><td style="word-break:break-word">${escapeHtml(c.sections.map((x) => x.id + '.' + x.variant).join(' '))} · ${escapeHtml(c.palette || '')}</td><td>${c.builds}</td><td>${c.meanScore}</td><td>${Math.round(c.keptRate * 100)}%</td><td>${Math.round(c.deletedRate * 100)}%</td><td>${escapeHtml(String(c.value))}</td></tr>`).join('')}</tbody></table>
       ${i.sectionWins.length ? `<p class="text-xs text-[var(--muted)] mt-2">Sections that win most: ${i.sectionWins.map((w) => escapeHtml(w.section) + ' (' + w.count + ')').join(', ')}</p>` : ''}
     </div>`;
   }).join('');
 }
 
 // Small shared pieces for the older tabs: every value is escaped; empty states say what is missing.
-const tile = (label, value, sub, tone) => `<div class="bg-white border border-[var(--line)] rounded-xl p-4"><p class="text-xs text-[var(--muted)] mb-1">${escapeHtml(label)}</p><p class="font-display font-bold text-xl" style="${tone ? 'color:' + tone : ''}">${escapeHtml(value)}</p>${sub ? `<p class="text-xs text-[var(--muted)] mt-1">${escapeHtml(sub)}</p>` : ''}</div>`;
-const pill = (text, bg, fg) => `<span class="badge" style="background:${bg};color:${fg}">${escapeHtml(text)}</span>`;
+const tile = (label, value, sub, tone) => `<div class="bg-white border border-[var(--line)] rounded-xl p-4"><p class="text-xs text-[var(--muted)] mb-1">${escapeHtml(label)}</p><p class="font-display font-bold text-xl" style="${tone ? 'color:' + escapeHtml(tone) : ''}">${escapeHtml(value)}</p>${sub ? `<p class="text-xs text-[var(--muted)] mt-1">${escapeHtml(sub)}</p>` : ''}</div>`;
+const pill = (text, bg, fg) => `<span class="badge" style="background:${escapeHtml(bg)};color:${escapeHtml(fg)}">${escapeHtml(text)}</span>`;
 const empty = (text) => `<p class="text-sm text-[var(--muted)] border border-dashed border-[var(--line)] rounded-xl p-4 bg-white">${escapeHtml(text)}</p>`;
 const num = (n) => (Number.isFinite(Number(n)) ? Number(n).toLocaleString('en-US') : '-');
 const money = (n) => '$' + (Number(n) || 0).toFixed(2);
@@ -513,8 +513,8 @@ async function renderUsage(el) {
     <div class="overflow-x-auto"><table>
       <thead><tr><th>Model</th><th>Calls</th><th>Input tokens</th><th>Output tokens</th><th>Cost</th><th>Share</th></tr></thead>
       <tbody>${rows.map(([model, d]) => {
-        const share = totalCost > 0 ? Math.round((d.cost / totalCost) * 100) : 0;
-        return `<tr><td style="word-break:break-word">${escapeHtml(model)}</td><td>${num(d.calls)}</td><td>${num(d.inputTokens)}</td><td>${num(d.outputTokens)}</td><td>${money(d.cost)}</td><td style="min-width:90px"><div style="background:#e2e8f0;border-radius:4px;height:8px"><div style="background:#0f766e;width:${share}%;height:8px;border-radius:4px"></div></div><span class="text-xs text-[var(--muted)]">${share}%</span></td></tr>`;
+        const sharePct = totalCost > 0 ? Math.round((d.cost / totalCost) * 100) : 0;
+        return `<tr><td style="word-break:break-word">${escapeHtml(model)}</td><td>${num(d.calls)}</td><td>${num(d.inputTokens)}</td><td>${num(d.outputTokens)}</td><td>${money(d.cost)}</td><td style="min-width:90px"><div style="background:#e2e8f0;border-radius:4px;height:8px"><div style="background:#0f766e;width:${sharePct}%;height:8px;border-radius:4px"></div></div><span class="text-xs text-[var(--muted)]">${sharePct}%</span></td></tr>`;
       }).join('')}</tbody>
     </table></div>`;
 }
@@ -527,9 +527,9 @@ async function renderHealth(el) {
   const err = Number(h.errorRate) || 0, ms = Number(h.avgDurationMs) || 0;
   const errTone = err >= 5 ? '#c2410c' : err >= 1 ? '#b45309' : '#15803d';
   const msTone = ms >= 3000 ? '#c2410c' : ms >= 1000 ? '#b45309' : '#15803d';
-  const status = err >= 5 || ms >= 3000 ? pill('Needs attention', '#ffedd5', '#9a3412') : err >= 1 || ms >= 1000 ? pill('Watch', '#fef3c7', '#92400e') : pill('Healthy', '#dcfce7', '#166534');
+  const statusPill = err >= 5 || ms >= 3000 ? pill('Needs attention', '#ffedd5', '#9a3412') : err >= 1 || ms >= 1000 ? pill('Watch', '#fef3c7', '#92400e') : pill('Healthy', '#dcfce7', '#166534');
   el.innerHTML = `
-    <p class="mb-3">${status} <span class="text-xs text-[var(--muted)]">Based on the last hour. Amber from 1% errors or 1s responses; red from 5% or 3s.</span></p>
+    <p class="mb-3">${statusPill} <span class="text-xs text-[var(--muted)]">Based on the last hour. Amber from 1% errors or 1s responses; red from 5% or 3s.</span></p>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
       ${tile('Uptime', up, 'since the last deploy')}${tile('Requests (1h)', num(h.totalRequests))}${tile('Error rate', err + '%', 'server errors (5xx)', errTone)}${tile('Avg response', ms + ' ms', null, msTone)}
     </div>
