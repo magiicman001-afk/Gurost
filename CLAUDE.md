@@ -45,7 +45,7 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
   (`lib/rate-limits.js`), exact-pinned dependencies + Dependabot, secret scanner (`lib/secret-scan.js`; pre-commit hook
   `.githooks/pre-commit`, enabled by `npm install`; CI `.github/workflows/security.yml`; mark fake test keys `secret-scan-ok: why`).
 - CI (`security.yml`) status 2026-10-12: secret scans and the full test suite PASS on GitHub. The "Dependency audit" step is RED:
-  0 critical, 12 high, 25 moderate. The two direct packages are `aislop` (0.14.1 -> 0.18.1 per npm) and `lighthouse` (12.8.2; its
+  0 critical, 12 high, 25 moderate. See "HAND-OFF to Laptop Claude" below for the exact steps. The two direct packages are `aislop` (0.14.1 -> 0.18.1 per npm) and `lighthouse` (12.8.2; its
   high findings are transitive: `@puppeteer/browsers`, `basic-ftp`, `get-uri`, `extract-zip`, `braces`, `micromatch`). Needs the npm
   registry, which Web Claude's sandbox cannot reach: LAPTOP CLAUDE does `npm install aislop@<fixed> --save-exact`, checks that
   `aislop-check.js` and `bots/revamp-bot.js` still work, re-runs `npm audit`, commits `package.json` + lock. Do not weaken the gate.
@@ -56,6 +56,51 @@ Supabase project: `jiadrorezquvthyujykb`. Test login lives in `CLAUDE.local.md`
 - NOT done yet: CSP enforcement (report-only; allows inline scripts, so escaping is the real XSS defence), 2FA for admin, cookie
   sessions (S3, Laptop Claude), email alerts (needs Postmark env on Render), log scanner, config auditor, auto-block/revert, views.
 - Next (week 2): log scanner, dependency report in admin, config auditor, alert system.
+
+## HAND-OFF to Laptop Claude: fix the red "Dependency audit" step (written 2026-10-12, Web Claude)
+Why: CI step `npm audit --audit-level=high` fails: 0 critical, 12 high, 25 moderate. Direct packages: `aislop` 0.14.1 (npm says
+fixed in 0.18.1) and `lighthouse` 12.8.2 (high findings are inside its own sub-packages; npm's suggested "fix" lighthouse@12.6.1 is a
+DOWNGRADE, so do not take it blindly). `@modelcontextprotocol/sdk` (high) comes in through aislop. Web Claude's sandbox has no npm
+registry, so only the laptop can do this. The gate stays at `high`: do NOT lower it, and do not add `|| true`.
+Note: package.json pins exact versions (a test enforces that package.json matches the lock). The comment in `aislop-check.js` still says "^0.14.0".
+
+Steps (run in the repo root, on `clean-main`, after `git fetch` + rebase; one package per commit; show the diff; push at once):
+1. `npm ci` then `npm audit --json > /tmp/before.json` and `npm audit` (read the paths: `npm audit` prints "node_modules/x ... via y").
+2. aislop: `npm view aislop versions --json` and read its changelog for 0.15 to 0.18 (it is a 0.x tool: a minor bump can change
+   the CLI). Then `npm install aislop@0.18.1 --save-exact` (or the newest version npm audit accepts).
+3. Verify aislop still works (below). If it breaks and cannot be fixed in `aislop-check.js` in a small edit, STOP and report: do
+   not delete the check. It is skipped safely (returns `skipped: true`), so a broken aislop will not crash builds, but then say so.
+4. lighthouse: first find who brings each high package: `npm ls @puppeteer/browsers basic-ftp get-uri extract-zip braces micromatch`.
+   a. Try the newest lighthouse: `npm view lighthouse version`; if newer than 12.8.2, `npm install lighthouse@<newest> --save-exact`.
+   b. If the high items remain, add `overrides` to package.json for ONLY the vulnerable sub-packages to their fixed versions
+      (for example `"overrides": {"braces": "<fixed>", "micromatch": "<fixed>"}`), then `npm install` and re-test.
+   c. If lighthouse@12.6.1 (the suggested "fix") is older than what we run: it is a downgrade. Do not install it. Use (a) or (b).
+   d. If neither is safe: lighthouse only runs inside `bots/revamp-bot.js` against URLs the user gives, after
+      `security.assertSafeUrl`. Then record each remaining advisory in the report with why it is not reachable, and ask Irfan
+      before adding an audit exception (an `audit-level` exception needs his OK and a written reason in this file).
+5. `npm audit --audit-level=high` must exit 0. `npm ls` must have no "invalid". Commit `package.json` + `package-lock.json` only.
+6. `node --test test/*.test.js` (all pass, including the pinning test), then push and watch the `security` workflow go green:
+   `gh run list --workflow=security.yml --limit 1`; if red, read the annotations (the raw log is not readable from the sandbox):
+   `gh api repos/magiicman001-afk/Gurost/check-runs/<job id>/annotations --jq '.[].message'`.
+
+Verify aislop still works (no test covers it today, so do this by hand and add a small test if easy):
+```
+node -e "require('./aislop-check').runAislopCheck([{path:'a.js',content:'import fs from \"fs\";\n// This function adds two numbers\nfunction add(a,b){try{return a+b}catch(e){}}\nexport default add;\n'}]).then(r=>console.log(JSON.stringify({skipped:r.skipped,reason:r.reason,issues:(r.results||[]).map(x=>x.issues&&x.issues.length)})))"
+```
+Pass = `skipped:false` and at least one issue found (swallowed catch / narrative comment / unused import). `skipped:true` means the
+binary `node_modules/.bin/aislop` is missing or its CLI changed (`scan --json` and `fix` are the two commands used).
+
+Verify Amend Website still works (needs Chrome; Playwright's chromium is installed by `npm install`):
+1. Lighthouse alone, no model cost, local page: start `npx http-server` or `python -m http.server 8099` in a folder with any index.html, then
+   `node -e "require('./bots/revamp-bot').runLighthouse('http://localhost:8099/').then(r=>console.log(r.performance,r.seo,r.accessibility,r.bestPractices,r.failingAudits.length)).catch(e=>{console.error('FAIL',e.message);process.exit(1)})"`
+   Pass = four numbers between 0 and 1 and no error. (`chrome-launcher` finds Chrome; set `CHROME_PATH` if it cannot.)
+2. Crawl: `node -e "require('./bots/revamp-bot').crawl('http://localhost:8099/').then(r=>console.log(r.title,r.links.length,r.html.length))"`.
+3. Whole route (uses the paid model, so only if OpenRouter has credit): sign in locally, `POST /api/revamp/audit` with
+   `{"url":"https://example.com"}`; expect 200 with `issues` and `lighthouse`. Screenshot it (rule: every live test gets a screenshot).
+   Note `assertSafeUrl` blocks localhost on that route, so use step 1 for local pages.
+4. Also run the security-adjacent tests: `node --test test/dependencies.test.js test/xss-scan.test.js test/secret-scan.test.js`.
+
+If anything fails: `git revert` the update commit (small, logged) and write the cause here. A red audit is better than a broken Amend Website, but tell Irfan which.
 
 ## Layout
 - Builders: Website (`bots/variant-bot.js`, 4 design directions), App
