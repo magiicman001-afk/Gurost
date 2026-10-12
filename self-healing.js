@@ -74,6 +74,22 @@ const segmentGuard = require("./segment-guard");
 const systemHealer = require("./system-healer");
 const { supabase } = require("./lib/db");
 
+const REQUIRE_CHECK_CONCURRENCY = Math.max(1, Number(process.env.HEALER_CONCURRENCY) || 4);
+
+/** Like Promise.all(items.map(fn)) but with at most `limit` running at once; keeps order. */
+async function mapLimit(items, limit, fn) {
+  const out = new Array(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const i = next++;
+      out[i] = await fn(items[i], i);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return out;
+}
+
 /**
  * The class of bug segment-guard.js's own docs admit it can't catch:
  * a file that's syntactically valid JavaScript but whose require()
@@ -89,8 +105,11 @@ async function checkRequirePaths(repoRoot) {
     .buildSegments()
     .flatMap((s) => s.files.map((f) => f.path));
 
-  const results = await Promise.all(
-    files.map(async (filePath) => {
+  // Run a few checks at a time, never all at once. Each check starts a whole
+  // `node` process that loads the file (and often half the app); with ~300 files
+  // started together this used more than the 2 GB Render allows, so the server was
+  // killed (out of memory) about once an hour and visitors got a 502.
+  const results = await mapLimit(files, REQUIRE_CHECK_CONCURRENCY, async (filePath) => {
       try {
         await execFileAsync("node", ["-e", `require(${JSON.stringify(filePath)})`], { timeout: 5000, cwd: repoRoot });
         return { path: filePath, ok: true };
@@ -104,8 +123,7 @@ async function checkRequirePaths(repoRoot) {
         if (isPathBug) return { path: filePath, ok: false, error: stderr };
         return { path: filePath, ok: true }; // not a path bug, not this check's concern
       }
-    })
-  );
+  });
 
   return results.filter((r) => !r.ok);
 }
@@ -289,6 +307,7 @@ function stopHealingLoop() {
 }
 
 module.exports = {
+  mapLimit,
   runDetectionCycle,
   runProposalCycle,
   verifyProposal,
