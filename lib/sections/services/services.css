@@ -6,10 +6,13 @@
   overflow-wrap: anywhere;
 }
 .g-services__text {
+  overflow-wrap: anywhere;
   margin-top: var(--g-s1);
   color: var(--g-muted);
 }
 .g-services__link {
+  max-width: 100%;
+  overflow-wrap: anywhere;
   display: inline-flex;
   align-items: center;
   min-height: var(--g-tap);
@@ -23,7 +26,7 @@
 .g-services__grid,
 .g-services__tiles {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--g-s3);
 }
 .g-services__grid .g-services__item,
@@ -42,12 +45,12 @@
 @media (min-width: 640px) {
   .g-services__grid,
   .g-services__tiles {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (min-width: 960px) {
   .g-services__grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--g-s4);
   }
 }
