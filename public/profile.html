@@ -211,7 +211,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const avatarEl = document.getElementById('avatarDisplay');
     if (me.avatarUrl) {
-      avatarEl.innerHTML = `<img src="${me.avatarUrl}" class="w-full h-full object-cover" alt="Your avatar"/>`;
+      avatarEl.innerHTML = `<img src="${GurostAPI.escapeHtml(me.avatarUrl)}" class="w-full h-full object-cover" alt="Your avatar"/>`;
     } else {
       avatarEl.textContent = (me.displayName || me.email || '?')[0].toUpperCase();
     }
@@ -244,7 +244,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Upload failed.');
-      document.getElementById('avatarDisplay').innerHTML = `<img src="${data.avatarUrl}" class="w-full h-full object-cover" alt="Your avatar"/>`;
+      document.getElementById('avatarDisplay').innerHTML = `<img src="${GurostAPI.escapeHtml(data.avatarUrl)}" class="w-full h-full object-cover" alt="Your avatar"/>`;
       statusEl.textContent = 'Photo updated.';
     } catch (err) {
       statusEl.textContent = 'Real, honest note: ' + err.message;

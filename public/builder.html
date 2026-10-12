@@ -368,12 +368,12 @@ function renderVariants(variants, pending = 0) {
   const shown = new Set([...grid.querySelectorAll('[data-variant-id]')].map((el) => el.dataset.variantId));
   if (!shown.size) grid.innerHTML = '';
   grid.insertAdjacentHTML('beforeend', variants.filter((v) => !shown.has(v.id)).map((v) => `
-    <button class="group text-left border border-[var(--line)] rounded-none overflow-hidden hover:border-[var(--gurost-primary)] transition-colors bg-white" data-variant-id="${v.id}">
+    <button class="group text-left border border-[var(--line)] rounded-none overflow-hidden hover:border-[var(--gurost-primary)] transition-colors bg-white" data-variant-id="${GurostAPI.escapeHtml(v.id)}">
       <div class="aspect-video bg-white overflow-hidden pointer-events-none">
-        <iframe class="w-full h-full border-0" srcdoc="${injectCodeBoxScript(v.html).replace(/&/g, '&amp;').replace(/"/g, '&quot;')}" sandbox="allow-scripts" tabindex="-1" title="${v.label} preview"></iframe>
+        <iframe class="w-full h-full border-0" srcdoc="${GurostAPI.escapeHtml(injectCodeBoxScript(v.html))}" sandbox="allow-scripts" tabindex="-1" title="${GurostAPI.escapeHtml(v.label)} preview"></iframe>
       </div>
       <div class="p-2">
-        <p class="text-xs font-semibold group-hover:text-[var(--gurost-primary)] transition-colors">${v.label}</p>
+        <p class="text-xs font-semibold group-hover:text-[var(--gurost-primary)] transition-colors">${GurostAPI.escapeHtml(v.label)}</p>
       </div>
     </button>
   `).join('') + Array.from({ length: Math.max(0, pending) }, () => `

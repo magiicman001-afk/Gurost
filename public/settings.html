@@ -249,12 +249,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!projects.length) {
       picker.innerHTML = '<option>No projects yet</option>';
     } else {
-      picker.innerHTML = projects.map((p) => `<option value="${p.id}">${GurostAPI.escapeHtml((p.prompt || 'Untitled').slice(0, 40))}</option>`).join('');
+      picker.innerHTML = projects.map((p) => `<option value="${GurostAPI.escapeHtml(p.id)}">${GurostAPI.escapeHtml((p.prompt || 'Untitled').slice(0, 40))}</option>`).join('');
       loadApiKeys(projects[0].id);
       picker.addEventListener('change', () => loadApiKeys(picker.value));
     }
   } catch (err) {
-    document.getElementById('apiKeysList').innerHTML = `<p class="text-sm text-red-600">Couldn't load your projects: ${err.message}</p>`;
+    document.getElementById('apiKeysList').innerHTML = `<p class="text-sm text-red-600">Couldn't load your projects: ${GurostAPI.escapeHtml(err.message)}</p>`;
   }
 
   async function loadApiKeys(projectId) {
@@ -269,12 +269,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
       list.innerHTML = keys.map((k) => `
         <div class="flex items-center justify-between border border-[var(--line)] rounded-lg px-4 py-2.5">
-          <span class="text-sm font-medium">${k.name}</span>
-          <span class="text-xs font-mono text-[var(--muted)]">••••${k.lastFour}</span>
+          <span class="text-sm font-medium">${GurostAPI.escapeHtml(k.name)}</span>
+          <span class="text-xs font-mono text-[var(--muted)]">••••${GurostAPI.escapeHtml(k.lastFour)}</span>
         </div>
       `).join('');
     } catch (err) {
-      list.innerHTML = `<p class="text-sm text-red-600">${err.message}</p>`;
+      list.innerHTML = `<p class="text-sm text-red-600">${GurostAPI.escapeHtml(err.message)}</p>`;
     }
   }
 
@@ -317,7 +317,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // list, then loads/saves the user's real, actual choice.
   const timezoneSelect = document.getElementById('timezoneSelect');
   const realTimezones = typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : [Intl.DateTimeFormat().resolvedOptions().timeZone];
-  timezoneSelect.innerHTML = realTimezones.map((tz) => `<option value="${tz}">${tz}</option>`).join('');
+  timezoneSelect.innerHTML = realTimezones.map((tz) => `<option value="${GurostAPI.escapeHtml(tz)}">${GurostAPI.escapeHtml(tz)}</option>`).join('');
   try {
     const me = await GurostAPI.call('/api/me');
     timezoneSelect.value = me.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
