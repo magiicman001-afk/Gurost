@@ -105,10 +105,11 @@ Images: `image-bot.js` in the repo root. It tries Gemini first and OpenAI second
 
 ### 3.7 Projects and where they live
 
-Today, projects live **in the server's memory** (the `PROJECTS` map). That means every deploy, and every server restart,
-wipes them, and a page refresh loses the project. This is the known **Bug AA**, and it is why a push to `clean-main`
-can destroy a build someone is testing. The fix (save projects in the database) is part of Website Builder V2. Until
-then: do not push while Irfan is testing live.
+Projects are kept in the server's memory for speed **and** saved to the database (Supabase table `project_state`); a project
+missing from memory is loaded back from the database when it is asked for. Since commit `0c3a008` (2026-10-11, "Bug AA") the
+Website Builder page also remembers the last project in the browser for twelve hours, so a refresh or a redeploy no longer
+loses the build. **Not yet verified on a live phone test**, and the App Builder page does not have the "remember" part yet
+(`docs/APP_BUILDER_STATUS.md`). Until the live check, treat a push while someone is testing as a small risk.
 
 ## 4. The security system
 
