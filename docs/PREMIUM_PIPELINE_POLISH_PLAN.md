@@ -58,7 +58,7 @@ Limit: three files per commit, one look or one section per commit, pushed at onc
 
 ## 4. Step 3: switch on, then collect real data (needs the evening list: flags, OpenRouter credit)
 
-1. Set `PREMIUM_PIPELINE=1` and `DESIGN_MEMORY=1` on Render (confirm `ESCALATION_HIERARCHY=1`). Top up OpenRouter first: a build with no
+1. Set **`SECTION_LIBRARY=1`** on Render FIRST (the premium pipeline, Design Memory and escalation only run inside the section-library path; with `SECTION_LIBRARY` off the old generator runs and the other three switches do nothing), then `PREMIUM_PIPELINE=1` and `DESIGN_MEMORY=1` (confirm `ESCALATION_HIERARCHY=1`). Also run the pending database migrations (`docs/migrations/`: `build_memory`, `build_logs`, `published_sites`, `user_sessions`, `admin_roles`, `admin_audit`); an unapplied table makes that feature silently do nothing. Top up OpenRouter first: a build with no
    credit falls to free models and tells us nothing about real quality.
 2. Run **at least 3 real builds per industry** (18 builds) on the phone: different business names and descriptions, some with very
    little detail, some with a lot, with and without a logo. Screenshot each.

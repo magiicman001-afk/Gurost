@@ -259,7 +259,7 @@ checking that all older backup repos are private (new ones always are); testing 
 - Delete the Supabase key `gurost_server_2`.
 - Top up OpenRouter, the Gemini image API and fal.ai.
 - Approve the 24 premium looks at `/premium-looks-preview.html`.
-- On Render set `PREMIUM_PIPELINE=1` and `DESIGN_MEMORY=1`, and confirm `ESCALATION_HIERARCHY=1`.
+- On Render set `SECTION_LIBRARY=1` first (without it the other three switches do nothing), then `PREMIUM_PIPELINE=1` and `DESIGN_MEMORY=1`, and confirm `ESCALATION_HIERARCHY=1`.
 - Test the full flow on your phone.
 - Turn on GitHub secret scanning and push protection.
 - Set the Postmark email variables on Render, and create a Render API key.

@@ -496,7 +496,7 @@ async function renderMemory(el) {
   const d = await adminCall('/api/admin/design-memory');
   const names = Object.keys(d.industries);
   if (!names.length) {
-    el.innerHTML = `<p class="text-sm">No builds recorded yet (${d.totalBuilds} so far). Designs are recorded once the Premium Pipeline is on (PREMIUM_PIPELINE=1); after ${d.minIndustryBuilds} builds in an industry, the builder starts leading with what scores and survives best.</p>`;
+    el.innerHTML = `<p class="text-sm">No builds recorded yet (${d.totalBuilds} so far). Designs are recorded once the section library and the Premium Pipeline are on (SECTION_LIBRARY=1 and PREMIUM_PIPELINE=1); after ${d.minIndustryBuilds} builds in an industry, the builder starts leading with what scores and survives best.</p>`;
     return;
   }
   el.innerHTML = `<p class="text-xs text-[var(--muted)] mb-3">${d.totalBuilds} builds recorded. Structure only (industry, sections, palette, score): never a person's words or details.</p>` + names.map((n) => {
