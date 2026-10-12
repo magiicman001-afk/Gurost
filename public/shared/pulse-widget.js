@@ -438,18 +438,18 @@
         voice: window.GurostVoice,
         lines: AI ? { retry: AI.VOICE.retry } : null,
         transcribe: async (blob) => {
-          const res = await fetch(`${window.GurostAPI.API_BASE || ''}/api/voice/transcribe`, {
+          const res = await window.GurostAPI.fetch(`${window.GurostAPI.API_BASE || ''}/api/voice/transcribe`, {
             method: 'POST',
-            headers: { 'Content-Type': blob.type || 'audio/webm', ...window.GurostAPI.authHeaders() },
+            headers: { 'Content-Type': blob.type || 'audio/webm' },
             body: blob
           });
           if (!res.ok) throw new Error('I could not hear that. Please try again.');
           return (await res.json()).transcript || '';
         },
         speak: async (text) => {
-          const res = await fetch(`${window.GurostAPI.API_BASE || ''}/api/voice/speak`, {
+          const res = await window.GurostAPI.fetch(`${window.GurostAPI.API_BASE || ''}/api/voice/speak`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...window.GurostAPI.authHeaders() },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text })
           });
           if (!res.ok) throw new Error('speech failed');
@@ -1121,9 +1121,9 @@
       if (!prompt) { logStatus('Describe the image first.'); return; }
       const resultEl = document.getElementById('pulseImageResult');
       resultEl.innerHTML = '<p>Generating…</p>';
-      const res = await fetch('/api/image/generate', {
+      const res = await (window.GurostAPI?.fetch || fetch)('/api/image/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(window.GurostAPI?.authHeaders ? window.GurostAPI.authHeaders() : {}) },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ description: prompt })
       });
       const data = await res.json();
@@ -1148,7 +1148,7 @@
       if (!projectId) { logStatus('No active project to show history for.'); return; }
 
       listEl.innerHTML = '<p>Loading…</p>';
-      const res = await fetch(`/api/project/${projectId}/history`, { headers: window.GurostAPI?.authHeaders ? window.GurostAPI.authHeaders() : {} });
+      const res = await (window.GurostAPI?.fetch || fetch)(`/api/project/${projectId}/history`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Could not load history.');
 
@@ -1167,9 +1167,8 @@
       listEl.querySelectorAll('.pulse-history-item').forEach((btn) => {
         btn.addEventListener('click', async () => {
           const idx = btn.dataset.index;
-          const restoreRes = await fetch(`/api/project/${projectId}/history/${idx}/restore`, {
-            method: 'POST',
-            headers: window.GurostAPI?.authHeaders ? window.GurostAPI.authHeaders() : {}
+          const restoreRes = await (window.GurostAPI?.fetch || fetch)(`/api/project/${projectId}/history/${idx}/restore`, {
+            method: 'POST'
           });
           const restoreData = await restoreRes.json();
           if (!restoreRes.ok) { logStatus(safeErr(restoreData.error || 'Restore failed.')); return; }
@@ -1202,9 +1201,9 @@
       const projectId = gb.getProjectId?.();
       if (!projectId) throw new Error('Nothing to download yet.');
       logStatus('Preparing your download…');
-      const res = await fetch(`${window.GurostAPI.API_BASE}/api/wrap`, {
+      const res = await window.GurostAPI.fetch(`${window.GurostAPI.API_BASE}/api/wrap`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...window.GurostAPI.authHeaders() },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId }),
       });
       if (!res.ok) {
@@ -1235,9 +1234,8 @@
       await runAction('upload', async () => {
         const formData = new FormData();
         formData.append('file', file);
-        const res = await fetch(`${window.GurostAPI.API_BASE}/api/project/${projectId}/upload`, {
+        const res = await window.GurostAPI.fetch(`${window.GurostAPI.API_BASE}/api/project/${projectId}/upload`, {
           method: 'POST',
-          headers: window.GurostAPI.authHeaders(),
           body: formData,
         });
         const data = await res.json();

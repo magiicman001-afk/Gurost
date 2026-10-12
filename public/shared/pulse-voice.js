@@ -282,9 +282,9 @@ function startRecordingSession() {
                     const wav = await blobToWav(blob);
                     if (wav) { blob = wav; sendType = "audio/wav"; }
                   }
-                  const response = await fetch("/api/voice/transcribe", {
+                  const response = await (window.GurostAPI?.fetch || fetch)("/api/voice/transcribe", {
                     method: "POST",
-                    headers: { "Content-Type": sendType, ...(window.GurostAPI?.authHeaders ? window.GurostAPI.authHeaders() : {}) },
+                    headers: { "Content-Type": sendType },
                     body: blob
                   });
                   if (!response.ok) {
@@ -410,9 +410,9 @@ function tapToTalk(button, handlers = {}) {
 }
 
 async function speakTextViaRest(text) {
-  const response = await fetch("/api/voice/speak", {
+  const response = await (window.GurostAPI?.fetch || fetch)("/api/voice/speak", {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...(window.GurostAPI?.authHeaders ? window.GurostAPI.authHeaders() : {}) },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text })
   });
   if (!response.ok) throw new Error("Text-to-speech failed.");
