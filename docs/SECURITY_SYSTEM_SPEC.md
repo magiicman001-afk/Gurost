@@ -101,7 +101,7 @@ attempt per level, the same rule as builds.
 ## 5. LAYER 5: AUDIT
 
 5.1 Security events timeline in admin: every event, fix, alert and escalation, filterable and exportable.
-5.2 Threat model: `docs/THREAT_MODEL.md`, reviewed quarterly.
+5.2 Threat model: `docs/THREAT_MODEL.md` (NOT written yet), reviewed quarterly.
 5.3 Compliance dashboard: GDPR, UK consumer rights, SOC 2 preparation, each item with a status and the gap. These
 are checklists of what we do, not legal advice; a qualified adviser still has to review (as the privacy policy note
 in CLAUDE.md says).

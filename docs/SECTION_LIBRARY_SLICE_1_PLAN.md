@@ -7,6 +7,7 @@ Status: BUILT 2026-10-11 (Sunday plan stages 2 to 8). Irfan's phone verdict on t
 - Built differently from this plan (by decision, all tested): hero scrim is 0.6 to 0.65 (0.55 failed 4.5:1 for the cream text); the hero also carries the command's `data-gsap-fade` / `data-gsap-slide` next to `data-g-reveal`; footer and hero take a `tone` slot (the assembler sets it from the palette); variants A/B of the hero are swapped to C when there is no image (`variantRules` in the manifest).
 - Still to build: the other 17 sections, then the Layer 2 polish pass (real fonts, images, GSAP, Lenis, micro-interactions), then Website Builder V2.
 (Original status line: PLAN ONLY, 2026-10-09.)
+Docs sweep 2026-10-12: file names in the body below are the PLAN. What exists: tests are `test/section-*.test.js` with helpers in `test/helpers/section-suite.js` and `section-test.js` (there is no `e2e/` folder and no `section-checks.js`); styles are `lib/sections/<id>/<id>.css`; sample content lives in the tests and `scripts/build-sections-preview.js`.
 Parent plans: the approved blueprint (20 sections x 3 variants, 6 palettes, quality gate) and the implementation plan
 (plain scoped CSS, server-side templates, one batch AI-fill call, honest slots). This file is the detail for the first 3 sections.
 

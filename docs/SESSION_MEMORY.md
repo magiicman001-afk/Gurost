@@ -3,6 +3,12 @@
 Newest session first. Every session adds an entry: what was done, what was decided, what changed, what's next.
 Read this and `CLAUDE.md` before starting work. `git fetch` first and check what the other Claude pushed.
 
+## Session 2026-10-12 (Monday): security week 1, admin help, plans (Web Claude)
+- **Done and pushed (hashes in `git log`):** security week 1 (log redaction, XSS scanner, input validation, rate-limit table, secret scanner + history allowlist, pinned dependencies); admin Help and Guide (`6bb151c` to `03ebe82`); `docs/HOW_GUROST_WORKS.md`; CI made readable (annotations) and green except the dependency audit (handed to Laptop Claude; aislop since updated by him); all GitHub repos private + test (`0dc0909`); plans: `WEEK_2_SECURITY_PLAN.md`, `PREMIUM_PIPELINE_POLISH_PLAN.md`, `APP_BUILDER_STATUS.md`, `MOBILE_APP_ROADMAP.md`; premium preview phone fix in the generator (`9078e87`); file ownership rules in `TEAM_STATUS.md`.
+- **Decided (Irfan):** no Flutter/Swift/Kotlin; mobile order PWA, Android, iPhone (Phase 2); Week 2 security waits for a green pipeline and is built by Laptop Claude; customer code in the owner's GitHub is a Phase 2 gap.
+- **Corrected:** projects are NOT wiped on refresh/deploy any more (`0c3a008`); several specs said "not built" for built things (fixed in the 2026-10-12 docs sweep).
+- **Open:** Irfan's evening list (migrations, top-ups, approve 24 looks, flags, phone test, GitHub secret scanning, Postmark, 2FA, password manager); old public `gurost-<id>` repos to switch to private by hand.
+
 ## Session 2026-10-11 (Sunday): section library build begins
 - **Done:** stages 0 to 8 (see `docs/TEAM_STATUS.md` for hashes): memory foundation, design tools, `lib/sections/` foundation, Navbar, Hero, Footer (A/B/C each, 6 palettes), preview page with Bug BB fixed, assembler behind `SECTION_LIBRARY=1`, quality gate with mutation tests. 828 tests, 826 pass (2 need express).
 - **Decided:**
