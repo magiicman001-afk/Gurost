@@ -7,13 +7,17 @@ const M = require("../public/shared/marble-loader");
 
 const src = fs.readFileSync(path.join(__dirname, "..", "public", "shared", "marble-loader.js"), "utf8");
 
-test("each marble is mostly its own colour with ONE accent ribbon from the brand trio, never its own colour", () => {
-  const trio = ["#F97316", "#FB7185", "#0D9488"];
+test("the eight marble pictures exist, are real PNGs with a transparent corner, and are a sensible size", () => {
+  const dir = path.join(__dirname, "..", "public", "marbles");
   for (const b of M.BOTS) {
-    assert.ok(trio.includes(b.accent), `${b.name} accent is orange, coral or teal`);
-    assert.notStrictEqual(b.accent.toLowerCase(), b.color.toLowerCase(), `${b.name} accent differs from its body`);
+    const file = path.join(dir, b.file);
+    assert.ok(fs.existsSync(file), `${b.file} exists`);
+    const buf = fs.readFileSync(file);
+    assert.strictEqual(buf.slice(1, 4).toString(), "PNG", `${b.file} is a PNG`);
+    assert.strictEqual(buf[25], 6, `${b.file} is RGBA (colour type 6), so it can have a transparent background`);
+    assert.ok(buf.length >= 20 * 1024 && buf.length <= 500 * 1024, `${b.file} is ${Math.round(buf.length / 1024)} KB (20 to 500 KB)`);
+    assert.strictEqual(buf.readUInt32BE(16), buf.readUInt32BE(20), `${b.file} is square`);
   }
-  assert.ok(!/ACCENTS/.test(src), "no leftover shared accent list");
 });
 
 test("eight marbles, one per bot, named like the bots in the build log", () => {
@@ -21,13 +25,13 @@ test("eight marbles, one per bot, named like the bots in the build log", () => {
   assert.deepStrictEqual(M.BOTS.map((b) => b.name), ["Planner", "Designer", "Industry", "Builder", "Pulse", "Research", "Review", "Launch"]);
   for (const b of M.BOTS) {
     assert.match(faces, new RegExp(`name: '${b.name}'`), `${b.name} is a bot in bot-conversation.js`);
-    assert.match(b.color, /^#[0-9A-F]{6}$/i);
+    assert.strictEqual(b.file, `${b.name.toLowerCase()}.png`, "picture is named after the bot");
   }
-  assert.strictEqual(new Set(M.BOTS.map((b) => b.color)).size, 8, "eight different colours");
+  assert.strictEqual(new Set(M.BOTS.map((b) => b.file)).size, 8, "eight different pictures");
 });
 
 for (const [w, h] of [[343, 300], [1100, 420], [200, 150], [343, 140]]) {
-  test(`physics at ${w}x${h}: marbles stay inside, keep moving, never overlap for long, no NaN`, () => {
+  test(`physics at ${w}x${h}: marbles stay inside, keep moving, no NaN, steady slow speed`, () => {
     const r = M.diameterFor(w, h) / 2;
     const world = M.createWorld(8, w, h, r, 3);
     const start = world.marbles.map((p) => ({ x: p.x, y: p.y }));
@@ -39,7 +43,7 @@ for (const [w, h] of [[343, 300], [1100, 420], [200, 150], [343, 140]]) {
         assert.ok(Number.isFinite(p.x) && Number.isFinite(p.y) && Number.isFinite(p.vx) && Number.isFinite(p.vy) && Number.isFinite(p.rot), "finite numbers");
         assert.ok(p.x >= r - 1e-6 && p.x <= w - r + 1e-6 && p.y >= r - 1e-6 && p.y <= h - r + 1e-6, `inside the box (${p.x.toFixed(1)}, ${p.y.toFixed(1)})`);
         const sp = Math.hypot(p.vx, p.vy);
-        assert.ok(sp >= world.vmin * 0.99 && sp <= world.vmax * 1.01, `speed in the lively band (${sp.toFixed(1)})`);
+        assert.ok(sp >= 54 && sp <= 96, `speed stays moderate (${sp.toFixed(1)} px/s)`);
         travelled[k] += Math.hypot(p.x - before[k].x, p.y - before[k].y);
       });
     }
@@ -48,21 +52,29 @@ for (const [w, h] of [[343, 300], [1100, 420], [200, 150], [343, 140]]) {
   });
 }
 
-test("two marbles meeting head on bounce apart (equal masses swap speed)", () => {
-  const world = M.createWorld(2, 400, 200, 20, 1);
-  world.marbles[0] = { x: 100, y: 100, vx: 80, vy: 0, rot: 0 };
-  world.marbles[1] = { x: 139, y: 100, vx: -80, vy: 0, rot: 0 };
-  world.rnd = () => 0.5; // no wander, so the check is exact
-  M.stepWorld(world, 0.016);
-  assert.ok(world.marbles[0].vx < 0 && world.marbles[1].vx > 0, "they move apart");
-  const d = Math.hypot(world.marbles[1].x - world.marbles[0].x, world.marbles[1].y - world.marbles[0].y);
-  assert.ok(d >= 40 - 1e-6, "no longer overlapping");
+test("a marble that reaches a wall turns around and stays inside (left, right, up, down)", () => {
+  const world = M.createWorld(1, 200, 100, 20, 1);
+  world.marbles[0] = { x: 181, y: 50, vx: 100, vy: 0, rot: 0, spin: 0.2 };
+  M.stepWorld(world, 0.05);
+  assert.ok(world.marbles[0].vx < 0, "bounced off the right wall");
+  world.marbles[0] = { x: 100, y: 21, vx: 0, vy: -100, rot: 0, spin: 0.2 };
+  M.stepWorld(world, 0.05);
+  assert.ok(world.marbles[0].vy > 0 && world.marbles[0].y >= 20, "bounced off the top wall");
 });
 
-test("diameter: 40 to 80 px; a 375px phone gets a marble that fits eight on screen", () => {
-  assert.ok(M.diameterFor(343, 400) >= 40 && M.diameterFor(343, 400) <= 80);
-  assert.strictEqual(M.diameterFor(2000, 2000), 80);
-  assert.strictEqual(M.diameterFor(50, 50), 40);
+test("no marble-to-marble physics: two marbles on the same spot just pass through", () => {
+  const world = M.createWorld(2, 400, 200, 20, 1);
+  world.marbles[0] = { x: 100, y: 100, vx: 60, vy: 0, rot: 0, spin: 0 };
+  world.marbles[1] = { x: 105, y: 100, vx: -60, vy: 0, rot: 0, spin: 0 };
+  M.stepWorld(world, 0.016);
+  assert.ok(world.marbles[0].vx === 60 && world.marbles[1].vx === -60, "speeds untouched");
+  assert.ok(!/stepWorld[\s\S]*?collid/i.test(src), "no collision code left");
+});
+
+test("diameter: 48 to 88 px; a 375px phone gets a marble that fits eight on screen", () => {
+  assert.ok(M.diameterFor(343, 400) >= 48 && M.diameterFor(343, 400) <= 88);
+  assert.strictEqual(M.diameterFor(2000, 2000), 88);
+  assert.strictEqual(M.diameterFor(50, 50), 48);
 });
 
 test("reduced motion layout: still, inside the box", () => {
@@ -80,5 +92,8 @@ test("source promises: reduced motion respected, plain-spinner fallback, 10 seco
   assert.match(src, /mbl-spin/);
   assert.strictEqual(M.SNIPPET_EVERY_MS, 10000);
   assert.ok(!/innerHTML|insertAdjacentHTML|document\.write|eval\(/.test(src), "no HTML injection");
-  assert.ok(!/https?:\/\//.test(src.replace(/\/\*[\s\S]*?\*\//g, "")), "no network, no external files");
+  assert.ok(!/https?:\/\//.test(src.replace(/\/\*[\s\S]*?\*\//g, "")), "no external addresses: pictures come from our own /marbles/ folder");
+  assert.ok(!/fetch\(|XMLHttpRequest|WebSocket/.test(src), "no network calls");
+  assert.match(src, /onerror/, "a missing picture triggers the plain spinner");
+  assert.ok(!/createRadialGradient|paintBody|paintGloss/.test(src), "the drawn marbles are gone");
 });
