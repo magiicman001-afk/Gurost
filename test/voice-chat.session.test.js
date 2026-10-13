@@ -152,3 +152,47 @@ test("stop while the bot is talking silences it", async () => {
   assert.equal(log.players[0].stopped, true);
   assert.equal(session.state, "off");
 });
+
+// Privacy (Irfan, 2026-10-13): "I clicked Stop and it carried on listening." Stop pressed while the phone was still asking
+// for the microphone did nothing, and the microphone came on afterwards with nothing able to switch it off.
+test("Stop pressed while the microphone is still starting: it never comes on, and the granted microphone is closed", { timeout: 5000 }, async () => {
+  let grant;
+  const log = { stopped: 0, states: [], recorders: 0, interval: false };
+  const env = {
+    getUserMedia: () => new Promise((r) => { grant = r; }), // the phone's permission prompt is still open
+    stopStream() { log.stopped++; },
+    createAnalyser() { return { readLevel: () => 0, close() {} }; },
+    createRecorder() { log.recorders++; return { start() {}, discard() {}, async stop() { return { size: 5000 }; } }; },
+    playAudio() { throw new Error("no"); },
+    createVad: () => createVad(),
+    setInterval() { log.interval = true; return 1; }, clearInterval() {}, now: () => 0
+  };
+  const s = createVoiceSession(env, { send: async () => ({}), onStatus: (st) => log.states.push(st) });
+  const starting = s.start();
+  assert.equal(s.starting, true);
+  s.stop();                       // the user presses Stop now
+  grant({ fake: "stream" });      // ...and the permission arrives afterwards
+  await starting;
+  assert.equal(s.state, "off");
+  assert.equal(log.stopped, 1, "the microphone handed over late is switched off");
+  assert.equal(log.recorders, 0, "nothing recorded");
+  assert.equal(log.interval, false, "nothing listening");
+  assert.deepEqual(log.states, [], "never shown as listening");
+});
+
+test("a second start while the first is waiting for the microphone does not open a second one", { timeout: 5000 }, async () => {
+  let grants = 0, grant;
+  const env = {
+    getUserMedia: () => { grants++; return new Promise((r) => { grant = r; }); },
+    stopStream() {}, createAnalyser() { return { readLevel: () => 0, close() {} }; },
+    createRecorder() { return { start() {}, discard() {}, async stop() { return null; } }; },
+    playAudio() {}, createVad: () => createVad(), setInterval() { return 1; }, clearInterval() {}, now: () => 0
+  };
+  const s = createVoiceSession(env, { send: async () => ({}) });
+  const a = s.start(); s.start(); s.start();
+  grant({});
+  await a;
+  assert.equal(grants, 1);
+  s.stop();
+  assert.equal(s.state, "off");
+});

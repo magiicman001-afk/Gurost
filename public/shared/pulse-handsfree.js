@@ -89,7 +89,9 @@
       });
       session = s;
       try { await s.start(); }
-      catch (err) { session = null; throw err; }
+      catch (err) { if (session === s) session = null; throw err; }
+      // Stopped while the microphone was starting: make sure this session is off too.
+      if (session !== s) s.stop();
     }
 
     function stop() { if (session) { var s = session; session = null; s.stop(); } }

@@ -22,7 +22,7 @@
    */
   function createVoiceSession(env, hooks) {
     var state = "off", vad = null, stream = null, analyser = null, recorder = null, timer = null;
-    var player = null, recStartedAt = 0, failures = 0, generation = 0;
+    var player = null, recStartedAt = 0, failures = 0, generation = 0, starting = false;
 
     function setState(next) { state = next; if (hooks.onStatus) hooks.onStatus(next); }
 
@@ -100,10 +100,17 @@
     }
 
     async function start() {
-      if (state !== "off") return;
+      if (state !== "off" || starting) return;
       generation++;
+      var mine = generation;
       failures = 0;
-      stream = await env.getUserMedia();
+      starting = true;
+      var granted;
+      try { granted = await env.getUserMedia(); } finally { starting = false; }
+      // Stop was pressed while the browser was still asking for the microphone (a phone takes a while):
+      // the microphone it has just handed over is closed at once and nothing listens.
+      if (mine !== generation) { env.stopStream(granted); return; }
+      stream = granted;
       analyser = env.createAnalyser(stream);
       vad = env.createVad();
       setState("listening");
@@ -112,8 +119,8 @@
     }
 
     function stop() {
+      generation++; // also cancels a start still waiting for the microphone
       if (state === "off") return;
-      generation++;
       env.clearInterval(timer); timer = null;
       if (player) { player.stop(); player = null; }
       if (recorder) { recorder.discard(); recorder = null; }
@@ -122,7 +129,7 @@
       setState("off");
     }
 
-    return { start: start, stop: stop, get state() { return state; } };
+    return { start: start, stop: stop, get state() { return state; }, get starting() { return starting; } };
   }
 
   // ---- the real browser ------------------------------------------------------

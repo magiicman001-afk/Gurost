@@ -188,3 +188,23 @@ test("the widget still loads on a bare page and exposes the Voice switch", () =>
   assert.equal(typeof ctx.window.GurostPulseVoice.toggle, "function");
   assert.equal(ctx.window.GurostPulseVoice.active, false);
 });
+
+// Privacy: Stop during the microphone start must leave nothing listening (the session used to be forgotten while its
+// microphone came on anyway, so the next tap opened a SECOND one and the first could never be stopped).
+test("stop() while the voice session is starting: that session is stopped too, and active stays false", async () => {
+  const { createHandsFree } = require("../public/shared/pulse-handsfree");
+  let release, stops = 0;
+  const fakeSession = { start: () => new Promise((r) => { release = r; }), stop() { stops++; } };
+  const hf = createHandsFree({
+    voice: { browserSupported: () => true, browserEnv: () => ({}), createVoiceSession: () => fakeSession },
+    transcribe: async () => "", speak: async () => "", run: async () => ({ ok: true }), ui: {}
+  });
+  const p = hf.start();
+  assert.equal(hf.active, true);
+  hf.stop();
+  assert.equal(hf.active, false);
+  release();
+  await p;
+  assert.ok(stops >= 2, "stopped when asked and again once its start finished");
+  assert.equal(hf.active, false);
+});
