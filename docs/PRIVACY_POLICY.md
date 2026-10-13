@@ -8,7 +8,7 @@ Controller: Surii Global Limited. Contact: support@gurost.com.
 
 ## 0. Build status: what is true today (not part of the policy text)
 
-The policy below describes the finished state. These lines say what the code does today, so nobody publishes a promise we cannot keep. Updated 2026-10-13 after Fixes 2 to 5.
+The policy below describes the finished state. These lines say what the code does today, so nobody publishes a promise we cannot keep. Updated 2026-10-13 after Fixes 2 to 5. Provider list re-checked against the code on 2026-10-13 (every host in `server.js`, `image-bot.js`, `bots/`, `lib/`): added Google Maps embeds and the currency and news-feed lookups; OmniRoute is no longer used.
 
 | Promise in the policy | Status 2026-10-13 |
 |---|---|
@@ -72,6 +72,8 @@ Each provider gets only what its one job needs. "May be off" means the feature r
 | E2B | Sandbox that runs generated code to test it | The generated code for your project |
 | Telegram, WhatsApp (Meta) | Only if you connect your own bot | Messages sent through your bot |
 | ntfy | Push notifications, if turned on | Short notice text (e.g. "your deploy finished") on a private random topic |
+| Google Maps | A map on a published site, if the business details include an address | The visitor's browser contacts Google directly (IP address, browser type); the address is in the map link |
+| Frankfurter, Hacker News, TechCrunch, Reddit feeds | Currency rates and public news feeds for the Assistant | Currency codes, or nothing (our server fetches public feeds; no account data) |
 | Google Fonts and CDNs (jsDelivr, cdnjs, unpkg, Tailwind CDN) | Fonts and code libraries for the Gurost pages and the sites we generate | Your browser's IP address and browser type, sent by your browser to them |
 
 Also: professional advisers (lawyers, accountants), authorities when the law requires it, and a buyer if the business is sold (you are told).
