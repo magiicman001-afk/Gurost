@@ -58,15 +58,16 @@
     <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
       <h2 class="font-display font-bold text-xl mb-4">1. Information We Collect</h2>
       <h3>Information You Provide</h3>
-      <ul><li>Account info</li><li>Payment data</li><li>Content you upload</li><li>Communications</li><li>Conversations with your Business Assistant department bots, and the notes saved from them (see section 11)</li></ul>
+      <ul><li>Account: email, name, sign-in details, plan</li><li>Profile and company details you save</li><li>Your projects: prompts you type, sites and apps built, versions, images, and form submissions on your published sites</li><li>Payments: handled by Stripe; we keep your plan and credit records, not card numbers</li><li>Messages you send us</li><li>Conversations with your Business Assistant department bots, and the notes saved from them (see section 11); what you ask Pulse</li></ul>
       <h3>Information Collected Automatically</h3>
-      <ul><li>Usage data</li><li>Device data</li><li>Cookies</li></ul>
+      <ul><li>IP address, request timing and security records (blocked addresses, abuse records)</li><li>Device and browser information</li><li>Sign-in session records</li><li>Audit records of assistant and admin actions (your user id and IP address)</li><li>Build logs and events</li><li>Sign-in cookie only. No advertising or analytics cookies.</li></ul>
     </div>
 
     <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
       <h2 class="font-display font-bold text-xl mb-4">2. How We Use Your Information</h2>
-      <ul><li>Provide Services</li><li>Authenticate users</li><li>Process payments</li><li>Respond to queries</li><li>Monitor security</li><li>Legal compliance</li></ul>
-      <p class="font-semibold mt-3" style="color: var(--ink);">We do not use your personal data for model training unless we have your explicit consent.</p>
+      <ul><li>Build your sites and apps and run Pulse and the Assistant (contract)</li><li>Sign you in and keep the service secure (contract, legitimate interests)</li><li>Take payment and keep records (contract, legal obligation)</li><li>Send service emails: resets, exports, confirmations (contract)</li><li>Fix bugs from build logs (legitimate interests)</li></ul>
+      <p class="font-semibold mt-3" style="color: var(--ink);">We do not sell your personal data. We run no advertising, ad networks, tracking pixels or data brokers.</p>
+      <p class="font-semibold mt-3" style="color: var(--ink);">We do not use your personal data for model training unless you explicitly switch that on for your account. It is off by default.</p>
     </div>
 
     <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
@@ -77,24 +78,46 @@
 
     <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
       <h2 class="font-display font-bold text-xl mb-4">4. Data Sharing</h2>
-      <ul><li>Service providers (Vercel, Render, Stripe, Claude, Gemini, DeepSeek, Deepgram for voice, Brave for web search)</li><li>Professional advisers</li><li>Authorities</li><li>Business transfers</li></ul>
+      <p>We share data only with the services that do one job for us, and each gets only what that job needs:</p>
+      <ul>
+        <li><b>Supabase</b>: our database, sign-in and file storage. Everything we store.</li>
+        <li><b>Render</b> (runs Gurost), <b>Vercel</b> (hosts sites you publish), <b>GitHub</b> (saves and backend code, private repositories), <b>Neon</b> (database for apps you deploy, if used).</li>
+        <li><b>Stripe</b>: payments. <b>Postmark</b>: our emails to you.</li>
+        <li><b>AI providers</b>: <b>OpenRouter</b> and the model makers it routes to, plus Google Gemini, Mistral, Cerebras and Groq as free fallbacks, Anthropic and OpenAI for some features. They receive your prompt and the context needed to answer it. See "What reaches AI providers" below.</li>
+        <li><b>Images</b>: fal.ai and Gemini (image descriptions); Pixabay, Unsplash and Openverse (a search phrase).</li>
+        <li><b>Voice</b>: Deepgram and LiveKit (audio while a voice conversation is open). <b>Web research</b>: Brave Search (the search phrase).</li>
+        <li><b>E2B</b>: a sandbox that runs generated code to test it.</li>
+        <li><b>Telegram and WhatsApp (Meta)</b>: only if you connect your own bot. <b>ntfy</b>: push notices, if turned on.</li>
+        <li><b>Google Fonts and code libraries (jsDelivr, cdnjs, unpkg, Tailwind)</b>: your browser fetches these directly, so they see your IP address.</li>
+        <li>Professional advisers, authorities where the law requires, and a buyer if the business is sold.</li>
+      </ul>
+      <h3>What reaches AI providers</h3>
+      <p>When you build, edit or chat, your prompt and the context needed (for example your business description, the page being edited, recent messages, and saved notes if memory is on) go to OpenRouter and the model maker it picks. We do not send passwords, card numbers or API keys on purpose. We do not use your data to train models and we ask providers not to. We cannot promise that a provider deletes a request: that depends on the provider's own terms. Free fallback models can have weaker privacy terms.</p>
     </div>
 
     <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
       <h2 class="font-display font-bold text-xl mb-4">5. International Data Transfers</h2>
-      <p>We utilize safeguards like UK IDTA, EU SCCs, and EU-US Data Privacy Framework for international transfers.</p>
+      <p>Many of these providers are outside the UK and EEA, mainly in the USA; the makers of some AI models are in other countries, including China. For these transfers we rely on safeguards such as the UK IDTA or Addendum, EU Standard Contractual Clauses and the UK-US data bridge where a provider takes part.</p>
     </div>
 
     <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
       <h2 class="font-display font-bold text-xl mb-4">6. Data Retention</h2>
-      <ul><li>Account info: Until deletion + 30 days</li><li>Payment records: 7 years</li><li>Support: 3 years</li><li>Server logs: 30-90 days</li></ul>
+      <ul><li>Account, profile, projects and assistant data: until you delete them or your account, then removed within 30 days</li><li>Payment and invoice records: 7 years (legal requirement); anonymised after you delete your account</li><li>Support messages: 3 years</li><li>Server and security logs: 30 to 90 days</li><li>Sign-in session records: until expired + 30 days</li><li>Build logs and events: 90 days</li><li>Voice recordings: not kept</li></ul>
     </div>
 
     <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">
       <h2 class="font-display font-bold text-xl mb-4">7. Your Rights</h2>
-      <p>Under UK GDPR, you have the right to:</p>
-      <ul><li>Access</li><li>Rectification</li><li>Erasure</li></ul>
-      <p class="mt-3">Contact: <a href="mailto:support@gurost.com">support@gurost.com</a></p>
+      <p>Under UK GDPR you have these rights. Email <a href="mailto:support@gurost.com">support@gurost.com</a> for any of them; we answer within one month. Self-service buttons are being added and this page will say so when they exist.</p>
+      <ul>
+        <li><b>Access</b>: ask us for a copy of your data.</li>
+        <li><b>Rectification</b>: edit your profile and company details in Settings, or email us.</li>
+        <li><b>Erasure</b>: email us (see section 8).</li>
+        <li><b>Restrict processing</b>: email us; you can also turn Assistant memory off.</li>
+        <li><b>Data portability</b>: we give you your data in JSON, a standard machine-readable format.</li>
+        <li><b>Object</b>: email us, for example to stop processing based on our legitimate interests. You can turn memory and suggestions off.</li>
+        <li><b>Automated decisions</b>: we make no automated decisions with legal or similarly significant effects about you. AI writes site and app content at your request, and our security system can automatically block abusive IP addresses.</li>
+        <li><b>Complain</b> to the Information Commissioner's Office (ico.org.uk).</li>
+      </ul>
     </div>
 
     <div class="reveal legal-section border border-[var(--line)] rounded-2xl p-8">

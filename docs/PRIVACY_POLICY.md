@@ -1,0 +1,124 @@
+# Gurost Privacy Policy (working copy)
+
+**NEEDS LEGAL REVIEW.** A qualified adviser must review this before launch (IP addresses are personal data; several providers are
+outside the UK). Written 2026-10-13 by Web Claude from the code, not from legal knowledge. Plain English on purpose.
+The public page is `public/privacy.html`; it must say the same as this file, except for rows marked not built in section 0: there the page says "email us" until the feature ships, and each fix updates that line.
+
+Controller: Surii Global Limited. Contact: support@gurost.com.
+
+## 0. Build status: what is true today (not part of the policy text)
+
+The policy below describes the finished state. These lines say what the code does today, so nobody publishes a promise we cannot keep.
+
+| Promise in the policy | Status 2026-10-13 |
+|---|---|
+| We never sell data; no ad or tracking scripts | True by code search (keyword search, not a full read). Re-check before launch. |
+| Provider list below | Built from the code (env vars, `fetch` hosts, packages). Which providers are switched on in production depends on the keys set on Render; confirm each one with Irfan. |
+| Export of your data | **Partial today:** account record + profile only. Fix 2 widens it. |
+| Delete my account button | **Not built.** Today: email support. Fix 3 builds it. |
+| Retention periods | **Not enforced.** No cleanup job exists. Fix 4 builds it. Until then do not publish exact numbers as fact. |
+| Rights list | Fix 5 adds how to use each right in the product. |
+| "Not stored by providers / not used for training" | **Not verifiable by us** for third-party providers: it depends on each provider's terms and our account settings (see section 5). Fix 6 audits what we send. |
+| Model training | Opt-in only (`training-data.js`, off by default, per user); no training run exists. |
+
+## 1. What we collect
+
+- **Account:** email, name, password hash (or sign-in token), plan, sign-up date, workspace membership.
+- **Profile and company details:** business name, website, industry, social handles, style notes, saved research notes.
+- **Your projects:** the prompts you type, the sites and apps built, versions and undo history, images you upload or we generate, form submissions made on your published sites.
+- **Business Assistant:** conversations with each bot, notes the bots keep (facts, preferences, habits), reminders, meeting notes, briefings, your answers to suggestions, usage counts (which bot, tool, day and time of day; not the text).
+- **Pulse:** what you ask Pulse (stored as a learning log, up to 2,000 characters per entry).
+- **Voice:** if you use Talk, your microphone audio is sent for transcription. We do not keep the recording; we keep the words as a message.
+- **Payments:** handled by Stripe. We keep plan, credit balance and credit events (a record of credits used); we do not store card numbers.
+- **Technical:** IP address and request timing (security logs, rate limits, blocked-IP list, security violation records), device and browser information, session records, audit records of admin and assistant actions (user id + IP address), build logs and build events.
+- **Cookies/session storage:** sign-in session. No advertising or analytics cookies.
+
+## 2. Why we collect it (and the legal basis)
+
+| Purpose | Data | Basis (UK GDPR) |
+|---|---|---|
+| Build your site or app, run Pulse and the Assistant | prompts, profile, projects, memory | Contract |
+| Sign you in, keep you secure, stop abuse | account, sessions, IP, logs | Contract; legitimate interests |
+| Take payment, keep records | Stripe data, credit events | Contract; legal obligation |
+| Send service emails (export, reset, receipts) | email address | Contract |
+| Fix bugs and keep the service working | build logs and events | Legitimate interests |
+| Suggestions in the Assistant | usage counts only | Legitimate interests; you can turn memory off |
+| Train a future model | prompt/response pairs | **Consent only**: off by default, per account, you can turn it off |
+
+We do not sell personal data. We do not run advertising, ad networks, tracking pixels or data brokers. We do not build advertising profiles.
+
+## 3. Who we share it with (exactly who, and what they get)
+
+Each provider gets only what its one job needs. "May be off" means the feature runs only if the key is set on our server.
+
+| Provider | Job | Data that goes there |
+|---|---|---|
+| Supabase | Database, sign-in, file storage | Everything in section 1 that we store |
+| Render | Runs the Gurost server; hosts deployed backends | Requests to our server; code of backends you deploy |
+| Vercel | Hosts websites and app frontends you publish | The site files you publish |
+| GitHub | Saves, backups, backend repos (private) | Project code you save or deploy |
+| Neon | Database for apps you deploy (may be off) | The schema of your app |
+| Stripe | Payments | Name, email, billing details you enter at Stripe |
+| Postmark | Our emails | Your email address and the email text (reset, export, confirmations) |
+| OpenRouter | Routes AI requests to model makers | Your prompt, project text and context for the request (see section 5) |
+| Model makers behind OpenRouter | Write the content | Same as above. Includes makers such as Anthropic, Google, Moonshot (Kimi), Z.ai (GLM), DeepSeek, NVIDIA, depending on the plan and what is available |
+| Google Gemini, Mistral, Cerebras, Groq | Free-tier fallbacks, used only if their key is set and the main route has nothing left | Same as above |
+| Anthropic (direct), OpenAI | Some assistant features, embeddings for semantic memory (OpenAI), images (fallback) | Text to embed or the image prompt |
+| fal.ai, Gemini image | Image generation (may be off) | The image description |
+| Pixabay, Unsplash, Openverse | Stock photo search | A search phrase from your business description |
+| Deepgram | Voice to text and back | Your audio while a voice conversation is open |
+| LiveKit | Live voice sessions (may be off) | Audio stream |
+| Brave Search | Web research for the Research agent | The search phrase |
+| E2B | Sandbox that runs generated code to test it | The generated code for your project |
+| Telegram, WhatsApp (Meta) | Only if you connect your own bot | Messages sent through your bot |
+| ntfy | Push notifications, if turned on | Short notice text (e.g. "your deploy finished") on a private random topic |
+| Google Fonts and CDNs (jsDelivr, cdnjs, unpkg, Tailwind CDN) | Fonts and code libraries for the Gurost pages and the sites we generate | Your browser's IP address and browser type, sent by your browser to them |
+
+Also: professional advisers (lawyers, accountants), authorities when the law requires it, and a buyer if the business is sold (you are told).
+
+## 4. International transfers
+Several providers are outside the UK and EEA (mainly the USA; model makers can also be in other countries, including China). We rely on the
+UK International Data Transfer Agreement or Addendum, EU Standard Contractual Clauses, and the UK-US data bridge where the provider
+participates. **Needs adviser check:** which provider uses which mechanism; we have not verified this per provider.
+
+## 5. What reaches AI providers
+When you build, edit or chat, your prompt and the context needed (your business description, the page being edited, recent messages, saved
+memory notes if memory is on) go to OpenRouter and the model maker it picks. We do not send passwords, card numbers or API keys on purpose.
+- We do not use your data to train models, and ask providers not to; whether a provider keeps a copy is set by that provider's terms
+  and the data settings on our account. **We cannot promise a provider deletes it.** (Fix 6 records what we set.)
+- Training data capture on our side is off unless you switch it on in your account.
+- Free fallback models usually have weaker privacy terms than paid ones.
+
+## 6. How long we keep it
+| Data | Kept |
+|---|---|
+| Account, profile, projects, assistant data | Until you delete them or your account; then removed within 30 days |
+| Payment and invoice records | 7 years (legal requirement), anonymised after you delete your account |
+| Support messages | 3 years |
+| Server and security logs | 30 to 90 days |
+| Session records | Until expired + 30 days |
+| Build logs and events | 90 days |
+| Voice recordings | Not kept |
+
+## 7. Your rights, and how to use them in Gurost
+| Right | How |
+|---|---|
+| Access | Settings, "Download my data" (emails you a link, valid 24 hours) |
+| Rectification | Edit your profile and company details in Settings; email us for anything else |
+| Erasure | Settings, "Delete my account" (two confirmations); or email support@gurost.com |
+| Restrict processing | Email us; you can also turn Assistant memory off in the memory panel |
+| Data portability | The same download, in JSON (a standard, machine-readable format) |
+| Object | Email us (for example to stop processing based on legitimate interests); turn memory and suggestions off |
+| Automated decisions | We do not make decisions with legal or similarly significant effects about you by automated means. AI writes site and app content at your request. Our security system can automatically block abusive IP addresses. |
+| Complain | Information Commissioner's Office (ico.org.uk) |
+
+We answer within one month.
+
+## 8. Security
+Encrypted connections, role-based admin access, rate limiting, input validation, secret scanning, audit logs, private code repositories. No system is perfectly secure.
+
+## 9. Children
+Not for under 16s.
+
+## 10. Changes
+We tell you by email or in the product.
