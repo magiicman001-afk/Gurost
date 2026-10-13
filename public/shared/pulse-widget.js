@@ -308,7 +308,7 @@
     const m = ADD_PAGE.exec(String(text || ''));
     // "add a link to page 2", "make a button on the page" are edits, not a new page.
     if (onWebsite && m && !/\b(?:to|on|in|of|for|at|from|with)\b/i.test(m[0])) return { action: 'reply', kind: 'unsupported', say: ADD_PAGE_REPLY };
-    if (state === 'ready' && UNSUPPORTED_MEDIA.test(String(text || '')) && !MEDIA_LINK_OK.test(String(text || ''))) return { action: 'reply', kind: 'unsupported', say: UNSUPPORTED_MEDIA_REPLY };
+    if (state === 'ready' && UNSUPPORTED_MEDIA.test(String(text || ''))) return { action: 'reply', kind: 'unsupported', say: UNSUPPORTED_MEDIA_REPLY };
     if (state === 'building') return { action: 'reply', kind: 'pickdesign', say: STILL_BUILDING_REPLY };
     if (state === 'choosing') return { action: 'reply', kind: 'pickdesign', say: PICK_DESIGN_REPLY };
     return { action: state === 'none' ? 'build' : 'edit' };
