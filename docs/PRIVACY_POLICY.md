@@ -18,7 +18,7 @@ The policy below describes the finished state. These lines say what the code doe
 | Delete my account button | **Built (Fix 3, `2766a20`, `11430ab`).** Settings, Danger Zone. Not verified live yet. |
 | Retention periods | **Built (Fix 4, `426ce36`).** Daily job; runs once deployed. Support messages (3 years) have no job: they live in email, not the database. Backups at providers are outside our control. |
 | Rights list | Done in Fix 5: each right says how to use it. Restrict and Object are by email only (no button). |
-| "Not stored by providers / not used for training" | **Not verifiable by us** for third-party providers: it depends on each provider's terms and our account settings (see section 5). Fix 6 audits what we send. |
+| "Not stored by providers / not used for training" | **Cannot be promised.** Audit done in Fix 6: `docs/AI_DATA_FLOW.md`. The policy says what is true: we do not train; provider terms apply. Becomes promisable for paid calls after the OpenRouter settings and `data_collection: "deny"` step (Irfan to decide). |
 | Model training | Opt-in only (`training-data.js`, off by default, per user); no training run exists. |
 
 ## 1. What we collect
@@ -84,8 +84,7 @@ participates. **Needs adviser check:** which provider uses which mechanism; we h
 ## 5. What reaches AI providers
 When you build, edit or chat, your prompt and the context needed (your business description, the page being edited, recent messages, saved
 memory notes if memory is on) go to OpenRouter and the model maker it picks. We do not send passwords, card numbers or API keys on purpose.
-- We do not use your data to train models, and ask providers not to; whether a provider keeps a copy is set by that provider's terms
-  and the data settings on our account. **We cannot promise a provider deletes it.** (Fix 6 records what we set.)
+- We do not train models on your data. We send only the content of the request: no account id, email or IP address (verified in the gateway code, `docs/AI_DATA_FLOW.md`). We have **not yet** set provider options that stop a provider keeping a copy, so each provider's own terms apply and **we cannot promise a provider deletes a request.** Form submissions on your sites, passwords and card details are never sent.
 - Training data capture on our side is off unless you switch it on in your account.
 - Free fallback models usually have weaker privacy terms than paid ones.
 
