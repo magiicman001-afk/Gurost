@@ -123,3 +123,50 @@ app recommended, built with Laptop Claude after S3 so it uses the same sessions)
 HTML. 5 Always validate server-side. 6 Always rate-limit public routes. 7 Always encrypt sensitive data at rest.
 8 Always require 2FA for admin (not yet built, see section 0). 9 Always log security events. 10 Always have a
 rollback plan (`git revert`, and the Ops tab).
+
+## 8. GDPR compliance: data minimisation, no sale, no adtech
+
+Added 2026-10-13 (Web Claude) after Irfan's reminder. **Notes and a plan only: nothing here is built, and nothing was changed in the
+code or the privacy policy.** Not legal advice: a qualified adviser must review the policy before launch (IP addresses count as
+personal data). Not blocking, but the launch policy must be accurate.
+
+### 8.1 Why
+In 2026 the Norwegian regulator fined Microsoft's Xandr EUR 8.5M. Its point: "Responsibility for data protection cannot be delegated
+to others. Each company must itself ensure, and be able to prove, that it is authorised to use this data." For Gurost that means
+we can name every place user data goes, and prove we have a reason for each.
+
+### 8.2 Principles (never break)
+1. **We never sell user data.** 2. **No adtech:** no ad networks, no tracking pixels, no data brokers, no cross-site profiling.
+3. **Minimum:** each outside service gets only what it needs to do its one job. 4. **Say what we do, do what we say:** the policy
+must match the code, checked by reading both. 5. The customer's data is the customer's; delete and export must really work.
+
+### 8.3 What I checked in the code (2026-10-13), and what I did not
+| Check | Finding |
+|---|---|
+| Selling data / ad or tracker scripts | No sale or ad code found by search of `server.js`, `lib/`, `bots/`. Only match for tracker words was `lib/finalize-site.js`: it adds social-preview (og/twitter) tags to a customer's site, not trackers. **Not a full audit:** I searched by keyword, I did not read every file. |
+| Data sent to AI providers | **Not verified.** Prompts include the customer's business description and, for Pulse, up to their last prompts (`pulse_learning_log`); Business Assistant sends saved conversations and notes (the policy says so, section 11). I have not checked every route for extra fields (emails, ids, IPs) in a prompt. |
+| Privacy policy (`public/privacy.html`) vs the six points | What and why: covered in outline. Retention: covered (account + 30 days, payments 7 years, logs 30 to 90 days) but **nothing in code enforces these numbers** (no cleanup job found). Export: **not mentioned** in "Your rights" (only access, rectification, erasure). |
+| Provider list in the policy (section 4) | **Does not match the code.** Policy names Vercel, Render, Stripe, Claude, Gemini, DeepSeek, Deepgram, Brave. Code also talks to Supabase (database), OpenRouter (routes to many model makers), OpenAI, Pixabay, Unsplash, Postmark (email), E2B (code sandboxes), GitHub, Google Fonts and CDNs. Stripe, DeepSeek and Brave appear in the code base, but I did not confirm that each is live. The list must be rebuilt from the code. |
+| Export (`POST /api/me/export`) | **Narrower than its email says.** It sends only the account record and `user_profiles`. Projects, Business Assistant conversations and notes, Pulse history, audit rows are not included, yet the email says "a real, complete export". Either widen it or change the wording; the second is the quick honest fix. |
+| Erasure | **No delete route.** The policy says to email support. `CLAUDE.md` already lists the full erasure route (every user table, projects, storage files) as a launch must-do. `DELETE /api/memory` only clears assistant memory. |
+| Audit rows | Policy has no line yet about `business_assistant_audit` (user id + IP address). Already listed in `CLAUDE.md`. |
+
+### 8.4 Privacy policy checklist (for the rewrite, before launch)
+The policy must state, in plain words: what data (with the audit rows and IP addresses); why (and the legal basis for each); who
+receives it (the full list from the code, each with its one job, and "nobody else"; no sale, no ads); how long we keep each kind
+(and a job that really deletes on that schedule); how to delete (a real button or route); how to export (a real route that
+covers all categories); how to complain (the UK ICO). Then the adviser review.
+
+### 8.5 To do (in order, each its own small step)
+1. Read every AI call and list exactly what leaves the server; strip anything not needed (ids, emails, IPs). Record the list here.
+2. Rebuild the provider list from the code; confirm which of Stripe, DeepSeek and Brave are live; fix the policy.
+3. Fix the export email wording now (one line); widen the export to every table later.
+4. Build the erasure route (Laptop Claude owns routes in `server.js`; Web Claude can supply the table list).
+5. Add retention cleanup jobs, or change the policy numbers to what we really do.
+6. Policy rewrite, then the adviser review.
+
+### 8.6 Planned: admin "Data handling audit" (NOT built, on hold)
+A read-only admin section that shows: each kind of data we store and the table it lives in; which outside services receive it; the
+retention rule and the date the last cleanup ran; and the customer rights status (export works, delete works, with the date last
+tested). It should be generated from one list in code (`lib/data-inventory.js`, to be written) so the page, the policy and a test
+can all be checked against each other. It would sit with the compliance dashboard in 5.3. Waits for the Week 2 security signal.
