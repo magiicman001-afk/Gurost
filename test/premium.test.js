@@ -58,10 +58,10 @@ test("needs follow the hero: a type-led hero (c) needs no photo, a photo hero ne
   }
 });
 
-test("the flag is off unless PREMIUM_PIPELINE is exactly 1", () => {
-  assert.equal(P.enabled({}), false);
-  assert.equal(P.enabled({ PREMIUM_PIPELINE: "true" }), false);
+test("the flag is on unless PREMIUM_PIPELINE is exactly 0", () => {
+  assert.equal(P.enabled({}), true);
   assert.equal(P.enabled({ PREMIUM_PIPELINE: "1" }), true);
+  assert.equal(P.enabled({ PREMIUM_PIPELINE: "0" }), false);
   assert.equal(P.config().threshold, 70);
 });
 
