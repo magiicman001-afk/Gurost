@@ -6447,5 +6447,11 @@ httpServer.listen(PORT, () => {
   reminders.startReminderPolling();
   selfHealing.startHealingLoop();
   weekAheadBriefing.startWeeklyBriefingScheduler();
+  // Daily retention cleanup (lib/retention.js): deletes data older than the privacy policy allows; logs counts only.
+  try {
+    require("./lib/retention").startRetentionJob(supabase, {
+      audit: (res) => supabase.from("admin_audit").insert({ role: "system", action: "retention_run", target: "daily", details: { deleted: res.deleted, failed: res.failed } }),
+    });
+  } catch (err) { console.error("[retention] could not start:", err.message); }
   telegramBot.restoreActiveBots(app).catch((err) => console.warn("[telegram-bot] Restore failed:", err.message));
 });
