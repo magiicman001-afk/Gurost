@@ -390,6 +390,7 @@
   // The scripts load on the first press, so pages that never use voice never pay for them.
   let handsFree = null;
   let voiceLoading = false;
+  let voiceCancelled = false; // Stop pressed while voice was still loading or starting
   const SCRIPT_BASE = ((document.currentScript && document.currentScript.src) || '').replace(/[^/]*$/, '') || 'shared/';
   const VOICE_TEXT = { listening: 'Listening… speak when you are ready.', thinking: 'Thinking…', speaking: 'Speaking. Talk any time to interrupt.' };
 
@@ -418,14 +419,21 @@
     btn.setAttribute('aria-pressed', on ? 'true' : 'false');
   }
 
+  // Stop means stop, at once, whatever voice is doing - loading, waiting for the microphone permission, listening,
+  // thinking or speaking. The button and the red ball go back to off here too, not only when the session reports it.
   function stopHandsFree() {
+    if (voiceLoading) voiceCancelled = true; // a start still loading: it must not switch the microphone on afterwards
     if (handsFree) handsFree.stop();
+    setVoiceButton(false);
+    setVoiceLine('');
+    if (currentState === 'recording' && !activeRecording) setState('idle');
   }
 
   async function toggleHandsFree() {
-    if (handsFree && handsFree.active) { stopHandsFree(); return; }
-    if (voiceLoading) return;
+    if (voiceLoading || (handsFree && handsFree.active)) { stopHandsFree(); return; }
     voiceLoading = true;
+    voiceCancelled = false;
+    setVoiceButton(true); // shows "Stop voice" straight away, so Stop can be pressed while it is starting
     try {
       if (!window.GurostVad) await loadScript('voice-vad.js');
       if (!window.GurostVoice) await loadScript('voice-chat.js');
@@ -438,7 +446,8 @@
     try {
       if (!window.GurostVoice.browserSupported()) { setVoiceLine('Voice is not available in this browser. You can type instead.'); return; }
       const st = await window.GurostAPI.call('/api/voice/status');
-      if (!st || !st.available) { setVoiceLine('Voice is not set up yet. You can type instead.'); return; }
+      if (voiceCancelled) return;
+      if (!st || !st.available) { setVoiceButton(false); setVoiceLine('Voice is not set up yet. You can type instead.'); return; }
       const HF = window.GurostPulseHandsFree;
       handsFree = HF.createHandsFree({
         voice: window.GurostVoice,
@@ -476,14 +485,30 @@
       });
       togglePanel(true);
       await handsFree.start();
+      if (voiceCancelled) stopHandsFree(); // Stop was pressed while the microphone was starting
     } catch (err) {
       handsFree = null;
       setVoiceButton(false);
       setVoiceLine(err && err.name === 'NotAllowedError' ? 'Microphone access was blocked. Allow it in your browser, or type instead.' : 'I could not start the microphone. You can type instead.');
     } finally {
       voiceLoading = false;
+      if (!(handsFree && handsFree.active)) setVoiceButton(false);
     }
   }
+
+  // Never listen in the background: the microphone goes off when the page is hidden (phone locked, another
+  // tab or app) or closed. Hold-to-talk recordings stop too.
+  function micOffInBackground() {
+    stopHandsFree();
+    if (activeRecording && typeof activeRecording.cancel === 'function') {
+      activeRecording.cancel(); // thrown away, never sent
+      activeRecording = null;
+      document.getElementById('pulseFloatMic')?.classList.remove('listening');
+      if (currentState === 'recording') setState('idle');
+    }
+  }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') micOffInBackground(); });
+  window.addEventListener('pagehide', micOffInBackground);
 
   // For tests and for checking by hand.
   window.GurostPulseVoice = { toggle: toggleHandsFree, stop: stopHandsFree, get active() { return !!(handsFree && handsFree.active); } };

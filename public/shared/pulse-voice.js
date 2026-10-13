@@ -267,6 +267,12 @@ function startRecordingSession() {
       const startedAt = Date.now();
 
       resolveStart({
+        // Microphone off now and the recording thrown away, never sent (the page went to the background).
+        cancel: () => {
+          chunks.length = 0;
+          try { if (recorder.state !== "inactive") recorder.stop(); } catch {}
+          stream.getTracks().forEach((t) => t.stop());
+        },
         stop: () =>
           new Promise((resolveStop, rejectStop) => {
             recorder.addEventListener(
