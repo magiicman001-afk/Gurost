@@ -813,7 +813,7 @@
       onStart: (session) => { activeRecording = session; setState('recording'); setFloatMic(true); logStatus('Listening… let go when you are done (or, if you tapped, tap the mic again).'); },
       onTapMode: () => logStatus('Listening… tap the mic again when you are done.'),
       onRelease: () => { activeRecording = null; setFloatMic(false); },
-      onResult: (transcript) => { setState('idle'); if (transcript) sendCorrection(transcript); },
+      onResult: (transcript) => { setState('idle'); if (transcript) sendCorrection(transcript); else logStatus("I didn't catch that. Tap the mic and try again, or type it instead."); },
       onError: (msg) => { logStatus(msg); setState('idle'); },
       onUnavailable: (msg) => logStatus(msg)
     });

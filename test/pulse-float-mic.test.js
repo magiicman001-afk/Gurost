@@ -18,7 +18,7 @@ test("there is exactly ONE mic button in the panel (Bug MM), and it uses the sha
   assert.ok(!/pulseMicButton/.test(src) && !/pulseMicButton/.test(css), "the second mic next to Send is gone");
   assert.strictEqual((src.match(/class="material-symbols-outlined">mic</g) || []).length, 1, "one mic icon in the panel markup");
   assert.match(src, /holdToTalk\(floatMic, \{\s*onPress: stopHandsFree,/);
-  assert.match(src, /onResult: \(transcript\) => \{ setState\('idle'\); if \(transcript\) sendCorrection\(transcript\); \}/);
+  assert.match(src, /onResult: \(transcript\) => \{ setState\('idle'\); if \(transcript\) sendCorrection\(transcript\);/);
 });
 
 test("tapToTalk helper (kept, no longer used by the panel): first tap starts, second tap stops and sends; errors reset the mic; it listens to click only", () => {

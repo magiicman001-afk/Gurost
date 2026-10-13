@@ -87,3 +87,8 @@ test("the transcribe route refuses non-audio and empty bodies, and never shows t
   assert.ok(!/res\.status\(502\)\.json\(\{ error: err\.message \}\)/.test(route));
   assert.match(route, /I couldn't make out that recording/);
 });
+
+test("Bug KK: an empty transcript is answered in words on the Dashboard and in the Pulse panel, never silence", () => {
+  assert.match(read("public/dashboard.html"), /if \(!transcript\) \{[^}]*I didn't catch that/);
+  assert.match(read("public/shared/pulse-widget.js"), /else logStatus\("I didn't catch that\./);
+});

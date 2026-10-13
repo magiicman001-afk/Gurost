@@ -296,6 +296,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   holdToTalk(document.getElementById('dashMicBtn'), {
     onPress: () => validationMsg.classList.add('hidden'),
     onResult: (transcript) => {
+      if (!transcript) { // nothing was heard: say so (it used to do nothing at all, Bug KK)
+        validationMsg.textContent = "I didn't catch that. Tap the mic and try again, or type it instead.";
+        validationMsg.classList.remove('hidden');
+        return;
+      }
       if (transcript) {
         document.getElementById('dashPromptInput').value = transcript;
         // Real, honest check, moved here - now that real speech
