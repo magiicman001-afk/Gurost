@@ -5618,6 +5618,41 @@ app.post("/api/me/export", security.rejectUnknownFields([]), async (req, res) =>
   }
 });
 
+// DELETE /api/account: erases everything tied to the signed-in person (the list is in lib/user-data.js).
+// Body { confirmEmail } must equal the account email (the page asks twice). Invoices and credit records are kept for the
+// 7-year legal period with the person's id removed. The account record goes last, so a failed attempt can be retried.
+app.delete("/api/account", security.rejectUnknownFields(["confirmEmail"]), async (req, res) => {
+  const email = String(req.user.email || "").trim().toLowerCase();
+  if (!email || String((req.body && req.body.confirmEmail) || "").trim().toLowerCase() !== email) {
+    return res.status(400).json({ error: "Type your account email exactly to confirm." });
+  }
+  try {
+    const { data: profile } = await supabase.from("user_profiles").select("stripe_customer_id").eq("user_id", req.user.id).maybeSingle();
+    if (profile && profile.stripe_customer_id) {
+      if (!process.env.STRIPE_SECRET_KEY) return res.status(503).json({ error: "Billing is not reachable right now, so we cannot safely stop your subscription. Nothing was deleted. Please email support@gurost.com." });
+      try { await userData.cancelStripeSubscriptions(require("stripe")(process.env.STRIPE_SECRET_KEY), profile.stripe_customer_id); }
+      catch (err) { console.error("[account-delete] stripe cancel failed:", err.message); return res.status(502).json({ error: "We could not stop your subscription, so nothing was deleted. Please try again or email support@gurost.com." }); }
+    }
+    const report = await userData.deleteUserData(supabase, { id: req.user.id, email: req.user.email });
+    const who = crypto.createHash("sha256").update(String(req.user.id)).digest("hex").slice(0, 16); // not reversible, no personal data in the log
+    const counts = { deleted: report.deleted, anonymised: report.anonymised, files: report.files, failed: report.failed };
+    console.log(`[account-delete] ${report.complete ? "done" : "INCOMPLETE"} who=${who} tables=${Object.keys(report.deleted).length} files=${report.files} failed=${report.failed.length}`);
+    await supabase.from("admin_audit").insert({ role: "system", action: report.complete ? "account_deleted" : "account_delete_incomplete", target: who, details: counts }).then(() => {}, () => {});
+    if (!report.complete) return res.status(500).json({ error: "Some of your data could not be deleted yet. Your account is still open so you can try again, or email support@gurost.com." });
+    try { auth.sessions().clearCookies(req, res); } catch { /* cookies may not exist */ }
+    if (postmarkClient) {
+      postmarkClient.sendEmail({
+        From: process.env.POSTMARK_FROM_EMAIL, To: req.user.email, Subject: "Your Gurost account has been deleted",
+        TextBody: "Your Gurost account and the data tied to it have been deleted, including your projects and published sites.\n\nWe keep invoice and payment records for 7 years because the law requires it; your name and id are removed from the credit records we hold, and Stripe keeps its own invoices.\n\nIf you did not do this, email support@gurost.com straight away.",
+      }).catch((err) => console.error("[account-delete] confirmation email failed:", err.message));
+    }
+    res.json({ deleted: true });
+  } catch (err) {
+    console.error("[account-delete] failed:", err.message);
+    res.status(500).json({ error: "The deletion could not be completed. Your account is still open. Please try again or email support@gurost.com." });
+  }
+});
+
 // ==== REAL PULSE LEARNING LOG (persistent, honest retrieval-based memory) ====
 /**
  * REAL PULSE LEARNING LOG
