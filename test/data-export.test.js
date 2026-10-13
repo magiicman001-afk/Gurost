@@ -87,9 +87,12 @@ test("a real zip is produced", { skip: !archiver }, async () => {
   const sink = new PassThrough();
   sink.on("data", (c) => chunks.push(c));
   const archive = archiver("zip");
+  // Listen for the end BEFORE writing: archiver can finish (and the sink emit "end") while
+  // writeExportZip is still awaiting finalize(), and a listener added afterwards never fires,
+  // which left this promise pending and took the next two tests down with it on CI.
+  const ended = new Promise((resolve, reject) => { sink.on("end", resolve); sink.on("error", reject); archive.on("error", reject); });
   archive.pipe(sink);
-  await ud.writeExportZip(archive, db, user, collected);
-  await new Promise((r) => sink.on("end", r));
+  await Promise.all([ud.writeExportZip(archive, db, user, collected), ended]);
   const zip = Buffer.concat(chunks);
   assert.strictEqual(zip.slice(0, 2).toString(), "PK");
   const raw = zip.toString("latin1"); // file names sit uncompressed in zip headers
