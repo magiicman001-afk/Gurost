@@ -44,3 +44,21 @@ test("with no photo found, the hero never ships a broken image (it falls back to
   const out = await build(async () => null);
   for (const v of out.variants) { assert.equal(heroVariant(v.html), "c"); assert.ok(!/IMG_\d/.test(v.html)); }
 });
+
+test("Bug SS: when the brief finds nothing, the person's own words are tried, then industry words; the hero gets a photo", async () => {
+  const asked = [];
+  const out = await build(async (q) => { asked.push(q); return /animal sanctuary/.test(q) ? { url: "https://cdn.pixabay.com/photo/found.jpg", credit: "Pixabay" } : null; });
+  assert.ok(asked.some((q) => /rescued dogs/.test(q)), "the model's brief was tried first");
+  assert.ok(asked.includes("animal sanctuary"), "then the person's own words");
+  for (const v of out.variants) assert.match(v.html, /g-hero__img" src="https:\/\/cdn\.pixabay\.com\/photo\/found\.jpg/, `${v.id} hero has the photo`);
+});
+
+test("Bug SS: when no photo can be found at all, the build log says so in plain words (never silent)", async () => {
+  const entries = [];
+  const logger = { log: (e) => { entries.push(e); return e; }, step: async (b, t, fn) => fn(), entries };
+  await L.generateLibraryVariants("animal sanctuary", { businessInfo: INFO, callModel: async () => MODEL, search: async () => null, browserChecks: false, premium: false, logger });
+  const msg = entries.find((e) => e.task && /^hero photo for/.test(e.task));
+  assert.ok(msg, "a hero-photo message was logged");
+  assert.match(msg.reason, /plain hero/);
+  assert.match(msg.reason, /add a photo/);
+});

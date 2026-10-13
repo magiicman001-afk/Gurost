@@ -298,7 +298,7 @@ async function buildDirection(dir, composed, { search, includeBranding, factsAll
     let html = fixed.html;
     for (const [tok, url] of Object.entries(photos)) html = html.replace(new RegExp(`src="${tok}"`, "g"), () => `src="${R.esc(url)}"`);
     if (/\ssrc="IMG_\d+"/.test(html)) throw new Error("the repaired page still has missing photos");
-    page = { ...fixed, html, credits: page.credits, filled: page.filled, photos };
+    page = { ...fixed, html, credits: page.credits, filled: page.filled, photos, unfilledRoles: page.unfilledRoles };
     g = fixed.gate;
     steps = fixed.steps || [];
     degraded = !!fixed.degraded;
@@ -397,7 +397,12 @@ async function generateLibraryVariants(prompt, o = {}) {
   }
   const available = new Set(Object.keys(composed.content));
   const cfg = P.config();
-  const withFallback = (q) => search(q).then((r) => r || search(`${PALETTE_WORDS[composed.palette] || "business"} photo`));
+  // Photo search by purpose (Bug SS): the model's brief, then the person's own words ("animal sanctuary"), then the industry words.
+  // Every design uses the whole chain, not only premium retries, so a hero is not left without a photo after one miss.
+  const promptWords = String(prompt || "").replace(/[^\p{L}\p{N}\s'-]/gu, " ").split(/\s+/).filter((w) => w.length > 2).slice(0, 4).join(" ");
+  const withFallback = (q) => search(q)
+    .then((r) => r || (promptWords && promptWords !== q ? search(promptWords) : null))
+    .then((r) => r || search(`${PALETTE_WORDS[composed.palette] || "business"} photo`));
 
   await Promise.all(
     dirs.map(async (dir) => {
@@ -434,8 +439,12 @@ async function generateLibraryVariants(prompt, o = {}) {
           premiumInfo = { look: r.best.look.id, sections: built.page.sections.map((x) => ({ id: x.id, variant: x.variant })), score: r.best.score.total, parts: r.best.score.parts, reasons: r.best.score.reasons.map((x) => x.text), attempts: r.attempts.length, passed: r.passed, note: r.note, levels: r.chain || undefined, report: r.report || undefined, flagged: r.flagged || undefined };
         } else {
           const tB = Date.now();
-          built = await buildDirection(dir, composed, { search, includeBranding: o.includeBranding !== false, factsAllow, browserChecks: o.browserChecks });
+          built = await buildDirection(dir, composed, { search: withFallback, includeBranding: o.includeBranding !== false, factsAllow, browserChecks: o.browserChecks });
           logger.log({ bot: "builder", task: `build the ${dir.label} design`, decision: `${built.page.sections.length} sections, ${composed.palette} palette`, reason: built.degraded ? "the quality gate repaired the page" : null, time_ms: Date.now() - tB, result: "success", next_bot: null, details: { slot: dir.id, gateOk: built.gate.ok, steps: built.steps } });
+        }
+        if ((built.page.unfilledRoles || []).includes("hero")) {
+          // Never silent: the person is told, in plain words, that this design has a plain hero and what to do about it.
+          logger.log({ bot: "photographer", task: `hero photo for the ${label} design`, decision: "no photo found, plain hero used", reason: "I couldn't find a photo for the top of this design just now, so it has a plain hero instead. Ask Pulse to \"add a photo\" to the hero, or tell me what the photo should show.", result: "fail", next_bot: null, details: { slot: dir.id } });
         }
         const html = built.page.html;
         if (!/<h1\b/i.test(html) || html.length < 2000) throw new Error("the page came out empty");
