@@ -4,6 +4,18 @@ Written 2026-10-13 (Web Claude) from Irfan's research list. **Spec only: nothing
 Plain English. Each tool below was checked against its own Hugging Face page on 2026-10-13 where marked **checked**; anything else is
 marked **not checked**. Developers' benchmark claims are theirs, not ours.
 
+## Honest status, 2026-10-13 (Irfan asked: "why aren't the free tools being used?")
+Plain answer, from the code and the live database, not guesses:
+- **Running today: none of the AI image/3D/video tools below.** MOVA (video), TRELLIS.2 (3D) and Nucleus-Image need a GPU, which we do not have.
+- **Free stock photos are the only image source we use, and they are NOT confirmed working live.** The search (`image-bot.js`) tries Pixabay, then
+  Openverse (no key, but only CC0 / public-domain photos of at least 1000 px, so few results), then Unsplash. Pixabay and Unsplash each need a key
+  (`PIXABAY_API_KEY`, `UNSPLASH_ACCESS_KEY`); the keys Irfan confirmed on Render do not include either. If neither is set, only Openverse runs.
+  Until 2026-10-13 a missing key or a failed search was silent. Now the server log says which source was skipped and why (look for `[image-bot]`).
+- **Premium AI images (fal.ai, Gemini image) need a top-up** (Irfan to do); until then they fail and the free stock path is the only one.
+- **3D images: not available.** Pulse now says so ("3D images are not available yet. I can add stock photos instead"). **Video:** Pulse looks for a real
+  stock clip (needs `PIXABAY_API_KEY`) and, if none, says plainly that it changed nothing.
+- Roadmap line (agreed with Irfan): **free AI tools integration comes after Stripe and a paid tier**, as section 0 says.
+
 ## 0. Decision and order of work
 - Priority rule in `CLAUDE.md`: the Website Builder comes first. None of this is needed to launch it (Pixabay photos and the section library
   are enough). So: **Phase 2, after the Website Builder launch and after Stripe is live.** No GPU is rented and no code is wired now.
