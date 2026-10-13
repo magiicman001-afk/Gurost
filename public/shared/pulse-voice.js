@@ -204,6 +204,7 @@ function prefetchVoiceStatus() {
 }
 
 const MIN_RECORDING_MS = 600; // a shorter recording is only a header with nothing in it, so stop() keeps listening until this is reached
+const LONG_PRESS_MS = 700; // with handlers.onLongPress (Pulse): a press this long switches to hands-free when let go
 const TAP_MS = 450; // a press shorter than this is a TAP: recording carries on until the next tap (a longer press is a HOLD: let go to send)
 
 // iPhone Safari records fragmented mp4, which the speech service sometimes refuses as "corrupt". Plain
@@ -339,6 +340,9 @@ function holdToTalk(button, handlers = {}) {
   let ignoreRelease = false;
   let heldMs = 0; // how long the press lasted, measured at the moment of release
   let lastPointerAt = 0;
+  let longTimer = null;
+  let cancelWanted = false; // a long press let go while the microphone was still starting: drop that recording when it arrives
+  const longPress = typeof handlers.onLongPress === "function";
   const fromPointer = () => Date.now() - lastPointerAt < 1000; // a mouse or finger sends pointer events AND mouse events: only one set counts
   prefetchVoiceStatus();
 
@@ -356,6 +360,8 @@ function holdToTalk(button, handlers = {}) {
   }
 
   function press() {
+    // The page can take the press over (Pulse: a tap while hands-free is on just stops it, nothing is recorded).
+    if (handlers.interceptPress && handlers.interceptPress()) { ignoreRelease = true; return; }
     if (starting) return;
     if (session) { // a recording is already running from a quick tap: this press is the "stop" tap
       if (tapMode) { ignoreRelease = true; finish(session); }
@@ -364,11 +370,14 @@ function holdToTalk(button, handlers = {}) {
     if (voiceStatus === false) { handlers.onUnavailable?.(VOICE_NOT_SET_UP); return; }
     starting = true;
     releaseWanted = false;
+    cancelWanted = false;
     pressAt = Date.now();
     handlers.onPress?.();
+    if (longPress) { clearTimeout(longTimer); longTimer = setTimeout(() => handlers.onLongPressReady?.(), LONG_PRESS_MS); }
     startRecordingSession()
       .then((s) => {
         starting = false;
+        if (cancelWanted) { cancelWanted = false; s.cancel?.(); handlers.onRelease?.(); return; } // it became a long press
         session = s;
         handlers.onStart?.(s);
         if (releaseWanted) settle(); // let go while the microphone was still starting (heldMs was measured at the release)
@@ -386,6 +395,15 @@ function holdToTalk(button, handlers = {}) {
   function release() {
     if (ignoreRelease) { ignoreRelease = false; return; }
     heldMs = Date.now() - pressAt;
+    clearTimeout(longTimer);
+    // A long press (Pulse only): the short recording it started is thrown away, never sent, and hands-free starts.
+    // It starts here, on the release, so it is still inside the touch (iPhones need that for the microphone).
+    if (longPress && heldMs >= LONG_PRESS_MS && !tapMode) {
+      if (starting) { cancelWanted = true; releaseWanted = false; }
+      else if (session) { const s = session; session = null; s.cancel?.(); handlers.onRelease?.(); }
+      handlers.onLongPress();
+      return;
+    }
     if (starting) { releaseWanted = true; return; }
     if (session && !tapMode) settle();
   }
