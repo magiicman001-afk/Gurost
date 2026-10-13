@@ -139,7 +139,7 @@ If anything fails: `git revert` the update commit (small, logged) and write the 
 - Tests: about 1,800 on 141 files (2026-10-12; the sandbox run shows ~30 failures that are only missing packages, GitHub CI is the judge).
 - Section library (2026-10-11): ALL 20 sections BUILT (A/B/C each, 6 palettes; batches 1-5, 2026-10-11) in `lib/sections/`
   (`render.js`, `manifest.json` with all 20 sections, `palettes.json`, `base.css`, `assemble.js` +
-  `recipes.json`, `quality-gate.js`). Behind `SECTION_LIBRARY=1`, OFF by default; WIRED into the Website Builder by V2 commit 2
+  `recipes.json`, `quality-gate.js`). ON by default since 2026-10-13 (`SECTION_LIBRARY=0` turns it off); WIRED into the Website Builder by V2 commit 2
   (`81916cf`, `bots/library-bot.js`, falls back to the old generator on any error). Preview: `/sections-preview.html`
   (`node scripts/build-sections-preview.js` regenerates it; a test checks it is current). Irfan's verdict:
   build on it. Order: all 20 built -> Irfan reviews the full preview on his phone (WAIT for his verdict) -> Layer 2 polish (real fonts, Pixabay images, GSAP, Lenis on
@@ -148,8 +148,8 @@ If anything fails: `git revert` the update commit (small, logged) and write the 
 - Security (audit 2026-10-08): items 1-3 DONE - `/shared/:token` runs sandboxed, security
   headers on every page (CSP in report-only mode until `CSP_ENFORCE=1`), CORS allowlist
   (form route stays open). Item 4 (S3: sessions table, short tokens, cookie login, logout
-  everywhere, admin) is IN PROGRESS with Laptop Claude: git log shows S3b (user_sessions), S3c-1..4 (cookie login, CSRF origin check, /ws/guide
-  accepts the cookie) and S3d-1..6 (browser side) landed; S3e (admin) and the WebSocket reconnect check below are for him to confirm.
+  everywhere, admin): S3a-S3d DONE and cookie login VERIFIED LIVE 2026-10-13 (see the 2026-10-13 evening entry below). Still to do:
+  the Google/GitHub cookie exchange, S3e (admin login), /ws/meeting login.
 - Money: OpenRouter balance is negative (paid models fail with 402); Gemini image API
   prepayment is depleted. Both need topping up by Irfan.
 - Design-quality plan: stop asking the model to invent design. Build a section library
@@ -159,8 +159,21 @@ If anything fails: `git revert` the update commit (small, logged) and write the 
 - 2026-10-13: marble build animation (`public/shared/marble-loader.js`, `docs/MARBLE_PREVIEW_ANIMATION_SPEC.md`, commits `80658ce`, `6c639d6`, `3aa5270`, `98d8efe`)
   runs over the Website Builder live preview while a build runs; eight bots, each mostly its own colour with one accent ribbon. Tested in a browser at 375px
   and on the real page with the network stubbed; NOT yet seen on Irfan's phone (he is checking). App Builder waits for the priority rule.
+- 2026-10-13 evening (Laptop Claude): LOGIN AND SWITCHES.
+  - Cookie login VERIFIED LIVE (test account, curl): `docs/migrations/2026-10-12_user_sessions.sql` was run by Irfan (RLS on, 0 policies,
+    no anon/authenticated grants). Login sets `gurost_at` (15 min, HttpOnly, Secure, SameSite=Lax), `gurost_rt` (30 days, HttpOnly, Secure,
+    path /api/auth) and `gurost_li` (readable flag); the cookie alone authenticates; refresh rotates the cookie; logout revokes the row.
+  - Sign-in options: 3 - email + password, Google, GitHub. Google and GitHub WORK on Irfan's phone (2026-10-13). They run through Supabase
+    Auth (`signInWithOAuth` in `public/login.html` / `signup.html`); providers are configured in Supabase. NOT DONE YET: those two still
+    store the Supabase token in the browser (`gurost_jwt`) instead of a cookie session - the server exchange is the next S3 item.
+    `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` are on Render but no Gurost code reads them today.
+  - Render variables set 2026-10-13: `SECTION_LIBRARY=1`, `PREMIUM_PIPELINE=1`, `DESIGN_MEMORY=1`, `ESCALATION_HIERARCHY=1`,
+    `SESSION_TOKEN_EXPIRY=24h` (KEEP 24h: it only sets the old stored token's life; 30-day stay-signed-in comes from the cookie), plus
+    the four OAuth names above. Before that, the switches were missing and every build ran the OLD generator for three days.
+  - Defaults now: SECTION_LIBRARY and PREMIUM_PIPELINE on unless "0" (`86ec7c5`, `8ac85b2`), ESCALATION_HIERARCHY on unless "0",
+    DESIGN_MEMORY opt-in ("1"). Every variable, default and first-time setup: `docs/DEPLOYMENT.md`.
 - Session idle timeout: NOT built. Today there is none (15-minute cookie renews while active, 30-day fixed session). Irfan confirmed 30 minutes with a warning at 28.
-  It touches Laptop Claude's session module plus several files, so it waits for Irfan's "go" and Laptop Claude (migration for a last-active column; `user_sessions` table does not exist yet in the live database).
+  It touches Laptop Claude's session module plus several files, so it waits for Irfan's "go" and Laptop Claude (migration for a last-active column; the `user_sessions` table exists in the live database since 2026-10-13).
 
 ## Known bugs (open)
 - Bug P: FIXED (`9f42f6c`, `0dbec59`): 8 individual bots, each with its own avatar and name.
