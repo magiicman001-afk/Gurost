@@ -297,11 +297,11 @@
   // "Add a page" is not a feature on the Website Builder yet, so it gets an honest answer instead.
   const ADD_PAGE = /\b(?:add|make|create|build|generate)\s+(?:me\s+)?(?:a|an|one|another|a new|new|extra|more|two|three)\s+(?:[\w-]+\s+){0,2}pages?\b/i;
   const ADD_PAGE_REPLY = "Adding new pages isn't ready yet. I can redesign your site or change the text and content. Want me to do that?";
-  // Motion video and 3D images are not built yet (no pipeline). An EDIT that asks for them used to run, change nothing and say
-  // nothing (phone test 2026-10-13, Bug PP). Now it gets an honest answer. A link to a YouTube/Vimeo video is a normal edit.
-  const UNSUPPORTED_MEDIA = /\b(?:3[\s-]?d|three[\s-]dimensional)\b|\b(?:motion|animated?|moving)\s+(?:video|footage|clip|film)s?\b|\b(?:add|put|make|create|generate|include|insert|want)\b[^.?!]{0,40}\b(?:videos?|footage)\b/i;
-  const MEDIA_LINK_OK = /\b(?:youtube|vimeo|embed|link|iframe)\b/i;
-  const UNSUPPORTED_MEDIA_REPLY = "Motion video and 3D images are not available yet. I can add stock photos instead. Want me to?";
+  // 3D images have no pipeline at all, so an EDIT that asks for them gets an honest answer instead of a silent no-op (phone test
+  // 2026-10-13, Bug PP). Video is NOT caught here: the server finds a real stock clip, or says plainly that none is available
+  // (lib/video-request.js), so it answers video requests itself.
+  const UNSUPPORTED_MEDIA = /\b(?:3[\s-]?d|three[\s-]dimensional)\b/i;
+  const UNSUPPORTED_MEDIA_REPLY = "3D images are not available yet. I can add stock photos instead. Want me to?";
   const PICK_DESIGN_REPLY = 'Pick a design first - tap the one you like on the left, then I can change it.';
   const STILL_BUILDING_REPLY = 'Your designs are still being built. Once you pick one, I can change it.';
   function routeRequest(text, state, onWebsite) {
