@@ -572,7 +572,6 @@
           <div id="pulseInputArea">
             <textarea id="pulseTextArea" placeholder="Type your idea or a correction…"></textarea>
             <div id="pulseActionRow">
-              <button id="pulseVoiceButton" type="button" aria-label="Hands-free voice" aria-pressed="false" style="font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;cursor:pointer;background:#fff;border:1px solid #E9E9EF;">Voice</button>
               <button id="pulseSendButton">Send</button>
             </div>
             <div id="pulsePauseResumeRow">
@@ -830,7 +829,7 @@
 
     // THE one microphone in the panel (top-right of the header). Hold it and let go to send, or tap, talk, tap again to send.
     // (A second mic next to Send was removed 2026-10-13, Bug MM: two mics confused people.)
-    document.getElementById('pulseVoiceButton').addEventListener('click', toggleHandsFree);
+    // The hands-free "Voice" button next to Send was removed 2026-10-13 (Bug 1: two mics, both stuck red). Hands-free voice is still in this file, reachable as window.GurostPulseVoice; it has no button.
     const floatMic = document.getElementById('pulseFloatMic');
     const setFloatMic = (on) => { floatMic.classList.toggle('listening', on); floatMic.setAttribute('aria-pressed', on ? 'true' : 'false'); };
     holdToTalk(floatMic, {

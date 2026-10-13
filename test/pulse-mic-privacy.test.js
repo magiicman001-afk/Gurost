@@ -42,3 +42,12 @@ test("a hold-to-talk recording can be cancelled: microphone off and the audio th
   assert.match(cancel, /stream\.getTracks\(\)\.forEach\(\(t\) => t\.stop\(\)\);/);
   assert.doesNotMatch(cancel, /fetch|transcribe/);
 });
+
+test("the Pulse panel has exactly one microphone button (the header mic); the second 'Voice' button is gone", () => {
+  const markup = widget.slice(widget.indexOf("widget.innerHTML = `"), widget.indexOf("`;", widget.indexOf("widget.innerHTML = `")));
+  assert.ok(markup.length > 1000, "panel markup found");
+  const micButtons = (markup.match(/<button\b[^>]*>(?:(?!<\/button>)[\s\S])*?(?:>mic<|Voice<\/button>)/g) || []);
+  assert.equal(micButtons.length, 1, micButtons.join("\n"));
+  assert.match(micButtons[0], /id="pulseFloatMic"/);
+  assert.doesNotMatch(markup, /id="pulseVoiceButton"/);
+});
