@@ -7,6 +7,15 @@ const M = require("../public/shared/marble-loader");
 
 const src = fs.readFileSync(path.join(__dirname, "..", "public", "shared", "marble-loader.js"), "utf8");
 
+test("each marble is mostly its own colour with ONE accent ribbon from the brand trio, never its own colour", () => {
+  const trio = ["#F97316", "#FB7185", "#0D9488"];
+  for (const b of M.BOTS) {
+    assert.ok(trio.includes(b.accent), `${b.name} accent is orange, coral or teal`);
+    assert.notStrictEqual(b.accent.toLowerCase(), b.color.toLowerCase(), `${b.name} accent differs from its body`);
+  }
+  assert.ok(!/ACCENTS/.test(src), "no leftover shared accent list");
+});
+
 test("eight marbles, one per bot, named like the bots in the build log", () => {
   const faces = fs.readFileSync(path.join(__dirname, "..", "public", "shared", "bot-conversation.js"), "utf8");
   assert.deepStrictEqual(M.BOTS.map((b) => b.name), ["Planner", "Designer", "Industry", "Builder", "Pulse", "Research", "Review", "Launch"]);

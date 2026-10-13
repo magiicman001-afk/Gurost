@@ -18,16 +18,17 @@
 
   // Same eight bots as shared/bot-conversation.js (BOT_FACES), in deeper tones that read on a cream background.
   var BOTS = [
-    { name: "Planner", color: "#2563EB" },
-    { name: "Designer", color: "#FB7185" },
-    { name: "Industry", color: "#0D9488" },
-    { name: "Builder", color: "#F97316" },
-    { name: "Pulse", color: "#F59E0B" },
-    { name: "Research", color: "#8B5CF6" },
-    { name: "Review", color: "#EF4444" },
-    { name: "Launch", color: "#22C55E" }
+    { name: "Planner", color: "#2563EB", accent: "#FB7185" },
+    { name: "Designer", color: "#FB7185", accent: "#0D9488" },
+    { name: "Industry", color: "#0D9488", accent: "#F97316" },
+    { name: "Builder", color: "#F97316", accent: "#0D9488" },
+    { name: "Pulse", color: "#F59E0B", accent: "#FB7185" },
+    { name: "Research", color: "#8B5CF6", accent: "#FB7185" },
+    { name: "Review", color: "#EF4444", accent: "#F97316" },
+    { name: "Launch", color: "#22C55E", accent: "#FB7185" }
   ];
-  var ACCENTS = ["#F97316", "#FB7185", "#0D9488"]; // the reference marble's swirl colours: orange, coral, teal
+  // Each marble is mostly its own bot colour (about three quarters) with ONE ribbon of an accent from the brand trio
+  // (orange, coral, teal), so the eight are told apart at a glance and still read as one family.
   var SNIPPET_EVERY_MS = 10000;
   var SNIPPET_SHOW_MS = 3000;
   var CREAM = "#FAF7F2";
@@ -168,7 +169,7 @@
   }
 
   /** The rolling part: a glass ball of the bot's colour, light in the middle and deep at the edge, with twisted ribbons inside. */
-  function paintBody(size, base, index) {
+  function paintBody(size, base, accent, index) {
     var cv = document.createElement("canvas");
     cv.width = cv.height = size;
     var ctx = cv.getContext("2d");
@@ -180,12 +181,10 @@
     var g = ctx.createRadialGradient(C, C, R * 0.05, C, C, R);
     g.addColorStop(0, mix(base, "#FFFFFF", 0.4)); g.addColorStop(0.5, mix(base, "#FFFFFF", 0.05)); g.addColorStop(0.88, base); g.addColorStop(1, mix(base, "#000000", 0.45));
     ctx.fillStyle = g; ctx.fillRect(0, 0, size, size);
-    var accents = ACCENTS.filter(function (a) { return a.toLowerCase() !== base.toLowerCase(); });
-    // the swirl: two broad twisted ribbons in the brand colours (the bot's own colour stays the main body), one pale strand, one dark strand for depth
+    // the swirl: ONE broad ribbon in the accent colour, plus a thin pale strand and a thin dark strand for glassy depth
     var a0 = index * 1.1 + rnd() * 0.6;
-    ribbon(ctx, C, R, a0, 1, 0.95, accents[index % accents.length], R * 0.34, 0.8, 0.25, 0.95);
-    ribbon(ctx, C, R, a0 + Math.PI, 1, 0.95, accents[(index + 1) % accents.length], R * 0.26, 0.7, 0.25, 0.95);
-    ribbon(ctx, C, R, a0 + Math.PI * 0.5, 1, 0.9, "#FFFFFF", R * 0.09, 0.55, 0.3, 0.9);
+    ribbon(ctx, C, R, a0, 1, 0.9, accent, R * 0.2, 0.85, 0.28, 0.92);
+    ribbon(ctx, C, R, a0 + Math.PI * 0.9, 1, 0.9, "#FFFFFF", R * 0.07, 0.5, 0.3, 0.9);
     ribbon(ctx, C, R, a0 + Math.PI * 1.5, 1, 0.9, mix(base, "#000000", 0.5), R * 0.05, 0.4, 0.3, 0.9);
     // inner shadow near the rim: the glass curves away, so the edge is darker and richer
     var e = ctx.createRadialGradient(C, C, R * 0.62, C, C, R);
@@ -287,7 +286,7 @@
       state.dpr = Math.min(window.devicePixelRatio || 1, 2);
       cv.width = Math.round(w * state.dpr); cv.height = Math.round(full * state.dpr); // the picture covers the whole panel; marbles use the part above the text
       var px = Math.round(d * state.dpr);
-      state.sprites = BOTS.map(function (b, i) { return { body: paintBody(px, b.color, i), gloss: paintGloss(px, b.color), color: b.color }; });
+      state.sprites = BOTS.map(function (b, i) { return { body: paintBody(px, b.color, b.accent, i), gloss: paintGloss(px, b.color), color: b.color }; });
       state.d = d;
       if (!state.world) state.world = createWorld(BOTS.length, w, h, r, 11);
       else { state.world.w = w; state.world.h = h; state.world.r = r; state.world.marbles.forEach(function (p) { p.x = Math.min(Math.max(p.x, r), w - r); p.y = Math.min(Math.max(p.y, r), h - r); }); }
