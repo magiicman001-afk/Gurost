@@ -8,16 +8,16 @@ Controller: Surii Global Limited. Contact: support@gurost.com.
 
 ## 0. Build status: what is true today (not part of the policy text)
 
-The policy below describes the finished state. These lines say what the code does today, so nobody publishes a promise we cannot keep.
+The policy below describes the finished state. These lines say what the code does today, so nobody publishes a promise we cannot keep. Updated 2026-10-13 after Fixes 2 to 5.
 
 | Promise in the policy | Status 2026-10-13 |
 |---|---|
 | We never sell data; no ad or tracking scripts | True by code search (keyword search, not a full read). Re-check before launch. |
 | Provider list below | Built from the code (env vars, `fetch` hosts, packages). Which providers are switched on in production depends on the keys set on Render; confirm each one with Irfan. |
-| Export of your data | **Partial today:** account record + profile only. Fix 2 widens it. |
-| Delete my account button | **Not built.** Today: email support. Fix 3 builds it. |
-| Retention periods | **Not enforced.** No cleanup job exists. Fix 4 builds it. Until then do not publish exact numbers as fact. |
-| Rights list | Fix 5 adds how to use each right in the product. |
+| Export of your data | **Built (Fix 2, `cc9101f`).** ZIP of the account and 28 kinds of data plus uploaded files, 24-hour link. Not verified live yet. |
+| Delete my account button | **Built (Fix 3, `2766a20`, `11430ab`).** Settings, Danger Zone. Not verified live yet. |
+| Retention periods | **Built (Fix 4, `426ce36`).** Daily job; runs once deployed. Support messages (3 years) have no job: they live in email, not the database. Backups at providers are outside our control. |
+| Rights list | Done in Fix 5: each right says how to use it. Restrict and Object are by email only (no button). |
 | "Not stored by providers / not used for training" | **Not verifiable by us** for third-party providers: it depends on each provider's terms and our account settings (see section 5). Fix 6 audits what we send. |
 | Model training | Opt-in only (`training-data.js`, off by default, per user); no training run exists. |
 
@@ -103,9 +103,9 @@ memory notes if memory is on) go to OpenRouter and the model maker it picks. We 
 ## 7. Your rights, and how to use them in Gurost
 | Right | How |
 |---|---|
-| Access | Settings, "Download my data" (emails you a link, valid 24 hours) |
+| Access | Settings, "Request a data export" (emails you a link, valid 24 hours, to a ZIP) |
 | Rectification | Edit your profile and company details in Settings; email us for anything else |
-| Erasure | Settings, "Delete my account" (two confirmations); or email support@gurost.com |
+| Erasure | Settings, Danger Zone, "Delete my account" (two confirmations); erased at once; or email support@gurost.com if you cannot sign in |
 | Restrict processing | Email us; you can also turn Assistant memory off in the memory panel |
 | Data portability | The same download, in JSON (a standard, machine-readable format) |
 | Object | Email us (for example to stop processing based on legitimate interests); turn memory and suggestions off |
