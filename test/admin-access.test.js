@@ -103,10 +103,13 @@ test("modelsStatus shows set / not set only, never a key value", () => {
 });
 
 test("inventory reports flags and the Render commit", () => {
-  const inv = D.inventory({ RENDER_GIT_COMMIT: "abcdef1234567", PREMIUM_PIPELINE: "1" }, 0);
+  const inv = D.inventory({ RENDER_GIT_COMMIT: "abcdef1234567", PREMIUM_PIPELINE: "0" }, 0);
   assert.equal(inv.version, "abcdef1");
   const wb = inv.products.find((p) => p.name === "Website Builder");
-  assert.deepEqual(wb.flags.map((f) => [f.name, f.on]), [["SECTION_LIBRARY", false], ["PREMIUM_PIPELINE", true], ["DESIGN_MEMORY", false]]);
+  // The same defaults the builder uses: library on, premium off here only because it is set to 0, memory opt-in.
+  assert.deepEqual(wb.flags.map((f) => [f.name, f.on]), [["SECTION_LIBRARY", true], ["PREMIUM_PIPELINE", false], ["DESIGN_MEMORY", false]]);
+  const set = D.inventory({ DESIGN_MEMORY: "1" }, 0).products.find((p) => p.name === "Website Builder");
+  assert.deepEqual(set.flags.map((f) => f.on), [true, true, true]);
   assert.equal(D.inventory({}, 0).version, "unknown");
 });
 
