@@ -93,9 +93,28 @@
     <div class="border border-red-200 rounded-2xl p-6 flex items-center justify-between">
       <div>
         <p class="font-semibold text-sm">Delete account</p>
-        <p class="text-xs text-[var(--muted)]">This cannot be undone.</p>
+        <p class="text-xs text-[var(--muted)]">Deletes your projects, published sites, Assistant and Pulse history, and uploads. This cannot be undone. Payment records are kept for 7 years, as the law requires. Download your data first if you want a copy.</p>
       </div>
-      <a href="mailto:support@gurost.com?subject=Account%20deletion%20request" class="text-sm font-semibold px-4 py-2 rounded-full border border-red-200 text-red-600 hover:bg-red-50 transition-colors">Request Deletion</a>
+      <button id="deleteAccountBtn" class="text-sm font-semibold px-4 py-2 rounded-full border border-red-200 text-red-600 hover:bg-red-50 transition-colors">Delete my account</button>
+    </div>
+    <div id="deletePanel" class="hidden border border-red-300 bg-red-50 rounded-2xl p-6 mt-3">
+      <div id="deleteStep1">
+        <p class="font-semibold text-sm text-red-700">This deletes everything. Sure?</p>
+        <p class="text-xs text-[var(--muted)] mt-1">Your account, projects, published sites, Assistant and Pulse history and uploaded files will be erased now.</p>
+        <div class="flex gap-3 mt-4">
+          <button id="deleteContinue" class="text-sm font-semibold px-4 py-2 rounded-full bg-red-600 text-white hover:bg-red-700">Yes, continue</button>
+          <button id="deleteCancel1" class="text-sm font-semibold px-4 py-2 rounded-full border border-[var(--line)]">Cancel</button>
+        </div>
+      </div>
+      <div id="deleteStep2" class="hidden">
+        <label for="deleteEmail" class="font-semibold text-sm text-red-700">Type your account email to confirm</label>
+        <input id="deleteEmail" type="email" autocomplete="off" class="mt-2 w-full border border-[var(--line)] rounded-xl px-3 py-2 text-sm bg-white" placeholder="you@example.com">
+        <div class="flex gap-3 mt-4">
+          <button id="deleteFinal" class="text-sm font-semibold px-4 py-2 rounded-full bg-red-600 text-white hover:bg-red-700">Delete everything</button>
+          <button id="deleteCancel2" class="text-sm font-semibold px-4 py-2 rounded-full border border-[var(--line)]">Cancel</button>
+        </div>
+      </div>
+      <p class="hidden text-xs mt-3" id="deleteStatus"></p>
     </div>
   </section>
 
@@ -337,6 +356,33 @@ document.addEventListener('DOMContentLoaded', async () => {
       statusEl.classList.remove('hidden');
     }
   });
+
+  // Delete my account: two confirmations, then DELETE /api/account.
+  (function () {
+    const $ = (id) => document.getElementById(id);
+    const panel = $('deletePanel'), s1 = $('deleteStep1'), s2 = $('deleteStep2'), st = $('deleteStatus');
+    function say(text, bad) { st.textContent = text; st.className = 'text-xs mt-3 ' + (bad ? 'text-red-700' : 'text-green-700'); st.classList.remove('hidden'); }
+    function reset() { panel.classList.add('hidden'); s1.classList.remove('hidden'); s2.classList.add('hidden'); st.classList.add('hidden'); $('deleteEmail').value = ''; }
+    $('deleteAccountBtn').addEventListener('click', () => { panel.classList.remove('hidden'); });
+    $('deleteCancel1').addEventListener('click', reset);
+    $('deleteCancel2').addEventListener('click', reset);
+    $('deleteContinue').addEventListener('click', () => { s1.classList.add('hidden'); s2.classList.remove('hidden'); $('deleteEmail').focus(); });
+    $('deleteFinal').addEventListener('click', async () => {
+      const btn = $('deleteFinal');
+      const confirmEmail = $('deleteEmail').value.trim();
+      if (!confirmEmail) { say('Type your email first.', true); return; }
+      btn.disabled = true; btn.textContent = 'Deleting…';
+      try {
+        await GurostAPI.call('/api/account', { method: 'DELETE', body: { confirmEmail } });
+        say('Your account has been deleted. Taking you to the home page…', false);
+        try { ['gurost_jwt', 'gurost_api_key', 'gurost_user_id'].forEach((k) => localStorage.removeItem(k)); } catch (e) { /* storage may be blocked */ }
+        setTimeout(() => { window.location.href = 'index.html'; }, 2500);
+      } catch (err) {
+        say(err.message || 'Deletion failed. Nothing was lost; try again or email support@gurost.com.', true);
+        btn.disabled = false; btn.textContent = 'Delete everything';
+      }
+    });
+  })();
 
   // Real Data Export.
   document.getElementById('exportDataBtn').addEventListener('click', async () => {
