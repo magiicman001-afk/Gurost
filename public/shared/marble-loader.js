@@ -134,6 +134,14 @@
     return "rgba(" + ((n >> 16) & 255) + "," + ((n >> 8) & 255) + "," + (n & 255) + "," + a + ")";
   }
 
+  function hexRgb(hex) { var n = parseInt(hex.slice(1), 16); return ((n >> 16) & 255) + "," + ((n >> 8) & 255) + "," + (n & 255); }
+  function shadow(ctx, x, y, rx, flat, alpha, rgb) {
+    ctx.save(); ctx.translate(x, y); ctx.scale(1, flat * 0.5);
+    var g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
+    g.addColorStop(0, "rgba(" + rgb + "," + alpha + ")"); g.addColorStop(1, "rgba(" + rgb + ",0)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, rx, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+  }
+
   function blob(ctx, x, y, rad, color, alpha) {
     var g = ctx.createRadialGradient(x, y, 0, x, y, rad);
     g.addColorStop(0, rgba(color, alpha));
@@ -142,51 +150,84 @@
     ctx.beginPath(); ctx.arc(x, y, rad, 0, Math.PI * 2); ctx.fill();
   }
 
-  /** The rolling part: body colour with swirls of the brand colours. Square picture, marble centred. */
+  /** One twisting ribbon of colour as a single smooth stroke, drawn wide and faint then narrow and strong, so its edges are soft like glass. */
+  function ribbon(ctx, C, R, a0, dir, turns, color, width, alpha, r0f, r1f) {
+    var steps = 40, pass, i;
+    for (pass = 0; pass < 2; pass++) {
+      ctx.beginPath();
+      for (i = 0; i <= steps; i++) {
+        var t = i / steps, ang = a0 + dir * t * turns * Math.PI * 2, rad = R * (r0f + (r1f - r0f) * t);
+        var x = C + Math.cos(ang) * rad, y = C + Math.sin(ang) * rad;
+        if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+      }
+      ctx.lineCap = "round"; ctx.lineJoin = "round";
+      ctx.strokeStyle = rgba(color, pass ? alpha : alpha * 0.4);
+      ctx.lineWidth = Math.max(0.8, pass ? width : width * 1.7);
+      ctx.stroke();
+    }
+  }
+
+  /** The rolling part: a glass ball of the bot's colour, light in the middle and deep at the edge, with twisted ribbons inside. */
   function paintBody(size, base, index) {
     var cv = document.createElement("canvas");
     cv.width = cv.height = size;
     var ctx = cv.getContext("2d");
     if (!ctx) throw new Error("no 2d canvas");
-    var R = size / 2 - 1, C = size / 2;
+    var R = size / 2 - 1, C = size / 2, rnd = mulberry32(101 + index * 17), k;
     ctx.save();
     ctx.beginPath(); ctx.arc(C, C, R, 0, Math.PI * 2); ctx.clip();
-    var g = ctx.createRadialGradient(C - R * 0.25, C - R * 0.3, R * 0.1, C, C, R);
-    g.addColorStop(0, mix(base, "#FFFFFF", 0.3)); g.addColorStop(0.6, base); g.addColorStop(1, mix(base, "#000000", 0.38));
+    // glass thickness: pale and clear where the light passes straight through, deep and saturated near the edge
+    var g = ctx.createRadialGradient(C, C, R * 0.05, C, C, R);
+    g.addColorStop(0, mix(base, "#FFFFFF", 0.4)); g.addColorStop(0.5, mix(base, "#FFFFFF", 0.05)); g.addColorStop(0.88, base); g.addColorStop(1, mix(base, "#000000", 0.45));
     ctx.fillStyle = g; ctx.fillRect(0, 0, size, size);
     var accents = ACCENTS.filter(function (a) { return a.toLowerCase() !== base.toLowerCase(); });
-    accents.push("#FFFFFF");
-    var N = 34, turns = 1.8, off = index * 1.3;
-    for (var arm = 0; arm < 2; arm++) {
-      for (var i = 0; i < N; i++) {
-        var t = i / (N - 1), ang = off + arm * Math.PI + t * turns * Math.PI;
-        var rad = R * (0.08 + 0.92 * t);
-        var col = accents[(Math.floor(t * 3) + arm + index) % accents.length];
-        blob(ctx, C + Math.cos(ang) * rad, C + Math.sin(ang) * rad, R * (0.16 + 0.16 * Math.sin(t * Math.PI)), col, col === "#FFFFFF" ? 0.28 : 0.45);
-      }
-    }
+    // the swirl: two broad twisted ribbons in the brand colours (the bot's own colour stays the main body), one pale strand, one dark strand for depth
+    var a0 = index * 1.1 + rnd() * 0.6;
+    ribbon(ctx, C, R, a0, 1, 0.95, accents[index % accents.length], R * 0.34, 0.8, 0.25, 0.95);
+    ribbon(ctx, C, R, a0 + Math.PI, 1, 0.95, accents[(index + 1) % accents.length], R * 0.26, 0.7, 0.25, 0.95);
+    ribbon(ctx, C, R, a0 + Math.PI * 0.5, 1, 0.9, "#FFFFFF", R * 0.09, 0.55, 0.3, 0.9);
+    ribbon(ctx, C, R, a0 + Math.PI * 1.5, 1, 0.9, mix(base, "#000000", 0.5), R * 0.05, 0.4, 0.3, 0.9);
+    // inner shadow near the rim: the glass curves away, so the edge is darker and richer
+    var e = ctx.createRadialGradient(C, C, R * 0.62, C, C, R);
+    e.addColorStop(0, "rgba(0,0,0,0)"); e.addColorStop(1, rgba(mix(base, "#000000", 0.6), 0.55));
+    ctx.fillStyle = e; ctx.fillRect(0, 0, size, size);
     ctx.restore();
     return cv;
   }
 
-  /** The fixed light: soft top-left highlight, small bright dot, faint bottom-right bounce light, glassy rim. */
-  function paintGloss(size) {
+  /** The fixed light (it does not roll): a window-shaped reflection, a sharp dot, a bright caustic where the light focuses, a pale rim. */
+  function paintGloss(size, base) {
     var cv = document.createElement("canvas");
     cv.width = cv.height = size;
     var ctx = cv.getContext("2d");
     var R = size / 2 - 1, C = size / 2;
     ctx.save();
     ctx.beginPath(); ctx.arc(C, C, R, 0, Math.PI * 2); ctx.clip();
+    // caustic: glass focuses light into a bright spot on the side away from the lamp
+    ctx.save(); ctx.translate(C + R * 0.34, C + R * 0.4); ctx.scale(1.2, 0.8); ctx.rotate(-0.6);
+    blob(ctx, 0, 0, R * 0.34, mix(base, "#FFFFFF", 0.7), 0.7);
+    ctx.restore();
+    // broad soft sheen across the upper left
+    ctx.save(); ctx.translate(C - R * 0.3, C - R * 0.38); ctx.scale(1.3, 0.75); ctx.rotate(-0.55);
+    blob(ctx, 0, 0, R * 0.5, "#FFFFFF", 0.55);
+    ctx.restore();
+    // the window reflection: a curved bright band hugging the upper-left rim
     ctx.save();
-    ctx.translate(C - R * 0.34, C - R * 0.42); ctx.scale(1.25, 0.8); ctx.rotate(-0.5);
-    blob(ctx, 0, 0, R * 0.42, "#FFFFFF", 0.85);
+    ctx.lineCap = "round";
+    var g = ctx.createLinearGradient(C - R * 0.8, C - R * 0.6, C - R * 0.1, C - R * 0.9);
+    g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(0.35, "rgba(255,255,255,0.95)"); g.addColorStop(1, "rgba(255,255,255,0.25)");
+    ctx.strokeStyle = g; ctx.lineWidth = R * 0.13;
+    ctx.beginPath(); ctx.arc(C, C, R * 0.8, Math.PI * 1.05, Math.PI * 1.46); ctx.stroke();
     ctx.restore();
-    blob(ctx, C - R * 0.42, C - R * 0.5, R * 0.09, "#FFFFFF", 1);
-    blob(ctx, C + R * 0.38, C + R * 0.45, R * 0.45, "#FFFFFF", 0.2);
+    // small, sharp specular dot
+    blob(ctx, C - R * 0.38, C - R * 0.46, R * 0.07, "#FFFFFF", 1);
+    ctx.fillStyle = "rgba(255,255,255,0.95)";
+    ctx.beginPath(); ctx.arc(C - R * 0.38, C - R * 0.46, R * 0.035, 0, Math.PI * 2); ctx.fill();
+    // fresnel: glass looks paler at a glancing angle, so the rim picks up a thin pale ring
+    var f = ctx.createRadialGradient(C, C, R * 0.82, C, C, R);
+    f.addColorStop(0, "rgba(255,255,255,0)"); f.addColorStop(1, "rgba(255,255,255,0.32)");
+    ctx.fillStyle = f; ctx.fillRect(0, 0, size, size);
     ctx.restore();
-    ctx.lineWidth = Math.max(1, size * 0.012);
-    ctx.strokeStyle = "rgba(255,255,255,0.35)";
-    ctx.beginPath(); ctx.arc(C, C, R - ctx.lineWidth / 2, 0, Math.PI * 2); ctx.stroke();
     return cv;
   }
 
@@ -240,14 +281,13 @@
     }
 
     function build() {
-      var w = host.clientWidth, h = host.clientHeight;
-      if (!w || !h) return false;
+      var w = host.clientWidth, full = host.clientHeight, h = full - (note.offsetHeight + 22); // marbles roll above the progress text, never under it
+      if (!w || h < 60) return false;
       var d = diameterFor(w, h), r = d / 2;
       state.dpr = Math.min(window.devicePixelRatio || 1, 2);
-      cv.width = Math.round(w * state.dpr); cv.height = Math.round(h * state.dpr);
+      cv.width = Math.round(w * state.dpr); cv.height = Math.round(full * state.dpr); // the picture covers the whole panel; marbles use the part above the text
       var px = Math.round(d * state.dpr);
-      var gloss = paintGloss(px);
-      state.sprites = BOTS.map(function (b, i) { return { body: paintBody(px, b.color, i), gloss: gloss }; });
+      state.sprites = BOTS.map(function (b, i) { return { body: paintBody(px, b.color, i), gloss: paintGloss(px, b.color), color: b.color }; });
       state.d = d;
       if (!state.world) state.world = createWorld(BOTS.length, w, h, r, 11);
       else { state.world.w = w; state.world.h = h; state.world.r = r; state.world.marbles.forEach(function (p) { p.x = Math.min(Math.max(p.x, r), w - r); p.y = Math.min(Math.max(p.y, r), h - r); }); }
@@ -260,12 +300,11 @@
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, cv.width, cv.height);
       var i, p, sh;
-      for (i = 0; i < list.length; i++) { // soft shadows first, so every marble sits on the floor
+      for (i = 0; i < list.length; i++) { // shadows first, so every marble sits on the floor
         p = list[i];
-        ctx.save(); ctx.translate(p.x * k, (p.y + r * 0.9) * k); ctx.scale(1, 0.24);
-        sh = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 0.95 * k);
-        sh.addColorStop(0, "rgba(90,60,30,.28)"); sh.addColorStop(1, "rgba(90,60,30,0)");
-        ctx.fillStyle = sh; ctx.beginPath(); ctx.arc(0, 0, r * 0.95 * k, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+        shadow(ctx, (p.x + r * 0.1) * k, (p.y + r * 0.92) * k, r * 1.05 * k, 0.24, 0.16, "90,60,30");        // wide, soft
+        shadow(ctx, (p.x + r * 0.06) * k, (p.y + r * 0.95) * k, r * 0.58 * k, 0.5, 0.34, "60,40,20");      // tight, dark contact
+        shadow(ctx, (p.x + r * 0.16) * k, (p.y + r * 0.96) * k, r * 0.7 * k, 0.4, 0.2, hexRgb(state.sprites[i].color)); // coloured light through the glass
       }
       for (i = 0; i < list.length; i++) {
         p = list[i];
@@ -290,7 +329,7 @@
     function paintStill() {
       try {
         if (!state.sprites && !build()) return;
-        draw(layoutStatic(BOTS.length, host.clientWidth, host.clientHeight, state.d / 2));
+        draw(layoutStatic(BOTS.length, state.world.w, state.world.h, state.d / 2));
       } catch (err) { useFallback(err); }
     }
 
