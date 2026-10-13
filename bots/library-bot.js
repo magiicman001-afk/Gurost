@@ -29,11 +29,14 @@ const manifest = require("../lib/sections/manifest.json");
 const COPY_SECTIONS = ["hero", "services", "features", "about", "process", "faq", "cta", "gallery"];
 
 // Same ids and labels as the old four directions, so the picker and the stored designs need no change.
+// Heroes (Bug UU, 2026-10-13): photo-led by default. "minimal" = split (text beside a photo, hero a), "bold" = full-bleed photo (hero b),
+// "corporate" = the palette's own default (split), "playful" = full-bleed. The text-only hero (c, with a plain shape) is NOT a default for any
+// direction: it is only what a photo hero falls back to when no photo could be found (assemble swaps it, and the build log says so).
 const DIRECTIONS = [
-  { id: "minimal", label: "Minimal / Editorial", set: { navbar: "a", hero: "c", services: "a", features: "a", about: "c", gallery: "a", process: "a", faq: "a", cta: "a", booking: "a", location: "a", footer: "a" } },
+  { id: "minimal", label: "Minimal / Editorial", set: { navbar: "a", hero: "a", services: "a", features: "a", about: "c", gallery: "a", process: "a", faq: "a", cta: "a", booking: "a", location: "a", footer: "a" } },
   { id: "bold", label: "Bold / Maximalist", set: { navbar: "b", hero: "b", services: "b", features: "b", about: "b", gallery: "b", process: "b", faq: "b", cta: "b", booking: "b", location: "b", footer: "b" } },
   { id: "corporate", label: "Corporate / Professional", set: {} }, // the palette's own defaults
-  { id: "playful", label: "Playful / Friendly", set: { navbar: "c", hero: "a", services: "c", features: "c", about: "b", gallery: "c", process: "c", faq: "c", cta: "c", booking: "c", location: "c", footer: "c" } },
+  { id: "playful", label: "Playful / Friendly", set: { navbar: "c", hero: "b", services: "c", features: "c", about: "b", gallery: "c", process: "c", faq: "c", cta: "c", booking: "c", location: "c", footer: "c" } },
 ];
 const FIRST_IDS = ["minimal", "bold"];
 const MORE_IDS = ["corporate", "playful"];
