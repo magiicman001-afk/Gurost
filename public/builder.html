@@ -157,6 +157,7 @@ if (window.self !== window.top) { window.stop(); document.documentElement.innerH
 <script src="shared/brand-config.js"></script>
 <script src="shared/ai-brand.js"></script>
 <script src="shared/bot-conversation.js"></script>
+<script src="shared/marble-loader.js"></script>
 <script>
 /**
  * Website Builder v4 — pure two-screen structure, per real, direct
@@ -173,7 +174,18 @@ let projectId = null;
 BuildLogUI.mount({ host: document.getElementById('headerActions'), getProjectId: () => projectId, call: GurostAPI.call });
 let currentHtml = null;
 
+// Build animation: eight bot marbles roll over the preview while a build runs (shared/marble-loader.js, spec
+// docs/MARBLE_PREVIEW_ANIMATION_SPEC.md). Hidden while the design picker or code is on screen; every 10 s it fades to
+// the real page once a live preview frame exists. If it cannot draw, it shows a plain spinner: never blank.
+document.getElementById('previewWrap').style.position = 'relative';
+const buildMarbles = MarbleLoader.create(document.getElementById('previewWrap'), {
+  label: 'Building…',
+  shouldShow: () => !pickerVisible() && !document.getElementById('previewWrap').classList.contains('hidden'),
+  hasSnippet: () => !!liveFrames
+});
+
 function setPreviewStatus(active) {
+  if (active) { buildMarbles.setProgress(null); buildMarbles.start(); } else buildMarbles.stop();
   const dot = document.getElementById('previewStatusDot');
   dot.style.background = active ? 'var(--gurost-primary)' : 'var(--line)';
   dot.classList.toggle('status-live', active);
@@ -187,6 +199,7 @@ function setBuildProgress(percent) {
   if (!el) return;
   el.classList.toggle('hidden', percent == null);
   if (percent == null) return;
+  buildMarbles.setProgress(percent);
   const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   el.textContent = `${GurostAI.STATUS.building} ${time} | ${percent}% complete`;
 }
