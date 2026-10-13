@@ -203,8 +203,8 @@ function prefetchVoiceStatus() {
   return voiceStatusPromise;
 }
 
-const MIN_RECORDING_MS = 600; // shorter than this is a tap, not speech: the recorder's file is a header with nothing in it
-const TOO_SHORT_TEXT = "That was too short. Hold the mic while you speak, then let go.";
+const MIN_RECORDING_MS = 600; // a shorter recording is only a header with nothing in it, so stop() keeps listening until this is reached
+const TAP_MS = 450; // a press shorter than this is a TAP: recording carries on until the next tap (a longer press is a HOLD: let go to send)
 
 // iPhone Safari records fragmented mp4, which the speech service sometimes refuses as "corrupt". Plain
 // 16-bit mono WAV (16 kHz) is understood everywhere, so an mp4 recording is decoded here and re-sent as WAV.
@@ -275,7 +275,6 @@ function startRecordingSession() {
                 stream.getTracks().forEach((t) => t.stop());
                 try {
                   if (!chunks.length) { resolveStop(""); return; } // nothing was recorded (released at once)
-                  if (Date.now() - startedAt < MIN_RECORDING_MS) throw new Error(TOO_SHORT_TEXT);
                   let blob = new Blob(chunks, { type: mimeType });
                   let sendType = mimeType;
                   if (mimeType === "audio/mp4") { // iPhone Safari
@@ -300,7 +299,10 @@ function startRecordingSession() {
               { once: true }
             );
             if (recorder.state === "inactive") { stream.getTracks().forEach((t) => t.stop()); resolveStop(""); return; }
-            recorder.stop();
+            // A recording shorter than MIN_RECORDING_MS is a header with nothing in it. Instead of failing (the old "too short"
+            // message, seen on a phone when the microphone was slow to start), keep listening until the minimum is reached.
+            const wait = Math.max(0, MIN_RECORDING_MS - (Date.now() - startedAt));
+            setTimeout(() => { if (recorder.state !== "inactive") recorder.stop(); }, wait);
           })
       });
     } catch (err) {
@@ -311,12 +313,14 @@ function startRecordingSession() {
 
 /**
  * Hold-to-talk on a button, for a finger, a pen or a mouse.
- * - Pointer events carry all three; the mouse events a phone sends after a touch are ignored
+ * - Pointer events carry all three; the mouse events that follow them (a phone sends them AFTER the finger lifts) are ignored
  *   (a phone sends them AFTER the finger lifts, so the old mousedown/mouseup wiring released before
  *   the microphone had started and left it recording forever).
- * - A release while the microphone is still starting is remembered and stops it the moment it is ready.
+ * - HOLD or TAP, both work: hold longer than TAP_MS and let go to send; or tap quickly, keep talking, and tap again to send.
+ *   (A quick tap used to be rejected as "too short", and a release while the microphone was still starting gave an empty recording.)
+ * - A release while the microphone is still starting is remembered and applied the moment it is ready.
  * - Mouse events dispatched by scripts still work.
- * handlers: onPress() immediately on press; onStart(session) once recording; onRelease() when it stops;
+ * handlers: onPress() immediately on press; onStart(session) once recording; onTapMode() when a quick tap keeps it recording; onRelease() when it stops;
  * onResult(transcript); onError(message); onUnavailable(message) when voice is not set up.
  */
 function holdToTalk(button, handlers = {}) {
@@ -324,8 +328,12 @@ function holdToTalk(button, handlers = {}) {
   let session = null;
   let starting = false;
   let releaseWanted = false;
-  let lastTouchAt = 0;
-  const fromTouch = () => Date.now() - lastTouchAt < 1000;
+  let tapMode = false; // recording carries on after a quick tap; the NEXT press stops and sends it
+  let pressAt = 0;
+  let ignoreRelease = false;
+  let heldMs = 0; // how long the press lasted, measured at the moment of release
+  let lastPointerAt = 0;
+  const fromPointer = () => Date.now() - lastPointerAt < 1000; // a mouse or finger sends pointer events AND mouse events: only one set counts
   prefetchVoiceStatus();
 
   button.style.touchAction = "none";
@@ -336,43 +344,58 @@ function holdToTalk(button, handlers = {}) {
 
   function finish(s) {
     session = null;
+    tapMode = false;
     handlers.onRelease?.();
     s.stop().then((t) => handlers.onResult?.(t || "")).catch((err) => handlers.onError?.(err && err.message ? err.message : "Couldn't transcribe. You can type instead."));
   }
 
   function press() {
-    if (session || starting) return;
+    if (starting) return;
+    if (session) { // a recording is already running from a quick tap: this press is the "stop" tap
+      if (tapMode) { ignoreRelease = true; finish(session); }
+      return;
+    }
     if (voiceStatus === false) { handlers.onUnavailable?.(VOICE_NOT_SET_UP); return; }
     starting = true;
     releaseWanted = false;
+    pressAt = Date.now();
     handlers.onPress?.();
     startRecordingSession()
       .then((s) => {
         starting = false;
         session = s;
-        if (releaseWanted) { finish(s); return; }
         handlers.onStart?.(s);
+        if (releaseWanted) settle(); // let go while the microphone was still starting (heldMs was measured at the release)
       })
       .catch((err) => { starting = false; releaseWanted = false; handlers.onRelease?.(); handlers.onError?.(micErrorText(err)); });
   }
 
+  // Called on release. A quick press (a tap) keeps recording until the next tap; a held press stops and sends now.
+  function settle() {
+    if (!session) return;
+    if (heldMs < TAP_MS) { tapMode = true; handlers.onTapMode?.(); return; }
+    finish(session);
+  }
+
   function release() {
+    if (ignoreRelease) { ignoreRelease = false; return; }
+    heldMs = Date.now() - pressAt;
     if (starting) { releaseWanted = true; return; }
-    if (session) finish(session);
+    if (session && !tapMode) settle();
   }
 
   button.addEventListener("pointerdown", (e) => {
-    if (e.pointerType !== "mouse") lastTouchAt = Date.now();
+    lastPointerAt = Date.now();
     try { button.setPointerCapture(e.pointerId); } catch {} // so the release is seen even if the finger slides off
     press();
   });
-  // The emulated mouse events come right after the finger LIFTS, so the guard window restarts there too
-  // (after a long hold they would otherwise arrive more than a second after pointerdown and start a second recording).
-  const lifted = (e) => { if (e.pointerType !== "mouse") lastTouchAt = Date.now(); release(); };
+  // The mouse events that follow a pointer event are ignored, and the guard window restarts when the finger or button
+  // LIFTS (after a long hold they would otherwise arrive more than a second after pointerdown and start a second recording).
+  const lifted = () => { lastPointerAt = Date.now(); release(); };
   button.addEventListener("pointerup", lifted);
   button.addEventListener("pointercancel", lifted);
-  button.addEventListener("mousedown", () => { if (!fromTouch()) press(); });
-  button.addEventListener("mouseup", () => { if (!fromTouch()) release(); });
+  button.addEventListener("mousedown", () => { if (!fromPointer()) press(); });
+  button.addEventListener("mouseup", () => { if (!fromPointer()) release(); });
   return { press, release };
 }
 

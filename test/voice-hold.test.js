@@ -26,17 +26,24 @@ test("recorder format comes from what the browser supports (iPhone: mp4 only)", 
 
 test("the helper uses pointer events and ignores mouse events that follow a touch", () => {
   assert.match(voice, /button\.addEventListener\("pointerdown"/);
-  assert.match(voice, /button\.addEventListener\("mousedown", \(\) => \{ if \(!fromTouch\(\)\) press\(\); \}\)/);
-  assert.match(voice, /button\.addEventListener\("mouseup", \(\) => \{ if \(!fromTouch\(\)\) release\(\); \}\)/);
+  assert.match(voice, /button\.addEventListener\("mousedown", \(\) => \{ if \(!fromPointer\(\)\) press\(\); \}\)/);
+  assert.match(voice, /button\.addEventListener\("mouseup", \(\) => \{ if \(!fromPointer\(\)\) release\(\); \}\)/);
 });
 
 test("the emulated-mouse guard restarts when the finger lifts (a long hold used to start a second recording)", () => {
-  assert.match(voice, /const lifted = \(e\) => \{ if \(e\.pointerType !== "mouse"\) lastTouchAt = Date\.now\(\); release\(\); \}/);
+  assert.match(voice, /const lifted = \(\) => \{ lastPointerAt = Date\.now\(\); release\(\); \}/);
 });
 
-test("a release while the microphone is still starting is remembered", () => {
+test("a release while the microphone is still starting is remembered and applied when it is ready", () => {
   assert.match(voice, /if \(starting\) \{ releaseWanted = true; return; \}/);
-  assert.match(voice, /if \(releaseWanted\) \{ finish\(s\); return; \}/);
+  assert.match(voice, /if \(releaseWanted\) settle\(\);/);
+});
+
+test("hold OR tap: a quick press keeps recording until the next press; a long press stops on release", () => {
+  assert.match(voice, /const TAP_MS = 450/);
+  assert.match(voice, /if \(heldMs < TAP_MS\) \{ tapMode = true; handlers\.onTapMode\?\.\(\); return; \}/);
+  assert.match(voice, /if \(tapMode\) \{ ignoreRelease = true; finish\(session\); \}/);
+  assert.match(voice, /if \(session && !tapMode\) settle\(\);/);
 });
 
 test("voice status is fetched ahead of the press, never awaited inside it (iOS needs the tap to reach getUserMedia)", () => {
@@ -59,9 +66,10 @@ test("panel, Dashboard and Assistant mics all use the helper and no longer liste
   assert.ok(!/micBtn\.addEventListener\('touchend'/.test(read("public/shared/pulse-widget.js")));
 });
 
-test("a tap is not sent: under 0.6s the person is told to hold longer", () => {
+test("a short recording is never rejected with a 'too short' error: stop() keeps listening until 0.6s", () => {
   assert.match(voice, /const MIN_RECORDING_MS = 600/);
-  assert.match(voice, /if \(Date\.now\(\) - startedAt < MIN_RECORDING_MS\) throw new Error\(TOO_SHORT_TEXT\)/);
+  assert.ok(!/TOO_SHORT_TEXT|That was too short/.test(voice), "the old error message is gone");
+  assert.match(voice, /const wait = Math\.max\(0, MIN_RECORDING_MS - \(Date\.now\(\) - startedAt\)\);/);
 });
 
 test("an iPhone mp4 recording is re-sent as 16 kHz mono WAV, with the original as fallback", () => {
