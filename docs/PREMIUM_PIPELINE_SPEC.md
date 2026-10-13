@@ -205,3 +205,14 @@ Real photos and fonts show on Render. I will not present it as a render of the l
   and 375px passes only, and the 2 GB OOM cause found today (311 processes at once) is already fixed in b56437a.
 - Six industries only. A prompt that matches none gets the `tech` look set. Widening to the 192-industry list is a
   separate piece of work; the unmatched fallback is stated, not hidden.
+
+## 11. Media tiers (planned, Phase 2, not built; added 2026-10-13)
+How images, 3D and video would differ by plan. Detail, licences, what was and was not verified, and the cost method are in
+`docs/FREE_AI_TOOLS.md` (read its section 4 before quoting any price: the video cost in the first research note is not supported).
+- **Free plan:** Pixabay, Openverse and Unsplash photos (built) plus free text models; the section library's own motion. No 3D, no video.
+- **Paid plan:** hosted image models through fal.ai (in the code today); hosted 3D and short video once each is tested; same motion.
+- **Later:** our own GPU job runner (RunPod, Vast.ai or similar) for open models such as Nucleus-Image, HiDream-O1-Image, TRELLIS.2, MOVA,
+  when volume makes it cheaper than hosted.
+- **Gate before switching any of it on:** Stripe live, provider added to the privacy policy and AI data-flow doc, per-user cost cap, honest
+  refund on failure, one measured job per tool. The premium score (section 4) does not judge 3D or video; that needs its own check.
+
