@@ -22,12 +22,17 @@ A real glass-marble picture, 48 to 88 px across (size scales with the panel: abo
 (CSS box-shadow; no filters, which iOS handles badly). Files: planner, designer, industry, builder, pulse, research, review, launch (`.png`), named after the bot.
 Colours by picture: Planner deep blue, Designer coral, Industry teal, Builder orange, Pulse gold, Research purple, Review red, Launch green.
 
-## 2. The motion (Irfan: "just move around the screen, left, right, up or down. That's it.")
-Eight marbles drift in straight lines around the preview area and bounce off the four walls, each with a slow spin (0.15 to 0.45 radians a second).
-Speed is steady and moderate (55 to 95 px a second), directions 20 to 70 degrees off the walls so each marble roams the whole box.
-**No marble-to-marble physics:** they pass over each other. Loops until the build ends. Each marble is one `<img>` moved with
-`transform: translate3d(...) rotate(...)` (graphics-chip friendly). Measured in a desktop Chromium at 375 px: 60 fps, 99% of frames 16.8 ms or better; phone
-speed to be confirmed on Irfan's phone.
+## 2. The motion
+Eight marbles drift in straight lines around the preview area, bounce off the four walls, and **push apart when they meet** (equal masses swap
+speed along the line between them; a few correction passes so a pile of three ends up apart), each with a slow spin (0.15 to 0.45 radians a second).
+Speed is kept in a moderate band (50 to 100 px a second); starting directions are 20 to 70 degrees off the walls so each marble roams the whole box.
+Loops until the build ends. Each marble is one `<img>` moved with `transform: translate3d(...) rotate(...)`. Measured in desktop Chromium at 375 px:
+60 fps; phone speed to be confirmed on Irfan's phone.
+- **Bug LL (phone test 2026-10-13): the marbles clustered at the top-middle and overlapped.** I had removed marble-to-marble physics on Irfan's earlier
+  "keep it simple" note, which let them pile; he then asked for them spread out and pushed apart, so collisions are back (this supersedes the earlier note).
+  Cause of the bunching: marbles are placed when the panel is measured, and the preview panel can still be short then; they stayed in that old corner when it
+  grew. Now a resize moves each marble to the same RELATIVE spot (`resizeWorld`). Tests: no overlap at the start or after any step at four sizes, they reach
+  most of the box, and a short-then-tall box stays spread.
 
 ## 3. The eight bots
 Same names as the build log (`shared/bot-conversation.js`; a test checks them). Marbles are not clickable and do not show which bot is working
@@ -50,7 +55,7 @@ Website Builder live preview (`public/builder.html`): starts with `setPreviewSta
 
 ## 7. Tests
 Unit: the eight PNGs exist, are real RGBA PNGs, square, 20 to 500 KB; movement for 60 simulated seconds at four panel sizes (stays inside, keeps moving,
-moderate speed, no NaN); wall bounces; no marble-to-marble physics; sizes; reduced-motion layout; source rules (no HTML injection, no network calls, fallback
+moderate speed, no NaN); wall bounces; push-apart collisions, spread, resize; sizes; reduced-motion layout; source rules (no HTML injection, no network calls, fallback
 and reduced-motion present). Browser (Playwright, 375 px, real files served over http, not an automated test in the repo): all eight pictures load, all move,
 never leave the box, 60 fps, no sideways scroll, no console errors, snippet fade at 10 s for 3 s, spinner fallback when a picture is blocked, still grid under reduced motion.
 Not covered by an automated test: the look (judge on the phone) and the live builder page (needs a signed-in build).

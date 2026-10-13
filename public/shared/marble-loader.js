@@ -6,7 +6,7 @@
  *   m.start(); m.setProgress(45); m.stop();
  *
  * The pictures are public/marbles/<bot>.png (round cut-outs with a transparent corner area). They are only MOVED by code: left, right,
- * up, down, bounce off the four walls, a slow spin. Marbles do not touch each other (they may pass over one another). Each is one <img>
+ * up, down, bounce off the four walls and push apart when they meet (never left overlapping), a slow spin. Each is one <img>
  * moved with a transform, which the phone's graphics chip handles at 60 frames a second.
  * If any picture fails to load, or anything throws, a plain spinner with the same progress text shows. It is never blank.
  */
@@ -64,10 +64,22 @@
         rot: rnd() * Math.PI * 2, spin: (0.15 + rnd() * 0.3) * (rnd() < 0.5 ? -1 : 1) // slow turn, radians a second
       });
     }
-    return { w: w, h: h, r: r, marbles: marbles };
+    return { w: w, h: h, r: r, marbles: marbles, vmin: 50, vmax: 100 };
   }
 
-  /** Advance by dt seconds (clamped). Straight lines, bounce off the four walls, slow spin. Nothing else. */
+  /** The box changed size (the preview panel grows after the first layout): keep every marble at the same RELATIVE spot, so they
+   *  stay spread out instead of staying bunched in the old, smaller corner. */
+  function resizeWorld(world, w, h, r) {
+    var sx = w / Math.max(world.w, 1), sy = h / Math.max(world.h, 1);
+    world.marbles.forEach(function (p) {
+      p.x = Math.min(Math.max(p.x * sx, r), w - r); p.y = Math.min(Math.max(p.y * sy, r), h - r);
+    });
+    world.w = w; world.h = h; world.r = r;
+    return world;
+  }
+
+  /** Advance by dt seconds (clamped). Straight lines, bounce off the four walls and off each other (pushed apart, never left
+   *  overlapping), slow spin. Speeds are kept in a moderate band so nothing stalls or races. */
   function stepWorld(world, dt) {
     dt = Math.min(Math.max(dt, 0), 0.05);
     var m = world.marbles, r = world.r;
@@ -78,6 +90,32 @@
       if (p.x > world.w - r) { p.x = world.w - r; p.vx = -Math.abs(p.vx); }
       if (p.y < r) { p.y = r; p.vy = Math.abs(p.vy); }
       if (p.y > world.h - r) { p.y = world.h - r; p.vy = -Math.abs(p.vy); }
+    }
+    var min = 2 * r, i2, j;
+    for (var pass = 0; pass < 3; pass++) { // a few passes, so a pile of three still ends up apart
+      for (i2 = 0; i2 < m.length; i2++) {
+        for (j = i2 + 1; j < m.length; j++) {
+          var a = m[i2], b = m[j];
+          var dx = b.x - a.x, dy = b.y - a.y, d2 = dx * dx + dy * dy;
+          if (d2 >= min * min) continue;
+          var d = Math.sqrt(d2), nx, ny;
+          if (d < 0.0001) { nx = 1; ny = 0; d = 0; } else { nx = dx / d; ny = dy / d; } // exactly on top of each other: push sideways
+          var push = (min - d) / 2;
+          a.x -= nx * push; a.y -= ny * push; b.x += nx * push; b.y += ny * push;
+          var rel = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny; // equal masses: swap the speed along the line between them
+          if (rel < 0) { a.vx += rel * nx; a.vy += rel * ny; b.vx -= rel * nx; b.vy -= rel * ny; }
+        }
+      }
+      for (i2 = 0; i2 < m.length; i2++) { // pushing apart can nudge a marble through a wall in a tight box: put it back
+        var q = m[i2];
+        if (q.x < r) q.x = r; else if (q.x > world.w - r) q.x = world.w - r;
+        if (q.y < r) q.y = r; else if (q.y > world.h - r) q.y = world.h - r;
+      }
+    }
+    for (i2 = 0; i2 < m.length; i2++) {
+      var v = m[i2], sp = Math.sqrt(v.vx * v.vx + v.vy * v.vy);
+      if (sp < world.vmin) { var k = world.vmin / (sp || 1); if (sp < 0.01) { v.vx = world.vmin; v.vy = 0; } else { v.vx *= k; v.vy *= k; } }
+      else if (sp > world.vmax) { v.vx *= world.vmax / sp; v.vy *= world.vmax / sp; }
     }
     return world;
   }
@@ -167,7 +205,7 @@
       state.d = d;
       imgs.forEach(function (im) { im.style.width = im.style.height = d + "px"; });
       if (!state.world) state.world = createWorld(BOTS.length, w, h, r, 11);
-      else { state.world.w = w; state.world.h = h; state.world.r = r; state.world.marbles.forEach(function (p) { p.x = Math.min(Math.max(p.x, r), w - r); p.y = Math.min(Math.max(p.y, r), h - r); }); }
+      else resizeWorld(state.world, w, h, r);
       return true;
     }
 
@@ -246,5 +284,5 @@
     return { start: start, stop: stop, setProgress: setProgress, isFallback: function () { return state.fallback; }, element: el };
   }
 
-  return { create: create, BOTS: BOTS, stepWorld: stepWorld, createWorld: createWorld, layoutStatic: layoutStatic, diameterFor: diameterFor, SNIPPET_EVERY_MS: SNIPPET_EVERY_MS };
+  return { create: create, BOTS: BOTS, stepWorld: stepWorld, createWorld: createWorld, resizeWorld: resizeWorld, layoutStatic: layoutStatic, diameterFor: diameterFor, SNIPPET_EVERY_MS: SNIPPET_EVERY_MS };
 });
