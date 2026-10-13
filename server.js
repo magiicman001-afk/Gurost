@@ -2122,6 +2122,22 @@ app.post("/api/pulse/analyze", security.rejectUnknownFields(["projectId", "facts
 const PULSE_EDIT_TIMEOUT_MS = Number(process.env.PULSE_EDIT_TIMEOUT_MS) || 75000;
 const PULSE_EDIT_TOO_SLOW = "That edit took too long (the AI is slow right now), so I stopped it. Your page is unchanged. Try a smaller change, or try again in a minute.";
 
+// Edits running in THIS server process (projectId -> start time). A project that says CORRECTING but is not in this map (a restart or a
+// crash left it so) or has been in it far longer than the edit limit is STUCK, not busy (Bug RR, phone test 2026-10-13: every later edit
+// answered "still applying the last change" and nothing applied). It is reset instead of refusing every edit for ever.
+const ACTIVE_EDITS = new Map();
+const PULSE_EDIT_HARD_STOP_MS = PULSE_EDIT_TIMEOUT_MS + 20000; // the model call has its own deadline; this one covers anything else that hangs
+function clearStuckEdit(project, projectId) {
+  if (project.state !== "CORRECTING") return false;
+  const started = ACTIVE_EDITS.get(projectId);
+  if (started && Date.now() - started <= PULSE_EDIT_HARD_STOP_MS + 5000) return false; // really still running
+  console.warn(`[pulse] Reset a stuck edit lock on ${projectId} (${started ? "ran " + Math.round((Date.now() - started) / 1000) + "s" : "no edit running in this process"})`);
+  ACTIVE_EDITS.delete(projectId);
+  transition(project, "RESUMING");
+  transition(project, "DONE");
+  return true;
+}
+
 app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "instruction"]), async (req, res) => {
   const { projectId, action } = req.body;
   const instruction = req.body.instruction ? security.sanitizeText(req.body.instruction, 2000) : undefined;
@@ -2160,6 +2176,7 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
       // fail its own transition and then, in its error handler, reset the
       // project to DONE under the first - whose finished edit was then
       // thrown away ("DONE -> RESUMING"). It now waits its turn instead.
+      clearStuckEdit(project, projectId);
       if (project.state === "CORRECTING") {
         return res.status(409).json({ error: "Pulse is still applying the last change - try again in a moment." });
       }
@@ -2169,17 +2186,28 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
       if (project.state === "BUILDING") transition(project, "PAUSED");
       recoverTo = project.state === "PAUSED" ? "BUILDING" : "DONE";
       transition(project, "CORRECTING");
+      ACTIVE_EDITS.set(projectId, Date.now());
+      const editStartedAt = Date.now();
+      let abandoned = false; // set when the hard stop fires: a late result must not be applied
+      let hardStopTimer = null;
+      const edLog = makeBuildLogger(projectId, req.user.id); // every edit's start, end and failure goes to build_logs
+      edLog.log({ bot: "pulse", task: "edit", decision: "started", reason: String(instruction).slice(0, 120), result: "success", details: { kind: videoClip ? "video" : photo ? "photo" : "text" } });
 
       // Locked so a second concurrent correction on this same project
       // (another collaborator, or this same route hit twice quickly)
       // can't read the same starting HTML and silently overwrite this
       // one's result — see lib/project-lock.js for the real bug this fixes.
-      const result = await withProjectLock(projectId, async () => {
+      const hardStop = new Promise((_, reject) => {
+        hardStopTimer = setTimeout(() => { abandoned = true; reject(Object.assign(new Error("The edit did not finish in time"), { deadlineExceeded: true })); }, PULSE_EDIT_HARD_STOP_MS);
+      });
+      hardStop.catch(() => {}); // it can fire while this edit still waits for the lock: never an unhandled rejection
+      const result = await withProjectLock(projectId, () => { const work = (async () => {
         const before = project.currentHtml;
         const editInstruction = videoClip ? videoRequest.buildInstruction(instruction, videoClip) : photo ? imageRequest.buildInstruction(instruction, photo) : instruction;
         const r = await correctionBot.applyCorrection(project.currentHtml, editInstruction, { plan: req.user.plan, deadline: Date.now() + PULSE_EDIT_TIMEOUT_MS });
         if (videoClip && !videoRequest.hasClip(r.html, videoClip)) throw new Error(videoRequest.NOT_APPLIED); // nothing is saved
         if (photo && !imageRequest.hasImage(r.html, photo)) throw new Error(imageRequest.NOT_APPLIED); // nothing is saved
+        if (abandoned) throw new Error("The edit finished after it was stopped, so it was not applied");
         pushUndoSnapshot(project, "correct");
         integrator.integrateCorrection(project, r);
         // An edit can't invent prices, years, ratings or statistics either: a
@@ -2193,8 +2221,10 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
           }
         }
         return r;
-      });
+      })(); work.catch(() => {}); return Promise.race([work, hardStop]); }).finally(() => clearTimeout(hardStopTimer));
 
+      ACTIVE_EDITS.delete(projectId);
+      edLog.log({ bot: "pulse", task: "edit", decision: "applied", reason: String(result.summary || "").slice(0, 200), time_ms: Date.now() - editStartedAt, result: "success", details: { method: result.method } });
       transition(project, "RESUMING");
       transition(project, "DONE");
       persistInBackground(projectId, project);
@@ -2261,6 +2291,7 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
   } catch (err) {
     // A failed correction must not strand the project in CORRECTING,
     // or every later correction fails its state transition too.
+    ACTIVE_EDITS.delete(projectId);
     if (recoverTo && project.state === "CORRECTING") {
       transition(project, "RESUMING");
       transition(project, recoverTo);
@@ -2268,6 +2299,7 @@ app.post("/api/pulse", security.rejectUnknownFields(["projectId", "action", "ins
     // Every failed edit is logged (it used to leave no trace) and answered with a plain message.
     const tooSlow = !!(err && (err.deadlineExceeded || /deadline/i.test(String(err.name || ""))));
     console.error(`[pulse] ${action} failed on ${projectId}${tooSlow ? " (too slow)" : ""}: ${err && err.message}`);
+    if (action === "correct" && recoverTo) makeBuildLogger(projectId, req.user.id).log({ bot: "pulse", task: "edit", decision: tooSlow ? "timed out" : "failed", reason: err && err.message, result: "fail", details: { tooSlow } });
     res.status(tooSlow ? 504 : 500).json({ error: tooSlow ? PULSE_EDIT_TOO_SLOW : err.message });
   }
 });
