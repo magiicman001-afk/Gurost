@@ -117,6 +117,7 @@ const researchBot = require("./bots/research-bot");
 const approvalWorkflow = require("./approval-workflow");
 const businessAutopilot = require("./business-autopilot");
 const trainingData = require("./training-data");
+const userData = require("./lib/user-data");
 const securityScanner = require("./security-scanner");
 const projectState = require("./project-state");
 const weekAheadBriefing = require("./week-ahead-briefing");
@@ -1130,6 +1131,31 @@ app.get("/api/templates/:id/preview", (req, res) => {
   const template = REAL_TEMPLATES[req.params.id];
   if (!template) return res.status(404).json({ error: `No template found with id '${req.params.id}'.` });
   res.json({ html: template.html });
+});
+
+// Data export download. Public on purpose: the emailed link carries a signed token (24 hours, own data only), so it opens
+// from the email without a sign-in. Must stay above app.use("/api", auth.requireAuth).
+const exportDownloadLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false,
+  message: { error: "Too many download attempts. Try again in an hour." } });
+app.get("/api/me/export/download", exportDownloadLimiter, async (req, res) => {
+  const link = userData.verifyDownloadToken(String(req.query.token || ""));
+  if (!link) return res.status(410).json({ error: "This download link is invalid or has expired. Request a new export from Settings." });
+  try {
+    const { data: acct } = await supabase.from("api_keys").select("user_id,email,plan").eq("user_id", link.userId).limit(1).maybeSingle();
+    const user = { id: link.userId, email: acct && acct.email, plan: acct && acct.plan };
+    const collected = await userData.collectUserData(supabase, user);
+    const archiver = require("archiver");
+    const archive = archiver("zip", { zlib: { level: 6 } });
+    archive.on("error", (err) => { console.error("[export] zip failed:", err.message); res.destroy(err); });
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Disposition", 'attachment; filename="gurost-data-export.zip"');
+    res.setHeader("Cache-Control", "no-store");
+    archive.pipe(res);
+    await userData.writeExportZip(archive, supabase, user, collected);
+  } catch (err) {
+    console.error("[export] download failed:", err.message);
+    if (!res.headersSent) res.status(500).json({ error: "The export could not be built. Please try again or email support@gurost.com." });
+  }
 });
 
 app.use("/api", auth.requireAuth);
@@ -5559,40 +5585,36 @@ app.patch("/api/me/timezone", security.rejectUnknownFields(["timezone"]), async 
   }
 });
 
-// POST /api/me/export — real, honest data export. Gathers everything
-// genuinely stored about this user across the real tables that exist,
-// and emails it as a real attachment via Postmark (reuses the same
-// real client already configured for Contact). A real, working start
-// on GDPR-style export - if you need every last real data category
-// (e.g. individual project content too, not just the profile/account
-// record), extend the query below to include those real tables too.
-app.post("/api/me/export", async (req, res) => {
+// POST /api/me/export: emails the signed-in person a link (valid 24 hours) to download a ZIP of everything we hold about them.
+// What the ZIP contains is listed in lib/user-data.js; its manifest.json says what was empty, missing and not included.
+app.post("/api/me/export", security.rejectUnknownFields([]), async (req, res) => {
   if (!postmarkClient) {
     return res.status(503).json({ error: "Email sending isn't configured yet — missing POSTMARK_API_KEY." });
   }
   try {
-    const { data: profile } = await supabase.from("user_profiles").select("*").eq("user_id", req.user.id).maybeSingle();
-    const exportData = {
-      userId: req.user.id,
-      email: req.user.email,
-      plan: req.user.plan,
-      profile: profile || {},
-      exportedAt: new Date().toISOString(),
-    };
+    const token = userData.createDownloadToken(req.user.id);
+    const base = process.env.APP_BASE_URL || process.env.PUBLIC_URL || "https://gurost.onrender.com";
+    const link = `${base}/api/me/export/download?token=${encodeURIComponent(token)}`;
     await postmarkClient.sendEmail({
       From: process.env.POSTMARK_FROM_EMAIL,
       To: req.user.email,
       Subject: "Your Gurost data export",
-      TextBody: "Attached is a real, complete export of your account data, as requested.",
-      Attachments: [{
-        Name: "gurost-data-export.json",
-        Content: Buffer.from(JSON.stringify(exportData, null, 2)).toString("base64"),
-        ContentType: "application/json",
-      }],
+      TextBody: [
+        "You asked for a copy of your Gurost data.",
+        "",
+        `Download it here (the link works for ${userData.LINK_HOURS} hours, then you can ask again): ${link}`,
+        "",
+        "The ZIP holds your account, profile, projects and their history, Assistant conversations and memory, Pulse history,",
+        "form submissions on your sites, credits, and the files you uploaded (within size limits). A manifest.json inside lists what",
+        "was found, what was empty and what is not included (for example card details, which Stripe holds).",
+        "",
+        "If you did not ask for this, ignore this email; nothing happens unless the link is opened. Do not forward it.",
+      ].join("\n"),
     });
-    res.json({ sent: true });
+    res.json({ sent: true, expiresInHours: userData.LINK_HOURS });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("[export] request failed:", err.message);
+    res.status(500).json({ error: "The export could not be started. Please try again or email support@gurost.com." });
   }
 });
 
