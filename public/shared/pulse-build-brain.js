@@ -128,8 +128,13 @@ window.PulseBuildBrain = (function () {
     return run;
   };
 
+  // The server answers "still applying the last change" when an edit is genuinely running. Say it ONCE, stop the list (the rest
+  // would only get the same answer), and give up on a fix that has failed twice instead of offering it for ever (Bug RR).
+  const BUSY = /still applying|try again in a moment/i;
+  const MAX_TRIES = 2;
   async function applyAll(issues, applyFix, row) {
     const todo = issues.filter((i) => !i.done);
+    const result = { stoppedBusy: false, abandoned: 0 };
     let k = 0;
     for (const issue of todo) {
       k++;
@@ -141,12 +146,26 @@ window.PulseBuildBrain = (function () {
         if (step) logBot('Pulse', `${step}: done.`, 'ok');
         issue.button?.replaceWith(Object.assign(document.createElement('span'), { className: 'text-[12px] text-green-400', textContent: 'Fixed' }));
       } catch (err) {
-        logBot('Pulse', `Couldn't fix "${issue.issue}": ${err.message}`, 'fail');
-        // Its buttons come back, so it can be tried again.
-        issue.row?.querySelectorAll('button').forEach((x) => { x.disabled = false; });
+        if (BUSY.test(String(err && err.message))) {
+          logBot('Pulse', "I'm still finishing the last change, so I've paused the rest of the fixes. Tap Fix all again in a minute.", 'info');
+          issue.row?.querySelectorAll('button').forEach((x) => { x.disabled = false; });
+          result.stoppedBusy = true;
+          break;
+        }
+        issue.tries = (issue.tries || 0) + 1;
+        if (issue.tries >= MAX_TRIES) {
+          issue.done = true; // given up: no more buttons for it
+          result.abandoned++;
+          logBot('Pulse', `I couldn't fix "${issue.issue}" after ${MAX_TRIES} tries, so I've dropped it. Tell me in your own words what you want changed and I'll try that.`, 'fail');
+        } else {
+          logBot('Pulse', `Couldn't fix "${issue.issue}": ${err && err.message}`, 'fail');
+          // Its buttons come back, so it can be tried once more.
+          issue.row?.querySelectorAll('button').forEach((x) => { x.disabled = false; });
+        }
       }
     }
     if (row) disableRow(row);
+    return result;
   }
 
   function showReview(issues, applyFix) {
@@ -192,11 +211,11 @@ window.PulseBuildBrain = (function () {
     logBot('Pulse', `${issues.length} issue${issues.length === 1 ? '' : 's'} found. ${shorten(result.summary, 200)}`, 'info');
     const row = logActions([
       { label: 'Review', primary: true, title: 'See each issue with Apply / Skip', onClick: (b, r) => { disableRow(r); showReview(issues, applyFix); } },
-      { label: 'Fix all', title: 'Apply every fix, one after another', onClick: (b, r) => { disableRow(r); logBot('Pulse', `Fixing all ${issues.length}…`, 'work'); applyAll(issues, applyFix).then(() => logBot('Pulse', 'Done — every fix I could make is applied.', 'ok')); } },
+      { label: 'Fix all', title: 'Apply every fix, one after another', onClick: (b, r) => { disableRow(r); logBot('Pulse', `Fixing all ${issues.length}…`, 'work'); applyAll(issues, applyFix).then((r) => { if (!r.stoppedBusy) logBot('Pulse', r.abandoned ? 'Finished. I made the fixes I could and dropped the ones that kept failing.' : 'Done — every fix I could make is applied.', 'ok'); }); } },
       { label: 'Skip', title: "Don't fix these now", onClick: (b, r) => { disableRow(r); issues.forEach((i) => skipped.add(i.issue)); logBot('Pulse', "Skipped — I won't bring these up again this session.", 'info'); } }
     ]);
     return row;
   }
 
-  return { start, stop, buildFinished, reviewPicked, _internal: { sectionCount, textOf } };
+  return { start, stop, buildFinished, reviewPicked, _internal: { sectionCount, textOf, applyAll } };
 })();
