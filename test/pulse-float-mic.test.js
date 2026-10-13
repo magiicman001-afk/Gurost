@@ -9,17 +9,19 @@ const src = fs.readFileSync(path.join(__dirname, "../public/shared/pulse-widget.
 const css = fs.readFileSync(path.join(__dirname, "../public/shared/pulse-widget.css"), "utf8");
 
 test("the mic sits in the panel header next to Close, as a button with an accessible name", () => {
-  assert.match(src, /<div id="pulseHeaderButtons">\s*<button id="pulseFloatMic" type="button" aria-label="Tap to talk, tap again to stop"/);
+  assert.match(src, /<div id="pulseHeaderButtons">\s*<button id="pulseFloatMic" type="button" aria-label="Microphone: hold to talk, or tap to start and tap again to stop"/);
 });
 
 const voice = fs.readFileSync(path.join(__dirname, "../public/shared/pulse-voice.js"), "utf8");
 
-test("the panel mic uses the shared tapToTalk helper (no hand-started recordings), one microphone user at a time", () => {
-  assert.match(src, /tapToTalk\(floatMic, \{\s*onPress: stopHandsFree,/);
+test("there is exactly ONE mic button in the panel (Bug MM), and it uses the shared holdToTalk helper, one microphone user at a time", () => {
+  assert.ok(!/pulseMicButton/.test(src) && !/pulseMicButton/.test(css), "the second mic next to Send is gone");
+  assert.strictEqual((src.match(/class="material-symbols-outlined">mic</g) || []).length, 1, "one mic icon in the panel markup");
+  assert.match(src, /holdToTalk\(floatMic, \{\s*onPress: stopHandsFree,/);
   assert.match(src, /onResult: \(transcript\) => \{ setState\('idle'\); if \(transcript\) sendCorrection\(transcript\); \}/);
 });
 
-test("tapToTalk: first tap starts, second tap stops and sends; errors reset the mic; it listens to click only", () => {
+test("tapToTalk helper (kept, no longer used by the panel): first tap starts, second tap stops and sends; errors reset the mic; it listens to click only", () => {
   const h = voice.slice(voice.indexOf("function tapToTalk"), voice.indexOf("async function speakTextViaRest"));
   assert.match(h, /if \(session\) \{ finish\(session\); return; \}/);
   assert.match(h, /handlers\.onRelease\?\.\(\); handlers\.onError\?\.\(micErrorText\(err\)\)/);

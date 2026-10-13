@@ -525,7 +525,7 @@
             <span id="pulsePanelStatusText">Ready when you are</span>
           </div>
           <div id="pulseHeaderButtons">
-            <button id="pulseFloatMic" type="button" aria-label="Tap to talk, tap again to stop" aria-pressed="false"><span class="material-symbols-outlined">mic</span></button>
+            <button id="pulseFloatMic" type="button" aria-label="Microphone: hold to talk, or tap to start and tap again to stop" aria-pressed="false"><span class="material-symbols-outlined">mic</span></button>
             <button id="pulsePanelClose" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
           </div>
         </div>
@@ -541,9 +541,6 @@
           <div id="pulseInputArea">
             <textarea id="pulseTextArea" placeholder="Type your idea or a correction…"></textarea>
             <div id="pulseActionRow">
-              <button id="pulseMicButton" aria-label="Hold to talk">
-                <span class="material-symbols-outlined">mic</span>
-              </button>
               <button id="pulseVoiceButton" type="button" aria-label="Hands-free voice" aria-pressed="false" style="font-size:12px;font-weight:600;padding:6px 12px;border-radius:999px;cursor:pointer;background:#fff;border:1px solid #E9E9EF;">Voice</button>
               <button id="pulseSendButton">Send</button>
             </div>
@@ -800,25 +797,15 @@
       if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) document.getElementById('pulseSendButton').click();
     });
 
-    // Real hold-to-talk, same tested recording session used all night
-    const micBtn = document.getElementById('pulseMicButton');
+    // THE one microphone in the panel (top-right of the header). Hold it and let go to send, or tap, talk, tap again to send.
+    // (A second mic next to Send was removed 2026-10-13, Bug MM: two mics confused people.)
     document.getElementById('pulseVoiceButton').addEventListener('click', toggleHandsFree);
-    holdToTalk(micBtn, {
-      onPress: stopHandsFree, // one microphone user at a time
-      onStart: (session) => { activeRecording = session; setState('recording'); micBtn.classList.add('listening'); },
-      onRelease: () => { activeRecording = null; micBtn.classList.remove('listening'); },
-      onResult: (transcript) => { setState('idle'); if (transcript) sendCorrection(transcript); },
-      onError: (msg) => { logStatus(msg); setState('idle'); },
-      onUnavailable: (msg) => logStatus(msg)
-    });
-
-    // Tap-to-talk mic in the panel's top-right corner: tap to start listening, tap again to stop and send. Same recording
-    // session and Deepgram transcription as the ball's hold-to-talk (one microphone user at a time).
     const floatMic = document.getElementById('pulseFloatMic');
     const setFloatMic = (on) => { floatMic.classList.toggle('listening', on); floatMic.setAttribute('aria-pressed', on ? 'true' : 'false'); };
-    tapToTalk(floatMic, {
-      onPress: stopHandsFree,
-      onStart: (session) => { activeRecording = session; setState('recording'); setFloatMic(true); logStatus('Listening… tap the mic again when you are done.'); },
+    holdToTalk(floatMic, {
+      onPress: stopHandsFree, // one microphone user at a time
+      onStart: (session) => { activeRecording = session; setState('recording'); setFloatMic(true); logStatus('Listening… let go when you are done (or, if you tapped, tap the mic again).'); },
+      onTapMode: () => logStatus('Listening… tap the mic again when you are done.'),
       onRelease: () => { activeRecording = null; setFloatMic(false); },
       onResult: (transcript) => { setState('idle'); if (transcript) sendCorrection(transcript); },
       onError: (msg) => { logStatus(msg); setState('idle'); },
