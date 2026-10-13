@@ -36,13 +36,22 @@ Rules:
 - Preserve all existing content and structure that isn't directly related to image placement.
 - Use proper alt text describing what the image actually shows.`;
 
+// Said once per server run (not per photo) so the logs show WHY photos are missing without flooding them (Bug SS/TT:
+// a hero came out with no photo and nothing said which provider failed or why).
+const warnedOnce = new Set();
+function warnOnce(key, message) {
+  if (warnedOnce.has(key)) return;
+  warnedOnce.add(key);
+  console.warn(`[image-bot] ${message}`);
+}
+
 async function searchUnsplash(query) {
   const key = process.env.UNSPLASH_ACCESS_KEY;
-  if (!key) return null;
+  if (!key) { warnOnce("unsplash-key", "UNSPLASH_ACCESS_KEY is not set on this server, so Unsplash is skipped."); return null; }
   const res = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1`, {
     headers: { Authorization: `Client-ID ${key}` }
   });
-  if (!res.ok) return null;
+  if (!res.ok) { warnOnce(`unsplash-${res.status}`, `Unsplash answered HTTP ${res.status} (check UNSPLASH_ACCESS_KEY and its rate limit).`); return null; }
   const data = await res.json();
   const photo = data.results?.[0];
   return photo ? { url: photo.urls.regular, credit: `Photo by ${photo.user.name} on Unsplash`, provider: "unsplash" } : null;
@@ -67,10 +76,11 @@ async function storeRemoteImage(url, folder = "stock") {
 
 async function searchPixabay(query) {
   const key = process.env.PIXABAY_API_KEY;
-  if (!key || !String(query || "").trim()) return null;
+  if (!key) { warnOnce("pixabay-key", "PIXABAY_API_KEY is not set on this server, so Pixabay is skipped (it is the first and best free photo source)."); return null; }
+  if (!String(query || "").trim()) return null;
   const q = encodeURIComponent(String(query).slice(0, 100)); // Pixabay's limit
   const res = await fetch(`https://pixabay.com/api/?key=${key}&q=${q}&per_page=3&image_type=photo&orientation=horizontal&safesearch=true`);
-  if (!res.ok) return null;
+  if (!res.ok) { warnOnce(`pixabay-${res.status}`, `Pixabay answered HTTP ${res.status} (check PIXABAY_API_KEY and its rate limit).`); return null; }
   const data = await res.json();
   const photo = data.hits?.[0];
   if (!photo) return null;
@@ -98,7 +108,7 @@ async function searchOpenverse(query) {
   if (!String(query || "").trim()) return null;
   const q = encodeURIComponent(String(query).slice(0, 100));
   const res = await fetch(`https://api.openverse.org/v1/images/?q=${q}&license=cc0,pdm&size=large&mature=false&page_size=8`).catch(() => null);
-  if (!res || !res.ok) return null;
+  if (!res || !res.ok) { warnOnce(`openverse-${res ? res.status : "net"}`, `Openverse ${res ? "answered HTTP " + res.status : "could not be reached"}.`); return null; }
   const data = await res.json().catch(() => ({}));
   // The query already asks for CC0 / public domain; this holds even if the API ever answers with another licence.
   const photo = (data.results || []).find((p) => p.url && (p.width || 0) >= OPENVERSE_MIN_WIDTH && /^(cc0|pdm)$/i.test(String(p.license || "")));
@@ -113,21 +123,46 @@ async function searchOpenverse(query) {
   }
 }
 
+const FILLER = new Set("a an the of in on at for and or with by to from is are be being very real photo image picture showing shows close up closeup view".split(" "));
+
+/** The 3 most meaningful words of a long brief ("volunteer cuddling a rescued dog at the shelter" -> "volunteer cuddling rescued"), for a second try. */
+function broaden(query) {
+  const words = String(query || "").toLowerCase().replace(/[^\p{L}\p{N}\s'-]/gu, " ").split(/\s+/).filter((w) => w.length > 2 && !FILLER.has(w));
+  return words.slice(0, 3).join(" ");
+}
+
 /**
  * Tries providers in order until one returns a result. Set
  * IMAGE_PROVIDER_ORDER (comma-separated: pixabay,openverse,unsplash) to
  * change priority — defaults to that order.
+ * One provider that throws (a network error) no longer ends the search: the next one is tried. If the full brief finds
+ * nothing, a shorter version of it is tried before giving up, and a miss is logged with every provider's outcome.
  */
 async function searchImage(query) {
   const order = (process.env.IMAGE_PROVIDER_ORDER || "pixabay,openverse,unsplash").split(",").map((s) => s.trim());
   const providers = { unsplash: searchUnsplash, pixabay: searchPixabay, openverse: searchOpenverse };
-  for (const name of order) {
-    const fn = providers[name];
-    if (!fn) continue;
-    const result = await fn(query);
-    if (result) return result;
+  const tried = [];
+  const queries = [...new Set([String(query || "").trim(), broaden(query)].filter(Boolean))];
+  for (const q of queries) {
+    for (const name of order) {
+      const fn = providers[name];
+      if (!fn) continue;
+      try {
+        const result = await fn(q);
+        if (result) return result;
+        tried.push(`${name}("${q.slice(0, 40)}"): no usable photo`);
+      } catch (err) {
+        tried.push(`${name}("${q.slice(0, 40)}"): error ${err && err.message}`);
+      }
+    }
   }
+  console.warn(`[image-bot] no photo for "${String(query || "").slice(0, 80)}": ${tried.join("; ") || "no provider is set up"}`);
   return null;
+}
+
+/** Which free photo sources this server can use right now (keys present). Openverse needs no key. For logs and honest messages. */
+function photoSources() {
+  return { pixabay: !!process.env.PIXABAY_API_KEY, openverse: true, unsplash: !!process.env.UNSPLASH_ACCESS_KEY };
 }
 
 async function enhanceWithImages(html, businessContext) {
@@ -437,5 +472,5 @@ async function generateFalImageUrl(description, { model = "dev", aspectRatio = "
   return { url: await storeRemoteImage(image.url, "generated"), cost: Math.round(megapixels * m.perMegapixel * 1000) / 1000, model: m.label };
 }
 
-module.exports = { enhanceWithImages, searchImage, searchOpenverse, searchVideo, pickVideoFile, generateFluxImageUrl, generateFalImageUrl, falAvailable, FAL_MODELS, generateCustomImage, generateImageWithGemini, generateImage, generateImageUrl, _resetFalPause: () => { falPausedUntil = 0; } };
+module.exports = { enhanceWithImages, searchImage, photoSources, broaden, searchOpenverse, searchVideo, pickVideoFile, generateFluxImageUrl, generateFalImageUrl, falAvailable, FAL_MODELS, generateCustomImage, generateImageWithGemini, generateImage, generateImageUrl, _resetFalPause: () => { falPausedUntil = 0; } };
 
