@@ -103,10 +103,10 @@ test("no photos found: the page still ships with no broken images", async () => 
   for (const v of out.variants) assert.doesNotMatch(v.html, /IMG_\d/);
 });
 
-test("the flag: off by default, on only for exactly 1", () => {
-  assert.equal(L.enabled({}), false);
+test("the flag: on by default, off only for exactly 0", () => {
+  assert.equal(L.enabled({}), true);
   assert.equal(L.enabled({ SECTION_LIBRARY: "1" }), true);
-  assert.equal(L.enabled({ SECTION_LIBRARY: "true" }), false);
+  assert.equal(L.enabled({ SECTION_LIBRARY: "0" }), false);
 });
 
 test("server wiring: both routes go through the flagged helper, the old generator is the fallback, select keeps the site", () => {

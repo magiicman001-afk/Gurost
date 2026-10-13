@@ -22,11 +22,12 @@ function contentFor(p, over = {}) {
 }
 const build = (p, extra = {}) => A.assemble({ palette: p, content: contentFor(p), now: NOW, ...extra });
 
-test("the flag is off unless SECTION_LIBRARY is exactly 1", () => {
-  assert.equal(A.enabled({}), false);
-  assert.equal(A.enabled({ SECTION_LIBRARY: "0" }), false);
-  assert.equal(A.enabled({ SECTION_LIBRARY: "true" }), false);
+test("the flag is on unless SECTION_LIBRARY is exactly 0 (a missing variable keeps the library on)", () => {
+  assert.equal(A.enabled({}), true);
   assert.equal(A.enabled({ SECTION_LIBRARY: "1" }), true);
+  assert.equal(A.enabled({ SECTION_LIBRARY: "" }), true);
+  assert.equal(A.enabled({ SECTION_LIBRARY: "0" }), false);
+  assert.equal(A.enabled({ SECTION_LIBRARY: " 0 " }), false);
 });
 
 for (const p of PALETTES)
