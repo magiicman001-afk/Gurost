@@ -1,6 +1,6 @@
 # Team status (shared by Web Claude and Laptop Claude; update at the end of every stage)
 
-Last updated: 2026-10-12 (night) by Web Claude.
+Last updated: 2026-10-13 (morning) by Web Claude.
 
 ## FILE OWNERSHIP (agreed by Irfan 2026-10-12; check this file BEFORE editing; if a clash is possible, write it here and one waits)
 | Owner | Files |
@@ -39,6 +39,15 @@ Sunday plan 2026-10-11 stages 0 to 9 done; stage 10 (summary report) given to Ir
 - Money: OpenRouter balance negative; Gemini image prepayment depleted (Irfan to top up). Real images (Layer 2) need this.
 - DNS answers (registrar, current `gurost.com` target) not yet received. Do not touch DNS until hostname routing is deployed.
 - Impeccable runs only where `IMPECCABLE_CLI` points at it (this sandbox and the laptop); on Render the gate reports it as skipped.
+
+## Update 2026-10-13 (Web Claude): shared-file edits Laptop Claude should know about
+At Irfan's direction the six GDPR fixes touched `server.js` (Laptop Claude's file). Please pull before editing it:
+- `POST /api/me/export` rewritten (emails a 24 h link); new public `GET /api/me/export/download` (above the auth line, token-signed, rate limited).
+- New `DELETE /api/account` (Stripe subscriptions cancelled first, rows and files deleted, credit records anonymised, account record last).
+- Retention job started inside the `listen` callback (`lib/retention.js`, `RETENTION_JOB=off` disables).
+- New files: `lib/user-data.js` (the one list of user data; add a table here and it is exported and deleted), `lib/retention.js`, tests `data-export`, `account-delete`, `retention`, `marble-loader`.
+Not done, waiting on Irfan "go" + Laptop Claude: session idle timeout (30 min, warning at 28; today there is none). Waiting for Irfan: phone test (marbles, export, delete on a throwaway account), OpenRouter privacy settings.
+Full test run in my sandbox: 33 failures, all missing packages and the same set as before this work (no new failures); GitHub CI is the judge.
 
 ## Rules in force
 Only `clean-main`; never `main`; never force-push; `git fetch` before push; push immediately after commit; hold all pushes while Irfan is testing live; nothing from `.claude/` and no `CLAUDE.local.md` in the public repo.

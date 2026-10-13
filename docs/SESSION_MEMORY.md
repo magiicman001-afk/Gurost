@@ -3,6 +3,14 @@
 Newest session first. Every session adds an entry: what was done, what was decided, what changed, what's next.
 Read this and `CLAUDE.md` before starting work. `git fetch` first and check what the other Claude pushed.
 
+## Session 2026-10-13 (Tuesday): GDPR fixes, marbles, specs (Web Claude)
+- **Done and pushed:** GDPR security-spec section (`319ec83`); six fixes: policy `c3cd553`, export `cc9101f`+`4e652a9`, delete `2766a20`+`11430ab`, retention `426ce36`, rights `7b02f8e`, AI data flow `3f9fb7c`; idle-suspension spec `bc46162`; free AI tools spec `5c6c73c`; marbles `80658ce`, `6c639d6`, `3aa5270`, `98d8efe`.
+- **Findings:** live database has 39 tables and no foreign keys to the user, so deletion needs the explicit list in `lib/user-data.js`; the policy's provider list did not match the code (rebuilt); export only held the profile (now a full ZIP); launched sites are frozen rows, so idle suspension only matters for deployed backends; several tools in the free-AI list were mis-described (checked, spec corrected); the AI gateway sends no ids but sets no provider data options.
+- **Corrections I made to the research list:** MOVA is Apache-2.0; TRELLIS.2 needs 24 GB; benchmark claims are the developers'; AssetFurnace not found; the 10-second video cost has no basis.
+- **Not verified live:** everything above (export, delete, retention, marbles). Irfan is testing on his phone.
+- **Waiting:** Irfan's phone test; his "go" for the session idle timeout (needs Laptop Claude); OpenRouter privacy settings; adviser review of the policy.
+- **Next after the phone test:** fix what it finds, then premium pipeline polish.
+
 ## Session 2026-10-12 (Monday): security week 1, admin help, plans (Web Claude)
 - **Done and pushed (hashes in `git log`):** security week 1 (log redaction, XSS scanner, input validation, rate-limit table, secret scanner + history allowlist, pinned dependencies); admin Help and Guide (`6bb151c` to `03ebe82`); `docs/HOW_GUROST_WORKS.md`; CI made readable (annotations) and green except the dependency audit (handed to Laptop Claude; aislop since updated by him); all GitHub repos private + test (`0dc0909`); plans: `WEEK_2_SECURITY_PLAN.md`, `PREMIUM_PIPELINE_POLISH_PLAN.md`, `APP_BUILDER_STATUS.md`, `MOBILE_APP_ROADMAP.md`; premium preview phone fix in the generator (`9078e87`); file ownership rules in `TEAM_STATUS.md`.
 - **Decided (Irfan):** no Flutter/Swift/Kotlin; mobile order PWA, Android, iPhone (Phase 2); Week 2 security waits for a green pipeline and is built by Laptop Claude; customer code in the owner's GitHub is a Phase 2 gap.

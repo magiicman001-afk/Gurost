@@ -156,6 +156,12 @@ If anything fails: `git revert` the update commit (small, logged) and write the 
   (GSAP + Lenis + React Bits) and industry design systems the model assembles from. Research
   and blueprint first; no code until the blueprint is approved.
 
+- 2026-10-13: marble build animation (`public/shared/marble-loader.js`, `docs/MARBLE_PREVIEW_ANIMATION_SPEC.md`, commits `80658ce`, `6c639d6`, `3aa5270`, `98d8efe`)
+  runs over the Website Builder live preview while a build runs; eight bots, each mostly its own colour with one accent ribbon. Tested in a browser at 375px
+  and on the real page with the network stubbed; NOT yet seen on Irfan's phone (he is checking). App Builder waits for the priority rule.
+- Session idle timeout: NOT built. Today there is none (15-minute cookie renews while active, 30-day fixed session). Irfan confirmed 30 minutes with a warning at 28.
+  It touches Laptop Claude's session module plus several files, so it waits for Irfan's "go" and Laptop Claude (migration for a last-active column; `user_sessions` table does not exist yet in the live database).
+
 ## Known bugs (open)
 - Bug P: FIXED (`9f42f6c`, `0dbec59`): 8 individual bots, each with its own avatar and name.
 - Bug BB: FIXED (`2008b66`): the preview page's sticky controls covered the section on phones.
@@ -189,6 +195,7 @@ If anything fails: `git revert` the update commit (small, logged) and write the 
 - `docs/TOOL_STACK_REVIEW.md` - the 20 tools and the 6 active ones.
 - `docs/INSFORGE_INTEGRATION_PLAN.md` - Phase 2 backend (after the Website Builder launch).
 - `docs/ADMIN_AREA_SPEC.md` - Admin Area: PARTLY BUILT (roles, dashboard, team, ops, Help and Guide: see the status line at the top of the spec); weekly report, email-plus-key sign-in and TOTP not built.
+- `docs/PRIVACY_POLICY.md` (NEEDS LEGAL REVIEW), `docs/AI_DATA_FLOW.md`, `docs/MARBLE_PREVIEW_ANIMATION_SPEC.md`; roadmap only, not built: `docs/IDLE_SITE_SUSPENSION_SPEC.md` (real target is deployed App Builder backends; build after ~500 live sites and a paid tier), `docs/FREE_AI_TOOLS.md` (GPU tools for images, 3D, video; Phase 2, after Stripe; several rows unchecked).
 - `docs/ADMIN_GUIDE_SPEC.md`, `docs/WEEK_2_SECURITY_PLAN.md`, `docs/PREMIUM_PIPELINE_SPEC.md` + `_POLISH_PLAN.md`, `docs/DESIGN_MEMORY_SPEC.md`, `docs/ESCALATION_HIERARCHY_SPEC.md`, `docs/APP_BUILDER_STATUS.md`, `docs/MOBILE_APP_ROADMAP.md`, `docs/HOW_GUROST_WORKS.md` (master reference), `docs/TEAM_STATUS.md` (file ownership: read before editing).
 
 ## Verified live — 2026-09-30 (commit dcab3d1)
@@ -233,16 +240,14 @@ If anything fails: `git revert` the update commit (small, logged) and write the 
   tier. Parked.
 - Amend Website could offer the industry palette as an optional audit fix.
 
-## Before launch (must do — none of this is built yet)
-- Privacy policy: add a line about audit rows (user id + IP address kept in
-  `business_assistant_audit`). The "Suggestions" paragraph is already in
-  section 11 (T7b); the audit-rows line is NOT yet in the policy.
-- "Delete my account data" route (GDPR erasure) must clear every user row:
-  `user_bot_conversations`, `user_bot_memory`, `user_memory_settings`,
-  `business_assistant_audit`, `proactive_suggestions`,
-  `assistant_pending_actions`, plus projects and all other user data.
-- A qualified adviser must review the privacy policy (IP addresses count as
-  personal data).
+## Before launch (must do; GDPR items updated 2026-10-13)
+- GDPR (2026-10-13, Irfan's six fixes, all pushed, NOT verified live): privacy policy rebuilt from the code (`docs/PRIVACY_POLICY.md`, `public/privacy.html`,
+  `c3cd553`, `7b02f8e`, `3f9fb7c`); complete export ZIP with 24 h link (`cc9101f`); `DELETE /api/account` + Settings button (`2766a20`, `11430ab`);
+  daily retention job (`426ce36`); AI data-flow audit (`docs/AI_DATA_FLOW.md`). One list of user data in `lib/user-data.js` drives export AND deletion.
+  STILL OPEN: a qualified adviser must review the policy (IP addresses count as personal data); Irfan: OpenRouter account privacy settings and the
+  `data_collection: "deny"` decision (`docs/AI_DATA_FLOW.md` section 4; a gateway change, Laptop Claude first); the live database lacks many tables
+  (e.g. `user_sessions`), the code skips missing tables; support messages (3 years) have no cleanup job; one prompt snippet is logged in `bots/video-bot.js`;
+  every new provider must be added to the policy and `docs/AI_DATA_FLOW.md` BEFORE it is switched on.
 - Per-user GitHub login (OAuth): GitHub saves use one server `GITHUB_TOKEN`, so
   every user's project lands in the owner's GitHub account. Must be per-user
   before real customers.
