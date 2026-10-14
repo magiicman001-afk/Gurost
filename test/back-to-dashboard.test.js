@@ -17,8 +17,13 @@ test("the script only acts when a login exists, links to the dashboard and sets 
   const src = read("shared/back-to-dashboard.js");
   assert.match(src, /isLoggedIn\(\)/);
   assert.match(src, /back\.href = 'dashboard\.html'/);
-  assert.match(src, /Back to Dashboard/);
+  assert.match(src, /\\u2190 Dashboard/);
   assert.ok(!/innerHTML|insertAdjacentHTML|document\.write|eval\(/.test(src), "no HTML injection");
+});
+
+test("the signed-in check also works on a page without the API client (cookie flag)", () => {
+  const src = read("shared/back-to-dashboard.js");
+  assert.match(src, /gurost_li=1/);
 });
 
 test("in a fake page: signed in swaps the two links, signed out changes nothing, and it runs only once", () => {
@@ -37,8 +42,8 @@ test("in a fake page: signed in swaps the two links, signed out changes nothing,
     };
     const document = {
       readyState: "complete",
-      querySelector: (s) => (s === "header.gurost-chrome" ? header : null),
-      createElement: () => { const el = { attrs: {}, setAttribute(k, v) { this.attrs[k] = v; } }; made.push(el); return el; },
+      querySelector: (s) => (s === "header" ? header : null),
+      createElement: () => { const el = { attrs: {}, style: {}, setAttribute(k, v) { this.attrs[k] = v; } }; made.push(el); return el; },
     };
     const window = { GurostAPI: { isLoggedIn: () => loggedIn } };
     new Function("window", "document", src)(window, document);
@@ -48,7 +53,8 @@ test("in a fake page: signed in swaps the two links, signed out changes nothing,
   assert.strictEqual(on.login.removed, true, "Log in link removed");
   assert.strictEqual(on.start.replacedWith, on.made[0], "Start Building replaced by the back link");
   assert.strictEqual(on.made[0].href, "dashboard.html");
-  assert.match(on.made[0].textContent, /Back to Dashboard/);
+  assert.strictEqual(on.made[0].textContent, "\u2190 Dashboard");
+  assert.strictEqual(on.made[0].style.fontSize, "13px", "one fixed size, set inline");
   const off = makeDom(false);
   assert.strictEqual(off.login.removed, false);
   assert.strictEqual(off.start.replacedWith, null);
