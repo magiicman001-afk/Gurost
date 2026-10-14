@@ -8,6 +8,7 @@ applies: the Website Builder launches first. Related: `docs/FREE_AI_TOOLS.md` (t
 
 **Phase 1 (now)**
 - Build animation v2 (marble staircase, night to day): built 2026-10-14; see `docs/MARBLE_PREVIEW_ANIMATION_SPEC.md`. Awaiting a look on Irfan's phone.
+- Premium template library: 6 bakery templates built 2026-10-14 (`docs/PREMIUM_TEMPLATE_LIBRARY.md`); next are the layout families, industry packs, picker and the media catalog.
 - Website Builder complete.
 - Free tier: Pixabay (plus Openverse and Unsplash fallbacks) and the section library.
 - Paid tier: fal.ai images, once the account is topped up.
