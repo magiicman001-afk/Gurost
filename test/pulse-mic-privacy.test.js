@@ -37,7 +37,7 @@ test("the microphone goes off when the page is hidden (phone locked, other tab) 
 });
 
 test("a hold-to-talk recording can be cancelled: microphone off and the audio thrown away, never sent", () => {
-  const cancel = body(voice, "cancel: () => {", "stop: () =>");
+  const cancel = body(voice, "cancel: () => {", "stop: (onMicOff) =>");
   assert.match(cancel, /chunks\.length = 0;/);
   assert.match(cancel, /stream\.getTracks\(\)\.forEach\(\(t\) => t\.stop\(\)\);/);
   assert.doesNotMatch(cancel, /fetch|transcribe/);

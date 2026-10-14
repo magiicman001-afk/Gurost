@@ -56,7 +56,7 @@ test("a tap starts listening; the next tap stops and sends", async () => {
   assert.ok(h.events.includes("onTapMode"));
   await wait(650);                     // talking
   r.down(); await wait(5); r.up();     // the stop tap
-  await wait(50);
+  await wait(400);                    // the recording runs a 300 ms tail after the stop tap
   assert.ok(h.events.includes("onResult:make the header blue"), h.events.join(","));
   assert.equal(r.log.transcribed, 1);
   assert.ok(!h.events.includes("onLongPress"));
@@ -92,6 +92,6 @@ test("pages without hands-free (Dashboard, Assistant) keep hold-to-talk: hold, s
   delete h.onLongPress; delete h.onLongPressReady;
   r.ctx.holdToTalk(r.button, h);
   r.down(); await wait(800); r.up();
-  await wait(50);
+  await wait(400);                    // 300 ms tail after letting go
   assert.ok(h.events.includes("onResult:make the header blue"), h.events.join(","));
 });

@@ -204,6 +204,7 @@ function prefetchVoiceStatus() {
 }
 
 const MIN_RECORDING_MS = 600; // a shorter recording is only a header with nothing in it, so stop() keeps listening until this is reached
+const TAIL_MS = 300; // keep recording this long after the finger lifts: phones cut the last word off otherwise
 const LONG_PRESS_MS = 700; // with handlers.onLongPress (Pulse): a press this long switches to hands-free when let go
 const TAP_MS = 450; // a press shorter than this is a TAP: recording carries on until the next tap (a longer press is a HOLD: let go to send)
 
@@ -274,12 +275,14 @@ function startRecordingSession() {
           try { if (recorder.state !== "inactive") recorder.stop(); } catch {}
           stream.getTracks().forEach((t) => t.stop());
         },
-        stop: () =>
+        // onMicOff (optional) runs the moment the microphone has really stopped, before the transcription starts.
+        stop: (onMicOff) =>
           new Promise((resolveStop, rejectStop) => {
             recorder.addEventListener(
               "stop",
               async () => {
                 stream.getTracks().forEach((t) => t.stop());
+                try { if (onMicOff) onMicOff(); } catch {}
                 try {
                   if (!chunks.length) { resolveStop(""); return; } // nothing was recorded (released at once)
                   let blob = new Blob(chunks, { type: mimeType });
@@ -309,7 +312,7 @@ function startRecordingSession() {
             // A recording shorter than MIN_RECORDING_MS is a header with nothing in it. Instead of failing (the old "too short"
             // message, seen on a phone when the microphone was slow to start), keep listening until the minimum is reached.
             const wait = Math.max(0, MIN_RECORDING_MS - (Date.now() - startedAt));
-            setTimeout(() => { if (recorder.state !== "inactive") recorder.stop(); }, wait);
+            setTimeout(() => { if (recorder.state !== "inactive") recorder.stop(); }, wait + TAIL_MS);
           })
       });
     } catch (err) {
@@ -356,7 +359,7 @@ function holdToTalk(button, handlers = {}) {
     session = null;
     tapMode = false;
     handlers.onRelease?.();
-    s.stop().then((t) => handlers.onResult?.(t || "")).catch((err) => handlers.onError?.(err && err.message ? err.message : "Couldn't transcribe. You can type instead."));
+    s.stop(handlers.onMicOff).then((t) => handlers.onResult?.(t || "")).catch((err) => handlers.onError?.(err && err.message ? err.message : "Couldn't transcribe. You can type instead."));
   }
 
   function press() {
@@ -438,7 +441,7 @@ function tapToTalk(button, handlers = {}) {
   function finish(s) {
     session = null;
     handlers.onRelease?.();
-    s.stop().then((t) => handlers.onResult?.(t || "")).catch((err) => handlers.onError?.(err && err.message ? err.message : "Couldn't transcribe. You can type instead."));
+    s.stop(handlers.onMicOff).then((t) => handlers.onResult?.(t || "")).catch((err) => handlers.onError?.(err && err.message ? err.message : "Couldn't transcribe. You can type instead."));
   }
 
   function tap() {
