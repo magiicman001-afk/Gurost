@@ -59,6 +59,7 @@ const adminGuide = require("./lib/admin-guide");
 const adminOps = require("./lib/admin-ops");
 const adminOpsActions = require("./lib/admin-ops-actions");
 const sandboxLink = require("./lib/sandbox-link");
+const templateSite = require("./lib/template-site");
 const publishedSites = require("./lib/published-sites");
 const pulseBrain = require("./bots/pulse-brain");
 const { normalizeBusinessInfo, describeBusinessInfo, applyBusinessInfoUpdate } = require("./lib/business-info");
@@ -521,12 +522,34 @@ app.get(/^\/builder\/sandbox\/([0-9a-f-]{36})\/([\w-]+)(\/.*)?$/i, async (req, r
   let project = PROJECTS.get(projectId);
   if (!project) project = await projectState.hydrateProjectIfMissing(projectId).catch(() => null);
   if (!project) return res.status(404).type("html").send("<!doctype html><title>Not found</title><p>Project not found.</p>");
+  if (project.templateSite) return sendTemplatePage(res, templateSite.respond(project.templateSite, rel || "/", { formEndpoint: `${process.env.PUBLIC_URL || "https://gurost.onrender.com"}/api/site-forms/${projectId}` }), { cacheAssets: true });
   const out = sandboxLink.serve(project, rel || "/", {
     base: `/builder/sandbox/${projectId}/${token}`,
     formEndpoint: `${process.env.PUBLIC_URL || "https://gurost.onrender.com"}/api/site-forms/${projectId}`,
     buildSite,
   });
   res.status(out.status).type(out.type).send(out.body);
+});
+
+// Template library (lib/template-site.js). A page is filled on every request from the committed template files.
+// Files (fonts, pictures, video) go out with sendFile so video can seek on a phone. Fonts carry an open CORS header because
+// the preview frames are sandboxed (their origin is "null") and a browser asks for fonts with CORS.
+function sendTemplatePage(res, out, { cacheAssets = false } = {}) {
+  if (out.file) {
+    if (out.font) res.set("Access-Control-Allow-Origin", "*");
+    if (cacheAssets) res.set("Cache-Control", "public, max-age=3600");
+    return res.sendFile(out.rel, { root: out.root, dotfiles: "deny", cacheControl: false }, (err) => { if (err && !res.headersSent) res.status(404).end(); });
+  }
+  return res.status(out.status).type(out.type).send(out.body);
+}
+const templatePreviewLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 1500, standardHeaders: true, legacyHeaders: false,
+  message: "Too many preview requests. Please wait a few minutes." });
+// The picker's live preview: a template filled with its own example details. Public on purpose (no customer data is in it).
+app.get(/^\/templates-preview\/([a-z][a-z0-9-]{1,30})\/([a-z][a-z0-9-]{1,30})(\/.*)?$/, templatePreviewLimiter, (req, res) => {
+  const [pack, style, rel] = [req.params[0], req.params[1], req.params[2]];
+  if (rel === undefined) return res.redirect(301, `/templates-preview/${pack}/${style}/`);
+  res.set({ "X-Robots-Tag": "noindex, nofollow", "Cache-Control": "no-store" });
+  sendTemplatePage(res, templateSite.respondDemo(pack, style, rel), { cacheAssets: true });
 });
 
 app.post("/api/site-forms/:projectId", siteFormLimiter, async (req, res) => {
@@ -1305,6 +1328,38 @@ app.post("/api/templates/:id/use", (req, res) => {
   persistInBackground(projectId, project);
 
   res.json({ projectId });
+});
+
+// ---- Template library picker (lib/template-site.js): pick an industry and style, type the business details, see it in the builder.
+// Publish, download and GitHub save do not know about template sites yet: such a project has no currentHtml, so those
+// routes answer "nothing built" instead of shipping a half site.
+app.get("/api/template-sites", (req, res) => res.json(templateSite.catalog()));
+
+app.post("/api/template-sites", security.rejectUnknownFields(["pack", "style", "values"]), (req, res) => {
+  const { pack, style, values } = req.body || {};
+  if (typeof pack !== "string" || typeof style !== "string" || !templateSite.has(pack, style)) return res.status(400).json({ error: "Pick an industry and a style from the list." });
+  const cleaned = templateSite.cleanValues(pack, values);
+  if (!cleaned.ok) return res.status(400).json({ error: "Some details need a second look.", fields: cleaned.errors });
+  const site = templateSite.makeSite(pack, style, cleaned.values);
+  const projectId = crypto.randomUUID();
+  const project = newProject(`${cleaned.values.business_name || "My business"} (${pack} template, ${style})`, req.user.id);
+  project.type = "website";
+  project.templateSite = site;
+  transition(project, "PLANNING");
+  transition(project, "BUILDING");
+  transition(project, "DONE");
+  PROJECTS.set(projectId, project);
+  persistInBackground(projectId, project);
+  res.json({ projectId });
+});
+
+// A draft link (12 hours) for a template project, like the sandbox link of a built site.
+app.post("/api/project/:id/template-link", (req, res) => {
+  const project = getProject(req.params.id, req, res);
+  if (!project) return;
+  if (!project.templateSite) return res.status(400).json({ error: "This project is not a template site." });
+  const token = sandboxLink.makeToken(req.params.id);
+  res.json({ url: `/builder/sandbox/${req.params.id}/${token}/`, expiresInHours: sandboxLink.TTL_MS / 3600000 });
 });
 
 // ==== REAL PROFILE / SETTINGS / CONTACT / BILLING PORTAL ROUTES ====

@@ -173,6 +173,7 @@ if (window.self !== window.top) { window.stop(); document.documentElement.innerH
 let projectId = null;
 BuildLogUI.mount({ host: document.getElementById('headerActions'), getProjectId: () => projectId, call: GurostAPI.call });
 let currentHtml = null;
+let templateMode = false; // a template-library site: shown from its own pages (draft link), not from currentHtml
 
 // Build animation: eight bot marbles roll over the preview while a build runs (shared/marble-steps.js, spec
 // docs/MARBLE_PREVIEW_ANIMATION_SPEC.md). Hidden while the design picker or code is on screen; every 10 s it fades to
@@ -975,6 +976,7 @@ async function sendCorrection(instruction) {
   // real happened. Throwing here lets the real failure surface
   // honestly instead.
   if (!projectId) throw new Error("No active project - generate a website first.");
+  if (templateMode) throw new Error("Editing a template site with Pulse is not ready yet. Your template is showing your details as typed.");
   if (!currentHtml) throw new Error("Nothing has been built yet to correct.");
   if (!instruction) throw new Error("No instruction given.");
 
@@ -1007,6 +1009,26 @@ async function sendCorrection(instruction) {
   }
 }
 
+// A site made from the template library has real pages and files (css, fonts, pictures, a looping video), so it is shown
+// from its draft link, like a published site, instead of as one srcdoc page.
+async function showTemplateSite() {
+  clearLivePreview();
+  document.getElementById('previewEmptyState').style.display = 'none';
+  const tabs = document.getElementById('pageTabs');
+  tabs.classList.add('hidden');
+  tabs.classList.remove('flex');
+  const frame = document.getElementById('previewFrame');
+  try {
+    const link = await GurostAPI.call(`/api/project/${projectId}/template-link`, { method: 'POST' });
+    frame.removeAttribute('srcdoc');
+    void frame.offsetWidth;
+    frame.src = link.url;
+    logBot('Builder', 'Your template is filled with your details. Tap around the preview to see your pages.', 'ok');
+  } catch (err) {
+    logBot('Builder', `Could not show the template: ${err.message}`, 'fail');
+  }
+}
+
 async function loadExistingProject(id) {
   try {
     const project = await GurostAPI.call(`/api/project/${id}`);
@@ -1016,7 +1038,10 @@ async function loadExistingProject(id) {
     // Joining late (reload, second tab) still gets the full bot log: the
     // server replays this project's recent events on connect.
     connectGenerationSocket(id);
-    if (project.currentHtml) {
+    if (project.templateSite) {
+      templateMode = true;
+      showTemplateSite();
+    } else if (project.currentHtml) {
       currentHtml = project.currentHtml;
       renderPreview(currentHtml);
     } else if (project.variants && project.variants.length) {

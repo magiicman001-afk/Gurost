@@ -47,7 +47,7 @@ const SCHEMA_VERSION = 2;
 function isBuilt(project) {
   const files = project?.appFiles;
   const hasFiles = Array.isArray(files) ? files.length > 0 : !!files && Object.keys(files).length > 0;
-  return Boolean(project?.currentHtml) || (Array.isArray(project?.variants) && project.variants.length > 0) || hasFiles;
+  return Boolean(project?.currentHtml) || Boolean(project?.templateSite) || (Array.isArray(project?.variants) && project.variants.length > 0) || hasFiles;
 }
 
 // Which real fields on a project object are worth persisting inside
@@ -84,6 +84,7 @@ function toRow(projectId, userId, project) {
       // `published` = { slug, version, publishedAt, status } for the live copy. Both survive refresh and redeploy.
       site: project.site || null,
       published: project.published || null,
+      templateSite: project.templateSite || null, // a template-library site: { pack, style, values }, rebuilt from the template files on every request
       schemaVersion: SCHEMA_VERSION,
     },
     updated_at: new Date().toISOString(),
@@ -119,6 +120,7 @@ function fromRow(row) {
     githubSave: ctx.githubSave || null,
     site: ctx.site || null,
     published: ctx.published || null,
+    templateSite: ctx.templateSite || null,
     assistantHistory: ctx.assistantHistory || [],
     pendingAssistantSuggestion: null,
     codeReview: null,

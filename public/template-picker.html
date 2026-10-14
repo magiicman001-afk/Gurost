@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pick a template - Gurost</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root { --ink:#1A1A2E; --muted:#5F6577; --line:#E5E7EB; --bg:#FFFFFF; --soft:#F6F6F9; --gold:#FEB246; --orange:#FF8C00; --err:#B42318; --focus:#1A1A2E; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; }
+  body { font-family:'Inter',system-ui,sans-serif; color:var(--ink); background:var(--bg); -webkit-text-size-adjust:100%; }
+  h1,h2 { font-family:'Montserrat','Inter',sans-serif; margin:0; text-wrap:balance; }
+  button, input { font:inherit; color:inherit; }
+  a { color:inherit; }
+  :focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+  .top { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; border-bottom:1px solid var(--line); }
+  .top a { font-size:.875rem; font-weight:600; text-decoration:none; min-height:44px; display:inline-flex; align-items:center; }
+  .wrap { max-width:1180px; margin:0 auto; padding:20px 16px 120px; }
+  h1 { font-size:1.6rem; line-height:1.15; }
+  .lead { color:var(--muted); margin:8px 0 18px; font-size:.98rem; line-height:1.5; max-width:60ch; }
+  .label { font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; font-weight:700; color:var(--muted); margin:18px 0 8px; }
+  .chips { display:flex; gap:8px; overflow-x:auto; padding:2px 2px 8px; margin:0 -16px; padding-inline:16px; scroll-snap-type:x proximity; -webkit-overflow-scrolling:touch; }
+  .chip { flex:none; min-height:44px; padding:0 16px; border-radius:999px; border:1px solid var(--line); background:#fff; font-weight:600; font-size:.9rem; cursor:pointer; white-space:nowrap; scroll-snap-align:start; }
+  .chip[aria-pressed="true"] { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .chip small { font-weight:500; opacity:.7; margin-left:6px; }
+  .stage { display:grid; gap:16px; grid-template-columns:minmax(0,1fr); }
+  .frame { position:relative; border:1px solid var(--line); border-radius:16px; overflow:hidden; background:var(--soft); height:68vh; min-height:420px; }
+  .frame iframe { position:absolute; inset:0; width:100%; height:100%; border:0; background:#fff; }
+  .frame .msg { position:absolute; inset:0; display:grid; place-items:center; color:var(--muted); font-size:.9rem; pointer-events:none; }
+  .styles { display:flex; gap:8px; overflow-x:auto; padding:2px 16px 8px; margin:0 -16px; }
+  .style { flex:none; min-height:56px; min-width:112px; text-align:left; padding:8px 14px; border-radius:12px; border:1px solid var(--line); background:#fff; cursor:pointer; }
+  .style b { display:block; font-size:.95rem; }
+  .style span { display:block; font-size:.74rem; color:var(--muted); margin-top:2px; }
+  .style[aria-pressed="true"] { border-color:var(--ink); box-shadow:inset 0 0 0 2px var(--ink); }
+  .bar { position:fixed; left:0; right:0; bottom:0; padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px)); background:rgba(255,255,255,.96); border-top:1px solid var(--line); display:flex; align-items:center; gap:12px; justify-content:space-between; z-index:5; }
+  .bar .name { font-size:.9rem; min-width:0; }
+  .bar .name b { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .bar .name span { color:var(--muted); font-size:.78rem; }
+  .btn { flex:none; min-height:48px; padding:0 22px; border:0; border-radius:999px; font-weight:700; cursor:pointer; background:linear-gradient(135deg,var(--gold),var(--orange)); color:#fff; font-size:1rem; }
+  .btn.ghost { background:#fff; color:var(--ink); border:1px solid var(--line); }
+  .btn[disabled] { opacity:.6; cursor:wait; }
+  form { display:grid; gap:14px; max-width:620px; }
+  .field { display:grid; gap:6px; }
+  .field label { font-weight:600; font-size:.92rem; }
+  .field input { min-height:48px; padding:0 14px; border:1px solid #9AA0AE; border-radius:10px; background:#fff; font-size:1rem; width:100%; }
+  .field .hint { color:var(--muted); font-size:.8rem; }
+  .field .err { color:var(--err); font-size:.85rem; font-weight:600; }
+  .field input[aria-invalid="true"] { border-color:var(--err); border-width:2px; }
+  .grid2 { display:grid; gap:14px; grid-template-columns:minmax(0,1fr); }
+  .note { background:var(--soft); border-radius:12px; padding:12px 14px; color:var(--muted); font-size:.88rem; line-height:1.45; }
+  .banner { color:var(--err); font-weight:600; margin:12px 0 4px; }
+  [hidden] { display:none !important; }
+  @media (min-width:900px) {
+    h1 { font-size:2.2rem; }
+    .wrap { padding-top:32px; }
+    .stage { grid-template-columns:260px minmax(0,1fr); align-items:start; }
+    .styles { flex-direction:column; overflow:visible; padding:0; margin:0; max-height:70vh; overflow-y:auto; }
+    .style { width:100%; }
+    .frame { height:74vh; }
+    .chips { flex-wrap:wrap; overflow:visible; margin:0; padding-inline:0; }
+    .grid2 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .bar { padding-inline:max(16px, calc((100vw - 1180px) / 2 + 16px)); }
+  }
+</style>
+</head>
+<body>
+<div class="top"><a href="templates.html">&larr; Templates</a><a href="dashboard.html">Dashboard</a></div>
+
+<main class="wrap">
+  <section id="pick">
+    <h1>Pick a template</h1>
+    <p class="lead">Choose your kind of business, tap through the styles, then add your details. You will see your own words in the site straight away.</p>
+    <div class="label" id="indLabel">Your kind of business</div>
+    <div class="chips" id="industries" role="group" aria-labelledby="indLabel"></div>
+    <div class="label" id="styLabel">Style <span id="count"></span></div>
+    <div class="stage">
+      <div class="styles" id="styles" role="group" aria-labelledby="styLabel"></div>
+      <div class="frame">
+        <iframe id="frame" title="Template preview" sandbox="allow-scripts allow-forms"></iframe>
+        <div class="msg" id="frameMsg">Loading the preview&hellip;</div>
+      </div>
+    </div>
+    <div class="bar">
+      <div class="name"><b id="barName">Choose a style</b><span id="barSub"></span></div>
+      <button class="btn" id="useBtn" type="button" disabled>Use this template</button>
+    </div>
+  </section>
+
+  <section id="details" hidden>
+    <h1>Your details</h1>
+    <p class="lead" id="detailsLead"></p>
+    <p class="note">Anything you leave blank keeps the example text, so nothing looks empty. You can fill it in later.</p>
+    <p class="banner" id="banner" role="alert" hidden></p>
+    <form id="form" novalidate></form>
+    <div class="bar">
+      <button class="btn ghost" id="backBtn" type="button">Back</button>
+      <button class="btn" id="goBtn" type="button">Show my site</button>
+    </div>
+  </section>
+</main>
+
+<script src="shared/api-client.js"></script>
+<script>
+(function () {
+  'use strict';
+  if (!GurostAPI.isLoggedIn()) { window.location.href = 'login.html'; return; }
+
+  var $ = function (id) { return document.getElementById(id); };
+  var cat = null, pack = null, style = null;
+
+  function el(tag, props, kids) {
+    var n = document.createElement(tag);
+    Object.keys(props || {}).forEach(function (k) { if (k === 'text') n.textContent = props[k]; else n.setAttribute(k, props[k]); });
+    (kids || []).forEach(function (c) { n.appendChild(c); });
+    return n;
+  }
+  function industry(id) { return cat.industries.filter(function (i) { return i.id === id; })[0]; }
+
+  function showPreview() {
+    var f = $('frame'), m = $('frameMsg');
+    m.hidden = false; m.textContent = 'Loading the preview…';
+    f.onload = function () { m.hidden = true; };
+    f.src = '/templates-preview/' + encodeURIComponent(pack) + '/' + encodeURIComponent(style) + '/';
+  }
+
+  function drawIndustries() {
+    var box = $('industries'); box.textContent = '';
+    cat.industries.forEach(function (i) {
+      var b = el('button', { type: 'button', 'class': 'chip', 'aria-pressed': String(i.id === pack) }, []);
+      b.appendChild(document.createTextNode(i.label));
+      b.appendChild(el('small', { text: String(i.styles.length) }));
+      b.addEventListener('click', function () { choose(i.id, null); });
+      box.appendChild(b);
+    });
+  }
+
+  function drawStyles() {
+    var box = $('styles'); box.textContent = '';
+    var ind = industry(pack);
+    $('count').textContent = '(' + ind.styles.length + ')';
+    ind.styles.forEach(function (s) {
+      var b = el('button', { type: 'button', 'class': 'style', 'aria-pressed': String(s.id === style) }, [
+        el('b', { text: s.name }),
+        el('span', { text: s.kind === 'special' ? 'Custom layout' : 'General layout' })
+      ]);
+      b.addEventListener('click', function () { choose(pack, s.id); });
+      box.appendChild(b);
+    });
+  }
+
+  function choose(p, s) {
+    var changedPack = p !== pack;
+    pack = p;
+    var ind = industry(pack);
+    style = s || (changedPack || !style ? ind.styles[0].id : style);
+    try { history.replaceState(null, '', '#' + pack + '/' + style); } catch (e) { /* no history: fine */ }
+    drawIndustries(); drawStyles(); showPreview();
+    $('barName').textContent = ind.label;
+    $('barSub').textContent = 'Style: ' + ind.styles.filter(function (x) { return x.id === style; })[0].name;
+    $('useBtn').disabled = false;
+  }
+
+  function drawForm() {
+    var form = $('form'); form.textContent = '';
+    $('banner').hidden = true;
+    var ind = industry(pack);
+    $('detailsLead').textContent = ind.label + ' · ' + ind.styles.filter(function (x) { return x.id === style; })[0].name;
+    var fields = cat.fields[pack];
+    var main = [], more = [];
+    fields.forEach(function (f) { (['business_name', 'tagline'].indexOf(f.name) > -1 ? main : more).push(f); });
+    function row(f) {
+      var id = 'f_' + f.name;
+      var type = f.type === 'email' ? 'email' : (f.type === 'phone' ? 'tel' : (f.type === 'url' ? 'url' : 'text'));
+      var input = el('input', { id: id, name: f.name, type: type, maxlength: String(f.max), autocomplete: f.type === 'email' ? 'email' : (f.type === 'phone' ? 'tel' : 'off'), placeholder: f.example ? 'e.g. ' + f.example : '' });
+      if (f.type === 'count' || f.type === 'year') input.setAttribute('inputmode', 'numeric');
+      if (f.required) input.setAttribute('required', '');
+      var kids = [el('label', { 'for': id, text: f.label + (f.required ? ' (needed)' : '') }), input];
+      if (f.hint) kids.push(el('div', { 'class': 'hint', text: f.hint }));
+      kids.push(el('div', { 'class': 'err', id: 'e_' + f.name, hidden: '' }));
+      return el('div', { 'class': 'field' }, kids);
+    }
+    main.forEach(function (f) { form.appendChild(row(f)); });
+    var g = el('div', { 'class': 'grid2' }, []);
+    more.forEach(function (f) { g.appendChild(row(f)); });
+    form.appendChild(g);
+  }
+
+  function showErrors(fields, message) {
+    var first = null;
+    Object.keys(fields || {}).forEach(function (name) {
+      var e = $('e_' + name), i = $('f_' + name);
+      if (!e || !i) return;
+      e.textContent = fields[name]; e.hidden = false; i.setAttribute('aria-invalid', 'true'); i.setAttribute('aria-describedby', 'e_' + name);
+      if (!first) first = i;
+    });
+    var b = $('banner'); b.textContent = message || 'Some details need a second look.'; b.hidden = false;
+    if (first) first.focus();
+  }
+
+  function clearErrors() {
+    document.querySelectorAll('#form .err').forEach(function (e) { e.hidden = true; e.textContent = ''; });
+    document.querySelectorAll('#form input').forEach(function (i) { i.removeAttribute('aria-invalid'); i.removeAttribute('aria-describedby'); });
+    $('banner').hidden = true;
+  }
+
+  $('useBtn').addEventListener('click', function () {
+    drawForm(); $('pick').hidden = true; $('details').hidden = false; window.scrollTo(0, 0);
+    var first = $('f_business_name'); if (first) first.focus({ preventScroll: true });
+  });
+  $('backBtn').addEventListener('click', function () { $('details').hidden = true; $('pick').hidden = false; });
+
+  $('goBtn').addEventListener('click', async function () {
+    clearErrors();
+    var values = {};
+    document.querySelectorAll('#form input').forEach(function (i) { var v = i.value.trim(); if (v) values[i.name] = v; });
+    if (!values.business_name) { showErrors({ business_name: 'Business name is needed.' }, 'Add your business name to continue.'); return; }
+    var btn = $('goBtn'); btn.disabled = true; btn.textContent = 'Building…';
+    try {
+      var r = await GurostAPI.call('/api/template-sites', { method: 'POST', body: { pack: pack, style: style, values: values } });
+      window.location.href = 'builder.html?projectId=' + encodeURIComponent(r.projectId);
+    } catch (err) {
+      btn.disabled = false; btn.textContent = 'Show my site';
+      showErrors(err && err.data && err.data.fields, (err && err.message) || 'Something went wrong. Please try again.');
+    }
+  });
+
+  GurostAPI.call('/api/template-sites').then(function (c) {
+    cat = c;
+    var m = /^#([a-z0-9-]+)\/([a-z0-9-]+)$/.exec(location.hash);
+    var p = m && industry(m[1]) ? m[1] : cat.industries[0].id;
+    var s = m && industry(m[1]) && industry(m[1]).styles.some(function (x) { return x.id === m[2]; }) ? m[2] : null;
+    choose(p, s);
+  }).catch(function (err) {
+    $('frameMsg').textContent = 'Could not load the templates: ' + ((err && err.message) || 'please try again.');
+  });
+})();
+</script>
+</body>
+</html>
