@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy policy · {{business_name}}</title>
+<meta name="description" content="Privacy policy">
+<meta property="og:title" content="Privacy policy · {{business_name}}">
+<meta property="og:description" content="Privacy policy">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#F2EDE3">
+<link rel="preload" href="assets/fonts/Gloock-Regular.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="stylesheet" href="assets/style.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Bakery","name":"{{json:business_name}}","description":"{{json:tagline}}","telephone":"{{json:phone}}","email":"{{json:email}}","servesCuisine":"Bakery","address":{"@type":"PostalAddress","streetAddress":"{{json:address_line1}}","addressLocality":"{{json:city}}"},"openingHours":["{{json:hours_weekdays}}"],"sameAs":["{{json:instagram_url}}"]}</script>
+</head>
+<body data-page="privacy">
+<a class="skip" href="#main">Skip to content</a><div class="topline"><div class="wrap"><span>Est. {{year_founded}}</span><span data-today>Fresh every morning</span><span>{{city}}</span></div></div>
+<header class="mast"><a href="index.html">{{business_name}}</a><p>{{tagline}}</p></header>
+<nav class="navbar" aria-label="Main"><div class="wrap"><a class="mini" href="index.html">{{business_name}}</a><a class="l" href="index.html">Home</a><a class="l" href="menu.html">Menu</a><a class="l" href="about.html">About</a><a class="l" href="contact.html">Contact</a><a class="cta" href="contact.html#preorder">Pre-order</a><button class="burger" type="button" aria-label="Menu" aria-expanded="false" data-menu-toggle><i></i></button></div></nav>
+<div class="drawer" data-menu aria-label="Menu"><a href="index.html">Home</a><a href="menu.html">Menu</a><a href="about.html">About</a><a href="contact.html">Contact</a><a href="contact.html#preorder" style="color:var(--red)">Pre-order</a></div><main id="main"><div class="wrap"><section class="phead legal" style="border:0"><span class="label red">Legal</span><h1 style="font-size:clamp(2.4rem,7vw,4.6rem)">Privacy policy</h1><div style="margin-top:2rem"><p>This page explains what {{business_name}} does with your details. It is a starting point generated with your website: please read it and replace anything that is not true for your business.</p><h2>What we collect</h2><p>Only what you type into our forms (for example your name, email, phone number and what you would like to order). We do not use advertising trackers on this website.</p><h2>Why</h2><p>To reply to you and to prepare your order. We keep it only as long as we need it.</p><h2>Your rights</h2><p>You can ask us what we hold about you, ask us to correct it or ask us to delete it. Email <a href="mailto:{{email}}">{{email}}</a>.</p></div></section></div></main><footer class="site-footer"><div class="wrap">
+<div class="fgrid">
+<div><div class="fbrand">{{business_name}}</div><p>{{tagline}}</p></div>
+<div><span class="label">Contents</span><a href="index.html">Home</a><a href="menu.html">Menu</a><a href="about.html">About</a><a href="contact.html">Contact</a></div>
+<div><span class="label">Visit</span><a href="{{maps_url}}" rel="noopener">{{address_line1}}</a><a href="{{maps_url}}" rel="noopener">{{address_line2}}</a><a href="tel:{{phone_href}}">{{phone}}</a><a href="mailto:{{email}}">{{email}}</a></div>
+<div><span class="label">Hours</span><p style="margin:0;font-style:normal;color:var(--ink)">Mon to Fri {{hours_weekdays}}<br>Sat {{hours_saturday}}<br>Sun {{hours_sunday}}</p><span class="label" style="margin-top:1rem">Follow</span><a href="{{instagram_url}}" rel="noopener">Instagram</a><a href="{{facebook_url}}" rel="noopener">Facebook</a></div>
+</div>
+<div class="fbottom"><span>© <span data-year>2026</span> {{business_name}}</span><span><a href="privacy.html">Privacy policy</a><a href="terms.html">Terms of service</a></span></div>
+</div></footer>
+<script src="assets/site.js"></script>
+<script>(function(){var n=document.querySelector(".navbar");if(!n)return;function s(){n.classList.toggle("is-stuck",window.scrollY>140)}s();window.addEventListener("scroll",s,{passive:true})})();</script></body></html>

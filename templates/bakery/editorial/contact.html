@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Contact and pre-orders · {{business_name}}</title>
+<meta name="description" content="Pre-order, ask a question or find {{business_name}}.">
+<meta property="og:title" content="Contact and pre-orders · {{business_name}}">
+<meta property="og:description" content="Pre-order, ask a question or find {{business_name}}.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#F2EDE3">
+<link rel="preload" href="assets/fonts/Gloock-Regular.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="stylesheet" href="assets/style.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Bakery","name":"{{json:business_name}}","description":"{{json:tagline}}","telephone":"{{json:phone}}","email":"{{json:email}}","servesCuisine":"Bakery","address":{"@type":"PostalAddress","streetAddress":"{{json:address_line1}}","addressLocality":"{{json:city}}"},"openingHours":["{{json:hours_weekdays}}"],"sameAs":["{{json:instagram_url}}"]}</script>
+</head>
+<body data-page="contact">
+<a class="skip" href="#main">Skip to content</a><div class="topline"><div class="wrap"><span>Est. {{year_founded}}</span><span data-today>Fresh every morning</span><span>{{city}}</span></div></div>
+<header class="mast"><a href="index.html">{{business_name}}</a><p>{{tagline}}</p></header>
+<nav class="navbar" aria-label="Main"><div class="wrap"><a class="mini" href="index.html">{{business_name}}</a><a class="l" href="index.html">Home</a><a class="l" href="menu.html">Menu</a><a class="l" href="about.html">About</a><a class="l" href="contact.html" aria-current="page">Contact</a><a class="cta" href="contact.html#preorder">Pre-order</a><button class="burger" type="button" aria-label="Menu" aria-expanded="false" data-menu-toggle><i></i></button></div></nav>
+<div class="drawer" data-menu aria-label="Menu"><a href="index.html">Home</a><a href="menu.html">Menu</a><a href="about.html">About</a><a href="contact.html">Contact</a><a href="contact.html#preorder" style="color:var(--red)">Pre-order</a></div><main id="main"><div class="wrap"><section class="phead"><span class="label red" data-reveal>Correspondence</span><h1 data-reveal data-delay="60">Write to <em>us</em></h1><p class="deck" data-reveal data-delay="120">Pre-order for tomorrow, ask about a celebration cake or simply tell us what you think.</p></section>
+<div class="contact-grid"><div data-reveal><div class="det"><span class="label">Visit</span><a href="{{maps_url}}" rel="noopener">{{address_line1}}, {{address_line2}}</a></div><div class="det"><span class="label">Telephone</span><a href="tel:{{phone_href}}">{{phone}}</a></div><div class="det"><span class="label">Email</span><a href="mailto:{{email}}">{{email}}</a></div><div class="det"><span class="label">Opening hours</span><table class="hours "><tbody>
+<tr data-days="1,2,3,4,5"><th scope="row">Monday to Friday</th><td>{{hours_weekdays}}</td></tr>
+<tr data-days="6"><th scope="row">Saturday</th><td>{{hours_saturday}}</td></tr>
+<tr data-days="0"><th scope="row">Sunday</th><td>{{hours_sunday}}</td></tr>
+</tbody></table></div><div class="det" style="border:0"><span class="label">Follow</span><a href="{{instagram_url}}" rel="noopener" style="display:inline">Instagram</a> &nbsp;·&nbsp; <a href="{{facebook_url}}" rel="noopener" style="display:inline">Facebook</a></div></div>
+<div id="preorder" data-reveal data-delay="100"><div class="tabs" role="tablist"><button role="tab" aria-selected="true" data-tab="order">Pre-order</button><button role="tab" aria-selected="false" data-tab="contact">Send a message</button></div>
+<div class="panel" data-panel="order"><form class="f " data-form data-form-kind="order" data-endpoint="{{form_endpoint}}" novalidate>
+<div class="f-row"><div class="f-field"><label for="order-name">Your name</label><input id="order-name" name="name" type="text" required autocomplete="name"></div><div class="f-field"><label for="order-phone">Phone</label><input id="order-phone" name="phone" type="tel" autocomplete="tel"></div></div><div class="f-field"><label for="order-email">Email</label><input id="order-email" name="email" type="email" required autocomplete="email"></div><div class="f-row"><div class="f-field"><label for="order-pickup date">Pick-up date</label><input id="order-pickup date" name="pickup date" type="date" required></div><div class="f-field"><label for="order-pickup time">Pick-up time</label><input id="order-pickup time" name="pickup time" type="time" ></div></div><div class="f-field"><label for="order-order">What would you like?</label><textarea id="order-order" name="order" rows="4" required placeholder="2 country sourdough, 6 butter croissants…"></textarea></div>
+<div class="f-hp" aria-hidden="true"><label>Leave this empty<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+<button class="btn btn-primary" type="submit"><span>Place pre-order</span></button>
+<p class="f-status" role="status" aria-live="polite"></p>
+</form></div><div class="panel" data-panel="contact" hidden><form class="f " data-form data-form-kind="contact" data-endpoint="{{form_endpoint}}" novalidate>
+<div class="f-row"><div class="f-field"><label for="contact-name">Your name</label><input id="contact-name" name="name" type="text" required autocomplete="name"></div><div class="f-field"><label for="contact-email">Email</label><input id="contact-email" name="email" type="email" required autocomplete="email"></div></div><div class="f-field"><label for="contact-about">What is it about?</label><input id="contact-about" name="about" type="text" ></div><div class="f-field"><label for="contact-message">Your message</label><textarea id="contact-message" name="message" rows="4" required></textarea></div>
+<div class="f-hp" aria-hidden="true"><label>Leave this empty<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+<button class="btn btn-primary" type="submit"><span>Send message</span></button>
+<p class="f-status" role="status" aria-live="polite"></p>
+</form></div></div></div></div>
+<script>(function(){var tabs=[].slice.call(document.querySelectorAll("[data-tab]")),ps=[].slice.call(document.querySelectorAll("[data-panel]"));function show(k){tabs.forEach(function(t){t.setAttribute("aria-selected",t.getAttribute("data-tab")===k?"true":"false")});ps.forEach(function(p){p.hidden=p.getAttribute("data-panel")!==k})}tabs.forEach(function(t){t.addEventListener("click",function(){show(t.getAttribute("data-tab"))})});if(location.hash==="#message")show("contact")})();</script></main><footer class="site-footer"><div class="wrap">
+<div class="fgrid">
+<div><div class="fbrand">{{business_name}}</div><p>{{tagline}}</p></div>
+<div><span class="label">Contents</span><a href="index.html">Home</a><a href="menu.html">Menu</a><a href="about.html">About</a><a href="contact.html">Contact</a></div>
+<div><span class="label">Visit</span><a href="{{maps_url}}" rel="noopener">{{address_line1}}</a><a href="{{maps_url}}" rel="noopener">{{address_line2}}</a><a href="tel:{{phone_href}}">{{phone}}</a><a href="mailto:{{email}}">{{email}}</a></div>
+<div><span class="label">Hours</span><p style="margin:0;font-style:normal;color:var(--ink)">Mon to Fri {{hours_weekdays}}<br>Sat {{hours_saturday}}<br>Sun {{hours_sunday}}</p><span class="label" style="margin-top:1rem">Follow</span><a href="{{instagram_url}}" rel="noopener">Instagram</a><a href="{{facebook_url}}" rel="noopener">Facebook</a></div>
+</div>
+<div class="fbottom"><span>© <span data-year>2026</span> {{business_name}}</span><span><a href="privacy.html">Privacy policy</a><a href="terms.html">Terms of service</a></span></div>
+</div></footer>
+<script src="assets/site.js"></script>
+<script>(function(){var n=document.querySelector(".navbar");if(!n)return;function s(){n.classList.toggle("is-stuck",window.scrollY>140)}s();window.addEventListener("scroll",s,{passive:true})})();</script></body></html>
