@@ -1,0 +1,14 @@
+{
+  "industry": "bakery",
+  "style": "professional food photograph, natural window light from the left, shallow depth of field, soft neutral warm-grey background with space around the subject, subject centred, 85mm lens, true-to-life colours, appetising, photorealistic, no text, no people, no logos",
+  "images": {
+    "loaf": "a rustic sourdough loaf with a blistered golden crust and a clean ear, whole, on a floured wooden board",
+    "croissant": "a freshly baked butter croissant with flaky golden layers, whole, on a plain linen cloth",
+    "baguettes": "three crusty baguettes with diagonal scoring lying side by side on a linen cloth",
+    "cupcake": "a single iced vanilla cupcake with a swirl of buttercream and a few sprinkles on a small plate",
+    "slice": "a slice of lemon tart with a glossy filling and a crisp pastry case on a white plate",
+    "coffee": "a flat white coffee in a ceramic cup with latte art, on a saucer, steam rising",
+    "roll": "a warm cinnamon roll with cream cheese icing melting over the swirls, on a baking paper square",
+    "wheat": "a bundle of golden wheat ears with a small pile of flour on a dark wooden table"
+  }
+}
