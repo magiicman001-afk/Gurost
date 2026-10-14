@@ -299,6 +299,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // The mic always starts - the mode is checked after speech is captured, not before. Hold-to-talk comes
   // from shared/pulse-voice.js (finger, pen or mouse; works on iPhone).
+  // Mic debug panel: open the Dashboard with ?micdebug=1 and every step of a recording is listed on screen (screenshot it).
+  // It shows events and sizes only, never what was said. Normal visits never see it.
+  if (/[?&]micdebug=1/.test(location.search)) {
+    const panel = document.createElement('div');
+    panel.style.cssText = 'position:fixed;left:0;right:0;bottom:0;max-height:42vh;overflow:auto;background:#111;color:#9f9;font:11px/1.35 monospace;padding:6px 8px;z-index:99999;white-space:pre-wrap;word-break:break-all';
+    document.body.appendChild(panel);
+    const t0 = Date.now();
+    window.__micDebug = (text) => {
+      const line = document.createElement('div');
+      line.textContent = ((Date.now() - t0) / 1000).toFixed(1) + 's  ' + text;
+      if (/^!!/.test(text)) line.style.color = '#f66';
+      panel.appendChild(line);
+      panel.scrollTop = panel.scrollHeight;
+    };
+    window.__micDebug('mic debug on. Hold the mic, speak, let go, then screenshot this panel.');
+    window.__micDebug('browser: ' + navigator.userAgent.replace(/\s+/g, ' ').slice(0, 120));
+  }
   const micBtn = document.getElementById('dashMicBtn');
   const micStatus = document.getElementById('dashMicStatus');
   const fb = window.GurostMicFeedback || { press() {}, ready() {}, release() {}, micOff() {} };

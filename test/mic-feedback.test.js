@@ -12,7 +12,7 @@ const voice = read("public/shared/pulse-voice.js");
 
 function run(win) { new Function("window", "navigator", fb)(win, win.navigator); return win.GurostMicFeedback; }
 
-test("press buzzes 50 ms, release buzzes 30 ms, ready and micOff each play one tone", () => {
+test("press buzzes 80 ms, release buzzes twice, ready and micOff each play one tone", () => {
   const buzzes = []; let tones = 0, resumed = 0;
   class AC {
     constructor() { this.state = "suspended"; this.currentTime = 0; this.destination = {}; }
@@ -22,7 +22,7 @@ test("press buzzes 50 ms, release buzzes 30 ms, ready and micOff each play one t
   }
   const api = run({ AudioContext: AC, navigator: { vibrate: (ms) => { buzzes.push(ms); return true; } } });
   api.press(); api.ready(); api.release(); api.micOff();
-  assert.deepStrictEqual(buzzes, [50, 30]);
+  assert.deepStrictEqual(buzzes, [80, [60, 50, 60]]);
   assert.strictEqual(tones, 2, "one tone on ready, one on micOff");
   assert.ok(resumed >= 1, "the sound is unlocked inside the press");
 });
@@ -70,4 +70,20 @@ test("speech service asks for British English with punctuation, and logs numbers
   assert.match(vc, /model=nova-3/);
   const logLine = vc.split("\n").find((l) => l.includes("[voice] transcribed"));
   assert.ok(logLine && !/\$\{transcript\}|transcript\b(?!\.length)/.test(logLine.replace("chars=${transcript.length}", "")), "the log line has no transcript text");
+});
+
+test("mic debug panel: only with ?micdebug=1, lists events with textContent, never the spoken words", () => {
+  assert.match(dash, /\/\[\?&\]micdebug=1\/\.test\(location\.search\)/);
+  const block = dash.slice(dash.indexOf("Mic debug panel"), dash.indexOf("const micBtn = document.getElementById"));
+  assert.match(block, /line\.textContent = /);
+  assert.ok(!/innerHTML/.test(block));
+  assert.ok(!/transcript/.test(block), "the panel code never touches the transcript");
+  assert.ok(!/transcript\b[^\n]*micDebug|micDebug\([^\n]*\btranscript\b(?!\s*\|\|)/.test(voice.replace(/String\(transcript \|\| ""\)\.length/, "")), "pulse-voice only reports the length of the transcript");
+});
+
+test("speech log also records seconds of audio, word count and when the last word ended", () => {
+  const vc = read("guide/voice-client.js");
+  assert.match(vc, /audio_secs=\$\{audioSecs\}/);
+  assert.match(vc, /words=\$\{words\.length\}/);
+  assert.match(vc, /last_word_ends_at=/);
 });

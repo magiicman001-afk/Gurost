@@ -1,8 +1,8 @@
 // Gurost mic feedback: so a person can tell, without looking, that the microphone is really listening.
-//   press()   the finger went down: one short buzz, and the button turns red straight away.
+//   press()   the finger went down: one buzz, and the button turns red straight away.
 //   ready()   the microphone is REALLY recording now (it can take a moment to start on a phone): a short
 //             rising beep. This is the "speak now" cue; words said before it are not recorded.
-//   release() the finger came up: one shorter buzz.
+//   release() the finger came up: a double buzz.
 //   micOff()  the microphone has really stopped: a short falling beep (played after it stops, so it is not recorded).
 // Haptics use navigator.vibrate (Android; iPhone Safari has no vibration, so it gets the sounds only).
 // Sounds are two tiny Web Audio tones: no audio files, no network. Everything is best effort and never throws.
@@ -20,8 +20,16 @@
     } catch (e) { return null; }
   }
 
-  function buzz(ms) {
-    try { if (navigator.vibrate) navigator.vibrate(ms); } catch (e) { /* not supported: fine */ }
+  function debug(text) { try { if (window.__micDebug) window.__micDebug(text); } catch (e) { /* debug only */ } }
+
+  // A 30 to 50 ms buzz is too faint to feel on many phones, so these are firmer. What the browser answered is shown in the mic debug panel.
+  function buzz(pattern, label) {
+    try {
+      if (!navigator.vibrate) { debug(label + ': this browser has no vibration (iPhone?)'); return; }
+      var ok = navigator.vibrate(pattern);
+      var ua = navigator.userActivation;
+      debug(label + ': vibrate(' + JSON.stringify(pattern) + ') answered ' + ok + (ua ? '; tapped on this page before: ' + ua.hasBeenActive : ''));
+    } catch (e) { debug(label + ': vibrate threw ' + e.message); }
   }
 
   // One soft tone that glides from `from` to `to` Hz over `ms`.
@@ -46,9 +54,9 @@
   }
 
   window.GurostMicFeedback = {
-    press: function () { audio(); buzz(50); }, // audio() here, inside the press, unlocks sound on phones
+    press: function () { audio(); buzz(80, 'press'); }, // audio() here, inside the press, unlocks sound on phones
     ready: function () { tone(660, 990, 90); },
-    release: function () { buzz(30); },
+    release: function () { buzz([60, 50, 60], 'release'); },
     micOff: function () { tone(880, 520, 110); }
   };
 })();
