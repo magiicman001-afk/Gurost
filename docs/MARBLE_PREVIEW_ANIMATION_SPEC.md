@@ -63,3 +63,17 @@ Not covered by an automated test: the look (judge on the phone) and the live bui
 ## 8. Later ideas (not built)
 The "GUROST" wordmark with a marble as the O (as in the reference); the working bot's marble glows; marbles on the empty-state card, the dashboard
 and the launch screen.
+
+## Version 2: the staircase (2026-10-14, Web Claude, approved by Irfan from screenshots)
+
+The Website Builder live preview now uses `public/shared/marble-steps.js` (`MarbleSteps.create`, same `start`/`stop`/`setProgress`
+options as `marble-loader.js`, which stays in the repo, unused). Tests: `test/marble-steps.test.js`.
+
+- The eight bot marbles (14 to 18 px) roll down rounded pastel steps, drop with gravity and a small squash, turn at the landing and
+  roll into a glass jar. Each marble has its own speed, a contact shadow, and a glint that stays put while the marble turns.
+- Night to day: the scene starts as a dark night (moon, twinkling stars, fireflies, lit lanterns, violet clouds) and a day layer
+  (sun, white clouds, warm dunes) fades in as `setProgress(percent)` rises. With no percentage it dawns slowly over about two minutes.
+- Original design (dusk palette, striped pastel steps, jar finish): chosen on purpose to share no characters, colours or layout with
+  any existing game. This is not a legal opinion; ask a lawyer if certainty is needed.
+- Same safety rules as v1: SVG/CSS only, no network, no innerHTML, reduced motion shows the still scene, any error shows the plain
+  spinner. Verified in a browser at 375 px and 1100 px with the network stubbed; NOT yet seen on Irfan's real phone.
