@@ -60,7 +60,7 @@ module.exports = {
   hint: "animal sanctuary",
   photo: "natural-light documentary photograph, warm and honest, calm gentle mood, shallow depth of field, true-to-life colours, photorealistic, no text",
   videoQuery: "dogs animal shelter",
-  styles: ["atelier", "gallery", "motion", "linen", "split", "journal", "market", "studio", "daylight", "hearth", "kindred", "stories", "commons"],
+  styles: ["atelier", "gallery", "motion", "linen", "split", "journal", "market", "studio", "daylight", "hearth", "kindred", "stories", "commons", "gazette", "wildkind", "letter"],
   mediaDir: "sanctuary",
   nav: { home: "Home", menu: "Our animals", cta: "Adopt or visit", ctaHref: "index.html#order" },
   cats,
@@ -69,6 +69,8 @@ module.exports = {
     home: { title: "Animal sanctuary", desc: "{{business_name}} is an animal sanctuary in {{city}}. Meet the animals looking for homes, plan a visit or donate." },
     menu: { title: "Our animals", desc: "Meet the dogs, cats, small animals and wildlife in our care at {{business_name}}, {{city}}." },
   },
+  dayEyebrow: "A day with us", dayH2: "A day at <em>the sanctuary</em>",
+  day: [["07:30", "Breakfast rounds", "Every animal is fed, checked and spoken to before the gates open."], ["09:00", "Medicine and vet checks", "Our vet visits twice a week. Everything else is done by our team, one animal at a time."], ["10:00", "Doors open", "Visitors are welcome to meet the animals looking for homes."], ["12:30", "Lunch and play", "Quiet time for the cats and a long run in the paddock for the dogs."], ["15:00", "Walks with volunteers", "Our volunteers take the dogs out and come back with the best stories."], ["16:00", "Doors close, evening feed", "A last round, fresh bedding and lights down for the night."]],
   community: {
     visitEyebrow: "Find us", visitH2: "Come and <em>say hello</em>", eventsEyebrow: "Coming up", eventsH2: "What is <em>on</em> at the sanctuary", waysEyebrow: "Get involved", waysH2: "Four ways to <em>help</em>",
     events: [["14", "Nov", "Open day and dog walks", "Meet the dogs and take one for a walk. Free entry."], ["28", "Nov", "Christmas craft fair", "Stalls, hot chocolate and a raffle for the animals."], ["12", "Dec", "Carols in the barn", "Songs by lantern light with mince pies for everyone."]],
