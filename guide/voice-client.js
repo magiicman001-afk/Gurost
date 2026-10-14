@@ -27,8 +27,11 @@ async function transcribe(audioBuffer, mimeType = "audio/webm") {
   const data = await response.json();
   const best = data.results?.channels?.[0]?.alternatives?.[0];
   const transcript = best?.transcript || "";
-  // Numbers only, never the words: what size came in, how long it took, how sure the service was.
-  console.log(`[voice] transcribed type=${mimeType} bytes=${audioBuffer.length} chars=${transcript.length} confidence=${typeof best?.confidence === "number" ? best.confidence.toFixed(2) : "n/a"} secs=${((Date.now() - startedAt) / 1000).toFixed(1)}`);
+  // Numbers only, never the words: size in, seconds of audio, how many words and when the last one ended (a recording much longer than the speech means it was cut or went quiet), how long it took, how sure the service was.
+  const words = best?.words || [];
+  const audioSecs = typeof data.metadata?.duration === "number" ? data.metadata.duration.toFixed(1) : "n/a";
+  const lastWordEnd = words.length && typeof words[words.length - 1].end === "number" ? words[words.length - 1].end.toFixed(1) : "n/a";
+  console.log(`[voice] transcribed type=${mimeType} bytes=${audioBuffer.length} audio_secs=${audioSecs} words=${words.length} last_word_ends_at=${lastWordEnd}s chars=${transcript.length} confidence=${typeof best?.confidence === "number" ? best.confidence.toFixed(2) : "n/a"} secs=${((Date.now() - startedAt) / 1000).toFixed(1)}`);
   return transcript;
 }
 
