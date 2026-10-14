@@ -90,8 +90,8 @@ const pad = (n) => String(n).padStart(2, "0");
 function home(pack) {
   const K = pack.copy.atelier, cats = pack.cats;
   const star = cats.flatMap((c) => c.items.filter((i) => i.star).map((i) => ({ ...i, art: i.art || c.art }))).slice(0, 3);
-  const plates = star.map((i, k) => `<article class="pl" data-reveal data-delay="${k * 100}"><div class="ph">${img(i.art, i.n, { hint: pack.hint + " " + i.n.toLowerCase() })}</div><div class="cap"><span>Plate ${pad(k + 1)}</span><span>${i.meta}</span></div><h3>${i.n}</h3><p>${i.d}</p></article>`).join("");
-  const idx = cats.map((c, k) => `<a class="ix" href="menu.html#${c.id}" data-reveal><span class="n">${pad(k + 1)}</span><h3>${c.name}</h3><p>${c.blurb}</p><div class="ph">${img(c.art, c.name, { w: 600, h: 400, hint: pack.hint + " " + c.name.toLowerCase() })}</div><span class="ar" aria-hidden="true">&rarr;</span></a>`).join("");
+  const plates = star.map((i, k) => `<article class="pl" data-reveal data-delay="${k * 100}"><div class="ph">${img(i.art, i.n, { hint: B.hintOf(pack, i) })}</div><div class="cap"><span>Plate ${pad(k + 1)}</span><span>${i.meta}</span></div><h3>${i.n}</h3><p>${i.d}</p></article>`).join("");
+  const idx = cats.map((c, k) => `<a class="ix" href="menu.html#${c.id}" data-reveal><span class="n">${pad(k + 1)}</span><h3>${c.name}</h3><p>${c.blurb}</p><div class="ph">${img(c.art, c.name, { w: 600, h: 400, hint: B.hintOf(pack, c) })}</div><span class="ar" aria-hidden="true">&rarr;</span></a>`).join("");
   const body = `
 <section class="hero"><div class="wrap"><div class="strip"><span>${K.heroEyebrow}</span><span>${K.glass[0]} &middot; ${K.glass[1]}</span></div>
 <h1>${K.heroH1}</h1>
@@ -112,7 +112,7 @@ function menu(pack) {
   const K = pack.copy.atelier, cats = pack.cats;
   const chips = `<button type="button" data-filter="all" aria-pressed="true">All</button>` + cats.map((c) => `<button type="button" data-filter="${c.id}" aria-pressed="false">${c.name}</button>`).join("");
   let n = 0;
-  const sec = cats.map((c) => `<section class="mcat" id="${c.id}" data-cat="${c.id}"><div class="side"><span class="eyebrow">${pad(cats.indexOf(c) + 1)}</span><h2 style="margin-top:.8rem">${c.name}</h2><p>${c.blurb}</p><div class="ph">${img(c.art, c.name, { hint: pack.hint + " " + c.name.toLowerCase() })}</div></div>
+  const sec = cats.map((c) => `<section class="mcat" id="${c.id}" data-cat="${c.id}"><div class="side"><span class="eyebrow">${pad(cats.indexOf(c) + 1)}</span><h2 style="margin-top:.8rem">${c.name}</h2><p>${c.blurb}</p><div class="ph">${img(c.art, c.name, { hint: B.hintOf(pack, c) })}</div></div>
 <div class="list">${c.items.map((i) => `<div class="mi" data-reveal><span class="n">${pad(++n)}</span><h3>${i.n}</h3><span class="price">${i.meta}</span><p>${i.d}</p><div class="tags">${i.star ? '<span class="tag star">Favourite</span>' : ""}${i.tags.map((x) => `<span class="tag" title="${pack.tags[x]}">${x}</span>`).join("")}</div></div>`).join("")}</div></section>`).join("");
   const body = `<section class="mhero"><div class="wrap"><div class="strip"><span>${K.menuHero[0]}</span><span>${t("business_name")}</span></div><h1>${K.menuHero[1]}</h1><p class="lead">${K.menuHero[2]}</p><div class="chips">${chips}</div></div></section>
 <div class="wrap">${sec}</div><div style="height:clamp(40px,6vw,80px)"></div>

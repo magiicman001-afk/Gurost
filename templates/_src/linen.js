@@ -90,7 +90,7 @@ const stat = ([v, s]) => `<b data-count="${v}"${s ? ` data-suffix="${s}"` : ""}>
 function home(pack) {
   const K = pack.copy.atelier, cats = pack.cats;
   const star = cats.flatMap((c) => c.items.filter((i) => i.star).map((i) => ({ ...i, art: i.art || c.art }))).slice(0, 3);
-  const sel = star.map((i, k) => `<article class="sc" data-reveal data-delay="${k * 100}"><div class="ph">${img(i.art, i.n, { hint: pack.hint + " " + i.n.toLowerCase() })}</div><h3>${i.n}</h3><p>${i.d}</p><span class="price">${i.meta}</span></article>`).join("");
+  const sel = star.map((i, k) => `<article class="sc" data-reveal data-delay="${k * 100}"><div class="ph">${img(i.art, i.n, { hint: B.hintOf(pack, i) })}</div><h3>${i.n}</h3><p>${i.d}</p><span class="price">${i.meta}</span></article>`).join("");
   const card = cats.map((c) => `<div class="cc"><h3>${c.name}</h3><p>${c.blurb}</p>${c.items.slice(0, 3).map((i) => `<div class="li"><b>${i.n}</b><i></i><span class="price">${i.meta}</span></div>`).join("")}</div>`).join("");
   const body = `
 <section class="hero"><div class="wrap"><div class="orn">${K.heroEyebrow}</div><h1 style="margin-top:1.2rem">${K.heroH1}</h1><p class="lead">${t("tagline")}</p>
@@ -113,7 +113,7 @@ ${foot()}`;
 function menu(pack) {
   const K = pack.copy.atelier, cats = pack.cats;
   const chips = `<button type="button" data-filter="all" aria-pressed="true">All</button>` + cats.map((c) => `<button type="button" data-filter="${c.id}" aria-pressed="false">${c.name}</button>`).join("");
-  const sec = cats.map((c) => `<section class="mcat" id="${c.id}" data-cat="${c.id}"><header><div class="ov">${img(c.art, c.name, { w: 400, h: 400, hint: pack.hint + " " + c.name.toLowerCase() })}</div><div><h2>${c.name}</h2><p>${c.blurb}</p></div></header>
+  const sec = cats.map((c) => `<section class="mcat" id="${c.id}" data-cat="${c.id}"><header><div class="ov">${img(c.art, c.name, { w: 400, h: 400, hint: B.hintOf(pack, c) })}</div><div><h2>${c.name}</h2><p>${c.blurb}</p></div></header>
 <div class="mgrid">${c.items.map((i) => `<div class="mi" data-reveal><div class="r"><h3>${i.n}</h3><i></i><span class="price">${i.meta}</span></div><p>${i.d}</p><div class="tags">${i.star ? '<span class="tag star">Favourite</span>' : ""}${i.tags.map((x) => `<span class="tag" title="${pack.tags[x]}">${x}</span>`).join("")}</div></div>`).join("")}</div></section>`).join("");
   const body = `<section class="mhero"><div class="wrap"><div class="orn">${K.menuHero[0]}</div><h1 style="margin-top:1.1rem">${K.menuHero[1]}</h1><p class="lead">${K.menuHero[2]}</p><div class="chips">${chips}</div></div></section>
 <div class="wrap">${sec}</div>

@@ -81,13 +81,13 @@ function foot() {
 <div class="base"><span>${f.copy}</span><span data-today></span></div></div></footer>`;
 }
 const stat = ([v, s]) => `<b data-count="${v}"${s ? ` data-suffix="${s}"` : ""}>${v}${s}</b>`;
-const panel = (pack, K) => `<aside class="pan">${video("split")}<div class="hero-art">${img(pack.cats[0].art, pack.cats[0].name, { role: "featured", w: 960, h: 1200, lazy: false, hint: pack.hint + " " + pack.cats[0].name.toLowerCase() })}</div><div class="pin"><a class="brand" href="index.html">${t("business_name")}</a><div class="badge"><i></i>${K.glass[0]} &middot; ${K.glass[1]}</div><p class="pcap">${t("tagline")}</p></div></aside>`;
+const panel = (pack, K) => `<aside class="pan">${video("split")}<div class="hero-art">${img(pack.cats[0].art, pack.cats[0].name, { role: "featured", w: 960, h: 1200, lazy: false, hint: B.hintOf(pack, pack.cats[0]) })}</div><div class="pin"><a class="brand" href="index.html">${t("business_name")}</a><div class="badge"><i></i>${K.glass[0]} &middot; ${K.glass[1]}</div><p class="pcap">${t("tagline")}</p></div></aside>`;
 
 function home(pack) {
   const K = pack.copy.atelier, cats = pack.cats;
   const star = cats.flatMap((c) => c.items.filter((i) => i.star).map((i) => ({ ...i, art: i.art || c.art }))).slice(0, 4);
-  const rows = star.map((i) => `<a class="lrow" href="index.html#order" data-reveal><div class="ph">${img(i.art, i.n, { w: 480, h: 480, hint: pack.hint + " " + i.n.toLowerCase() })}</div><div><h3>${i.n}</h3><p>${i.d}</p></div><span class="price">${i.meta}</span></a>`).join("");
-  const cg = cats.map((c) => `<a class="cgc" href="menu.html#${c.id}" data-reveal><div class="ph">${img(c.art, c.name, { w: 640, h: 512, hint: pack.hint + " " + c.name.toLowerCase() })}</div><h3>${c.name}</h3><span>${c.blurb}</span></a>`).join("");
+  const rows = star.map((i) => `<a class="lrow" href="index.html#order" data-reveal><div class="ph">${img(i.art, i.n, { w: 480, h: 480, hint: B.hintOf(pack, i) })}</div><div><h3>${i.n}</h3><p>${i.d}</p></div><span class="price">${i.meta}</span></a>`).join("");
+  const cg = cats.map((c) => `<a class="cgc" href="menu.html#${c.id}" data-reveal><div class="ph">${img(c.art, c.name, { w: 640, h: 512, hint: B.hintOf(pack, c) })}</div><h3>${c.name}</h3><span>${c.blurb}</span></a>`).join("");
   const body = `<div class="shell">${panel(pack, K)}<div class="main">
 <section class="hero"><div class="cw"><span class="eyebrow">${K.heroEyebrow}</span><h1 style="margin-top:1.1rem">${K.heroH1}</h1><p class="lead">${t("tagline")}</p>
 <div class="cta-row"><a class="btn btn-primary" href="${K.cta1Href || "#order"}"><span>${K.cta1}</span></a><a class="btn" href="${K.cta2Href || "menu.html"}"><span>${K.cta2}</span></a></div></div></section>
@@ -105,7 +105,7 @@ ${foot()}</div></div>`;
 function menu(pack) {
   const K = pack.copy.atelier, cats = pack.cats;
   const chips = `<button type="button" data-filter="all" aria-pressed="true">All</button>` + cats.map((c) => `<button type="button" data-filter="${c.id}" aria-pressed="false">${c.name}</button>`).join("");
-  const sec = cats.map((c) => `<section class="mcat" id="${c.id}" data-cat="${c.id}"><header><h2>${c.name}</h2><p>${c.blurb}</p></header>${c.items.map((i) => `<div class="mrow" data-reveal><div class="ph">${img(i.art || c.art, i.n, { w: 320, h: 320, hint: pack.hint + " " + i.n.toLowerCase() })}</div><div><h3>${i.n}</h3><p>${i.d}</p><div class="tags">${i.star ? '<span class="tag star">Favourite</span>' : ""}${i.tags.map((x) => `<span class="tag" title="${pack.tags[x]}">${x}</span>`).join("")}</div></div><span class="price">${i.meta}</span></div>`).join("")}</section>`).join("");
+  const sec = cats.map((c) => `<section class="mcat" id="${c.id}" data-cat="${c.id}"><header><h2>${c.name}</h2><p>${c.blurb}</p></header>${c.items.map((i) => `<div class="mrow" data-reveal><div class="ph">${img(i.art || c.art, i.n, { w: 320, h: 320, hint: B.hintOf(pack, i) })}</div><div><h3>${i.n}</h3><p>${i.d}</p><div class="tags">${i.star ? '<span class="tag star">Favourite</span>' : ""}${i.tags.map((x) => `<span class="tag" title="${pack.tags[x]}">${x}</span>`).join("")}</div></div><span class="price">${i.meta}</span></div>`).join("")}</section>`).join("");
   const body = `<div class="shell">${panel(pack, K)}<div class="main">
 <section class="hero"><div class="cw"><span class="eyebrow">${K.menuHero[0]}</span><h1 style="margin-top:1.1rem">${K.menuHero[1]}</h1><p class="lead">${K.menuHero[2]}</p><div class="chips">${chips}</div></div></section>
 <div class="cw">${sec}</div><div style="height:clamp(40px,6vw,80px)"></div>

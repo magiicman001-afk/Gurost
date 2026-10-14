@@ -97,7 +97,7 @@ const stat = ([v, s]) => `<b data-count="${v}"${s ? ` data-suffix="${s}"` : ""}>
 
 function home(pack) {
   const K = pack.copy.motion, cats = pack.cats;
-  const tiles = cats.map((c, i) => `<a class="tile" data-tilt data-reveal data-delay="${(i % 2) * 90}" href="menu.html#${c.id}">${img(c.art, c.name, { role: i === 0 ? "featured" : "secondary", w: 1000, h: 1000, hint: pack.hint + " " + c.name.toLowerCase() })}<span class="n">0${i + 1}</span><div><h3>${c.name}</h3><p>${c.blurb}</p></div></a>`).join("");
+  const tiles = cats.map((c, i) => `<a class="tile" data-tilt data-reveal data-delay="${(i % 2) * 90}" href="menu.html#${c.id}">${img(c.art, c.name, { role: i === 0 ? "featured" : "secondary", w: 1000, h: 1000, hint: B.hintOf(pack, c) })}<span class="n">0${i + 1}</span><div><h3>${c.name}</h3><p>${c.blurb}</p></div></a>`).join("");
   const words = K.marquee.map((w) => `<span>${w}</span>`).join("");
   const body = `
 <section class="kn">${video("motion")}<div class="mask"><h1 data-fitlines>${K.heroLines.map((l) => `<span>${l}</span>`).join("<br>")}</h1></div></section>
@@ -116,7 +116,7 @@ function menu(pack) {
   const chips = `<button type="button" data-filter="all" aria-pressed="true">All</button>` + cats.map((c) => `<button type="button" data-filter="${c.id}" aria-pressed="false">${c.name}</button>`).join("");
   const sec = cats.map((c) => `<section class="mcat" id="${c.id}" data-cat="${c.id}"><h2>${c.name} <small>${c.blurb}</small></h2>${c.items.map((i) => {
     const a = i.art || c.art;
-    return `<article class="mrow" tabindex="0" data-preview="assets/img/${a}.webp"><div class="th">${img(a, i.n, { w: 200, h: 200, hint: pack.hint + " " + i.n.toLowerCase() })}</div><h3>${i.n}</h3><span class="price">${i.meta}</span><p>${i.d}</p><div class="tags">${i.star ? '<span class="tag star">Favourite</span>' : ""}${i.tags.map((x) => `<span class="tag" title="${pack.tags[x]}">${x}</span>`).join("")}</div></article>`;
+    return `<article class="mrow" tabindex="0" data-preview="assets/img/${a}.webp"><div class="th">${img(a, i.n, { w: 200, h: 200, hint: B.hintOf(pack, i) })}</div><h3>${i.n}</h3><span class="price">${i.meta}</span><p>${i.d}</p><div class="tags">${i.star ? '<span class="tag star">Favourite</span>' : ""}${i.tags.map((x) => `<span class="tag" title="${pack.tags[x]}">${x}</span>`).join("")}</div></article>`;
   }).join("")}</section>`).join("");
   const first = cats[0].art;
   const body = `<section class="mhero"><div class="wrap"><h1>${K.menuHero[0]}</h1><p class="lead">${K.menuHero[1]}</p><div class="chips">${chips}</div></div></section>

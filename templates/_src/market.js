@@ -87,12 +87,12 @@ function home(pack) {
   const K = pack.copy.atelier, cats = pack.cats;
   const star = cats.flatMap((c) => c.items.filter((i) => i.star).map((i) => ({ ...i, art: i.art || c.art }))).slice(0, 3);
   const words = pack.copy.motion.marquee.concat(pack.copy.motion.marquee).map((w) => `<span>${w}</span>`).join("");
-  const tiles = cats.map((c) => `<a class="tile" href="menu.html#${c.id}" data-reveal><div class="ph">${img(c.art, c.name, { hint: pack.hint + " " + c.name.toLowerCase() })}</div><div class="tx"><h3>${c.name}</h3><p>${c.blurb}</p></div></a>`).join("");
-  const favs = star.map((i, k) => `<article class="fav" data-reveal data-delay="${k * 100}"><div class="ph">${img(i.art, i.n, { w: 960, h: 768, hint: pack.hint + " " + i.n.toLowerCase() })}</div><div class="tx"><div class="r"><h3>${i.n}</h3><span class="price">${i.meta}</span></div><p>${i.d}</p></div></article>`).join("");
+  const tiles = cats.map((c) => `<a class="tile" href="menu.html#${c.id}" data-reveal><div class="ph">${img(c.art, c.name, { hint: B.hintOf(pack, c) })}</div><div class="tx"><h3>${c.name}</h3><p>${c.blurb}</p></div></a>`).join("");
+  const favs = star.map((i, k) => `<article class="fav" data-reveal data-delay="${k * 100}"><div class="ph">${img(i.art, i.n, { w: 960, h: 768, hint: B.hintOf(pack, i) })}</div><div class="tx"><div class="r"><h3>${i.n}</h3><span class="price">${i.meta}</span></div><p>${i.d}</p></div></article>`).join("");
   const body = `
 <section class="hero"><div class="wrap hg"><div><span class="eyebrow">${K.heroEyebrow}</span><h1 style="margin-top:1.3rem">${K.heroH1}</h1><p class="lead">${t("tagline")}</p>
 <div class="cta-row"><a class="btn btn-primary" href="${K.cta1Href || "#order"}"><span>${K.cta1}</span></a><a class="btn btn-light" href="${K.cta2Href || "menu.html"}"><span>${K.cta2}</span></a></div></div>
-<div class="vid-card">${video("market")}<div class="prod">${img(cats[0].art, cats[0].name, { role: "featured", w: 960, h: 1200, lazy: false, hint: pack.hint + " " + cats[0].name.toLowerCase() })}</div><div class="stk">${K.glass[0]}</div></div></div></section>
+<div class="vid-card">${video("market")}<div class="prod">${img(cats[0].art, cats[0].name, { role: "featured", w: 960, h: 1200, lazy: false, hint: B.hintOf(pack, cats[0]) })}</div><div class="stk">${K.glass[0]}</div></div></div></section>
 <div class="mq" aria-hidden="true"><div>${words}</div></div>
 <div class="wrap"><div class="pro" data-reveal>${K.promise.map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join("")}</div></div>
 <section class="sec" style="padding-top:0"><div class="wrap"><div class="head"><div><span class="eyebrow">${K.collection[0]}</span><h2 style="margin-top:.9rem">${K.collection[1]}</h2></div><a class="btn" href="menu.html"><span>${K.collection[2]}</span></a></div><div class="tiles">${tiles}</div></div></section>
@@ -108,7 +108,7 @@ ${foot()}`;
 function menu(pack) {
   const K = pack.copy.atelier, cats = pack.cats;
   const chips = `<button type="button" data-filter="all" aria-pressed="true">All</button>` + cats.map((c) => `<button type="button" data-filter="${c.id}" aria-pressed="false">${c.name}</button>`).join("");
-  const sec = cats.map((c) => `<section class="mcat" id="${c.id}" data-cat="${c.id}"><header><h2>${c.name}</h2><p>${c.blurb}</p></header><div class="mgrid">${c.items.map((i) => `<article class="mc" data-reveal><div class="ph">${img(i.art || c.art, i.n, { hint: pack.hint + " " + i.n.toLowerCase() })}</div><div class="tx"><div class="r"><h3>${i.n}</h3><span class="price">${i.meta}</span></div><p>${i.d}</p><div class="tags">${i.star ? '<span class="tag star">Favourite</span>' : ""}${i.tags.map((x) => `<span class="tag" title="${pack.tags[x]}">${x}</span>`).join("")}</div></div></article>`).join("")}</div></section>`).join("");
+  const sec = cats.map((c) => `<section class="mcat" id="${c.id}" data-cat="${c.id}"><header><h2>${c.name}</h2><p>${c.blurb}</p></header><div class="mgrid">${c.items.map((i) => `<article class="mc" data-reveal><div class="ph">${img(i.art || c.art, i.n, { hint: B.hintOf(pack, i) })}</div><div class="tx"><div class="r"><h3>${i.n}</h3><span class="price">${i.meta}</span></div><p>${i.d}</p><div class="tags">${i.star ? '<span class="tag star">Favourite</span>' : ""}${i.tags.map((x) => `<span class="tag" title="${pack.tags[x]}">${x}</span>`).join("")}</div></div></article>`).join("")}</div></section>`).join("");
   const body = `<section class="mhero"><div class="wrap"><span class="eyebrow">${K.menuHero[0]}</span><h1 style="margin-top:1rem">${K.menuHero[1]}</h1><p class="lead">${K.menuHero[2]}</p><div class="chips">${chips}</div></div></section>
 <div class="wrap">${sec}</div><div style="height:clamp(40px,6vw,80px)"></div>
 ${ORDER(pack, K.orderMenu)}
