@@ -14,7 +14,7 @@ const os = require("os");
 const path = require("path");
 const { execFileSync } = require("child_process");
 const { art } = require("../templates/_src/illustrations");
-require("../templates/_src/illustrations-animals");
+fs.readdirSync(path.join(__dirname, "..", "templates", "_src")).filter((f) => /^illustrations-.+\.js$/.test(f)).forEach((f) => require("../templates/_src/" + f));
 
 const industry = process.argv[2];
 if (!industry || !fs.existsSync(path.join(__dirname, "..", "templates", "_src", "packs", industry + ".js"))) {
