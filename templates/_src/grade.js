@@ -1,0 +1,61 @@
+"use strict";
+/**
+ * grade (photography and weddings, real 3D): a clean gallery look with a turnable 3D picture frame and a "choose your editing look"
+ * before and after slider: drag across a drawn wedding scene to compare the unedited frame with five finishing styles (light and airy,
+ * warm and golden, moody, film, black and white), each with a short description of who it suits; the choice pre-fills the enquiry.
+ * Fonts: Crimson Pro + Instrument Sans (SIL OFL). Two pages.
+ */
+const R = require("./rest-kit");
+const FONTS = [["CrimsonPro-Regular.ttf", "CrimsonPro-Regular.ttf"], ["CrimsonPro-Italic.ttf", "CrimsonPro-Italic.ttf"], ["InstrumentSans-Regular.ttf", "InstrumentSans-Regular.ttf"], ["InstrumentSans-Bold.ttf", "InstrumentSans-Bold.ttf"], ["CrimsonPro-OFL.txt", "OFL-CrimsonPro.txt"], ["InstrumentSans-OFL.txt", "OFL-InstrumentSans.txt"]];
+const LOOKS = [
+  { n: "Light and airy", f: "brightness(1.14) contrast(.9) saturate(.88)", d: "Bright, soft and full of air. Pastel tones and creamy skin. Beautiful for garden weddings and pale venues." },
+  { n: "Warm and golden", f: "sepia(.3) saturate(1.3) contrast(1.05) brightness(1.04)", d: "Glowing, sunlit colour like the last hour before sunset. Flattering on every skin tone." },
+  { n: "Moody", f: "brightness(.8) contrast(1.3) saturate(.8)", d: "Deep shadows and rich, painterly tones. Made for candlelit rooms, autumn and winter days." },
+  { n: "Film", f: "sepia(.16) contrast(1.1) saturate(.92) hue-rotate(6deg) brightness(1.02)", d: "Gentle grain-like warmth and softly faded colour, in the spirit of classic film." },
+  { n: "Black and white", f: "grayscale(1) contrast(1.18)", d: "Timeless and honest. Emotion first, colour out of the way." },
+];
+const BEFORE = "saturate(.7) contrast(.82) brightness(.94)";
+const scene = `<svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" role="img" aria-label="A wedding couple under a flower arch on a hill at sunset"><defs><linearGradient id="gs" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8FB6DB"/><stop offset=".55" stop-color="#F6C9A0"/><stop offset="1" stop-color="#F7A982"/></linearGradient><linearGradient id="gh" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FAE6A"/><stop offset="1" stop-color="#4C7F4A"/></linearGradient></defs><rect width="800" height="500" fill="url(#gs)"/><circle cx="610" cy="250" r="64" fill="#FFE3A8"/><circle cx="610" cy="250" r="100" fill="#FFE3A8" opacity=".25"/><path d="M0 330 Q160 250 320 320 T640 300 T800 310 V500 H0 Z" fill="#6F9A68"/><path d="M0 390 Q200 320 400 380 T800 360 V500 H0 Z" fill="url(#gh)"/><path d="M360 500 Q390 440 420 380 Q440 430 520 500 Z" fill="#D8C9A8" opacity=".7"/><g fill="#3F6B45"><circle cx="90" cy="320" r="34"/><rect x="86" y="340" width="8" height="40"/><circle cx="700" cy="330" r="28"/><rect x="696" y="346" width="8" height="34"/></g><g><path d="M300 400 V230 Q300 150 400 150 Q500 150 500 230 V400" fill="none" stroke="#8AAE7A" stroke-width="14"/><g fill="#F7C9D4"><circle cx="300" cy="260" r="14"/><circle cx="296" cy="300" r="12"/><circle cx="304" cy="340" r="13"/><circle cx="500" cy="270" r="14"/><circle cx="504" cy="310" r="12"/><circle cx="496" cy="350" r="13"/><circle cx="330" cy="188" r="15"/><circle cx="372" cy="160" r="14"/><circle cx="430" cy="158" r="15"/><circle cx="472" cy="188" r="14"/></g><g fill="#FFFFFF"><circle cx="318" cy="205" r="9"/><circle cx="400" cy="152" r="10"/><circle cx="486" cy="215" r="9"/><circle cx="300" cy="230" r="9"/></g></g><g><ellipse cx="372" cy="402" rx="38" ry="7" fill="#2D4A33" opacity=".35"/><ellipse cx="438" cy="402" rx="44" ry="7" fill="#2D4A33" opacity=".35"/><circle cx="372" cy="262" r="15" fill="#E7B796"/><path d="M356 258 Q372 238 388 258 Q380 250 356 258Z" fill="#3B2A22"/><path d="M350 280 H394 V372 H350 Z" fill="#2B3445"/><path d="M356 372 H390 V402 H356 Z" fill="#232A38"/><circle cx="438" cy="258" r="15" fill="#EBC1A0"/><path d="M420 256 Q438 230 456 256 Q452 276 440 280 Q424 276 420 256Z" fill="#5A3A28"/><path d="M416 282 Q438 270 460 282 L482 402 H394 Z" fill="#FFFDFB"/><path d="M416 282 Q438 270 460 282 L450 330 H426 Z" fill="#F3EEE8"/><path d="M394 294 L416 300 M462 300 L482 286" stroke="#FFFDFB" stroke-width="9" stroke-linecap="round"/></g></svg>`;
+const css = `
+@font-face{font-family:"Crimson Pro";src:url(fonts/CrimsonPro-Regular.ttf) format("truetype");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Crimson Pro";src:url(fonts/CrimsonPro-Italic.ttf) format("truetype");font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:"Instrument Sans";src:url(fonts/InstrumentSans-Regular.ttf) format("truetype");font-weight:400;font-display:swap}
+@font-face{font-family:"Instrument Sans";src:url(fonts/InstrumentSans-Bold.ttf) format("truetype");font-weight:700;font-display:swap}
+h1,h2,h3{font-family:var(--display);font-weight:400;letter-spacing:-.01em}h1{font-size:clamp(3rem,8vw,6.4rem);line-height:.96}h2{font-size:clamp(2.1rem,4.6vw,3.6rem);line-height:1.04}h3{font-size:1.5rem}
+h1 em,h2 em{font-style:italic;color:var(--accent)}.eyebrow{color:var(--ink);letter-spacing:.2em}
+.hero{padding:clamp(110px,12vw,150px) 0 clamp(26px,4vw,56px)}.hero .wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:20px;align-items:center}.hero h1{margin:1rem 0 1.2rem}.cta-row{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:1.6rem}.hero .gl3d{max-width:380px;justify-self:center}
+@media(max-width:820px){.hero .wrap{grid-template-columns:minmax(0,1fr)}}
+.gr .stage{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:16/10;background:#222;box-shadow:0 20px 50px rgba(0,0,0,.18);touch-action:pan-y;user-select:none}.gr .layer{position:absolute;inset:0}.gr .layer svg{display:block;width:100%;height:100%}.gr .after{clip-path:inset(0 0 0 50%)}
+.gr .lab{position:absolute;top:12px;font:700 .68rem var(--sans);letter-spacing:.16em;text-transform:uppercase;background:rgba(20,20,20,.65);color:#fff;padding:.35rem .6rem;border-radius:99px}.gr .lab.l{left:12px}.gr .lab.r{right:12px}
+.gr .handle{position:absolute;top:0;bottom:0;left:50%;width:2px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.15);pointer-events:none}.gr .handle:after{content:"\\2194";position:absolute;top:50%;left:50%;width:42px;height:42px;margin:-21px;border-radius:50%;background:#fff;color:#111;display:grid;place-items:center;font-size:1.15rem;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.gr input[type=range]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0}
+.gr .looks{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1.2rem}.gr .looks button{font:700 .9rem var(--sans);border:1px solid var(--ink);background:transparent;color:var(--ink);border-radius:999px;padding:.6rem 1.1rem;cursor:pointer}.gr .looks button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.gr .desc{display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:1.1rem}.gr .desc p{margin:0;max-width:56ch;color:var(--muted)}.gr .desc b{display:block;font:400 1.7rem var(--display);color:var(--ink);margin-bottom:.2rem}.gr .note{display:block;margin-top:.8rem;font-size:.76rem;color:var(--muted)}
+.th{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(10px,2vw,24px)}.th div{border-top:1px solid var(--ink);padding-top:1rem}.th b{display:block;font:400 3.2rem/1 var(--display);color:var(--ink)}.th p{margin:.3rem 0 0;color:var(--muted)}@media(max-width:760px){.th{grid-template-columns:minmax(0,1fr)}}
+.sv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(12px,2vw,24px)}.sv a{display:grid;grid-template-columns:110px minmax(0,1fr);gap:1rem;align-items:center;text-decoration:none;color:inherit;border-top:1px solid var(--ink);padding:1rem 0}.sv img{width:110px;height:110px;object-fit:contain}.sv p{margin:.2rem 0 0;color:var(--muted);font-size:.92rem}@media(max-width:760px){.sv{grid-template-columns:minmax(0,1fr)}}
+`;
+const JS = `
+(function () {
+  var c = document.querySelector("[data-grade]"); if (!c) return;
+  var L = JSON.parse(c.getAttribute("data-grade")), af = c.querySelector(".after"), hd = c.querySelector(".handle"), rg = c.querySelector("input"), bs = [].slice.call(c.querySelectorAll(".looks button")), cur = 0;
+  function pos() { var v = +rg.value; af.style.clipPath = "inset(0 0 0 " + v + "%)"; hd.style.left = v + "%"; }
+  function pick(i) { cur = i; af.firstElementChild.style.filter = L.looks[i].f; c.querySelector("[data-ln]").textContent = L.looks[i].n; c.querySelector("[data-ld]").textContent = L.looks[i].d; c.querySelector(".lab.r").textContent = L.looks[i].n; bs.forEach(function (b, j) { b.setAttribute("aria-pressed", j === i ? "true" : "false"); }); }
+  rg.addEventListener("input", pos); bs.forEach(function (b, i) { b.addEventListener("click", function () { pick(i); }); }); pos(); pick(0);
+  c.querySelector("[data-book]").addEventListener("click", function () { var ta = document.querySelector("#order textarea"); if (ta) ta.value = "I love the " + L.looks[cur].n + " editing look. My date is: "; var o = document.getElementById("order"); if (o) o.scrollIntoView({ behavior: "smooth", block: "start" }); });
+})();
+`;
+module.exports = R.make({
+  name: "grade", themeColor: "#F6F4F0", fonts: FONTS, preload: ["assets/fonts/CrimsonPro-Regular.ttf"], js: JS,
+  vars: { bg: "#F6F4F0", surface: "#FFFFFF", ink: "#171717", muted: "#6A6660", line: "#DEDAD2", accent: "#C2410C", onaccent: "#FFFFFF", c1: "#171717", c2: "#E8C46A", c3: "#171717", rad: "10px", display: '"Crimson Pro",Georgia,serif', sans: '"Instrument Sans",system-ui,sans-serif', header: "rgba(246,244,240,.93)" },
+  css,
+  home(pack, { B, K, img, model3d }) {
+    const X = pack.copy.atelier, t = B.t;
+    const sv = pack.cats.map((c) => `<a href="menu.html#${c.id}" data-reveal>${img(c.art, c.name, { w: 220, h: 220, hint: B.hintOf(pack, c) })}<div><h3>${c.name}</h3><p>${c.blurb}</p></div></a>`).join("");
+    const nums = X.stats.map(([v, s, l]) => `<div data-reveal><b>${v}${s}</b><p>${l}</p></div>`).join("");
+    const btns = LOOKS.map((l, i) => `<button type="button" aria-pressed="${i === 0}">${l.n}</button>`).join("");
+    return `<section class="hero"><div class="wrap"><div><span class="eyebrow">${X.heroEyebrow}</span><h1>Your photographs, <em>your look</em>.</h1><p class="lead">${t("tagline")}</p><div class="cta-row"><a class="btn btn-primary" href="#look"><span>Compare looks</span></a><a class="btn" href="menu.html"><span>${X.cta2}</span></a></div></div>${model3d(pack, "frame", "polaroid", "A picture frame you can turn", { c1: "#C45C78", c2: "#E8C46A", c3: "#171717", hint: "a picture frame" })}</div></section>
+<section class="sec" id="look" style="padding-top:0"><div class="wrap"><div class="sh" data-reveal><div><span class="eyebrow">Editing looks</span><h2 style="margin-top:.8rem">Drag to see <em>the difference</em></h2></div></div><div class="gr" data-grade='${JSON.stringify({ looks: LOOKS })}' data-reveal><div class="stage"><div class="layer" style="filter:${BEFORE}">${scene}</div><div class="layer after"><div style="width:100%;height:100%">${scene.replace(/id="gs"/g, 'id="gs2"').replace(/id="gh"/g, 'id="gh2"').replace(/url\(#gs\)/g, "url(#gs2)").replace(/url\(#gh\)/g, "url(#gh2)")}</div></div><span class="lab l">Straight from camera</span><span class="lab r"></span><div class="handle"></div><input type="range" min="2" max="98" value="50" aria-label="Drag to compare the unedited and edited photograph"></div><div class="looks">${btns}</div><div class="desc"><div><b data-ln></b><p data-ld></p></div><button type="button" class="btn btn-primary" data-book><span>I want this look</span></button></div><span class="note">An illustration for demonstration. Your own photographs are edited by hand, one at a time.</span></div></div></section>
+<section class="sec" style="padding-top:0"><div class="wrap"><div class="th">${nums}</div></div></section>
+<section class="sec" style="padding-top:0"><div class="wrap"><div class="sh" data-reveal><div><span class="eyebrow">${X.collection[0]}</span><h2 style="margin-top:.8rem">${X.collection[1]}</h2></div><a class="btn" href="menu.html"><span>${X.collection[2]}</span></a></div><div class="sv">${sv}</div></div></section>`;
+  },
+});
