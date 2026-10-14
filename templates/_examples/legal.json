@@ -1,0 +1,294 @@
+{
+ "ex_025c09e473": {
+  "h": "{{owner_name}} founded {{business_name}} in {{year_founded}} to give ordinary people clear advice, a named lawyer and a fee they can see first.",
+  "r": "text"
+ },
+ "ex_02e946744c": {
+  "h": "Debt recovery",
+  "r": "name"
+ },
+ "ex_07bdf0190f": {
+  "h": "Look after the people you love, and settle an estate without the stress.",
+  "r": "desc"
+ },
+ "ex_0847f8f64f": {
+  "h": "Straight answers for employees and owners, before a problem becomes a fight.",
+  "r": "desc"
+ },
+ "ex_08afa446e0": {
+  "h": "We confirm the cost and the timeline in writing, so there are no surprises.",
+  "r": "text"
+ },
+ "ex_0a2d2529a2": {
+  "h": "Your named solicitor handles the work and keeps you updated at every stage.",
+  "r": "text"
+ },
+ "ex_0a312f5137": {
+  "h": "first call free",
+  "r": "price"
+ },
+ "ex_0d89f5373b": {
+  "h": "A clear, fair agreement before the wedding, drafted with care.",
+  "r": "desc"
+ },
+ "ex_11b1525343": {
+  "h": "from &pound;1,500 + VAT",
+  "r": "price"
+ },
+ "ex_14f54bc522": {
+  "h": "A fair, legally binding agreement about money and property.",
+  "r": "desc"
+ },
+ "ex_16e1414cd9": {
+  "h": "Independent advice before you sign, as the law requires.",
+  "r": "desc"
+ },
+ "ex_186c8c74f7": {
+  "h": "no win, no fee options",
+  "r": "price"
+ },
+ "ex_196f5890ca": {
+  "h": "Book <em>a free call</em>",
+  "r": "text"
+ },
+ "ex_1bc10986c5": {
+  "h": "from &pound;895 + VAT",
+  "r": "price"
+ },
+ "ex_2009a9d701": {
+  "h": "Choose who can make decisions for you if you ever cannot.",
+  "r": "desc"
+ },
+ "ex_224fc99b62": {
+  "h": "&pound;180 + VAT",
+  "r": "price"
+ },
+ "ex_23337f79f4": {
+  "h": "from &pound;300 an hour",
+  "r": "price"
+ },
+ "ex_25bda43681": {
+  "h": "A fixed-fee purchase, with searches, Land Registry and stamp duty handled for you.",
+  "r": "desc"
+ },
+ "ex_28207d2abc": {
+  "h": "Free first call",
+  "r": "text"
+ },
+ "ex_30462d1c7a": {
+  "h": "from &pound;750 + VAT",
+  "r": "price"
+ },
+ "ex_31074d0c08": {
+  "h": "from &pound;950 + VAT",
+  "r": "price"
+ },
+ "ex_314ca5f452": {
+  "h": "Financial settlements",
+  "r": "name"
+ },
+ "ex_34cae0953f": {
+  "h": "Born in Manchester, <em>for Manchester</em>",
+  "r": "text"
+ },
+ "ex_34e30c210c": {
+  "h": "Unfair dismissal, redundancy, pay and discrimination, explained clearly.",
+  "r": "desc"
+ },
+ "ex_34f34850a9": {
+  "h": "from &pound;1,250 + VAT",
+  "r": "price"
+ },
+ "ex_354f8b1316": {
+  "h": "from &pound;650 + VAT",
+  "r": "price"
+ },
+ "ex_36ca8831bd": {
+  "h": "Conveyancing from offer to keys, with one fixed fee and a named lawyer.",
+  "r": "desc"
+ },
+ "ex_3cfdd442ef": {
+  "h": "{{business_name}} are friendly solicitors in {{city}}. Property, family, wills and employment law, with fixed fees and a free first call.",
+  "r": "text"
+ },
+ "ex_423ff1a394": {
+  "h": "Children and arrangements",
+  "r": "name"
+ },
+ "ex_428381cce8": {
+  "h": "Tell us briefly what has happened. A solicitor will call you back to arrange your free 15 minute call.",
+  "r": "text"
+ },
+ "ex_445b3ee951": {
+  "h": "&pound;295 + VAT",
+  "r": "price"
+ },
+ "ex_4daba691a6": {
+  "h": "Fees are examples. We confirm a fixed fee in writing before we start.",
+  "r": "text"
+ },
+ "ex_4e4de455af": {
+  "h": "Agreements and court orders that put your children first.",
+  "r": "desc"
+ },
+ "ex_5f27019acb": {
+  "h": "Terms and conditions, supplier and client contracts that protect you.",
+  "r": "desc"
+ },
+ "ex_659ff0fcfc": {
+  "h": "Selling a home",
+  "r": "name"
+ },
+ "ex_6c7c96e885": {
+  "h": "Probate",
+  "r": "name"
+ },
+ "ex_6e3e9c658e": {
+  "h": "Advice for <em>every stage</em>",
+  "r": "text"
+ },
+ "ex_737be1dc55": {
+  "h": "from &pound;1,100 + VAT",
+  "r": "price"
+ },
+ "ex_73c50789b7": {
+  "h": "Our purchase had a deadline and three other parties. One named solicitor kept us informed every week and we got the keys on time.",
+  "r": "desc"
+ },
+ "ex_78fba642cf": {
+  "h": "A clear, properly witnessed will, written to your wishes.",
+  "r": "desc"
+ },
+ "ex_79d71571ef": {
+  "h": "Clear advice on leases, ground rent and extending your lease.",
+  "r": "desc"
+ },
+ "ex_7a95e98cd9": {
+  "h": "Business contracts",
+  "r": "name"
+ },
+ "ex_7c123ff82c": {
+  "h": "We deal with the buyer's solicitor and keep your sale on track to completion.",
+  "r": "desc"
+ },
+ "ex_7fb6c4442d": {
+  "h": "A quick, fixed-fee remortgage when you switch lender, with no surprises.",
+  "r": "desc"
+ },
+ "ex_81ea1c6d8e": {
+  "h": "from &pound;350 + VAT",
+  "r": "price"
+ },
+ "ex_8a839a62ac": {
+  "h": "Buying a home",
+  "r": "name"
+ },
+ "ex_94bea8dc12": {
+  "h": "Divorce",
+  "r": "name"
+ },
+ "ex_9f04dfae93": {
+  "h": "from &pound;450 + VAT",
+  "r": "price"
+ },
+ "ex_a245e67a57": {
+  "h": "A clear fixed fee",
+  "r": "text"
+ },
+ "ex_a29b190fc5": {
+  "h": "from &pound;795 + VAT",
+  "r": "price"
+ },
+ "ex_a3702fb911": {
+  "h": "Settlement agreements",
+  "r": "name"
+ },
+ "ex_ab520710a3": {
+  "h": "Book a free call",
+  "r": "text"
+ },
+ "ex_ad813bfed4": {
+  "h": "Sample review, Callum and Ria",
+  "r": "text"
+ },
+ "ex_b522f9165d": {
+  "h": "Request my free call",
+  "r": "text"
+ },
+ "ex_b9398056f9": {
+  "h": "Lasting power of attorney",
+  "r": "name"
+ },
+ "ex_ba20e781ed": {
+  "h": "Leasehold and lease extensions",
+  "r": "name"
+ },
+ "ex_bd9880d462": {
+  "h": "Need advice?<br><em>Call us free.</em>",
+  "r": "text"
+ },
+ "ex_c1a060b35a": {
+  "h": "Calm, practical advice at the hardest of times, with fixed fees where we can.",
+  "r": "desc"
+ },
+ "ex_c65da31e73": {
+  "h": "Employment advice",
+  "r": "name"
+ },
+ "ex_c80a5cf129": {
+  "h": "{{owner_name}} founded {{business_name}} in {{year_founded}}. Clear advice, fixed fees and a named lawyer.",
+  "r": "text"
+ },
+ "ex_c96881be9b": {
+  "h": "A firm letter, and court action if needed, to collect what you are owed.",
+  "r": "desc"
+ },
+ "ex_d299c151ee": {
+  "h": "Protect your home and savings for the next generation.",
+  "r": "desc"
+ },
+ "ex_d74efe0529": {
+  "h": "We deal with the paperwork, so you can focus on your family.",
+  "r": "desc"
+ },
+ "ex_de689fc2cd": {
+  "h": "from &pound;395 + VAT",
+  "r": "price"
+ },
+ "ex_e473ef6390": {
+  "h": "Trusts",
+  "r": "name"
+ },
+ "ex_e9d8aaf2da": {
+  "h": "{{owner_name}} founded {{business_name}} in {{year_founded}}. We value clear advice, fixed fees and a named lawyer who picks up the phone.",
+  "r": "text"
+ },
+ "ex_ea5301432f": {
+  "h": "Prenuptial agreements",
+  "r": "name"
+ },
+ "ex_eb4a1c7d24": {
+  "h": "Guidance through every step of an uncontested divorce, in plain English.",
+  "r": "desc"
+ },
+ "ex_ec3538ee28": {
+  "h": "No jargon, no surprises.",
+  "r": "text"
+ },
+ "ex_eda0c2af97": {
+  "h": "Free first call &middot; {{phone}}",
+  "r": "text"
+ },
+ "ex_f4fd08cba1": {
+  "h": "Single will",
+  "r": "name"
+ },
+ "ex_f6b66356dd": {
+  "h": "Fixed fees",
+  "r": "text"
+ },
+ "ex_ff56f292e7": {
+  "h": "Remortgage",
+  "r": "name"
+ }
+}

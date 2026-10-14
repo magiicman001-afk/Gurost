@@ -70,7 +70,7 @@ test("phone numbers become a tel: link, UK style by default", () => {
   assert.equal(T.phoneHref(""), "");
 });
 
-test("a filled page shows the customer's words, escaped, and example text where they left a blank", () => {
+test("a filled page shows the customer's words, escaped, and an 'Add ... here' marker where they left a blank", () => {
   const values = T.cleanValues("tech", { business_name: "Acme <b>x</b> & Co", phone: "07700 900123", city: "Leeds" }).values;
   const site = T.makeSite("tech", "estimate", values);
   const home = T.respond(site, "/", { formEndpoint: "https://gurost.test/api/site-forms/abc" });
@@ -81,7 +81,8 @@ test("a filled page shows the customer's words, escaped, and example text where 
   assert.ok(home.body.includes('href="tel:+447700900123"'));
   assert.ok(home.body.includes('data-endpoint="https://gurost.test/api/site-forms/abc"'));
   assert.ok(!home.body.includes("Northlight"), "the example business name is replaced");
-  assert.ok(home.body.includes("Oxford Road"), "an unfilled address keeps its example text");
+  assert.ok(!home.body.includes("Oxford Road"), "the example business's address never appears on a customer's site");
+  assert.ok(home.body.includes("[Add street address here]"), "an unfilled address shows a marker instead");
   assert.ok(!/\{\{/.test(home.body), "no token is left behind");
   const second = T.respond(site, "/menu.html", {});
   assert.equal(second.status, 200);

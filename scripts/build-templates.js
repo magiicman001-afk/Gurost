@@ -7,6 +7,7 @@
 const fs = require("fs");
 const path = require("path");
 const { fillTemplate } = require("../templates/_src/fill");
+const { tokenise, exampleValues } = require("../templates/_src/examples");
 
 const FONT_DIR = process.env.FONT_DIR || "/mnt/skills/examples/canvas-design/canvas-fonts";
 const args = process.argv.slice(2);
@@ -19,11 +20,15 @@ const write = (file, data) => { fs.mkdirSync(path.dirname(file), { recursive: tr
 
 for (const pack of PACKS) {
   const outRoot = path.join(__dirname, "..", "templates", pack.id);
+  const examples = {}; // every example text of this pack's pages, kept apart from them (see templates/_src/examples.js)
   for (const style of pack.styles) {
     const b = require(`../templates/_src/${style}`).build(pack);
-    const files = {};
-    for (const [p, body] of Object.entries(b.files)) files[p] = typeof body === "string" ? body.replace(/\{\{theme_color\}\}/g, b.themeColor) : body;
-    for (const [dir, base] of [[path.join(outRoot, style), null], demoDir ? [path.join(demoDir, pack.id, style), pack.demo] : [null, null]]) {
+    const raw = {};
+    for (const [p, body] of Object.entries(b.files)) raw[p] = typeof body === "string" ? body.replace(/\{\{theme_color\}\}/g, b.themeColor) : body;
+    const tok = tokenise(raw, pack);
+    Object.assign(examples, tok.table);
+    const files = tok.files;
+    for (const [dir, base] of [[path.join(outRoot, style), null], demoDir ? [path.join(demoDir, pack.id, style), { ...pack.demo, ...exampleValues(tok.table) }] : [null, null]]) {
       if (!dir) continue;
       let out = files;
       if (base) { const r = fillTemplate(files, base); out = r.files; if (r.missing.length) console.warn(pack.id, style, "tokens without a demo value:", r.missing.join(", ")); }
@@ -41,4 +46,6 @@ for (const pack of PACKS) {
     }
     console.log(pack.id, style, Object.keys(files).length, "files");
   }
+  const sorted = Object.fromEntries(Object.keys(examples).sort().map((k) => [k, examples[k]]));
+  write(path.join(__dirname, "..", "templates", "_examples", pack.id + ".json"), JSON.stringify(sorted, null, 1) + "\n");
 }

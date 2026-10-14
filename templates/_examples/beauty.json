@@ -1,0 +1,246 @@
+{
+ "ex_00139144cf": {
+  "h": "Nail art set",
+  "r": "name"
+ },
+ "ex_01d0dec6bf": {
+  "h": "Spray tan",
+  "r": "name"
+ },
+ "ex_0262303e93": {
+  "h": "from &pound;32 &middot; 45 min",
+  "r": "price"
+ },
+ "ex_0403e755ef": {
+  "h": "Hand-painted designs, chrome, French or glitter. Bring a picture.",
+  "r": "desc"
+ },
+ "ex_06d4126eb5": {
+  "h": "Shape, cuticle care and two weeks of chip-free colour.",
+  "r": "desc"
+ },
+ "ex_0be291ef9a": {
+  "h": "Express facial",
+  "r": "name"
+ },
+ "ex_0fdf37bbc2": {
+  "h": "Gel manicure",
+  "r": "name"
+ },
+ "ex_1b7e380537": {
+  "h": "Lash lift and tint",
+  "r": "name"
+ },
+ "ex_2193aafa39": {
+  "h": "Curled, darker lashes for weeks. No mascara needed.",
+  "r": "desc"
+ },
+ "ex_232aaa654d": {
+  "h": "Evening make-up",
+  "r": "name"
+ },
+ "ex_25499ba42f": {
+  "h": "from &pound;55 &middot; 45 min",
+  "r": "price"
+ },
+ "ex_25a6dec6d6": {
+  "h": "Trained, insured and proud of their craft.",
+  "r": "text"
+ },
+ "ex_27e1d2f582": {
+  "h": "A spray tan with a brow tidy and a quick manicure.",
+  "r": "desc"
+ },
+ "ex_375acf1c44": {
+  "h": "Smooth, bouncy or sleek. Ideal before a party or a big day.",
+  "r": "desc"
+ },
+ "ex_3cc42b4543": {
+  "h": "from &pound;35 &middot; 30 min",
+  "r": "price"
+ },
+ "ex_3da3c3969b": {
+  "h": "Cut and finish",
+  "r": "name"
+ },
+ "ex_3db2e3397d": {
+  "h": "{{owner_name}} opened {{business_name}} in {{year_founded}} with one chair and a big idea: a salon that feels like a treat, not a chore. Today our team looks after thousands of clients every year.",
+  "r": "text"
+ },
+ "ex_40892b04c8": {
+  "h": "A deep cleanse, exfoliation and a hydrating mask. Skin looks fresh straight away.",
+  "r": "desc"
+ },
+ "ex_43fe2df5a8": {
+  "h": "Balayage",
+  "r": "name"
+ },
+ "ex_45c2fc1f8e": {
+  "h": "from &pound;38 &middot; 55 min",
+  "r": "price"
+ },
+ "ex_4ddef6b52d": {
+  "h": "from &pound;25 &middot; 20 min",
+  "r": "price"
+ },
+ "ex_4e314906c0": {
+  "h": "from &pound;140 &middot; 3 hr",
+  "r": "price"
+ },
+ "ex_4f9c6290a7": {
+  "h": "Shaped to your face and tinted for a soft, defined finish.",
+  "r": "desc"
+ },
+ "ex_54ffacecbb": {
+  "h": "from &pound;75 &middot; 2 hr",
+  "r": "price"
+ },
+ "ex_5c62844c9e": {
+  "h": "from &pound;18 &middot; 15 min",
+  "r": "price"
+ },
+ "ex_6fc08a151c": {
+  "h": "Polished, long-wearing make-up for dinners, parties and photos.",
+  "r": "desc"
+ },
+ "ex_7490a0298a": {
+  "h": "Rich, even all-over colour with a glossing treatment for shine.",
+  "r": "desc"
+ },
+ "ex_77a20431a2": {
+  "h": "See every treatment and price at {{business_name}}, {{city}}: hair, nails, face, brows and tanning.",
+  "r": "text"
+ },
+ "ex_809e8fbbc1": {
+  "h": "from &pound;45 &middot; 75 min",
+  "r": "price"
+ },
+ "ex_8557a18cfc": {
+  "h": "{{owner_name}} opened {{business_name}} in {{year_founded}}. Every visit starts with a chat and ends with you feeling brilliant.",
+  "r": "text"
+ },
+ "ex_8682193d23": {
+  "h": "Long-lasting colour, clean finishes and a little bit of art.",
+  "r": "desc"
+ },
+ "ex_8790a9a773": {
+  "h": "A patch test is needed 48 hours before",
+  "r": "text"
+ },
+ "ex_8d0638b8e1": {
+  "h": "A soothing soak, a gentle buff and a polish that lasts.",
+  "r": "desc"
+ },
+ "ex_8e0e3dbee2": {
+  "h": "Luxury glow tan",
+  "r": "name"
+ },
+ "ex_93d9d93f07": {
+  "h": "A free consultation before every new treatment.",
+  "r": "text"
+ },
+ "ex_954ac51e6a": {
+  "h": "Blow-dry",
+  "r": "name"
+ },
+ "ex_956ca5cfff": {
+  "h": "Brow shape and tint",
+  "r": "name"
+ },
+ "ex_99106a6a7e": {
+  "h": "from &pound;40 &middot; 60 min",
+  "r": "price"
+ },
+ "ex_a133e18f78": {
+  "h": "Cuts, colour and finishes by a team that listens first.",
+  "r": "desc"
+ },
+ "ex_a5235ad11d": {
+  "h": "Feel like <em>the best you</em>.",
+  "r": "text"
+ },
+ "ex_a794ac3594": {
+  "h": "Refresh your colour between full tans, within seven days.",
+  "r": "desc"
+ },
+ "ex_a9e5645b74": {
+  "h": "Tan and tidy",
+  "r": "name"
+ },
+ "ex_aa4966ff4b": {
+  "h": "Streak-free sunless tanning that looks like you, on a good day.",
+  "r": "desc"
+ },
+ "ex_aeb0c0fb0e": {
+  "h": "Cuts and colour tailored to you.",
+  "r": "text"
+ },
+ "ex_b0f686d91d": {
+  "h": "Qualified team",
+  "r": "text"
+ },
+ "ex_b373c15ac6": {
+  "h": "Gel pedicure",
+  "r": "name"
+ },
+ "ex_b7e0b2a3bb": {
+  "h": "Streak-free tanning in minutes.",
+  "r": "text"
+ },
+ "ex_b8ce4faf84": {
+  "h": "from &pound;48 &middot; 50 min",
+  "r": "price"
+ },
+ "ex_bcf91b002e": {
+  "h": "Colour and gloss",
+  "r": "name"
+ },
+ "ex_ca71b1aecf": {
+  "h": "Infills",
+  "r": "name"
+ },
+ "ex_cecb03adbd": {
+  "h": "from &pound;45 &middot; 45 min",
+  "r": "price"
+ },
+ "ex_d390816567": {
+  "h": "from &pound;28 &middot; 40 min",
+  "r": "price"
+ },
+ "ex_d3c2b6c19f": {
+  "h": "from &pound;42 &middot; 60 min",
+  "r": "price"
+ },
+ "ex_dc4f30b94e": {
+  "h": "Keep your extensions looking fresh between full sets.",
+  "r": "desc"
+ },
+ "ex_e102e24eb0": {
+  "h": "Skin, lashes, brows and make-up for everyday and special days.",
+  "r": "desc"
+ },
+ "ex_e12577d2e4": {
+  "h": "A consultation, a wash, a precision cut and a blow-dry you can recreate at home.",
+  "r": "desc"
+ },
+ "ex_e3f2287d76": {
+  "h": "A natural colour in minutes, in a shade chosen for your skin tone.",
+  "r": "desc"
+ },
+ "ex_e7d88e9f4e": {
+  "h": "Hydrating, longer-lasting colour with a subtle luminous finish.",
+  "r": "desc"
+ },
+ "ex_e7fee3e2cd": {
+  "h": "Hand-painted, sun-kissed highlights that grow out softly.",
+  "r": "desc"
+ },
+ "ex_f3ddbfc18c": {
+  "h": "Tan top-up",
+  "r": "name"
+ },
+ "ex_f43a5c529d": {
+  "h": "from &pound;22 &middot; 25 min",
+  "r": "price"
+ }
+}

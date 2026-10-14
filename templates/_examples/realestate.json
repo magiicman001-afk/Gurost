@@ -1,0 +1,326 @@
+{
+ "ex_08a0fb46d8": {
+  "h": "Furnished studio, all bills in one easy payment.",
+  "r": "desc"
+ },
+ "ex_08e433a246": {
+  "h": "Fully protected",
+  "r": "text"
+ },
+ "ex_08eb140a7c": {
+  "h": "Tell us about your home and we will arrange a free, no obligation valuation.",
+  "r": "text"
+ },
+ "ex_09077e78b5": {
+  "h": "Tenant find",
+  "r": "name"
+ },
+ "ex_0d0d32ce78": {
+  "h": "&pound;2,100 pcm",
+  "r": "price"
+ },
+ "ex_1251065a5f": {
+  "h": "Top-floor apartment with river views, secure parking and a concierge.",
+  "r": "desc"
+ },
+ "ex_182e7a8633": {
+  "h": "Hands-off lettings that keep your property full and your rent coming in.",
+  "r": "desc"
+ },
+ "ex_21e8821a51": {
+  "h": "A bright first home above the shops, with a Juliet balcony.",
+  "r": "desc"
+ },
+ "ex_22e6f88612": {
+  "h": "Safety certificates",
+  "r": "name"
+ },
+ "ex_265725f5ea": {
+  "h": "&pound;295,000",
+  "r": "price"
+ },
+ "ex_268972b53d": {
+  "h": "Honest advice",
+  "r": "text"
+ },
+ "ex_29fd49e13c": {
+  "h": "Roundhay",
+  "r": "text"
+ },
+ "ex_2a00dfc5f0": {
+  "h": "&pound;189,500",
+  "r": "price"
+ },
+ "ex_2bbc7c4e4c": {
+  "h": "included in our fee",
+  "r": "price"
+ },
+ "ex_317251a7f8": {
+  "h": "&pound;625,000",
+  "r": "price"
+ },
+ "ex_343fd6097c": {
+  "h": "Four-bed detached, Roundhay",
+  "r": "name"
+ },
+ "ex_380f74c744": {
+  "h": "Three-bed terrace, Armley",
+  "r": "name"
+ },
+ "ex_384eafcf41": {
+  "h": "Regulated and clients' money protected.",
+  "r": "text"
+ },
+ "ex_3bd19d57e1": {
+  "h": "Four-bed house share, Headingley",
+  "r": "name"
+ },
+ "ex_3ceb5b595c": {
+  "h": "&pound;139,950",
+  "r": "price"
+ },
+ "ex_3e97613ad8": {
+  "h": "City centre",
+  "r": "text"
+ },
+ "ex_3f4b10b24b": {
+  "h": "Sale progression",
+  "r": "name"
+ },
+ "ex_42075598f8": {
+  "h": "A local expert visits, measures up and gives you a realistic price.",
+  "r": "desc"
+ },
+ "ex_46a3b41f92": {
+  "h": "Houses and flats across Leeds.",
+  "r": "text"
+ },
+ "ex_4fe2528b27": {
+  "h": "&pound;1,150 pcm",
+  "r": "price"
+ },
+ "ex_57f2c05688": {
+  "h": "Open house events",
+  "r": "name"
+ },
+ "ex_5ac349dfdf": {
+  "h": "Headingley",
+  "r": "text"
+ },
+ "ex_5c13f8675c": {
+  "h": "Three-bed semi, Headingley",
+  "r": "name"
+ },
+ "ex_5d82f24612": {
+  "h": "Two-bed flat, city centre",
+  "r": "name"
+ },
+ "ex_65310a28e8": {
+  "h": "Rent guarantee",
+  "r": "name"
+ },
+ "ex_65f9660b68": {
+  "h": "{{business_name}} is an independent estate agent and lettings agent in {{city}}. Homes for sale, homes to rent and a free valuation.",
+  "r": "text"
+ },
+ "ex_67319d3433": {
+  "h": "Viewings 7 days",
+  "r": "text"
+ },
+ "ex_6b833e116d": {
+  "h": "Chapeltown",
+  "r": "text"
+ },
+ "ex_6bff1736d1": {
+  "h": "Chapel Allerton",
+  "r": "text"
+ },
+ "ex_6d561cf36d": {
+  "h": "8% + VAT of monthly rent",
+  "r": "price"
+ },
+ "ex_6e10c12b1f": {
+  "h": "Spacious professional let with a big garden and off-street parking.",
+  "r": "desc"
+ },
+ "ex_74b23ca099": {
+  "h": "Homes with <em>local roots</em>.",
+  "r": "text"
+ },
+ "ex_77815cfe42": {
+  "h": "Full management",
+  "r": "name"
+ },
+ "ex_7b8ed826ef": {
+  "h": "&pound;1,295 pcm",
+  "r": "price"
+ },
+ "ex_7e0d7545cc": {
+  "h": "Tell us what you are looking for, or book a free valuation.",
+  "r": "text"
+ },
+ "ex_868eafac83": {
+  "h": "Well-kept lets, managed by people who answer the phone.",
+  "r": "desc"
+ },
+ "ex_8785743fd9": {
+  "h": "Renovated throughout, a courtyard garden and a new kitchen.",
+  "r": "desc"
+ },
+ "ex_8eee6fcc00": {
+  "h": "Sample review, Hannah and Joe",
+  "r": "text"
+ },
+ "ex_95cc763059": {
+  "h": "Book a free valuation",
+  "r": "text"
+ },
+ "ex_97874ee65c": {
+  "h": "{{owner_name}} started {{business_name}} in {{year_founded}} to give local people straight answers and better service. We still answer every call ourselves.",
+  "r": "text"
+ },
+ "ex_997321508e": {
+  "h": "{{owner_name}} started {{business_name}} in {{year_founded}}. We value honest advice, realistic prices and a quick reply.",
+  "r": "text"
+ },
+ "ex_9c4d83f7c1": {
+  "h": "We chase solicitors and keep your chain moving until completion.",
+  "r": "desc"
+ },
+ "ex_9d24acf007": {
+  "h": "A free valuation, honest advice and a team that sells homes faster.",
+  "r": "desc"
+ },
+ "ex_9d824e81d2": {
+  "h": "Generous family home with a kitchen extension, an office and mature gardens.",
+  "r": "desc"
+ },
+ "ex_9f572f42f1": {
+  "h": "&pound;795 pcm",
+  "r": "price"
+ },
+ "ex_9fb6992856": {
+  "h": "A managed viewing day that brings serious buyers through the door at once.",
+  "r": "desc"
+ },
+ "ex_a1fb3aa594": {
+  "h": "Modern flat with a balcony, close to the university and the station.",
+  "r": "desc"
+ },
+ "ex_a7fe223428": {
+  "h": "Free valuation",
+  "r": "text"
+ },
+ "ex_ab365dbf64": {
+  "h": "One-bed starter, Chapel Allerton",
+  "r": "name"
+ },
+ "ex_acfbc95587": {
+  "h": "Bay-fronted, a sunny garden and a short walk to the park. Chain free.",
+  "r": "desc"
+ },
+ "ex_b14742b908": {
+  "h": "Free home valuation",
+  "r": "name"
+ },
+ "ex_b15ea65ec4": {
+  "h": "Studio, South Bank",
+  "r": "name"
+ },
+ "ex_b33c12b432": {
+  "h": "{{owner_name}} started {{business_name}} in {{year_founded}}. Local people, honest advice and a quick reply.",
+  "r": "text"
+ },
+ "ex_b5de70ac42": {
+  "h": "A free, honest valuation.",
+  "r": "text"
+ },
+ "ex_b8fab96879": {
+  "h": "Hyde Park",
+  "r": "text"
+ },
+ "ex_bd228f77fc": {
+  "h": "from &pound;75",
+  "r": "price"
+ },
+ "ex_c382189342": {
+  "h": "Viewings 7 days &middot; {{phone}}",
+  "r": "text"
+ },
+ "ex_c3d0fa4c62": {
+  "h": "Insurance that pays your rent if a tenant stops.",
+  "r": "desc"
+ },
+ "ex_c41e479931": {
+  "h": "Rent collection, repairs, inspections and compliance, all handled.",
+  "r": "desc"
+ },
+ "ex_c486c2e123": {
+  "h": "from 50% of one month's rent",
+  "r": "price"
+ },
+ "ex_cf1277633a": {
+  "h": "Two-bed flat, Hyde Park",
+  "r": "name"
+ },
+ "ex_cfdc154af0": {
+  "h": "Professional photos, a floor plan, a video tour and top listing on every portal.",
+  "r": "desc"
+ },
+ "ex_d19901e30c": {
+  "h": "They valued our house on Monday, listed on Wednesday and had three offers by the weekend. Brilliant.",
+  "r": "desc"
+ },
+ "ex_d422e9092c": {
+  "h": "free, no obligation",
+  "r": "price"
+ },
+ "ex_d826d9a3ee": {
+  "h": "Book <em>a free valuation</em>",
+  "r": "text"
+ },
+ "ex_d8a6e9f7d0": {
+  "h": "Chain free",
+  "r": "text"
+ },
+ "ex_db3e43d8de": {
+  "h": "Born in Leeds, <em>for Leeds</em>",
+  "r": "text"
+ },
+ "ex_de92bbce09": {
+  "h": "Horsforth",
+  "r": "text"
+ },
+ "ex_ea748ec2b7": {
+  "h": "Gas, electrical and EPC certificates arranged for you.",
+  "r": "desc"
+ },
+ "ex_eb506eb3b0": {
+  "h": "Premium marketing",
+  "r": "name"
+ },
+ "ex_edd1e3f113": {
+  "h": "Adel",
+  "r": "text"
+ },
+ "ex_f4c30bab36": {
+  "h": "from &pound;14 a month",
+  "r": "price"
+ },
+ "ex_f87b58b206": {
+  "h": "Marketing, viewings, referencing and the tenancy agreement.",
+  "r": "desc"
+ },
+ "ex_fbd8fb8053": {
+  "h": "Family houses, first flats and a few special finds across Leeds.",
+  "r": "desc"
+ },
+ "ex_fc5b24d0e2": {
+  "h": "Local experts",
+  "r": "text"
+ },
+ "ex_fd99dc478e": {
+  "h": "{{city}} &middot; Independent estate agents",
+  "r": "text"
+ }
+}

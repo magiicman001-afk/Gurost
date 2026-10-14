@@ -1,0 +1,530 @@
+{
+ "ex_008ea56232": {
+  "h": "Members trained",
+  "r": "text"
+ },
+ "ex_00a894c711": {
+  "h": "7:15pm",
+  "r": "text"
+ },
+ "ex_059e077feb": {
+  "h": "12:15pm",
+  "r": "text"
+ },
+ "ex_0c49bc74a3": {
+  "h": "Boxing conditioning",
+  "r": "text"
+ },
+ "ex_11012373d6": {
+  "h": "First session free",
+  "r": "text"
+ },
+ "ex_113f835209": {
+  "h": "Run club",
+  "r": "text"
+ },
+ "ex_12f58fb721": {
+  "h": "Yes, most of our members started as beginners. Your free first session is with a coach who will show you around and match you to the right classes.",
+  "r": "text"
+ },
+ "ex_187333ee92": {
+  "h": "from &pound;26 each &middot; 55 min",
+  "r": "price"
+ },
+ "ex_1d9632fbe7": {
+  "h": "&pound;9 drop-in &middot; 40 min",
+  "r": "price"
+ },
+ "ex_1e784df570": {
+  "h": "Learn the big lifts with small groups and a coach watching your form.",
+  "r": "desc"
+ },
+ "ex_2089e89b6d": {
+  "h": "Mat pilates",
+  "r": "text"
+ },
+ "ex_222d08db3e": {
+  "h": "Breath-led movement linking one pose to the next.",
+  "r": "desc"
+ },
+ "ex_2250e86894": {
+  "h": "Everything in Everything",
+  "r": "text"
+ },
+ "ex_26414e770f": {
+  "h": "Maya",
+  "r": "text"
+ },
+ "ex_265dc298e8": {
+  "h": "Sam",
+  "r": "text"
+ },
+ "ex_27a96b3705": {
+  "h": "Strength foundations",
+  "r": "text"
+ },
+ "ex_29553af1e0": {
+  "h": "Two a week",
+  "r": "text"
+ },
+ "ex_2ed84021e1": {
+  "h": "What do I need to bring?",
+  "r": "text"
+ },
+ "ex_301ca159a9": {
+  "h": "Twelve years teaching. Makes stiff people feel brilliant.",
+  "r": "desc"
+ },
+ "ex_305e713567": {
+  "h": "Easy, steady and tempo groups. Every pace has a place.",
+  "r": "desc"
+ },
+ "ex_33434cffa0": {
+  "h": "11:15am",
+  "r": "text"
+ },
+ "ex_3824b54b16": {
+  "h": "Partner training",
+  "r": "name"
+ },
+ "ex_39fea7b731": {
+  "h": "No hard sell, no lock-in. Cancel any time.",
+  "r": "text"
+ },
+ "ex_3da6d84aa5": {
+  "h": "Once a month",
+  "r": "text"
+ },
+ "ex_40f90a769b": {
+  "h": "Kettlebell club",
+  "r": "text"
+ },
+ "ex_41426e759d": {
+  "h": "Simple habits and weekly check-ins. No crash diets.",
+  "r": "desc"
+ },
+ "ex_41d3ea252c": {
+  "h": "&pound;9 drop-in &middot; 60 min",
+  "r": "price"
+ },
+ "ex_45c2fc1f8e": {
+  "h": "from &pound;38 &middot; 55 min",
+  "r": "price"
+ },
+ "ex_486e9470ba": {
+  "h": "Claim my free session",
+  "r": "text"
+ },
+ "ex_4937e5100e": {
+  "h": "1-to-1 sessions",
+  "r": "text"
+ },
+ "ex_4a66d14807": {
+  "h": "Everything",
+  "r": "name"
+ },
+ "ex_4cdad06e6f": {
+  "h": "A written plan, updated monthly",
+  "r": "text"
+ },
+ "ex_4ee5ce80ac": {
+  "h": "Four a month",
+  "r": "text"
+ },
+ "ex_56ba8fba38": {
+  "h": "Coached lifting, from your first barbell to your next personal best.",
+  "r": "desc"
+ },
+ "ex_57a4e7ca7f": {
+  "h": "strength",
+  "r": "text"
+ },
+ "ex_5c4e63c0a0": {
+  "h": "Can I freeze my membership?",
+  "r": "text"
+ },
+ "ex_5cbb28302e": {
+  "h": "10:00am",
+  "r": "text"
+ },
+ "ex_5d9e2d91c4": {
+  "h": "All hours, all classes, no catches.",
+  "r": "desc"
+ },
+ "ex_60ab93a950": {
+  "h": "Gym floor, weekdays 10am to 4pm",
+  "r": "text"
+ },
+ "ex_60b543bfaa": {
+  "h": "Dan",
+  "r": "text"
+ },
+ "ex_62e8ada3c7": {
+  "h": "5:30pm",
+  "r": "text"
+ },
+ "ex_636485fa56": {
+  "h": "Claim <em>your free session</em>",
+  "r": "text"
+ },
+ "ex_65233d0385": {
+  "h": "Big effort in 45 minutes.",
+  "r": "text"
+ },
+ "ex_659aa47344": {
+  "h": "Coached lifting for every level.",
+  "r": "text"
+ },
+ "ex_66cb0bf30e": {
+  "h": "Powerlifting",
+  "r": "text"
+ },
+ "ex_6a8d00c010": {
+  "h": "Tell us a little about you and we will book your free first session within a day.",
+  "r": "text"
+ },
+ "ex_6da29d3451": {
+  "h": "&pound;11 drop-in &middot; 75 min",
+  "r": "price"
+ },
+ "ex_713edfcf81": {
+  "h": "Head coach and founder",
+  "r": "text"
+ },
+ "ex_73e7285d39": {
+  "h": "Your goals, your pace, your coach. We write the plan and run it with you.",
+  "r": "desc"
+ },
+ "ex_760d7d9910": {
+  "h": "Every hour we are open",
+  "r": "text"
+ },
+ "ex_77e18d6f0c": {
+  "h": "Pads, bags and footwork. No sparring, plenty of sweat.",
+  "r": "desc"
+ },
+ "ex_796bf31b4b": {
+  "h": "Former amateur boxer. Loud music, louder encouragement.",
+  "r": "desc"
+ },
+ "ex_7b9e56bcab": {
+  "h": "members trained",
+  "r": "text"
+ },
+ "ex_7bf9e6d321": {
+  "h": "{{owner_name}} started {{business_name}} in {{year_founded}}. We coach every session, learn every name and celebrate every first.",
+  "r": "text"
+ },
+ "ex_7c86cb0323": {
+  "h": "&pound;8 drop-in &middot; 45 min",
+  "r": "price"
+ },
+ "ex_7cc57ca608": {
+  "h": "Drop-in prices are shown. Members attend classes free of charge. Every class can be scaled to your level.",
+  "r": "text"
+ },
+ "ex_7dc8534f6f": {
+  "h": "Maya Lindqvist",
+  "r": "name"
+ },
+ "ex_7f7f4a96b6": {
+  "h": "Sam Reyes",
+  "r": "name"
+ },
+ "ex_803f3926ce": {
+  "h": "Movement check, goal chat and a simple first month plan.",
+  "r": "desc"
+ },
+ "ex_84da49c7dd": {
+  "h": "Tell us your goals and how much you have trained.",
+  "r": "text"
+ },
+ "ex_8720485fa0": {
+  "h": "11:45am",
+  "r": "text"
+ },
+ "ex_878113162c": {
+  "h": "Gym floor, every hour we are open",
+  "r": "text"
+ },
+ "ex_8c96288e5f": {
+  "h": "{{owner_name}} opened {{business_name}} in {{year_founded}}. Every session is coached, every member is known by name.",
+  "r": "text"
+ },
+ "ex_8e0ad82765": {
+  "h": "Josh",
+  "r": "text"
+ },
+ "ex_8ffa95b5a9": {
+  "h": "&pound;9 drop-in &middot; 45 min",
+  "r": "price"
+ },
+ "ex_90aec87050": {
+  "h": "Every class, unlimited",
+  "r": "text"
+ },
+ "ex_9333b88def": {
+  "h": "Every level",
+  "r": "text"
+ },
+ "ex_938aff4f49": {
+  "h": "Four 1-to-1 sessions a month",
+  "r": "text"
+ },
+ "ex_957ecf9f38": {
+  "h": "See every class, price and timetable at {{business_name}}, {{city}}: strength, HIIT and cardio, yoga and mobility, personal training.",
+  "r": "text"
+ },
+ "ex_95e8b6fc49": {
+  "h": "Gym floor 10am to 4pm on weekdays.",
+  "r": "desc"
+ },
+ "ex_95eacd0efb": {
+  "h": "Barbell basics",
+  "r": "text"
+ },
+ "ex_98a83b67ee": {
+  "h": "Programmed training for the squat, bench and deadlift.",
+  "r": "desc"
+ },
+ "ex_9a196bce96": {
+  "h": "Mobility reset",
+  "r": "text"
+ },
+ "ex_9ffb49ab3e": {
+  "h": "10:30am",
+  "r": "text"
+ },
+ "ex_a5aa6870da": {
+  "h": "Come in for a free session with a coach.",
+  "r": "text"
+ },
+ "ex_a6078f8519": {
+  "h": "{{business_name}} is a friendly gym and fitness studio in {{city}}. Strength, HIIT, yoga and personal training. Try a free first session.",
+  "r": "text"
+ },
+ "ex_a9080731e0": {
+  "h": "hiit",
+  "r": "text"
+ },
+ "ex_acf4ac0ea6": {
+  "h": "Yes. Pause for up to two months a year, for holidays, injury or anything else, at no charge.",
+  "r": "text"
+ },
+ "ex_afe3ea8b60": {
+  "h": "Free starter assessment",
+  "r": "text"
+ },
+ "ex_afec096d1e": {
+  "h": "Music, a rolling route and a coach calling the climbs.",
+  "r": "desc"
+ },
+ "ex_b0af672fa8": {
+  "h": "6:00pm",
+  "r": "text"
+ },
+ "ex_b417fa094d": {
+  "h": "Train with a friend and split the cost. Twice the fun.",
+  "r": "desc"
+ },
+ "ex_b688c0f643": {
+  "h": "Beginners welcome. Every class scales up or down.",
+  "r": "text"
+ },
+ "ex_b8bef37b71": {
+  "h": "Unlimited",
+  "r": "text"
+ },
+ "ex_b9ef7b6e88": {
+  "h": "A plan built around you, with a coach who keeps you honest.",
+  "r": "desc"
+ },
+ "ex_bb78a0835a": {
+  "h": "HIIT and boxing",
+  "r": "text"
+ },
+ "ex_bbaa501668": {
+  "h": "Starter assessment",
+  "r": "name"
+ },
+ "ex_bd20ffd130": {
+  "h": "Long holds, soft lights. The best way to end a hard week.",
+  "r": "desc"
+ },
+ "ex_be25b3b6d7": {
+  "h": "9:00am",
+  "r": "text"
+ },
+ "ex_be8c46e137": {
+  "h": "Rehab and performance. Gets you strong without getting you hurt.",
+  "r": "desc"
+ },
+ "ex_bee8ae06ba": {
+  "h": "Restorative stretch",
+  "r": "text"
+ },
+ "ex_c02013c97a": {
+  "h": "Written plan and nutrition check-ins",
+  "r": "text"
+ },
+ "ex_c025efd197": {
+  "h": "Spin ride",
+  "r": "text"
+ },
+ "ex_c0b6597f3b": {
+  "h": "Try it free",
+  "r": "text"
+ },
+ "ex_c1b6966751": {
+  "h": "Move well, recover properly and clear your head.",
+  "r": "desc"
+ },
+ "ex_c27ef7156b": {
+  "h": "Two classes a week",
+  "r": "text"
+ },
+ "ex_c339b7a77a": {
+  "h": "6:30am",
+  "r": "text"
+ },
+ "ex_c33eef0612": {
+  "h": "Coached",
+  "r": "name"
+ },
+ "ex_c666140fee": {
+  "h": "Everything, plus a coach in your corner.",
+  "r": "desc"
+ },
+ "ex_c71c303c5f": {
+  "h": "Run club and workshops",
+  "r": "text"
+ },
+ "ex_ca0435ec12": {
+  "h": "No. Every plan is month to month and you can cancel any time from your account or at the front desk.",
+  "r": "text"
+ },
+ "ex_ca1b68e0b3": {
+  "h": "1-to-1 session",
+  "r": "name"
+ },
+ "ex_cb0bb242f6": {
+  "h": "Dan Okafor",
+  "r": "name"
+ },
+ "ex_cb1da6c7b0": {
+  "h": "Core, posture and control, one slow rep at a time.",
+  "r": "desc"
+ },
+ "ex_cb474cc092": {
+  "h": "Trainers, water and a towel. Mats, bars, bikes and kettlebells are all here.",
+  "r": "text"
+ },
+ "ex_cb946665c5": {
+  "h": "Nutrition check-ins",
+  "r": "text"
+ },
+ "ex_cdef404b7d": {
+  "h": "Drop-in prices are shown. Members attend classes free of charge.",
+  "r": "text"
+ },
+ "ex_ce4b14977d": {
+  "h": "Open stiff hips and shoulders so everything else gets easier.",
+  "r": "desc"
+ },
+ "ex_d0f02523ac": {
+  "h": "&pound;25 &middot; 45 min",
+  "r": "price"
+ },
+ "ex_d42c011296": {
+  "h": "mind",
+  "r": "text"
+ },
+ "ex_d4bfe01c76": {
+  "h": "Bring a friend",
+  "r": "text"
+ },
+ "ex_d51ae22f5c": {
+  "h": "Vinyasa flow",
+  "r": "text"
+ },
+ "ex_d63d3a95be": {
+  "h": "&pound;9 drop-in &middot; 50 min",
+  "r": "price"
+ },
+ "ex_d98670b27f": {
+  "h": "Free for members &middot; 60 min",
+  "r": "price"
+ },
+ "ex_dae64f1f97": {
+  "h": "from &pound;60 / month",
+  "r": "price"
+ },
+ "ex_dba499435e": {
+  "h": "Off-peak",
+  "r": "name"
+ },
+ "ex_dc6117374f": {
+  "h": "&pound;10 drop-in &middot; 50 min",
+  "r": "price"
+ },
+ "ex_de54120203": {
+  "h": "Bring a friend, once a month",
+  "r": "text"
+ },
+ "ex_e2d96356d8": {
+  "h": "HIIT 45",
+  "r": "text"
+ },
+ "ex_e6118c27eb": {
+  "h": "Gym floor",
+  "r": "text"
+ },
+ "ex_e7f580c49c": {
+  "h": "&pound;8 drop-in &middot; 40 min",
+  "r": "price"
+ },
+ "ex_e8c8cc36b3": {
+  "h": "Qualified, insured and genuinely friendly.",
+  "r": "text"
+ },
+ "ex_eb704696cf": {
+  "h": "Intervals on the floor with the whole room. Scale it up or down.",
+  "r": "desc"
+ },
+ "ex_ed9ffe8c29": {
+  "h": "Weekdays 10am to 4pm",
+  "r": "text"
+ },
+ "ex_f2f3d790cc": {
+  "h": "Josh Bellamy",
+  "r": "name"
+ },
+ "ex_f325b53221": {
+  "h": "Big effort, short sessions, and a room that carries you through.",
+  "r": "desc"
+ },
+ "ex_f729a6cdd4": {
+  "h": "Swings, cleans and carries. Strong, fast and a lot of fun.",
+  "r": "desc"
+ },
+ "ex_f72c6c1db4": {
+  "h": "Squat, press, deadlift. A calm, step-by-step start with the bar.",
+  "r": "desc"
+ },
+ "ex_faca5fe0ce": {
+  "h": "I have never trained before. Is that okay?",
+  "r": "text"
+ },
+ "ex_fba4734f9a": {
+  "h": "Nutrition coaching",
+  "r": "name"
+ },
+ "ex_fe03c2cf11": {
+  "h": "Is there a contract?",
+  "r": "text"
+ },
+ "ex_ff31524bc9": {
+  "h": "Powerlifter turned coach. Believes anybody can get strong.",
+  "r": "desc"
+ }
+}

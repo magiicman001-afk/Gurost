@@ -1,0 +1,266 @@
+{
+ "ex_0a76418a37": {
+  "h": "from &pound;5,500",
+  "r": "price"
+ },
+ "ex_10ef6c2f4a": {
+  "h": "from &pound;1,400",
+  "r": "price"
+ },
+ "ex_196f5890ca": {
+  "h": "Book <em>a free call</em>",
+  "r": "text"
+ },
+ "ex_1a5599e886": {
+  "h": "&pound;60 an hour",
+  "r": "price"
+ },
+ "ex_21ba509ab7": {
+  "h": "SEO and analytics",
+  "r": "name"
+ },
+ "ex_23015d6a20": {
+  "h": "from &pound;900",
+  "r": "price"
+ },
+ "ex_2f6ee30e3c": {
+  "h": "from &pound;3,000",
+  "r": "price"
+ },
+ "ex_315409f943": {
+  "h": "from &pound;2,500",
+  "r": "price"
+ },
+ "ex_353290be80": {
+  "h": "Product support",
+  "r": "name"
+ },
+ "ex_35db70c1e3": {
+  "h": "One page built to sell one thing, with tracking from day one.",
+  "r": "desc"
+ },
+ "ex_3a1b64781b": {
+  "h": "Products, payments and stock, set up so you can run it yourself.",
+  "r": "desc"
+ },
+ "ex_40cf5a2689": {
+  "h": "A written report on speed, security and accessibility.",
+  "r": "desc"
+ },
+ "ex_44d875fa69": {
+  "h": "Listings, screenshots and submission, handled for you.",
+  "r": "desc"
+ },
+ "ex_44fa52b1bb": {
+  "h": "Bookings, accounts and notifications, on both iPhone and Android.",
+  "r": "desc"
+ },
+ "ex_4a303d490e": {
+  "h": "Custom web app",
+  "r": "name"
+ },
+ "ex_55c71cfae2": {
+  "h": "Move to the cloud safely, with backups and a rollback plan.",
+  "r": "desc"
+ },
+ "ex_5705495a37": {
+  "h": "Connect the tools you already use so data flows on its own.",
+  "r": "desc"
+ },
+ "ex_58fe0fa0e1": {
+  "h": "from &pound;4,000",
+  "r": "price"
+ },
+ "ex_6406be4e8d": {
+  "h": "A free 30 minute call about your goals, users and budget.",
+  "r": "text"
+ },
+ "ex_69f04f94dd": {
+  "h": "Fixed proposal",
+  "r": "text"
+ },
+ "ex_6b0939bf60": {
+  "h": "Hosting, security updates, backups and two hours of changes.",
+  "r": "desc"
+ },
+ "ex_709370742e": {
+  "h": "App prototype",
+  "r": "name"
+ },
+ "ex_70d9c42644": {
+  "h": "{{owner_name}} started {{business_name}} in {{year_founded}}. Clear plans, honest prices and software that earns its keep.",
+  "r": "text"
+ },
+ "ex_7ac6e499bc": {
+  "h": "Replace paper and spreadsheets with a simple app for your staff.",
+  "r": "desc"
+ },
+ "ex_801f478681": {
+  "h": "from &pound;15,000",
+  "r": "price"
+ },
+ "ex_848172a8a3": {
+  "h": "Be found on Google and see exactly what is working.",
+  "r": "desc"
+ },
+ "ex_8529094127": {
+  "h": "Hosting, updates and marketing that keep your product healthy.",
+  "r": "desc"
+ },
+ "ex_8599044e2d": {
+  "h": "Five pages, your brand, your words and a launch in four weeks.",
+  "r": "desc"
+ },
+ "ex_8769cca8f8": {
+  "h": "Fixed prices",
+  "r": "text"
+ },
+ "ex_87753484e7": {
+  "h": "A clickable prototype to test your idea with real people.",
+  "r": "desc"
+ },
+ "ex_88537e8643": {
+  "h": "Free call",
+  "r": "text"
+ },
+ "ex_89ead9025b": {
+  "h": "Cloud migration",
+  "r": "name"
+ },
+ "ex_8ac8b241ba": {
+  "h": "Integrations and APIs",
+  "r": "name"
+ },
+ "ex_8c77ffcb6c": {
+  "h": "See website, app and software packages and prices from {{business_name}} in {{city}}. Fixed prices, agreed in writing.",
+  "r": "text"
+ },
+ "ex_8f6ddd80a0": {
+  "h": "Dashboards, portals and workflow tools, built around your process.",
+  "r": "desc"
+ },
+ "ex_94ab5f288a": {
+  "h": "{{business_name}} designs and builds websites, mobile apps and software in {{city}}. Fixed prices, you own your code, and care plans after launch.",
+  "r": "text"
+ },
+ "ex_9e56201ec7": {
+  "h": "App store launch",
+  "r": "name"
+ },
+ "ex_a2d00a5780": {
+  "h": "Book my free call",
+  "r": "text"
+ },
+ "ex_a83eeb3f3b": {
+  "h": "Online shop",
+  "r": "name"
+ },
+ "ex_aaa67c10da": {
+  "h": "iPhone and Android apps your customers will actually open.",
+  "r": "desc"
+ },
+ "ex_aca2ef64be": {
+  "h": "&pound;650",
+  "r": "price"
+ },
+ "ex_ad59c81efa": {
+  "h": "Fast, beautiful sites that look great on every phone and turn visitors into customers.",
+  "r": "desc"
+ },
+ "ex_b3d10df447": {
+  "h": "Calls {{hours_weekdays}} on weekdays, no obligation.",
+  "r": "text"
+ },
+ "ex_b815bddc8d": {
+  "h": "Care plan",
+  "r": "name"
+ },
+ "ex_b8501daaf3": {
+  "h": "MVP in 8 weeks",
+  "r": "name"
+ },
+ "ex_c4407559b0": {
+  "h": "A new look and faster pages for the site you already have.",
+  "r": "desc"
+ },
+ "ex_c61725c2b4": {
+  "h": "Website refresh",
+  "r": "name"
+ },
+ "ex_c6b1f4fd06": {
+  "h": "Custom tools and cloud products that fit the way you work.",
+  "r": "desc"
+ },
+ "ex_c9660391b9": {
+  "h": "from &pound;18,000",
+  "r": "price"
+ },
+ "ex_c99114b917": {
+  "h": "&pound;950",
+  "r": "price"
+ },
+ "ex_ce701ea9aa": {
+  "h": "Free discovery call &middot; {{phone}}",
+  "r": "text"
+ },
+ "ex_d2974dcc15": {
+  "h": "Landing page",
+  "r": "name"
+ },
+ "ex_d5134dc50f": {
+  "h": "Performance audit",
+  "r": "name"
+ },
+ "ex_d6daa5f0c0": {
+  "h": "Customer app",
+  "r": "name"
+ },
+ "ex_d7522af1dd": {
+  "h": "&pound;450 a month",
+  "r": "price"
+ },
+ "ex_d781466273": {
+  "h": "Tell us what you want to build. We reply within a day with a time for a free 30 minute call.",
+  "r": "text"
+ },
+ "ex_dc4a0ece0f": {
+  "h": "Internal team app",
+  "r": "name"
+ },
+ "ex_dcbb8bc9c1": {
+  "h": "&pound;149 a month",
+  "r": "price"
+ },
+ "ex_e02039d7b0": {
+  "h": "Brochure website",
+  "r": "name"
+ },
+ "ex_e1a3b81267": {
+  "h": "{{owner_name}} started {{business_name}} in {{year_founded}} after ten years building software for large companies, to give small businesses the same quality at honest prices.",
+  "r": "text"
+ },
+ "ex_e475c45395": {
+  "h": "Prices are examples. Every project gets a fixed, written quote.",
+  "r": "text"
+ },
+ "ex_ebbd550c70": {
+  "h": "from &pound;8,500",
+  "r": "price"
+ },
+ "ex_f1c1204c05": {
+  "h": "Developers on call when something breaks or needs building.",
+  "r": "desc"
+ },
+ "ex_f2059b0d9f": {
+  "h": "from &pound;6,500",
+  "r": "price"
+ },
+ "ex_f85fa39e8f": {
+  "h": "from &pound;12,000",
+  "r": "price"
+ },
+ "ex_fb0f21f846": {
+  "h": "Launch a first version of your product and learn from real users.",
+  "r": "desc"
+ }
+}

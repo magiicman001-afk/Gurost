@@ -1,0 +1,266 @@
+{
+ "ex_0033df86f0": {
+  "h": "Maths and English",
+  "r": "name"
+ },
+ "ex_026d37e4d4": {
+  "h": "Two hours on revision, timing and nerves, in small groups.",
+  "r": "desc"
+ },
+ "ex_03de54a34e": {
+  "h": "Essay structure, set texts and the skills examiners reward.",
+  "r": "desc"
+ },
+ "ex_0e40b9b75d": {
+  "h": "Help for <em>every stage</em>",
+  "r": "text"
+ },
+ "ex_1713381c99": {
+  "h": "&pound;38 an hour",
+  "r": "price"
+ },
+ "ex_1aa79dd7d7": {
+  "h": "Exam technique workshop",
+  "r": "name"
+ },
+ "ex_1d921935af": {
+  "h": "Reading and phonics",
+  "r": "name"
+ },
+ "ex_212e98e1cd": {
+  "h": "Change tutor free",
+  "r": "text"
+ },
+ "ex_22357ca6e7": {
+  "h": "Free trial",
+  "r": "text"
+ },
+ "ex_25122f221a": {
+  "h": "Need a tutor?<br><em>Try one free.</em>",
+  "r": "text"
+ },
+ "ex_25d7133ac4": {
+  "h": "&pound;55 an hour",
+  "r": "price"
+ },
+ "ex_26f3073ad8": {
+  "h": "Weekly sessions that close gaps and make school feel easier.",
+  "r": "desc"
+ },
+ "ex_33e74b7820": {
+  "h": "&pound;42 an hour",
+  "r": "price"
+ },
+ "ex_3d387de4e0": {
+  "h": "&pound;45 an hour",
+  "r": "price"
+ },
+ "ex_3f22b4def1": {
+  "h": "Essay subjects",
+  "r": "name"
+ },
+ "ex_42ea11b56d": {
+  "h": "&pound;50 an hour",
+  "r": "price"
+ },
+ "ex_45b3148d7a": {
+  "h": "Home education",
+  "r": "name"
+ },
+ "ex_4853c27828": {
+  "h": "Maths and English for work, apprenticeships or pure pleasure.",
+  "r": "desc"
+ },
+ "ex_4a4c1f1d61": {
+  "h": "Specialist tutors, calm pace and strategies that last.",
+  "r": "desc"
+ },
+ "ex_4b28e849f4": {
+  "h": "{{business_name}} are friendly, DBS-checked tutors in {{city}} and online. Maths, English, sciences and more, with a free first lesson.",
+  "r": "text"
+ },
+ "ex_54684480a8": {
+  "h": "First lesson free &middot; {{phone}}",
+  "r": "text"
+ },
+ "ex_6070f630cb": {
+  "h": "&pound;30 an hour",
+  "r": "price"
+ },
+ "ex_63acbb68f5": {
+  "h": "UCAS and personal statements",
+  "r": "name"
+ },
+ "ex_66fe13b128": {
+  "h": "Learning that fits the person, not the other way round.",
+  "r": "desc"
+ },
+ "ex_6723865d3a": {
+  "h": "SEN and dyslexia support",
+  "r": "name"
+ },
+ "ex_732316d0ae": {
+  "h": "Book a free lesson",
+  "r": "text"
+ },
+ "ex_74e3a1979a": {
+  "h": "Verbal, non-verbal and exam technique, with timed practice papers.",
+  "r": "desc"
+ },
+ "ex_774f1da727": {
+  "h": "Patient, playful help for children who find reading hard.",
+  "r": "desc"
+ },
+ "ex_78f116e836": {
+  "h": "Expert tutors for the top grades, and help with university applications.",
+  "r": "desc"
+ },
+ "ex_79a4e271e8": {
+  "h": "A-level Maths",
+  "r": "name"
+ },
+ "ex_7ad8addb6a": {
+  "h": "A weekly tutor for families who learn at home.",
+  "r": "desc"
+ },
+ "ex_7ee062c2dd": {
+  "h": "Confidence first. Gentle one-to-one help in reading, writing and number.",
+  "r": "desc"
+ },
+ "ex_7f65663126": {
+  "h": "Book <em>a free lesson</em>",
+  "r": "text"
+ },
+ "ex_81a039d202": {
+  "h": "11+ preparation",
+  "r": "name"
+ },
+ "ex_8553f93c3d": {
+  "h": "GCSE Sciences",
+  "r": "name"
+ },
+ "ex_871b4b3fac": {
+  "h": "Weekly lessons, a short report each month and a review every six weeks.",
+  "r": "text"
+ },
+ "ex_8876e1ff99": {
+  "h": "Every tutor, every time.",
+  "r": "text"
+ },
+ "ex_89fb3e9dda": {
+  "h": "Every topic covered, with exam-style questions and worked answers.",
+  "r": "desc"
+ },
+ "ex_8c5a005362": {
+  "h": "First lesson free",
+  "r": "text"
+ },
+ "ex_9229f6032d": {
+  "h": "A-level Sciences",
+  "r": "name"
+ },
+ "ex_9765f1f6f7": {
+  "h": "Adult learners",
+  "r": "name"
+ },
+ "ex_982d04142a": {
+  "h": "&pound;40 an hour",
+  "r": "price"
+ },
+ "ex_98cc4623cc": {
+  "h": "Expert help for top grades.",
+  "r": "text"
+ },
+ "ex_9c3d8a476b": {
+  "h": "A matched tutor gives a free 30 minute trial lesson.",
+  "r": "text"
+ },
+ "ex_9d18ca5c74": {
+  "h": "History, English and politics: argue clearly and write well.",
+  "r": "desc"
+ },
+ "ex_9e63f99938": {
+  "h": "&pound;32 an hour",
+  "r": "price"
+ },
+ "ex_a5aa2275a6": {
+  "h": "Clear explanations, past papers and a plan for every topic.",
+  "r": "desc"
+ },
+ "ex_aa81e93c48": {
+  "h": "Tell us the subject and level. We will match a tutor and arrange a free 30 minute trial lesson.",
+  "r": "text"
+ },
+ "ex_b11ad7fcf6": {
+  "h": "Free first lesson",
+  "r": "text"
+ },
+ "ex_b4e17454c8": {
+  "h": "Biology, chemistry and physics, taught so that it sticks.",
+  "r": "desc"
+ },
+ "ex_b84a27b81a": {
+  "h": "&pound;48 an hour",
+  "r": "price"
+ },
+ "ex_c1fdc34ca0": {
+  "h": "French, Spanish and Welsh, with speaking practice every week.",
+  "r": "desc"
+ },
+ "ex_ca0eca7ac6": {
+  "h": "Shape your story, practise interviews and apply with confidence.",
+  "r": "desc"
+ },
+ "ex_caf2f45c87": {
+  "h": "Book my free lesson",
+  "r": "text"
+ },
+ "ex_cd8e5449ed": {
+  "h": "Pure, mechanics and statistics from tutors with maths degrees.",
+  "r": "desc"
+ },
+ "ex_d20e819dc8": {
+  "h": "&pound;34 an hour",
+  "r": "price"
+ },
+ "ex_d229c19a5a": {
+  "h": "&pound;25 each",
+  "r": "price"
+ },
+ "ex_d5f14d163b": {
+  "h": "{{owner_name}} started {{business_name}} in {{year_founded}} so every child could have a tutor who explains things clearly and never makes them feel behind.",
+  "r": "text"
+ },
+ "ex_dacafff142": {
+  "h": "Biology, chemistry and physics, with practical and exam support.",
+  "r": "desc"
+ },
+ "ex_db07be1844": {
+  "h": "Languages",
+  "r": "name"
+ },
+ "ex_e236051d9a": {
+  "h": "A six-week plan before the tests, with practice and feedback.",
+  "r": "desc"
+ },
+ "ex_ebc025ce23": {
+  "h": "GCSE Maths",
+  "r": "name"
+ },
+ "ex_ede577f49a": {
+  "h": "GCSE English",
+  "r": "name"
+ },
+ "ex_eef4ca437c": {
+  "h": "Free consultation",
+  "r": "text"
+ },
+ "ex_f0de71ca4a": {
+  "h": "See tutoring subjects and prices at {{business_name}} in {{city}}: primary, 11+, GCSE, A-level and extra support.",
+  "r": "text"
+ },
+ "ex_f134de0f23": {
+  "h": "SATs booster",
+  "r": "name"
+ }
+}

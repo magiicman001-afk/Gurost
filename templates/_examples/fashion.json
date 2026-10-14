@@ -1,0 +1,282 @@
+{
+ "ex_045d38684c": {
+  "h": "Cushioned cotton socks in neutral shades.",
+  "r": "desc"
+ },
+ "ex_09266ca095": {
+  "h": "Cotton twill with four pockets. Wear it open or buttoned.",
+  "r": "desc"
+ },
+ "ex_11f7da1e2e": {
+  "h": "A clean, tapered leg in stretch cotton, in five colours.",
+  "r": "desc"
+ },
+ "ex_1724c16c8e": {
+  "h": "Canvas trainers",
+  "r": "name"
+ },
+ "ex_1b6f90f0c0": {
+  "h": "&pound;18",
+  "r": "price"
+ },
+ "ex_1dea3658c0": {
+  "h": "<span>Simple,</span> <span>honest,</span> <span>and</span> <span><em>made to wear</em></span> <span>from {{city}}.</span>",
+  "r": "text"
+ },
+ "ex_1fdfac35f1": {
+  "h": "&pound;78",
+  "r": "price"
+ },
+ "ex_2092d18dd7": {
+  "h": "&pound;68",
+  "r": "price"
+ },
+ "ex_222f47f246": {
+  "h": "Free returns within 30 days, no questions asked.",
+  "r": "text"
+ },
+ "ex_24151f4fd5": {
+  "h": "Wool beanie",
+  "r": "name"
+ },
+ "ex_247bee14bd": {
+  "h": "&pound;65",
+  "r": "price"
+ },
+ "ex_26f870b5de": {
+  "h": "Orders before 2pm ship the same day.",
+  "r": "text"
+ },
+ "ex_27233eea53": {
+  "h": "Free UK delivery",
+  "r": "text"
+ },
+ "ex_27596ae849": {
+  "h": "Use the size finder or browse by category. Every item lists measurements.",
+  "r": "text"
+ },
+ "ex_28d38747d2": {
+  "h": "Chunky ribbed lambswool in four warm colours.",
+  "r": "desc"
+ },
+ "ex_297e0e66ac": {
+  "h": "&pound;55",
+  "r": "price"
+ },
+ "ex_2bd7336bc0": {
+  "h": "Hand-woven, packable and made for long days outside.",
+  "r": "desc"
+ },
+ "ex_38f3ec90b1": {
+  "h": "{{business_name}} makes womenswear, menswear and accessories from organic and recycled fabrics. Free UK delivery over £60 and free 30-day returns.",
+  "r": "text"
+ },
+ "ex_3dcbb3b6e8": {
+  "h": "Our best sellers",
+  "r": "text"
+ },
+ "ex_3e21447f53": {
+  "h": "{{owner_name}} started {{business_name}} in {{year_founded}} to make clothes that fit properly, last for years and never cost the earth.",
+  "r": "text"
+ },
+ "ex_430bf62409": {
+  "h": "&pound;110",
+  "r": "price"
+ },
+ "ex_50d7c66c32": {
+  "h": "&pound;32",
+  "r": "price"
+ },
+ "ex_5222df4ffa": {
+  "h": "Summer straw hat",
+  "r": "name"
+ },
+ "ex_54e216b947": {
+  "h": "Ribbed tank",
+  "r": "name"
+ },
+ "ex_566a13453f": {
+  "h": "Browse dresses, tees, shoes and bags from {{business_name}}. Free UK delivery over £60 and free 30-day returns.",
+  "r": "text"
+ },
+ "ex_5ebedd6316": {
+  "h": "&pound;95",
+  "r": "price"
+ },
+ "ex_603596c005": {
+  "h": "{{owner_name}} started {{business_name}} in {{year_founded}}. Honest fabrics, careful cutting and prices that make sense.",
+  "r": "text"
+ },
+ "ex_61b4eadd6f": {
+  "h": "&pound;16",
+  "r": "price"
+ },
+ "ex_627f38ce45": {
+  "h": "A classic low-top with a vulcanised sole and a recycled lining.",
+  "r": "desc"
+ },
+ "ex_6b46a27355": {
+  "h": "Free 30-day returns",
+  "r": "text"
+ },
+ "ex_7221b99dd7": {
+  "h": "&pound;24",
+  "r": "price"
+ },
+ "ex_73fdcf7475": {
+  "h": "Dense organic cotton, a boxy fit and a collar that holds its shape.",
+  "r": "desc"
+ },
+ "ex_7506d78168": {
+  "h": "Straight chinos",
+  "r": "name"
+ },
+ "ex_75c11e7a66": {
+  "h": "The finishing touches, in leather, linen and recycled materials.",
+  "r": "desc"
+ },
+ "ex_7d99210a19": {
+  "h": "Organic cotton tee 3-pack",
+  "r": "name"
+ },
+ "ex_7ec8402755": {
+  "h": "The pieces you reach for every morning, made well and priced fairly.",
+  "r": "desc"
+ },
+ "ex_7f758de947": {
+  "h": "Prices include VAT. Delivery is free over £60. Example prices.",
+  "r": "text"
+ },
+ "ex_840a09098b": {
+  "h": "&pound;45",
+  "r": "price"
+ },
+ "ex_8ee36ba04c": {
+  "h": "Free delivery over £60 &middot; {{phone}}",
+  "r": "text"
+ },
+ "ex_8eebe90765": {
+  "h": "Minimal court sneakers with a cushioned, recycled sole.",
+  "r": "desc"
+ },
+ "ex_9004909038": {
+  "h": "Heavyweight tee",
+  "r": "name"
+ },
+ "ex_900d322a08": {
+  "h": "Wrap midi dress",
+  "r": "name"
+ },
+ "ex_901c45cbec": {
+  "h": "&pound;89",
+  "r": "price"
+ },
+ "ex_99eaacbbd2": {
+  "h": "Chore overshirt",
+  "r": "name"
+ },
+ "ex_9c7cd59871": {
+  "h": "A close-fitting layering staple in stretch organic cotton.",
+  "r": "desc"
+ },
+ "ex_9fabe0ad56": {
+  "h": "Wide-leg trousers",
+  "r": "name"
+ },
+ "ex_a713fba758": {
+  "h": "Everyday leather bag",
+  "r": "name"
+ },
+ "ex_a97f06f909": {
+  "h": "A flattering wrap in soft crepe, with pockets. Sizes 6 to 22.",
+  "r": "desc"
+ },
+ "ex_abe86d4df3": {
+  "h": "Free delivery over &pound;60 and express next day if you need it quickly.",
+  "r": "text"
+ },
+ "ex_b3aacb3d1c": {
+  "h": "Washed European linen that softens with every wear.",
+  "r": "desc"
+ },
+ "ex_b44b9d95e6": {
+  "h": "Three soft tees in white, black and sand. Free returns.",
+  "r": "desc"
+ },
+ "ex_b818ff561e": {
+  "h": "Canvas weekend bag",
+  "r": "name"
+ },
+ "ex_b8c043f20f": {
+  "h": "&pound;72",
+  "r": "price"
+ },
+ "ex_b99a1f26e5": {
+  "h": "On orders over £60.",
+  "r": "text"
+ },
+ "ex_ba20acfc7a": {
+  "h": "High waist, drapey fabric and a hem that skims the shoe.",
+  "r": "desc"
+ },
+ "ex_bf343438ba": {
+  "h": "Organic and recycled fabrics.",
+  "r": "text"
+ },
+ "ex_bf816711ba": {
+  "h": "Waxed canvas with a leather handle and a zipped inner pocket.",
+  "r": "desc"
+ },
+ "ex_c0a5532770": {
+  "h": "Bio-acetate frames with UV400 lenses and a soft case.",
+  "r": "desc"
+ },
+ "ex_c52bb2f15e": {
+  "h": "Leather-trim sneakers",
+  "r": "name"
+ },
+ "ex_cb3f9ee176": {
+  "h": "&pound;34",
+  "r": "price"
+ },
+ "ex_cb4bbccb26": {
+  "h": "Well-cut basics and overshirts made to last more than a season.",
+  "r": "desc"
+ },
+ "ex_cba91827bb": {
+  "h": "Sunday socks 5-pack",
+  "r": "name"
+ },
+ "ex_cbc779b2c0": {
+  "h": "Something <em>for every day</em>",
+  "r": "text"
+ },
+ "ex_e1bd655ea1": {
+  "h": "Acetate sunglasses",
+  "r": "name"
+ },
+ "ex_ec1c888d5c": {
+  "h": "Easy dresses, tailoring and layers that move from desk to dinner.",
+  "r": "desc"
+ },
+ "ex_f24765d469": {
+  "h": "Relaxed linen shirt",
+  "r": "name"
+ },
+ "ex_f35fbbffa7": {
+  "h": "&pound;58",
+  "r": "price"
+ },
+ "ex_fc6d6be774": {
+  "h": "Free over £60",
+  "r": "text"
+ },
+ "ex_fe3beb63fb": {
+  "h": "Vegetable-tanned leather that ages beautifully. Fits a 13 inch laptop.",
+  "r": "desc"
+ },
+ "ex_ffbcd34190": {
+  "h": "&pound;129",
+  "r": "price"
+ }
+}

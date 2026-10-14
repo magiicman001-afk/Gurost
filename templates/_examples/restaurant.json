@@ -1,0 +1,258 @@
+{
+ "ex_0328fc64da": {
+  "h": "Burnt basque cheesecake",
+  "r": "name"
+ },
+ "ex_056fec2127": {
+  "h": "Dark chocolate pot",
+  "r": "name"
+ },
+ "ex_0691835274": {
+  "h": "{{owner_name}} opened {{business_name}} in {{year_founded}} with a wood-fired grill and a simple promise: good food, honest prices and a room you will not want to leave.",
+  "r": "text"
+ },
+ "ex_06da436bd9": {
+  "h": "Elderflower, sparkling wine and soda, over ice with cucumber.",
+  "r": "desc"
+ },
+ "ex_1b3afa8291": {
+  "h": "Oak and charcoal, one grill, and nowhere to hide. Everything is cooked over flame.",
+  "r": "desc"
+ },
+ "ex_259c572503": {
+  "h": "&pound;26",
+  "r": "price"
+ },
+ "ex_2c73b0c025": {
+  "h": "We came for a quick bite and stayed three hours. The burnt-onion soup alone is worth the trip.",
+  "r": "desc"
+ },
+ "ex_32a17c6264": {
+  "h": "Grilled until sweet, with miso butter and toasted hazelnuts.",
+  "r": "desc"
+ },
+ "ex_343335edea": {
+  "h": "Whole sea bream",
+  "r": "name"
+ },
+ "ex_352ae9cb08": {
+  "h": "10oz ribeye",
+  "r": "name"
+ },
+ "ex_360893299e": {
+  "h": "Deeply caramelised outside, soft in the middle. Poached cherries on the side.",
+  "r": "desc"
+ },
+ "ex_36dea035ad": {
+  "h": "Lightly floured, fried hot, with lemon and smoked aioli.",
+  "r": "desc"
+ },
+ "ex_3864af3b10": {
+  "h": "Local craft ale",
+  "r": "name"
+ },
+ "ex_3888ee221c": {
+  "h": "Not an afterthought. Save room.",
+  "r": "desc"
+ },
+ "ex_38c6950ad5": {
+  "h": "Open {{hours_weekdays}} on weekdays. Bar seats are never booked.",
+  "r": "text"
+ },
+ "ex_44d3ca1ed1": {
+  "h": "Slow-cooked onions, sourdough and a melted aged-cheddar toastie on top.",
+  "r": "desc"
+ },
+ "ex_45e83996dc": {
+  "h": "Small producers, honest pours and cocktails with a bit of smoke.",
+  "r": "desc"
+ },
+ "ex_510c03e9f9": {
+  "h": "Prices include VAT. Tell us about any allergies and we will look after you. V means vegetarian, GF means gluten free.",
+  "r": "text"
+ },
+ "ex_55e2a9bdda": {
+  "h": "Tell us when and how many, and we will confirm your table within the hour.",
+  "r": "text"
+ },
+ "ex_561242340d": {
+  "h": "Sample review, Marcus T.",
+  "r": "text"
+ },
+ "ex_5aba73f659": {
+  "h": "&pound;11",
+  "r": "price"
+ },
+ "ex_616fb254e0": {
+  "h": "Charred hispi cabbage",
+  "r": "name"
+ },
+ "ex_688d5b3022": {
+  "h": "Sticky toffee pudding",
+  "r": "name"
+ },
+ "ex_69325cd334": {
+  "h": "{{owner_name}} opened {{business_name}} in {{year_founded}}. One grill, local suppliers and a room that feels like a friend's dining table.",
+  "r": "text"
+ },
+ "ex_6efac017ae": {
+  "h": "Date sponge, hot toffee sauce and clotted cream ice cream.",
+  "r": "desc"
+ },
+ "ex_73e288e181": {
+  "h": "&pound;8",
+  "r": "price"
+ },
+ "ex_7698c444d2": {
+  "h": "Sample review, Hannah W.",
+  "r": "text"
+ },
+ "ex_76ad76da72": {
+  "h": "Lovely room, proper cooking and a fair price. Our new family favourite.",
+  "r": "desc"
+ },
+ "ex_78e8d81afa": {
+  "h": "Sourdough baked in the building, every day",
+  "r": "text"
+ },
+ "ex_7a4f885248": {
+  "h": "A soft, juicy tempranillo from a family estate in Rioja.",
+  "r": "desc"
+ },
+ "ex_7a5f973116": {
+  "h": "The ribeye is the best I have had outside of a steakhouse. And the staff make you feel like a regular on day one.",
+  "r": "desc"
+ },
+ "ex_81316071fc": {
+  "h": "Smoked old fashioned",
+  "r": "name"
+ },
+ "ex_8577a52ed0": {
+  "h": "Fish landed that morning at the south coast",
+  "r": "text"
+ },
+ "ex_86f4dc3109": {
+  "h": "Dry-aged for 35 days, cooked over oak. Served with bone-marrow butter and chips.",
+  "r": "desc"
+ },
+ "ex_89e68709e3": {
+  "h": "Crispy squid",
+  "r": "name"
+ },
+ "ex_89f834c2c3": {
+  "h": "Rotating guest taps from breweries within ten miles.",
+  "r": "desc"
+ },
+ "ex_9f36136b24": {
+  "h": "Oak-smoked and dry-aged beef from a farm 20 miles away",
+  "r": "text"
+ },
+ "ex_9f4eb0ab64": {
+  "h": "&pound;7",
+  "r": "price"
+ },
+ "ex_a0d31e5ee0": {
+  "h": "Silky and not too sweet, with sea salt and olive oil.",
+  "r": "desc"
+ },
+ "ex_a460485685": {
+  "h": "&pound;9",
+  "r": "price"
+ },
+ "ex_a654592169": {
+  "h": "Crisp pastry, sharp curd and a little torched meringue.",
+  "r": "desc"
+ },
+ "ex_a9f3d40161": {
+  "h": "Elderflower spritz",
+  "r": "name"
+ },
+ "ex_ab7c644cd4": {
+  "h": "Warm flatbread, chilli oil and thyme honey.",
+  "r": "desc"
+ },
+ "ex_af70219e96": {
+  "h": "Lemon tart",
+  "r": "name"
+ },
+ "ex_b2235be616": {
+  "h": "&pound;15",
+  "r": "price"
+ },
+ "ex_b5314f64d5": {
+  "h": "Whipped feta and honey",
+  "r": "name"
+ },
+ "ex_b5a1f85a55": {
+  "h": "&pound;5.50 a pint",
+  "r": "price"
+ },
+ "ex_b7ac643fd1": {
+  "h": "Gluten free",
+  "r": "text"
+ },
+ "ex_b8307888b2": {
+  "h": "House red",
+  "r": "name"
+ },
+ "ex_bac1b4392e": {
+  "h": "Half wood-fired chicken",
+  "r": "name"
+ },
+ "ex_bb3398853d": {
+  "h": "Made to share, or not. Order a few and let them land as they are ready.",
+  "r": "desc"
+ },
+ "ex_bd2e708e5f": {
+  "h": "Burnt-onion soup",
+  "r": "name"
+ },
+ "ex_ca64fc482b": {
+  "h": "{{owner_name}} started {{business_name}} in {{year_founded}}. We cook over oak, buy from neighbours and treat every table like friends.",
+  "r": "text"
+ },
+ "ex_cb3f9ee176": {
+  "h": "&pound;34",
+  "r": "price"
+ },
+ "ex_cb4d4c1637": {
+  "h": "Sample review, the Patel family",
+  "r": "text"
+ },
+ "ex_cfb8f08df7": {
+  "h": "Smoked cocktails and local ales.",
+  "r": "text"
+ },
+ "ex_cff100444d": {
+  "h": "Local first",
+  "r": "text"
+ },
+ "ex_d0e5110ebb": {
+  "h": "Slow-fermented dough, San Marzano tomato, mozzarella and hot honey.",
+  "r": "desc"
+ },
+ "ex_dbf8495059": {
+  "h": "&pound;7.50 a glass",
+  "r": "price"
+ },
+ "ex_e03a705dc6": {
+  "h": "&pound;19",
+  "r": "price"
+ },
+ "ex_e041c649a3": {
+  "h": "Bourbon, maple and bitters, smoked at the table with oak chips.",
+  "r": "desc"
+ },
+ "ex_f81e4a1b4a": {
+  "h": "Grilled whole with fennel, capers and lemon butter.",
+  "r": "desc"
+ },
+ "ex_fbe936cbcd": {
+  "h": "Nduja and honey pizza",
+  "r": "name"
+ },
+ "ex_fcb55a390d": {
+  "h": "Brined overnight, glazed with chilli honey, with a bright green salsa.",
+  "r": "desc"
+ }
+}

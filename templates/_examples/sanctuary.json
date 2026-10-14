@@ -1,0 +1,414 @@
+{
+ "ex_005b92ee1d": {
+  "h": "Medicine and vet checks",
+  "r": "text"
+ },
+ "ex_03ad609671": {
+  "h": "Biscuit",
+  "r": "name"
+ },
+ "ex_053387c39f": {
+  "h": "Every animal arrives with a story.",
+  "r": "text"
+ },
+ "ex_057a12b818": {
+  "h": "Gentle and clumsy, loves long walks and chasing tennis balls.",
+  "r": "desc"
+ },
+ "ex_08a2848558": {
+  "h": "A safe place <em>to begin again</em>.",
+  "r": "text"
+ },
+ "ex_0e2b38deeb": {
+  "h": "Age 1 &middot; Orange",
+  "r": "price"
+ },
+ "ex_0eb66e5540": {
+  "h": "Barnaby",
+  "r": "name"
+ },
+ "ex_11d227f5ef": {
+  "h": "{{owner_name}} opened {{business_name}} in {{year_founded}} to give animals in need a second chance. Today our team and volunteers care for them every day of the year.",
+  "r": "text"
+ },
+ "ex_1273827574": {
+  "h": "Ash",
+  "r": "name"
+ },
+ "ex_131ff7871b": {
+  "h": "A lap cat who purrs the moment you sit down.",
+  "r": "desc"
+ },
+ "ex_15aad5ebca": {
+  "h": "Open day and dog walks",
+  "r": "text"
+ },
+ "ex_17e6eb909c": {
+  "h": "A last round, fresh bedding and lights down for the night.",
+  "r": "text"
+ },
+ "ex_1841825b4f": {
+  "h": "See the wish list",
+  "r": "text"
+ },
+ "ex_188b1e9685": {
+  "h": "&pound;10",
+  "r": "price"
+ },
+ "ex_1b41db91e8": {
+  "h": "Our vet visits twice a week. Everything else is done by our team, one animal at a time.",
+  "r": "text"
+ },
+ "ex_208f0c8c64": {
+  "h": "Visitors are welcome to meet the animals looking for homes.",
+  "r": "text"
+ },
+ "ex_22a7022f1f": {
+  "h": "Smoky",
+  "r": "name"
+ },
+ "ex_28b3f8aa4e": {
+  "h": "Quiet and sweet, a perfect first small pet.",
+  "r": "desc"
+ },
+ "ex_29acd0eeac": {
+  "h": "Recovering from a wing injury. Release planned in the spring.",
+  "r": "desc"
+ },
+ "ex_2dc4a75587": {
+  "h": "&pound;100",
+  "r": "price"
+ },
+ "ex_2e97b8b4ba": {
+  "h": "Juno",
+  "r": "name"
+ },
+ "ex_31499ee94a": {
+  "h": "Calm, loves a cuddle and a dandelion leaf.",
+  "r": "desc"
+ },
+ "ex_38b3865fb5": {
+  "h": "Bouncy, bright and learning fast. Best with a training-minded family.",
+  "r": "desc"
+ },
+ "ex_43ccdfa805": {
+  "h": "Full of energy, loves toys and climbing the curtains.",
+  "r": "desc"
+ },
+ "ex_45579461dc": {
+  "h": "Volunteer with us",
+  "r": "text"
+ },
+ "ex_45cc7980ae": {
+  "h": "Chirpy and sociable, needs a friend of her own kind.",
+  "r": "desc"
+ },
+ "ex_4d9bf1f67b": {
+  "h": "Pepper",
+  "r": "name"
+ },
+ "ex_4dcf574d2b": {
+  "h": "A calm senior who wants a warm bed and a slow stroll.",
+  "r": "desc"
+ },
+ "ex_4e19cf30de": {
+  "h": "Stalls, hot chocolate and a raffle for the animals.",
+  "r": "text"
+ },
+ "ex_515c3dd983": {
+  "h": "Mochi",
+  "r": "name"
+ },
+ "ex_544915fd6b": {
+  "h": "Lunch and play",
+  "r": "text"
+ },
+ "ex_545dde653a": {
+  "h": "Rabbits, guinea pigs and other little friends.",
+  "r": "desc"
+ },
+ "ex_57fe3b35e2": {
+  "h": "16:00",
+  "r": "text"
+ },
+ "ex_5d21af62d7": {
+  "h": "Every animal <em>deserves a home</em>.",
+  "r": "text"
+ },
+ "ex_6154039182": {
+  "h": "Affectionate and a little shy at first. Warms up with treats.",
+  "r": "desc"
+ },
+ "ex_62646b00e3": {
+  "h": "09:00",
+  "r": "text"
+ },
+ "ex_62784b04f8": {
+  "h": "Wish list",
+  "r": "text"
+ },
+ "ex_6b5cc4e2be": {
+  "h": "Foster",
+  "r": "text"
+ },
+ "ex_7272f72d18": {
+  "h": "Hazel",
+  "r": "name"
+ },
+ "ex_73b885e60d": {
+  "h": "Murphy",
+  "r": "name"
+ },
+ "ex_7430fb7b62": {
+  "h": "&pound;50",
+  "r": "price"
+ },
+ "ex_756611619d": {
+  "h": "Become a foster carer",
+  "r": "text"
+ },
+ "ex_7b94c2a529": {
+  "h": "Curious and gentle. Bonded with Hazel, so they go home together.",
+  "r": "desc"
+ },
+ "ex_7f37abf2aa": {
+  "h": "Nutmeg",
+  "r": "name"
+ },
+ "ex_81717ee82a": {
+  "h": "Every animal is fed, checked and spoken to before the gates open.",
+  "r": "text"
+ },
+ "ex_82aaed6d1b": {
+  "h": "Walk dogs, groom cats or help in the barn. A few hours a week makes a real difference.",
+  "r": "text"
+ },
+ "ex_830ef3bf11": {
+  "h": "07:30",
+  "r": "text"
+ },
+ "ex_841a93e8d6": {
+  "h": "Age 8 &middot; Collie",
+  "r": "price"
+ },
+ "ex_90bdceb0c0": {
+  "h": "A small owl with a big personality, almost ready to fly free.",
+  "r": "desc"
+ },
+ "ex_931d7be3cd": {
+  "h": "Age 2 &middot; Tabby",
+  "r": "price"
+ },
+ "ex_93c10c9144": {
+  "h": "In care &middot; Barn owl",
+  "r": "price"
+ },
+ "ex_9525ae1781": {
+  "h": "Safe",
+  "r": "text"
+ },
+ "ex_98d391f3ea": {
+  "h": "Clover",
+  "r": "name"
+ },
+ "ex_997f59bc99": {
+  "h": "Dec",
+  "r": "text"
+ },
+ "ex_9a50788f0a": {
+  "h": "Every animal",
+  "r": "text"
+ },
+ "ex_9d392b6e6a": {
+  "h": "Age 3 &middot; Labrador cross",
+  "r": "price"
+ },
+ "ex_9e7d7a79a5": {
+  "h": "Sponsor an animal",
+  "r": "text"
+ },
+ "ex_a18afdb499": {
+  "h": "Age 3 &middot; Rabbit",
+  "r": "price"
+ },
+ "ex_a3c39ef999": {
+  "h": "10:00",
+  "r": "text"
+ },
+ "ex_a3c3d8d770": {
+  "h": "In care &middot; Little owl",
+  "r": "price"
+ },
+ "ex_a5f1ca966e": {
+  "h": "Rescued, rehabilitated and ready for a home.",
+  "r": "desc"
+ },
+ "ex_a7286137b9": {
+  "h": "Breakfast rounds",
+  "r": "text"
+ },
+ "ex_a835d0ba1e": {
+  "h": "Age 4 &middot; Spaniel",
+  "r": "price"
+ },
+ "ex_aa55852381": {
+  "h": "Independent, cuddly and everything between.",
+  "r": "desc"
+ },
+ "ex_afc9272b7d": {
+  "h": "Age 5 &middot; Grey",
+  "r": "price"
+ },
+ "ex_b148e4b81f": {
+  "h": "Blankets, food and toys. Everything on our list is used within days.",
+  "r": "text"
+ },
+ "ex_b26aae9698": {
+  "h": "Meet the dogs and take one for a walk. Free entry.",
+  "r": "text"
+ },
+ "ex_b8caa081eb": {
+  "h": "Christmas craft fair",
+  "r": "text"
+ },
+ "ex_bb640d949b": {
+  "h": "Quiet and watchful, on the mend after a road accident.",
+  "r": "desc"
+ },
+ "ex_bb9bfefd53": {
+  "h": "Nov",
+  "r": "text"
+ },
+ "ex_bee1609f15": {
+  "h": "Gentle and wise. Happiest with one calm person.",
+  "r": "desc"
+ },
+ "ex_bf17933286": {
+  "h": "12:30",
+  "r": "text"
+ },
+ "ex_c1de92bdb0": {
+  "h": "Hoot",
+  "r": "name"
+ },
+ "ex_c2cb1346df": {
+  "h": "Sponsor an animal and get updates and photographs as it settles in.",
+  "r": "text"
+ },
+ "ex_c5ebad692b": {
+  "h": "Playful and chatty. Follows you from room to room.",
+  "r": "desc"
+ },
+ "ex_c69fc39890": {
+  "h": "Biscotti",
+  "r": "name"
+ },
+ "ex_c7466a5802": {
+  "h": "In care &middot; Long-eared owl",
+  "r": "price"
+ },
+ "ex_c93fe3ecca": {
+  "h": "Doors close, evening feed",
+  "r": "text"
+ },
+ "ex_ca475ed4bf": {
+  "h": "Age 9 &middot; Tortoiseshell",
+  "r": "price"
+ },
+ "ex_cbb09cf943": {
+  "h": "Age 4 &middot; Guinea pig",
+  "r": "price"
+ },
+ "ex_cc4f6112cf": {
+  "h": "Our volunteers take the dogs out and come back with the best stories.",
+  "r": "text"
+ },
+ "ex_d421206116": {
+  "h": "Songs by lantern light with mince pies for everyone.",
+  "r": "text"
+ },
+ "ex_d465c3e2d4": {
+  "h": "{{owner_name}} started {{business_name}} in {{year_founded}}. We rescue, rehabilitate and rehome animals, and we never give up on one.",
+  "r": "text"
+ },
+ "ex_d9854a6970": {
+  "h": "Found as a chick and hand-reared by our wildlife team.",
+  "r": "desc"
+ },
+ "ex_dd04001e18": {
+  "h": "{{owner_name}} opened {{business_name}} in {{year_founded}}. Every animal here has a name, a warm bed and someone who cares.",
+  "r": "text"
+ },
+ "ex_de2b5810d9": {
+  "h": "Willa",
+  "r": "name"
+ },
+ "ex_de7b91b598": {
+  "h": "Walks with volunteers",
+  "r": "text"
+ },
+ "ex_e072eb25a7": {
+  "h": "Willow",
+  "r": "name"
+ },
+ "ex_e18df0905d": {
+  "h": "Age 1 &middot; Guinea pig",
+  "r": "price"
+ },
+ "ex_e6aaeeacff": {
+  "h": "Carols in the barn",
+  "r": "text"
+ },
+ "ex_e8be399c95": {
+  "h": "Every <em>gift</em> goes straight to their care",
+  "r": "text"
+ },
+ "ex_eb3a25dbe1": {
+  "h": "We are a small charity and we depend on kind people. Give once, or every month, and we will show you exactly where it went.",
+  "r": "text"
+ },
+ "ex_eb9c5dee03": {
+  "h": "Ginger",
+  "r": "name"
+ },
+ "ex_f16c0f22c4": {
+  "h": "Age 1 &middot; Terrier mix",
+  "r": "price"
+ },
+ "ex_f3c95c66db": {
+  "h": "In care &middot; Tawny owl",
+  "r": "price"
+ },
+ "ex_f51eb468b4": {
+  "h": "15:00",
+  "r": "text"
+ },
+ "ex_f71ff6a692": {
+  "h": "&pound;25",
+  "r": "price"
+ },
+ "ex_f97bd0f9d7": {
+  "h": "Doors open",
+  "r": "text"
+ },
+ "ex_f9ef2ad804": {
+  "h": "Give an animal a quiet home while it waits for its forever family.",
+  "r": "text"
+ },
+ "ex_fadc345c08": {
+  "h": "Quiet time for the cats and a long run in the paddock for the dogs.",
+  "r": "text"
+ },
+ "ex_fd0b743b62": {
+  "h": "Sponsor",
+  "r": "text"
+ },
+ "ex_fd470c391b": {
+  "h": "Injured and orphaned wild animals, cared for until release.",
+  "r": "desc"
+ },
+ "ex_ff0efa6b1d": {
+  "h": "Age 2 &middot; Rabbit",
+  "r": "price"
+ }
+}

@@ -1,0 +1,290 @@
+{
+ "ex_0572a111e5": {
+  "h": "Toothache, a broken tooth or a swelling: we keep slots free every day.",
+  "r": "desc"
+ },
+ "ex_05ce768269": {
+  "h": "from &pound;2,100",
+  "r": "price"
+ },
+ "ex_062afb50c7": {
+  "h": "A relaxed first visit with a sticker at the end. Parents welcome in the room.",
+  "r": "desc"
+ },
+ "ex_09012152f1": {
+  "h": "A full exam, x-rays if needed, and a clear plan with prices before we start.",
+  "r": "desc"
+ },
+ "ex_092f1cfa9f": {
+  "h": "{{owner_name}} opened {{business_name}} in {{year_founded}}. We value calm care, honest advice and prices you see first.",
+  "r": "text"
+ },
+ "ex_0f2c8045ba": {
+  "h": "Broken or knocked-out tooth",
+  "r": "name"
+ },
+ "ex_14e5f30447": {
+  "h": "Care for <em>every smile</em>",
+  "r": "text"
+ },
+ "ex_2304f78e3a": {
+  "h": "A strong, natural-looking cover made to fit your bite exactly.",
+  "r": "desc"
+ },
+ "ex_247bee14bd": {
+  "h": "&pound;65",
+  "r": "price"
+ },
+ "ex_276b93b55f": {
+  "h": "A tooth-coloured filling placed with local anaesthetic and a gentle touch.",
+  "r": "desc"
+ },
+ "ex_281b01b0a1": {
+  "h": "{{owner_name}} opened {{business_name}} in {{year_founded}}. Calm care, honest advice and fixed prices.",
+  "r": "text"
+ },
+ "ex_2defb0e9b3": {
+  "h": "from &pound;120",
+  "r": "price"
+ },
+ "ex_2f4982825a": {
+  "h": "from &pound;650 a tooth",
+  "r": "price"
+ },
+ "ex_33727c565a": {
+  "h": "Gentle exams, scale and polish, and advice that keeps problems small.",
+  "r": "desc"
+ },
+ "ex_37fc9c08ee": {
+  "h": "Safe, professional brightening.",
+  "r": "text"
+ },
+ "ex_3efeb7f28e": {
+  "h": "Emergency",
+  "r": "text"
+ },
+ "ex_3f11b6c549": {
+  "h": "Dental implant",
+  "r": "name"
+ },
+ "ex_410494f2cf": {
+  "h": "Crown",
+  "r": "name"
+ },
+ "ex_48493eef68": {
+  "h": "Scale and polish",
+  "r": "name"
+ },
+ "ex_48f5260e8d": {
+  "h": "from &pound;85",
+  "r": "price"
+ },
+ "ex_4c2975e74f": {
+  "h": "A chip, gap or edge reshaped in a single visit, often without any drilling.",
+  "r": "desc"
+ },
+ "ex_4f19960826": {
+  "h": "Same-day and emergency",
+  "r": "text"
+ },
+ "ex_51bdb5a0f8": {
+  "h": "from &pound;595",
+  "r": "price"
+ },
+ "ex_5462dc3e84": {
+  "h": "Home whitening kit",
+  "r": "name"
+ },
+ "ex_5df04dccc8": {
+  "h": "Repairs that look natural and last, explained in plain English.",
+  "r": "desc"
+ },
+ "ex_63080cefec": {
+  "h": "Dental anxiety care",
+  "r": "name"
+ },
+ "ex_6465ac9670": {
+  "h": "A calm, unhurried visit, with signals so you stay in control.",
+  "r": "desc"
+ },
+ "ex_6476812a03": {
+  "h": "Prices are examples. Your dentist will confirm a fixed price in writing before any treatment.",
+  "r": "text"
+ },
+ "ex_64b406db75": {
+  "h": "from &pound;180 a tooth",
+  "r": "price"
+ },
+ "ex_69f9c8e448": {
+  "h": "Porcelain veneers",
+  "r": "name"
+ },
+ "ex_6a3068f0f3": {
+  "h": "Relieves pain and saves the tooth. Most are completed in one or two visits.",
+  "r": "desc"
+ },
+ "ex_6b1dada6fb": {
+  "h": "Prices are examples. Your dentist will confirm a fixed price in writing.",
+  "r": "text"
+ },
+ "ex_6c1c16bf3c": {
+  "h": "Call us at once. We can often save a tooth if it is seen quickly.",
+  "r": "desc"
+ },
+ "ex_6ccfb98e77": {
+  "h": "Emergency slots every weekday.",
+  "r": "text"
+ },
+ "ex_6f6bd57a95": {
+  "h": "A permanent replacement tooth, planned with a 3D scan and a clear fixed price.",
+  "r": "desc"
+ },
+ "ex_71ef231ff5": {
+  "h": "Composite bonding",
+  "r": "name"
+ },
+ "ex_75f54a5d66": {
+  "h": "Emergency appointment",
+  "r": "name"
+ },
+ "ex_7b7d53d7f9": {
+  "h": "Nearly invisible straightening, with a digital preview of your result.",
+  "r": "desc"
+ },
+ "ex_7bc67da4c2": {
+  "h": "no extra charge",
+  "r": "price"
+ },
+ "ex_80a9417b5b": {
+  "h": "&pound;295",
+  "r": "price"
+ },
+ "ex_837755ea3a": {
+  "h": "Open {{hours_weekdays}} on weekdays. We keep emergency appointments free every day.",
+  "r": "text"
+ },
+ "ex_8769cca8f8": {
+  "h": "Fixed prices",
+  "r": "text"
+ },
+ "ex_90d4b83227": {
+  "h": "Lost filling or crown",
+  "r": "name"
+ },
+ "ex_92b3b40cb4": {
+  "h": "from &pound;395",
+  "r": "price"
+ },
+ "ex_95cb140e34": {
+  "h": "White filling",
+  "r": "name"
+ },
+ "ex_97ffbe0736": {
+  "h": "See treatments and clear prices at {{business_name}} in {{city}}: check-ups, whitening, fillings, implants and emergency care.",
+  "r": "text"
+ },
+ "ex_99a46576a6": {
+  "h": "Same-day help",
+  "r": "text"
+ },
+ "ex_9e8dae0621": {
+  "h": "Custom trays and professional gel for a safe, even shade over two weeks.",
+  "r": "desc"
+ },
+ "ex_a7d380f363": {
+  "h": "<span>Gentle,</span> <span>honest,</span> <span>and</span> <span><em>on your</em></span> <span>side in {{city}}.</span>",
+  "r": "text"
+ },
+ "ex_b1c370aba8": {
+  "h": "A quick repair or temporary fix so you can eat and smile again.",
+  "r": "desc"
+ },
+ "ex_b3bc43a10a": {
+  "h": "free under 18 (NHS)",
+  "r": "price"
+ },
+ "ex_b70a2c8eb8": {
+  "h": "Same-day slots &middot; {{phone}}",
+  "r": "text"
+ },
+ "ex_b7a250e08c": {
+  "h": "from &pound;90",
+  "r": "price"
+ },
+ "ex_b9573fd314": {
+  "h": "Root canal treatment",
+  "r": "name"
+ },
+ "ex_b96b368104": {
+  "h": "Clear aligners",
+  "r": "name"
+ },
+ "ex_bd228f77fc": {
+  "h": "from &pound;75",
+  "r": "price"
+ },
+ "ex_c4cb7946cf": {
+  "h": "{{business_name}} is a friendly dental clinic in {{city}}. Check-ups, whitening, implants and same-day emergency appointments, with prices agreed up front.",
+  "r": "text"
+ },
+ "ex_cb66402d58": {
+  "h": "Three visits to treat gum disease and teach you what works at home.",
+  "r": "desc"
+ },
+ "ex_ccc094bef0": {
+  "h": "Gum health programme",
+  "r": "name"
+ },
+ "ex_d02f0c205d": {
+  "h": "New patient check-up",
+  "r": "name"
+ },
+ "ex_d1613c8038": {
+  "h": "from &pound;60",
+  "r": "price"
+ },
+ "ex_d34cf6b32a": {
+  "h": "from &pound;2,250",
+  "r": "price"
+ },
+ "ex_d79b784628": {
+  "h": "Thin, natural-looking shells made by a local ceramic lab.",
+  "r": "desc"
+ },
+ "ex_db3e43d8de": {
+  "h": "Born in Leeds, <em>for Leeds</em>",
+  "r": "text"
+ },
+ "ex_db89305a88": {
+  "h": "Same-day care",
+  "r": "text"
+ },
+ "ex_dc5eac0cc1": {
+  "h": "{{owner_name}} opened {{business_name}} in {{year_founded}} to give local families calm, honest dentistry. We still explain every price before every treatment.",
+  "r": "text"
+ },
+ "ex_e1ad3288ec": {
+  "h": "Same-day slots",
+  "r": "text"
+ },
+ "ex_e3589c91a3": {
+  "h": "&pound;49",
+  "r": "price"
+ },
+ "ex_e7a678b46f": {
+  "h": "Children's check-up",
+  "r": "name"
+ },
+ "ex_ea7f040332": {
+  "h": "A thorough hygienist clean that removes stains and protects your gums.",
+  "r": "desc"
+ },
+ "ex_f12301d8a3": {
+  "h": "Seen the same day, usually within the hour, to ease pain and make a plan.",
+  "r": "desc"
+ },
+ "ex_ff21af36ce": {
+  "h": "A brighter, straighter smile, planned with you and shown before it is done.",
+  "r": "desc"
+ }
+}

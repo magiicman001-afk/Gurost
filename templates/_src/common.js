@@ -83,7 +83,7 @@ function form(kind, { submit = "Send", cls = "" } = {}) {
   const fld = (id, label, type = "text", extra = "") => `<div class="f-field"><label for="${kind}-${id}">${label}</label><input id="${kind}-${id}" name="${id}" type="${type}" ${extra}></div>`;
   const area = (id, label, extra = "") => `<div class="f-field"><label for="${kind}-${id}">${label}</label><textarea id="${kind}-${id}" name="${id}" rows="4" ${extra}></textarea></div>`;
   const body = kind === "order"
-    ? row(fld("name", "Your name", "text", 'required autocomplete="name"'), fld("phone", "Phone", "tel", 'autocomplete="tel"')) + fld("email", "Email", "email", 'required autocomplete="email"') + row(fld("pickup date", "Pick-up date", "date", "required"), fld("pickup time", "Pick-up time", "time")) + area("order", "What would you like?", 'required placeholder="2 country sourdough, 6 butter croissants…"')
+    ? row(fld("name", "Your name", "text", 'required autocomplete="name"'), fld("phone", "Phone", "tel", 'autocomplete="tel"')) + fld("email", "Email", "email", 'required autocomplete="email"') + row(fld("pickup date", "Pick-up date", "date", "required"), fld("pickup time", "Pick-up time", "time")) + area("order", "What would you like?", 'required placeholder="Tell us what you would like and how many"')
     : row(fld("name", "Your name", "text", 'required autocomplete="name"'), fld("email", "Email", "email", 'required autocomplete="email"')) + fld("about", "What is it about?") + area("message", "Your message", "required");
   return `<form class="f ${cls}" data-form data-form-kind="${kind}" data-endpoint="${t("form_endpoint")}" novalidate>
 ${body}

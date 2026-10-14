@@ -1,0 +1,494 @@
+{
+ "ex_0121ee04e3": {
+  "h": "Salford",
+  "r": "text"
+ },
+ "ex_047d5e9e81": {
+  "h": "No. Quotes are free and the price we give is the price you pay.",
+  "r": "text"
+ },
+ "ex_067d304e09": {
+  "h": "If it is not right, we come back free.",
+  "r": "text"
+ },
+ "ex_081faf9de0": {
+  "h": "free in an emergency",
+  "r": "price"
+ },
+ "ex_0a708342e7": {
+  "h": "Get a free quote",
+  "r": "text"
+ },
+ "ex_0ae9c3ad50": {
+  "h": "Every job guaranteed for 12 months",
+  "r": "text"
+ },
+ "ex_0ba3dd32cb": {
+  "h": "Emergency call-outs",
+  "r": "text"
+ },
+ "ex_0c4cc6c568": {
+  "h": "24 hour emergencies",
+  "r": "text"
+ },
+ "ex_0e2a0cf35d": {
+  "h": "from &pound;795",
+  "r": "price"
+ },
+ "ex_0f49b4b9ce": {
+  "h": "from &pound;480",
+  "r": "price"
+ },
+ "ex_0fe3e53587": {
+  "h": "See the services and prices at {{business_name}}, {{city}}: plumbing, electrical, heating and 24 hour emergency call-outs.",
+  "r": "text"
+ },
+ "ex_1023747f74": {
+  "h": "Safety check, clean and efficiency report. Keeps your warranty valid.",
+  "r": "desc"
+ },
+ "ex_12895239ae": {
+  "h": "Chorlton",
+  "r": "text"
+ },
+ "ex_14452396f4": {
+  "h": "Smart thermostat fitting",
+  "r": "name"
+ },
+ "ex_1465976c7c": {
+  "h": "Safe, certified electrical work.",
+  "r": "text"
+ },
+ "ex_14c075a6ca": {
+  "h": "24-hour emergency plumber",
+  "r": "name"
+ },
+ "ex_1518968940": {
+  "h": "Heating and plumbing cover.",
+  "r": "desc"
+ },
+ "ex_16adf0e181": {
+  "h": "We confirm the cost before any work starts. No surprises.",
+  "r": "text"
+ },
+ "ex_18f58ac43a": {
+  "h": "On time, tidy and honest about the price. The fuse box upgrade was done in a morning.",
+  "r": "desc"
+ },
+ "ex_1b7cc33e98": {
+  "h": "10% off call-outs",
+  "r": "text"
+ },
+ "ex_1c47536e73": {
+  "h": "Burst pipe at 9pm. Sam was here in 40 minutes and had it sorted by ten. Fantastic.",
+  "r": "desc"
+ },
+ "ex_1c5e44be5a": {
+  "h": "Everything in Care",
+  "r": "text"
+ },
+ "ex_1eaf3e9054": {
+  "h": "Stockport",
+  "r": "text"
+ },
+ "ex_208ef41fde": {
+  "h": "Leak and drip repair",
+  "r": "name"
+ },
+ "ex_2279e71e43": {
+  "h": "Electrical safety report",
+  "r": "name"
+ },
+ "ex_2420d413ab": {
+  "h": "Sale and Altrincham",
+  "r": "text"
+ },
+ "ex_2739c4818d": {
+  "h": "&pound;150",
+  "r": "price"
+ },
+ "ex_289254dac5": {
+  "h": "Priority booking",
+  "r": "text"
+ },
+ "ex_2c9008d48c": {
+  "h": "Something has gone wrong at the worst time. We answer, and we come.",
+  "r": "desc"
+ },
+ "ex_2ccea48f10": {
+  "h": "A full EICR for landlords and buyers, with a clear pass or fail.",
+  "r": "desc"
+ },
+ "ex_2ee9021358": {
+  "h": "No heating, no hot water",
+  "r": "name"
+ },
+ "ex_342a7a92cf": {
+  "h": "Modern consumer unit with RCD protection and a certificate.",
+  "r": "desc"
+ },
+ "ex_350a1a6cfa": {
+  "h": "Trafford",
+  "r": "text"
+ },
+ "ex_38995a3021": {
+  "h": "Are you insured?",
+  "r": "text"
+ },
+ "ex_3d1913607a": {
+  "h": "Do you charge for quotes?",
+  "r": "text"
+ },
+ "ex_3fb20b13d3": {
+  "h": "Certificate provided",
+  "r": "text"
+ },
+ "ex_40e9bf47bd": {
+  "h": "New taps, cisterns and seats fitted, with the old ones taken away.",
+  "r": "desc"
+ },
+ "ex_42d590e530": {
+  "h": "Annual safety checks",
+  "r": "text"
+ },
+ "ex_42f74506ba": {
+  "h": "Emergencies, usually within the hour. Planned jobs, often within two working days.",
+  "r": "text"
+ },
+ "ex_4334b45508": {
+  "h": "If you smell gas, call the gas emergency line first. We follow up with a safety check.",
+  "r": "desc"
+ },
+ "ex_440b8a4f59": {
+  "h": "New sockets, switches and lights, fitted neatly and tested.",
+  "r": "desc"
+ },
+ "ex_450358ac3e": {
+  "h": "Power cuts, tripping circuits and burning smells, made safe fast.",
+  "r": "desc"
+ },
+ "ex_46382fa834": {
+  "h": "Unlimited call-out visits",
+  "r": "text"
+ },
+ "ex_482b97592f": {
+  "h": "Safe, certified electrical work for homes and small businesses.",
+  "r": "desc"
+ },
+ "ex_48f5260e8d": {
+  "h": "from &pound;85",
+  "r": "price"
+ },
+ "ex_49f4af5d6a": {
+  "h": "from &pound;2,150",
+  "r": "price"
+ },
+ "ex_4c2c1ca23e": {
+  "h": "EV charger install",
+  "r": "name"
+ },
+ "ex_4c9b673a3a": {
+  "h": "Do you guarantee your work?",
+  "r": "text"
+ },
+ "ex_57616ea405": {
+  "h": "New boiler installation",
+  "r": "name"
+ },
+ "ex_578c7bc60c": {
+  "h": "from &pound;130",
+  "r": "price"
+ },
+ "ex_5b665ce278": {
+  "h": "Sample review, Rachel M.",
+  "r": "text"
+ },
+ "ex_5b9f500e92": {
+  "h": "Yes. We carry full public liability insurance and show you the certificate on request.",
+  "r": "text"
+ },
+ "ex_5c016cf488": {
+  "h": "For up to three properties.",
+  "r": "desc"
+ },
+ "ex_5f318afe89": {
+  "h": "Gas smell check",
+  "r": "name"
+ },
+ "ex_6066fbba23": {
+  "h": "Burst pipes, floods and no hot water. On the road within the hour.",
+  "r": "desc"
+ },
+ "ex_60cc8d2712": {
+  "h": "Free quote",
+  "r": "text"
+ },
+ "ex_6104c92545": {
+  "h": "A heating engineer at your door, often the same day.",
+  "r": "desc"
+ },
+ "ex_68544b8d2f": {
+  "h": "Fixed price",
+  "r": "text"
+ },
+ "ex_6a4c5f2929": {
+  "h": "{{city}} &middot; Gas Safe &amp; NICEIC registered",
+  "r": "text"
+ },
+ "ex_6c6c8bccaa": {
+  "h": "Tell us what is wrong and we will call you back within the hour with a fixed price.",
+  "r": "text"
+ },
+ "ex_70dbb93885": {
+  "h": "12 month guarantee",
+  "r": "text"
+ },
+ "ex_7577275496": {
+  "h": "Socket and light fitting",
+  "r": "name"
+ },
+ "ex_75b34811e0": {
+  "h": "How fast can you come?",
+  "r": "text"
+ },
+ "ex_779db9a7c6": {
+  "h": "Care",
+  "r": "name"
+ },
+ "ex_78938da01b": {
+  "h": "Control your heating from your phone and cut your bills.",
+  "r": "desc"
+ },
+ "ex_79de333fc1": {
+  "h": "Available day and night",
+  "r": "text"
+ },
+ "ex_7af3b7fe5f": {
+  "h": "Tell us what is wrong. For emergencies we pick up day and night.",
+  "r": "text"
+ },
+ "ex_7ec08331c8": {
+  "h": "Sinks, baths and drains cleared and flushed. We camera-check if it keeps coming back.",
+  "r": "desc"
+ },
+ "ex_7f98f01046": {
+  "h": "Certified",
+  "r": "text"
+ },
+ "ex_86dd852894": {
+  "h": "Gas Safe and NICEIC registered",
+  "r": "text"
+ },
+ "ex_8769cca8f8": {
+  "h": "Fixed prices",
+  "r": "text"
+ },
+ "ex_8ac98aac28": {
+  "h": "Open {{hours_weekdays}} on weekdays. Emergencies any time, day or night.",
+  "r": "text"
+ },
+ "ex_8ba5240e46": {
+  "h": "Fixed right, <em>first time</em>.",
+  "r": "text"
+ },
+ "ex_8cb01800f4": {
+  "h": "Sample review, the Okoro family",
+  "r": "text"
+ },
+ "ex_901c45cbec": {
+  "h": "&pound;89",
+  "r": "price"
+ },
+ "ex_90b1fb567c": {
+  "h": "from &pound;110",
+  "r": "price"
+ },
+ "ex_90f48a365f": {
+  "h": "One van, <em>now eleven</em>",
+  "r": "text"
+ },
+ "ex_913bf0c95e": {
+  "h": "Fully certified",
+  "r": "text"
+ },
+ "ex_92ee7c9453": {
+  "h": "Three steps <em>to fixed</em>",
+  "r": "text"
+ },
+ "ex_96b0eaedd5": {
+  "h": "Tap and toilet fitting",
+  "r": "name"
+ },
+ "ex_9902242f06": {
+  "h": "Landlord",
+  "r": "name"
+ },
+ "ex_9b408aa14a": {
+  "h": "{{owner_name}} started {{business_name}} in {{year_founded}}. Honest quotes, tidy work and a guarantee on every job.",
+  "r": "text"
+ },
+ "ex_9fb43c5007": {
+  "h": "Plumbing emergencies covered",
+  "r": "text"
+ },
+ "ex_a054e07851": {
+  "h": "24 hour emergencies &middot; {{phone}}",
+  "r": "text"
+ },
+ "ex_a8c84b4385": {
+  "h": "Annual boiler service",
+  "r": "text"
+ },
+ "ex_aa578e2b23": {
+  "h": "Didsbury",
+  "r": "text"
+ },
+ "ex_ab98f5b857": {
+  "h": "Fixed",
+  "r": "text"
+ },
+ "ex_abe4b148b0": {
+  "h": "Bury",
+  "r": "text"
+ },
+ "ex_b03dcd5a7f": {
+  "h": "We find the source, fix it and dry the area. Most leaks are done in one visit.",
+  "r": "desc"
+ },
+ "ex_b0c6b1f172": {
+  "h": "from &pound;95",
+  "r": "price"
+ },
+ "ex_b216b4e066": {
+  "h": "Get <em>a free quote</em>",
+  "r": "text"
+ },
+ "ex_b380583825": {
+  "h": "Emergencies",
+  "r": "text"
+ },
+ "ex_b7b8a258b4": {
+  "h": "Fixed prices agreed before we start",
+  "r": "text"
+ },
+ "ex_b7bc5fead8": {
+  "h": "Prices include VAT. Every quote is fixed before work begins.",
+  "r": "text"
+ },
+ "ex_bd228f77fc": {
+  "h": "from &pound;75",
+  "r": "price"
+ },
+ "ex_be42f98ffe": {
+  "h": "Bathroom refit",
+  "r": "name"
+ },
+ "ex_bfebc9e95e": {
+  "h": "Sample review, Dev P.",
+  "r": "text"
+ },
+ "ex_c19a832e43": {
+  "h": "&pound;95 call-out",
+  "r": "price"
+ },
+ "ex_c337f2738a": {
+  "h": "Fuse box upgrade",
+  "r": "name"
+ },
+ "ex_c41127dfda": {
+  "h": "24/7",
+  "r": "text"
+ },
+ "ex_c4d830e5e5": {
+  "h": "Emergency electrician",
+  "r": "name"
+ },
+ "ex_c67279a79f": {
+  "h": "Manchester city centre",
+  "r": "text"
+ },
+ "ex_cc2884b176": {
+  "h": "Our go-to for the rental flats. Quick quotes, proper certificates, no fuss.",
+  "r": "desc"
+ },
+ "ex_cce20db6d4": {
+  "h": "Get my free quote",
+  "r": "text"
+ },
+ "ex_cfd62c4eaf": {
+  "h": "Home charge point supplied, fitted and registered.",
+  "r": "desc"
+ },
+ "ex_d5063343f9": {
+  "h": "EICR reports",
+  "r": "text"
+ },
+ "ex_d560a57a81": {
+  "h": "{{business_name}} is a trusted plumber, electrician and heating engineer in {{city}}. Fixed prices, 24 hour emergencies and a 12 month guarantee. Get a free quote.",
+  "r": "text"
+ },
+ "ex_d5ce051f38": {
+  "h": "Care Plus",
+  "r": "name"
+ },
+ "ex_d62010f4ed": {
+  "h": "Everything we fit carries a 12 month guarantee, and boilers have up to 10 years.",
+  "r": "text"
+ },
+ "ex_d6cea0b572": {
+  "h": "quote after survey",
+  "r": "price"
+ },
+ "ex_d741941e09": {
+  "h": "from &pound;140",
+  "r": "price"
+ },
+ "ex_d8a15afb81": {
+  "h": "Design, supply and fitting from one team, with a fixed price in writing.",
+  "r": "desc"
+ },
+ "ex_da1c4b6041": {
+  "h": "New radiators and valves, balanced to heat evenly.",
+  "r": "desc"
+ },
+ "ex_da212bcd11": {
+  "h": "Get a fixed price",
+  "r": "text"
+ },
+ "ex_e24dec0bde": {
+  "h": "Gas Safe and NICEIC registered engineers.",
+  "r": "text"
+ },
+ "ex_e36ffbd07b": {
+  "h": "Blocked drain clearing",
+  "r": "name"
+ },
+ "ex_e3cb462597": {
+  "h": "Prices include VAT. Every quote is fixed before work begins. Emergency call-outs are available 24 hours a day.",
+  "r": "text"
+ },
+ "ex_edc1615661": {
+  "h": "Radiator replacement",
+  "r": "name"
+ },
+ "ex_f23d3899f9": {
+  "h": "One call, one invoice",
+  "r": "text"
+ },
+ "ex_f61e37b965": {
+  "h": "Supplied and fitted by Gas Safe engineers, with a 10 year warranty.",
+  "r": "desc"
+ },
+ "ex_fca7f52f37": {
+  "h": "Warm homes without the worry: boilers, radiators and yearly servicing.",
+  "r": "desc"
+ },
+ "ex_fdafd3ec59": {
+  "h": "Leaks, taps, toilets and bathrooms, fixed properly and tidied up after.",
+  "r": "desc"
+ },
+ "ex_fec74a97c2": {
+  "h": "Peace of mind for one boiler.",
+  "r": "desc"
+ }
+}

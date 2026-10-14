@@ -7,6 +7,8 @@ const assert = require("node:assert");
 const fs = require("fs");
 const path = require("path");
 const { fillTemplate } = require("../templates/_src/fill");
+const { tokenise, exampleValues } = require("../templates/_src/examples");
+const examplesOf = (id) => JSON.parse(fs.readFileSync(path.join(__dirname, "..", "templates", "_examples", id + ".json"), "utf8"));
 
 const PACK_DIR = path.join(__dirname, "..", "templates", "_src", "packs");
 const PACKS = fs.readdirSync(PACK_DIR).filter((f) => f.endsWith(".js")).map((f) => require(path.join(PACK_DIR, f)));
@@ -47,7 +49,7 @@ test("filling the sample details leaves no empty token (the form address is set 
   each((pack, s, root) => {
     const files = {};
     for (const p of html(root, s)) files[p] = fs.readFileSync(path.join(root, s, p), "utf8");
-    const r = fillTemplate(files, pack.demo);
+    const r = fillTemplate(files, { ...pack.demo, ...exampleValues(examplesOf(pack.id)) });
     assert.deepStrictEqual(r.missing, ["form_endpoint"], `${pack.id}/${s}`);
     for (const body of Object.values(r.files)) assert.ok(!/\{\{/.test(body), `${pack.id}/${s} unfilled token`);
   });
@@ -69,10 +71,14 @@ test("premium plus styles: a video with a poster, picture hints and the legal po
 test("the committed pages match the generators", () => {
   each((pack, s, root) => {
     const b = require(`../templates/_src/${s}`).build(pack);
-    for (const [p, body] of Object.entries(b.files)) {
-      if (typeof body !== "string") continue;
-      const want = body.replace(/\{\{theme_color\}\}/g, b.themeColor);
+    const raw = {};
+    for (const [p, body] of Object.entries(b.files)) raw[p] = typeof body === "string" ? body.replace(/\{\{theme_color\}\}/g, b.themeColor) : body;
+    const tok = tokenise(raw, pack); // the example text is taken out of the pages into templates/_examples/<industry>.json
+    const saved = examplesOf(pack.id);
+    for (const [p, want] of Object.entries(tok.files)) {
+      if (typeof want !== "string") continue;
       assert.strictEqual(fs.readFileSync(path.join(root, s, p), "utf8"), want, `${pack.id}/${s}/${p} is out of date: run node scripts/build-templates.js`);
     }
+    for (const [name, e] of Object.entries(tok.table)) assert.deepStrictEqual(saved[name], e, `${pack.id}/${s} ${name} is out of date in templates/_examples/${pack.id}.json`);
   });
 });

@@ -1,0 +1,254 @@
+{
+ "ex_02de9068cc": {
+  "h": "Free cancellation",
+  "r": "text"
+ },
+ "ex_0d9e6f30f4": {
+  "h": "from &pound;1,150 a family",
+  "r": "price"
+ },
+ "ex_0d9fb617e5": {
+  "h": "Afternoon tea",
+  "r": "name"
+ },
+ "ex_0ffb413e72": {
+  "h": "Cookery class",
+  "r": "name"
+ },
+ "ex_13f7a8f450": {
+  "h": "Cooked breakfast",
+  "r": "name"
+ },
+ "ex_1402bab915": {
+  "h": "Choose dates and who is coming. We show what is free and the price.",
+  "r": "text"
+ },
+ "ex_14a0338590": {
+  "h": "Three hours with a local guide, tea and cake halfway.",
+  "r": "desc"
+ },
+ "ex_16ea3a6387": {
+  "h": "A larger room opening onto the walled garden, with a reading chair.",
+  "r": "desc"
+ },
+ "ex_178b94e58a": {
+  "h": "{{hours_weekdays}}. Free cancellation up to 48 hours before.",
+  "r": "text"
+ },
+ "ex_1c22512a80": {
+  "h": "&pound;14",
+  "r": "price"
+ },
+ "ex_256ad32f76": {
+  "h": "from &pound;65",
+  "r": "price"
+ },
+ "ex_259c572503": {
+  "h": "&pound;26",
+  "r": "price"
+ },
+ "ex_2f9fd44534": {
+  "h": "Local eggs, smoked bacon and sourdough, served until 10.30am.",
+  "r": "desc"
+ },
+ "ex_32d4f75c89": {
+  "h": "Guided coastal walk",
+  "r": "name"
+ },
+ "ex_41029667b5": {
+  "h": "Sandwiches, warm scones and cakes, with a pot of loose-leaf tea.",
+  "r": "desc"
+ },
+ "ex_44b135d960": {
+  "h": "from &pound;159 a night",
+  "r": "price"
+ },
+ "ex_44ce68caa2": {
+  "h": "From £129 a night",
+  "r": "price"
+ },
+ "ex_457885cf27": {
+  "h": "Romantic escape",
+  "r": "name"
+ },
+ "ex_48ace4017f": {
+  "h": "from &pound;249 each",
+  "r": "price"
+ },
+ "ex_4ca5a09003": {
+  "h": "from &pound;420 each",
+  "r": "price"
+ },
+ "ex_4cec7c871e": {
+  "h": "Tasting dinner",
+  "r": "name"
+ },
+ "ex_4e4747c87c": {
+  "h": "Not just our hotel. We plan complete trips, with real people on the phone.",
+  "r": "desc"
+ },
+ "ex_4f2a029200": {
+  "h": "We take your bags, put the kettle on and show you the best of the area.",
+  "r": "text"
+ },
+ "ex_4f4b2d4a58": {
+  "h": "A massage or facial in our quiet garden treatment room.",
+  "r": "desc"
+ },
+ "ex_5549df3366": {
+  "h": "Tell us your dates and who is coming. A real person replies the same day.",
+  "r": "text"
+ },
+ "ex_599261aa5a": {
+  "h": "Rooms free",
+  "r": "text"
+ },
+ "ex_65ec50119f": {
+  "h": "from &pound;329 a night",
+  "r": "price"
+ },
+ "ex_72916f4158": {
+  "h": "Spa treatment",
+  "r": "name"
+ },
+ "ex_7529ae99b2": {
+  "h": "Cook a three-course supper in the hotel kitchen, then eat it.",
+  "r": "desc"
+ },
+ "ex_7e07289919": {
+  "h": "Classic double",
+  "r": "name"
+ },
+ "ex_7f6ce345b2": {
+  "h": "{{owner_name}} opened {{business_name}} in {{year_founded}}. Quiet rooms, honest food and a host who knows your name.",
+  "r": "text"
+ },
+ "ex_8416428a45": {
+  "h": "Up to 48 hours before arrival.",
+  "r": "text"
+ },
+ "ex_8437197ae8": {
+  "h": "Family holiday",
+  "r": "name"
+ },
+ "ex_8b2f84b597": {
+  "h": "Garden view room",
+  "r": "name"
+ },
+ "ex_928a0aa914": {
+  "h": "Two nights, breakfast and one dinner, with a walk or trip included.",
+  "r": "desc"
+ },
+ "ex_a274681615": {
+  "h": "Flights, central hotel and a local guide, planned around your dates.",
+  "r": "desc"
+ },
+ "ex_a2ed590ca3": {
+  "h": "&pound;55 each",
+  "r": "price"
+ },
+ "ex_adab9eb95e": {
+  "h": "Seasonal food from local suppliers, and a bar that closes when you do.",
+  "r": "desc"
+ },
+ "ex_b0e298f230": {
+  "h": "Local eggs, bacon and bread.",
+  "r": "text"
+ },
+ "ex_b3c0f09f9b": {
+  "h": "Quiet, comfortable rooms with proper beds, blackout curtains and a kettle you will actually use.",
+  "r": "desc"
+ },
+ "ex_b563d55987": {
+  "h": "&pound;35 each",
+  "r": "price"
+ },
+ "ex_bb772cd263": {
+  "h": "A two-hour trip along the coast with a skipper who knows every cove.",
+  "r": "desc"
+ },
+ "ex_c07d9b4080": {
+  "h": "from &pound;219 a night",
+  "r": "price"
+ },
+ "ex_c09136a9ec": {
+  "h": "Tower suite, champagne on arrival and a tasting dinner for two.",
+  "r": "desc"
+ },
+ "ex_c1ddc84587": {
+  "h": "Weekend break",
+  "r": "name"
+ },
+ "ex_c3e2b8125b": {
+  "h": "Easy days out we have tried ourselves, bookable at the desk.",
+  "r": "desc"
+ },
+ "ex_d11423c27e": {
+  "h": "A week of sun, sorted: flights, transfers and a kids club.",
+  "r": "desc"
+ },
+ "ex_d229c19a5a": {
+  "h": "&pound;25 each",
+  "r": "price"
+ },
+ "ex_d28ea3774d": {
+  "h": "from &pound;389 each",
+  "r": "price"
+ },
+ "ex_d99e4c2398": {
+  "h": "Sunday lunch",
+  "r": "name"
+ },
+ "ex_daac7bc885": {
+  "h": "Slow-roast beef or nut roast with all the trimmings, booked by the table.",
+  "r": "desc"
+ },
+ "ex_dcfc65478c": {
+  "h": "The Tower suite",
+  "r": "name"
+ },
+ "ex_e1fc4b004f": {
+  "h": "Family suite",
+  "r": "name"
+ },
+ "ex_e7a45c37c7": {
+  "h": "A calm double with a king bed, rainfall shower and garden views.",
+  "r": "desc"
+ },
+ "ex_e8a0029c63": {
+  "h": "Boat trip",
+  "r": "name"
+ },
+ "ex_e99746b969": {
+  "h": "from &pound;129 a night",
+  "r": "price"
+ },
+ "ex_f3c9bdcdb2": {
+  "h": "City break abroad",
+  "r": "name"
+ },
+ "ex_f42f23db41": {
+  "h": "&pound;48",
+  "r": "price"
+ },
+ "ex_f5e1319376": {
+  "h": "From £129 a night &middot; {{phone}}",
+  "r": "price"
+ },
+ "ex_f9063d3726": {
+  "h": "Two rooms, sleeps four, with bunk beds the children will argue over.",
+  "r": "desc"
+ },
+ "ex_fd15eb4847": {
+  "h": "&pound;22",
+  "r": "price"
+ },
+ "ex_fdba31149c": {
+  "h": "Five small courses from the garden and the farm next door.",
+  "r": "desc"
+ },
+ "ex_ff9e037e8d": {
+  "h": "Our top-floor suite with a freestanding bath and a view over the rooftops.",
+  "r": "desc"
+ }
+}

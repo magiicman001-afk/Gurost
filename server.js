@@ -1338,6 +1338,7 @@ app.get("/api/template-sites", (req, res) => res.json(templateSite.catalog()));
 app.post("/api/template-sites", security.rejectUnknownFields(["pack", "style", "values"]), (req, res) => {
   const { pack, style, values } = req.body || {};
   if (typeof pack !== "string" || typeof style !== "string" || !templateSite.has(pack, style)) return res.status(400).json({ error: "Pick an industry and a style from the list." });
+  if (!templateSite.isHonest(style)) return res.status(400).json({ error: "That layout is preview only for now: its working tool still shows example figures. Pick one of the General layouts." });
   const cleaned = templateSite.cleanValues(pack, values);
   if (!cleaned.ok) return res.status(400).json({ error: "Some details need a second look.", fields: cleaned.errors });
   const site = templateSite.makeSite(pack, style, cleaned.values);

@@ -90,7 +90,7 @@
   <section id="details" hidden>
     <h1>Your details</h1>
     <p class="lead" id="detailsLead"></p>
-    <p class="note">Anything you leave blank keeps the example text, so nothing looks empty. You can fill it in later.</p>
+    <p class="note">Anything you leave blank shows a marker like "[Add phone number here]" on your site. We never fill gaps with someone else's details, prices or reviews.</p>
     <p class="banner" id="banner" role="alert" hidden></p>
     <form id="form" novalidate></form>
     <div class="bar">
@@ -142,7 +142,7 @@
     ind.styles.forEach(function (s) {
       var b = el('button', { type: 'button', 'class': 'style', 'aria-pressed': String(s.id === style) }, [
         el('b', { text: s.name }),
-        el('span', { text: s.kind === 'special' ? 'Custom layout' : 'General layout' })
+        el('span', { text: s.ready ? (s.kind === 'special' ? 'Custom layout' : 'General layout') : 'Preview only' })
       ]);
       b.addEventListener('click', function () { choose(pack, s.id); });
       box.appendChild(b);
@@ -153,12 +153,14 @@
     var changedPack = p !== pack;
     pack = p;
     var ind = industry(pack);
-    style = s || (changedPack || !style ? ind.styles[0].id : style);
+    style = s || (changedPack || !style ? (ind.styles.filter(function (x) { return x.ready; })[0] || ind.styles[0]).id : style);
     try { history.replaceState(null, '', '#' + pack + '/' + style); } catch (e) { /* no history: fine */ }
     drawIndustries(); drawStyles(); showPreview();
     $('barName').textContent = ind.label;
     $('barSub').textContent = 'Style: ' + ind.styles.filter(function (x) { return x.id === style; })[0].name;
-    $('useBtn').disabled = false;
+    var cur = ind.styles.filter(function (x) { return x.id === style; })[0];
+    $('useBtn').disabled = !cur.ready;
+    $('barSub').textContent += cur.ready ? '' : ' (preview only: its tool still shows example figures)';
   }
 
   function drawForm() {

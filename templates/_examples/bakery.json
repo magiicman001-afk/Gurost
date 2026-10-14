@@ -1,0 +1,290 @@
+{
+ "ex_0237f905b3": {
+  "h": "Artisan bakery in {{city}}. Sourdough, pastries and coffee, baked fresh every morning.",
+  "r": "text"
+ },
+ "ex_0725c83e76": {
+  "h": "Whatever is best this week, under a golden lattice.",
+  "r": "desc"
+ },
+ "ex_0883317e5e": {
+  "h": "36h",
+  "r": "text"
+ },
+ "ex_144d3a58dc": {
+  "h": "Butter croissant",
+  "r": "name"
+ },
+ "ex_1518ca08c9": {
+  "h": "&pound;3.10",
+  "r": "price"
+ },
+ "ex_15ef2a2936": {
+  "h": "Chocolate brownie",
+  "r": "name"
+ },
+ "ex_1d7eb487ab": {
+  "h": "Good coffee to go with it.",
+  "r": "desc"
+ },
+ "ex_1f369a56a3": {
+  "h": "Seeded rye",
+  "r": "name"
+ },
+ "ex_23054307bf": {
+  "h": "Long-fermented and baked on the stone.",
+  "r": "desc"
+ },
+ "ex_2388b2d097": {
+  "h": "Carrot cake",
+  "r": "name"
+ },
+ "ex_2eaeca6b64": {
+  "h": "Sweet pastry, sharp lemon curd, a little burnt sugar.",
+  "r": "desc"
+ },
+ "ex_310b86e0b6": {
+  "h": "100",
+  "r": "text"
+ },
+ "ex_37bb0abd4e": {
+  "h": "{{owner_name}} started {{business_name}} in {{year_founded}}. Every loaf is mixed, shaped and baked on site, the same way, every day.",
+  "r": "text"
+ },
+ "ex_3e8fc5a11e": {
+  "h": "Stoneground and sourced close to home.",
+  "r": "text"
+ },
+ "ex_3fa0f8e473": {
+  "h": "Spiced sponge, walnut and a thick cream cheese frosting.",
+  "r": "desc"
+ },
+ "ex_4135b027ae": {
+  "h": "slow rise",
+  "r": "text"
+ },
+ "ex_489c971b97": {
+  "h": "Double shot, silky milk.",
+  "r": "desc"
+ },
+ "ex_499c005d7d": {
+  "h": "Real dark chocolate, not powder.",
+  "r": "desc"
+ },
+ "ex_4e94e52bcb": {
+  "h": "&pound;3.20",
+  "r": "price"
+ },
+ "ex_52535db00e": {
+  "h": "&pound;4.50",
+  "r": "price"
+ },
+ "ex_62086ee8b1": {
+  "h": "&pound;4.00",
+  "r": "price"
+ },
+ "ex_6733c528ee": {
+  "h": "&pound;5.20",
+  "r": "price"
+ },
+ "ex_68d1a4e8ad": {
+  "h": "Seasonal fruit pie",
+  "r": "name"
+ },
+ "ex_7174edc62b": {
+  "h": "&pound;2.60",
+  "r": "price"
+ },
+ "ex_78b69848ab": {
+  "h": "Hot chocolate",
+  "r": "name"
+ },
+ "ex_7b95051f66": {
+  "h": "&pound;4.20",
+  "r": "price"
+ },
+ "ex_7d6aaa3687": {
+  "h": "Laminated by hand, with real butter.",
+  "r": "desc"
+ },
+ "ex_7ef1d4c046": {
+  "h": " data-count=\"36\" data-suffix=\"h\"",
+  "r": "attr"
+ },
+ "ex_85e1430984": {
+  "h": " data-count=\"27\"",
+  "r": "attr"
+ },
+ "ex_86410deaa4": {
+  "h": "Made by hand, <em>never rushed</em>",
+  "r": "text"
+ },
+ "ex_88c1c1d1ef": {
+  "h": " data-count=\"0\"",
+  "r": "attr"
+ },
+ "ex_899db44c97": {
+  "h": "&pound;3.80",
+  "r": "price"
+ },
+ "ex_8bfad5aef1": {
+  "h": "Cakes and tarts, made in small batches.",
+  "r": "desc"
+ },
+ "ex_8dbff7682c": {
+  "h": "Our 36-hour loaf with a blistered crust and a soft, open crumb.",
+  "r": "desc"
+ },
+ "ex_91e7fe3aa2": {
+  "h": "Filter coffee",
+  "r": "name"
+ },
+ "ex_91fb915817": {
+  "h": "&pound;3.40",
+  "r": "price"
+ },
+ "ex_9204ebd13a": {
+  "h": "Two bars of dark chocolate inside.",
+  "r": "desc"
+ },
+ "ex_928860f7b7": {
+  "h": "Thirty-six hours for flavour and a better crumb.",
+  "r": "text"
+ },
+ "ex_953d5be09a": {
+  "h": "Fermented for 36 hours for flavour.",
+  "r": "text"
+ },
+ "ex_955384150e": {
+  "h": "Country sourdough",
+  "r": "name"
+ },
+ "ex_999c88ffb4": {
+  "h": "Nothing artificial, ever.",
+  "r": "text"
+ },
+ "ex_a6dd9bf2f9": {
+  "h": "A rotating single origin, with free refills.",
+  "r": "desc"
+ },
+ "ex_aa55bece7d": {
+  "h": "Today's best",
+  "r": "text"
+ },
+ "ex_abbb6b0622": {
+  "h": "Baguette",
+  "r": "name"
+ },
+ "ex_af70219e96": {
+  "h": "Lemon tart",
+  "r": "name"
+ },
+ "ex_b2e386b1c5": {
+  "h": " data-count=\"100\" data-suffix=\"%\"",
+  "r": "attr"
+ },
+ "ex_b4f32ec08a": {
+  "h": "&pound;5.60",
+  "r": "price"
+ },
+ "ex_b7ac643fd1": {
+  "h": "Gluten free",
+  "r": "text"
+ },
+ "ex_b8bbf8bf27": {
+  "h": "Flat white",
+  "r": "name"
+ },
+ "ex_ba2169d955": {
+  "h": "Almond croissant",
+  "r": "name"
+ },
+ "ex_be2f91ccbd": {
+  "h": "A big pot with leaves from the windowsill.",
+  "r": "desc"
+ },
+ "ex_c011b38549": {
+  "h": "<span>Baked</span> <span>in</span> <span><em>{{city}}</em></span> <span>every</span> <span>morning.</span>",
+  "r": "text"
+ },
+ "ex_c18e798936": {
+  "h": "Olive oil, sea salt and plenty of rosemary.",
+  "r": "desc"
+ },
+ "ex_ca530a9a6f": {
+  "h": "Fudgy in the middle, crisp at the edge.",
+  "r": "desc"
+ },
+ "ex_caf83e4dbc": {
+  "h": "Soft, sticky and finished with cream cheese icing.",
+  "r": "desc"
+ },
+ "ex_d31e2a48a9": {
+  "h": "0",
+  "r": "text"
+ },
+ "ex_d3a9bf7e58": {
+  "h": "Twenty-seven layers, shatteringly crisp.",
+  "r": "desc"
+ },
+ "ex_d495ab972d": {
+  "h": "27",
+  "r": "text"
+ },
+ "ex_d4f369b180": {
+  "h": "real butter",
+  "r": "text"
+ },
+ "ex_d7d340c22c": {
+  "h": "Twice-baked with frangipane and toasted flakes.",
+  "r": "desc"
+ },
+ "ex_e410b2d03f": {
+  "h": "{{owner_name}} opened {{business_name}} in {{year_founded}} with one oven and a simple idea: bake the way it used to be done, and do it every morning.",
+  "r": "text"
+ },
+ "ex_e485623665": {
+  "h": "croissant layers",
+  "r": "text"
+ },
+ "ex_e55462fb75": {
+  "h": "Pain au chocolat",
+  "r": "name"
+ },
+ "ex_e5bac17e36": {
+  "h": "&pound;2.80",
+  "r": "price"
+ },
+ "ex_e739ba7cad": {
+  "h": "Rosemary focaccia",
+  "r": "name"
+ },
+ "ex_ebf5576936": {
+  "h": "Fresh mint tea",
+  "r": "name"
+ },
+ "ex_f5c5c551ce": {
+  "h": "Prices include VAT. V vegetarian, VG vegan, GF gluten free. Ask us about allergens.",
+  "r": "text"
+ },
+ "ex_f71a532c95": {
+  "h": "100%",
+  "r": "text"
+ },
+ "ex_fe09c471db": {
+  "h": "Cinnamon roll",
+  "r": "name"
+ },
+ "ex_fee28f9e60": {
+  "h": "&pound;3.60",
+  "r": "price"
+ },
+ "ex_ff10a0750c": {
+  "h": "Dense, malty and covered in toasted seeds. Brilliant with cheese.",
+  "r": "desc"
+ },
+ "ex_ff9004380e": {
+  "h": "Crackling outside, airy inside. Baked every hour until noon.",
+  "r": "desc"
+ }
+}
