@@ -18,8 +18,12 @@
   /* Real, improved mic - standalone, prominent, its own real breathing
      rings, rather than a small inline button. */
   @keyframes mic-ring { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.9); opacity: 0; } }
-  .mic-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--orange); animation: mic-ring 2.2s cubic-bezier(0.4,0,0.6,1) infinite; }
-  .mic-ring-2 { animation-delay: 0.7s; }
+  /* The rings and the red only show while the microphone is really on (Irfan, 2026-10-14). */
+  .mic-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid #DC2626; opacity: 0; pointer-events: none; }
+  #dashMicBtn.recording .mic-ring { animation: mic-ring 1.4s cubic-bezier(0.4,0,0.6,1) infinite; }
+  #dashMicBtn.recording .mic-ring-2 { animation-delay: 0.5s; }
+  #dashMicBtn.starting, #dashMicBtn.recording { background: #DC2626; }
+  #dashMicBtn.starting { opacity: 0.85; }
 
   /* Real, genuine movement on the marble swirl - a slow, continuous
      flow along each path, not a static illustration. */
@@ -47,7 +51,7 @@
   .card-hover { transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease; }
   .card-hover:hover { transform: translateY(-5px); box-shadow: 0 24px 48px -20px rgba(26,26,46,0.18); }
 
-  @media (prefers-reduced-motion: reduce) { .rise-in, .input-glow, .mic-ring { animation: none; } .reveal { opacity: 1; transform: none; } #marbleFlow1, #marbleFlow2, #marbleFlow3 { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .rise-in, .input-glow { animation: none; } #dashMicBtn.recording .mic-ring { animation: none; opacity: 0.5; transform: scale(1.4); } .reveal { opacity: 1; transform: none; } #marbleFlow1, #marbleFlow2, #marbleFlow3 { animation: none; } }
   a:focus-visible, button:focus-visible, textarea:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 </style>
 </head>
@@ -123,6 +127,7 @@
     <span class="mic-ring"></span><span class="mic-ring mic-ring-2"></span>
     <span class="material-symbols-outlined text-[30px]" style="font-variation-settings: 'FILL' 1;">mic</span>
   </button>
+  <p id="dashMicStatus" class="text-sm text-[var(--muted)] -mt-5 mb-6 min-h-[20px]" aria-live="polite">Hold the mic and talk, then let go.</p>
 
   <div class="rise-in d-3">
     <div class="input-glow bg-white border border-[var(--line)] rounded-2xl p-3 text-left">
@@ -219,6 +224,7 @@
 </footer>
 
 <script src="shared/api-client.js"></script>
+<script src="shared/mic-feedback.js"></script>
 <script src="shared/pulse-voice.js"></script>
 <script>
 const PLAN_DISPLAY_NAMES = { free: 'Free', pro: 'Plus', unlimited: 'Max', ultimate: 'Custom' };
@@ -293,9 +299,23 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // The mic always starts - the mode is checked after speech is captured, not before. Hold-to-talk comes
   // from shared/pulse-voice.js (finger, pen or mouse; works on iPhone).
-  holdToTalk(document.getElementById('dashMicBtn'), {
-    onPress: () => validationMsg.classList.add('hidden'),
+  const micBtn = document.getElementById('dashMicBtn');
+  const micStatus = document.getElementById('dashMicStatus');
+  const fb = window.GurostMicFeedback || { press() {}, ready() {}, release() {}, micOff() {} };
+  const IDLE_TEXT = 'Hold the mic and talk, then let go.';
+  const setMic = (state, text) => { // state: idle | starting | recording
+    micBtn.classList.toggle('starting', state === 'starting');
+    micBtn.classList.toggle('recording', state === 'recording');
+    micStatus.textContent = text;
+  };
+  holdToTalk(micBtn, {
+    onPress: () => { validationMsg.classList.add('hidden'); fb.press(); setMic('starting', 'Getting the mic ready\u2026'); },
+    onStart: () => { fb.ready(); setMic('recording', 'Listening\u2026 speak now'); },
+    onTapMode: () => setMic('recording', 'Listening\u2026 tap the mic again to send'),
+    onRelease: () => { fb.release(); setMic('idle', 'Working out what you said\u2026'); },
+    onMicOff: () => fb.micOff(),
     onResult: (transcript) => {
+      micStatus.textContent = IDLE_TEXT;
       if (!transcript) { // nothing was heard: say so (it used to do nothing at all, Bug KK)
         validationMsg.textContent = "I didn't catch that. Tap the mic and try again, or type it instead.";
         validationMsg.classList.remove('hidden');
@@ -318,8 +338,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
     },
-    onError: (msg) => { validationMsg.textContent = msg; validationMsg.classList.remove('hidden'); },
-    onUnavailable: (msg) => { validationMsg.textContent = msg; validationMsg.classList.remove('hidden'); }
+    onError: (msg) => { setMic('idle', IDLE_TEXT); validationMsg.textContent = msg; validationMsg.classList.remove('hidden'); },
+    onUnavailable: (msg) => { setMic('idle', IDLE_TEXT); validationMsg.textContent = msg; validationMsg.classList.remove('hidden'); }
   });
 
   document.getElementById('dashPromptInput').addEventListener('focus', () => requireMode(validationMsg));
