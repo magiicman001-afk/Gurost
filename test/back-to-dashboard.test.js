@@ -60,3 +60,9 @@ test("in a fake page: signed in swaps the two links, signed out changes nothing,
   assert.strictEqual(off.start.replacedWith, null);
   assert.strictEqual(off.made.length, 0);
 });
+
+test("every public page with the Log in / Start Building header loads the script", () => {
+  for (const f of ["index", "pricing", "blog", "about", "showcase", "templates"]) {
+    assert.match(read(f + ".html"), /<script src="shared\/back-to-dashboard\.js"><\/script>/, `${f}.html includes it`);
+  }
+});
