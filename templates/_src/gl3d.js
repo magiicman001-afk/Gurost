@@ -8,10 +8,10 @@
  *
  *   tag("wineglass", { fallback: "<img ...>", c1: "#B5362B", c2: "#F0A23B", c3: "#2A1A14", label: "A glass of wine", cls: "hero3d" })
  */
-const MODELS = { dumbbell: 0, kettlebell: 1, wineglass: 2, cloche: 3, coupe: 4, pizza: 5, stopwatch: 6, bulb: 7, house: 8, wrench: 9, key: 10, tower: 11 };
+const MODELS = { dumbbell: 0, kettlebell: 1, wineglass: 2, cloche: 3, coupe: 4, pizza: 5, stopwatch: 6, bulb: 7, house: 8, wrench: 9, key: 10, tower: 11, tooth: 12, cross: 13 };
 /** camera per model: pitch (radians), target height, distance */
-const YAW = { dumbbell: 1.3, kettlebell: 0.6, wineglass: 0.6, cloche: 0.6, coupe: 0.8, pizza: 0.4, stopwatch: 0.5, bulb: 0.4, house: 0.7, wrench: 0.5, key: 0.5, tower: 0.7 };
-const CAM = { dumbbell: [0.3, -0.2, 5.4], kettlebell: [0.28, -0.08, 5.0], wineglass: [0.2, 0.02, 4.7], cloche: [0.28, -0.3, 5.5], coupe: [0.26, -0.1, 4.6], pizza: [0.78, -0.9, 4.8], stopwatch: [0.2, -0.1, 5.0], bulb: [0.16, -0.05, 4.5], house: [0.42, -0.25, 5.0], wrench: [0.2, 0.0, 4.5], key: [0.18, 0.0, 4.6], tower: [0.3, 0.1, 6.0] };
+const YAW = { dumbbell: 1.3, kettlebell: 0.6, wineglass: 0.6, cloche: 0.6, coupe: 0.8, pizza: 0.4, stopwatch: 0.5, bulb: 0.4, house: 0.7, wrench: 0.5, key: 0.5, tower: 0.7, tooth: 0.5, cross: 0.12 };
+const CAM = { dumbbell: [0.3, -0.2, 5.4], kettlebell: [0.28, -0.08, 5.0], wineglass: [0.2, 0.02, 4.7], cloche: [0.28, -0.3, 5.5], coupe: [0.26, -0.1, 4.6], pizza: [0.78, -0.9, 4.8], stopwatch: [0.2, -0.1, 5.0], bulb: [0.16, -0.05, 4.5], house: [0.42, -0.25, 5.0], wrench: [0.2, 0.0, 4.5], key: [0.18, 0.0, 4.6], tower: [0.3, 0.1, 6.0], tooth: [0.2, -0.1, 4.8], cross: [0.15, 0.0, 4.6] };
 
 
 /** Smooth lathe profiles (radius, height) for the two glasses; the bowl is sampled from a curve so it renders round, not faceted. */
@@ -141,6 +141,18 @@ vec2 map(vec3 p){
   vec3 wz=vec3(mod(p.x+.25,.25)-.125,mod(p.y+.1,.27)-.135,p.z-.5); float wl=sdRB(wz,vec3(.07,.085,.02))-.004; wl=max(wl,max(abs(p.x)-.44,abs(p.y-.1)-.9));
   vec3 wx=vec3(mod(p.z+.25,.25)-.125,mod(p.y+.1,.27)-.135,p.x-.5); float wl2=sdRB(wx,vec3(.07,.085,.02))-.004; wl2=max(wl2,max(abs(p.z)-.44,abs(p.y-.1)-.9));
   r=U(r,vec2(min(wl,wl2),9.));
+  return r;
+#elif MODEL==12
+  float cr=sdEll(p-vec3(0,.42,0),vec3(.76,.52,.64)); cr=smin(cr,sdRB(p-vec3(0,.28,0),vec3(.4,.3,.36))-.2,.3);
+  cr=smin(cr,-sdEll(p-vec3(0,1.12,0),vec3(.2,.24,1.2)),-.07); cr=max(cr,-(length(p-vec3(.46,.98,.1))-.16));
+  float tt=clamp((.15-p.y)/1.0,0.,1.), rr=mix(.25,.09,tt);
+  float r1=sdCap(p,vec3(-.36,.15,0),vec3(-.24,-.95,.02),rr), r2=sdCap(p,vec3(.36,.15,0),vec3(.24,-.95,-.02),rr);
+  return vec2(smin(cr,min(r1,r2),.2),5.);
+#elif MODEL==13
+  vec2 r=vec2(sdRB(p,vec3(.24,.78,.1))-.12,1.);
+  r=U(r,vec2(sdRB(p,vec3(.78,.24,.1))-.12,1.));
+  float bar=min(sdRB(p-vec3(0,0,.17),vec3(.1,.55,.01))-.012,sdRB(p-vec3(0,0,.17),vec3(.55,.1,.01))-.012);
+  r=U(r,vec2(bar,5.));
   return r;
 #else
   vec3 q=p+vec3(0,.1,0);
