@@ -10,14 +10,15 @@ const { fillTemplate } = require("../templates/_src/fill");
 
 const PACK_DIR = path.join(__dirname, "..", "templates", "_src", "packs");
 const PACKS = fs.readdirSync(PACK_DIR).filter((f) => f.endsWith(".js")).map((f) => require(path.join(PACK_DIR, f)));
-const PAGES = { minimal: 6, bold: 6, editorial: 6, atelier: 2, gallery: 2, motion: 2 };
-const PLUS = ["atelier", "gallery", "motion"];
+const PAGES = { minimal: 6, bold: 6, editorial: 6, atelier: 2, gallery: 2, motion: 2, linen: 2, split: 2, journal: 2, market: 2 };
+const PLUS = ["atelier", "gallery", "motion", "linen", "split", "journal", "market"]; // premium plus: video, hints, pop-ups
+const CORE = ["atelier", "gallery", "motion"]; // every industry must have at least these
 const each = (fn) => { for (const pack of PACKS) for (const s of pack.styles) fn(pack, s, path.join(__dirname, "..", "templates", pack.id)); };
 const html = (root, s) => fs.readdirSync(path.join(root, s)).filter((f) => f.endsWith(".html"));
 
 test("every pack has at least the bakery's three premium plus styles", () => {
   assert.ok(PACKS.length >= 2);
-  for (const pack of PACKS) for (const s of PLUS) assert.ok(pack.styles.includes(s), `${pack.id} ${s}`);
+  for (const pack of PACKS) for (const s of CORE) assert.ok(pack.styles.includes(s), `${pack.id} ${s}`);
 });
 
 test("every style has the expected pages, a stylesheet and a script", () => {

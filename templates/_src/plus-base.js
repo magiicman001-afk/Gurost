@@ -157,4 +157,11 @@ const PLUS_JS = `(function () {
 })();
 `;
 
-module.exports = { C, t, esc, img, video, header, dialogs, footerBits, page, BASE_CSS, PLUS_JS, MENU: C.MENU, TAGS: C.TAGS };
+/** Media list for a layout that borrows another layout's pictures (imgSet) and hero loop (vidSet): [source in templates/_media, file in the template's assets]. */
+const mediaFor = (pack, layout, imgSet, vidSet) => [
+  ...pack.media.motifs.map((n) => [`${pack.mediaDir}/img/${imgSet}/${n}.webp`, `img/${n}.webp`]),
+  ...["mp4", "webm"].map((x) => [`${pack.mediaDir}/video/${vidSet}-hero.${x}`, `video/${layout}-hero.${x}`]),
+  [`${pack.mediaDir}/video/${vidSet}-poster.webp`, `video/${layout}-poster.webp`],
+];
+
+module.exports = { mediaFor, C, t, esc, img, video, header, dialogs, footerBits, page, BASE_CSS, PLUS_JS, MENU: C.MENU, TAGS: C.TAGS };

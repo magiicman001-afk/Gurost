@@ -38,6 +38,10 @@ const T = {
   atelier: ":root{--accent:#2F7D6B;--soft:#F2F7F2;--line:#DFE9DF;--ink:#14201A;--muted:#5C6C62}.hero-box{background:#0d1a14}.hero-box::after{background:linear-gradient(180deg,rgba(6,18,12,.55) 0%,rgba(6,18,12,0) 36%,rgba(6,18,12,.74) 100%)}.tile::after{background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(8,26,18,.72))}.hero-box::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(6,18,12,.6),rgba(6,18,12,0) 68%)}.hero h1 em{color:#9BE3C2}@media(max-width:860px){.hero-box::after{background:linear-gradient(180deg,rgba(6,18,12,.55) 0%,rgba(6,18,12,.45) 30%,rgba(6,18,12,.86) 100%)}}",
   gallery: ":root{--accent:#2A7561;--gold:#F2B93B;--soft:#F5F8F3;--line:#E4ECE0;--ink:#16221B;--muted:#5E6E64}",
   motion: ":root{--accent:#1F7A5C;--butter:#BFE37A;--soft:#F2F7EE;--line:#E1EADB;--ink:#12201A;--muted:#5C6C62}.order .lead,.order .hours th,.order .f label{color:#1F3A25}",
+  linen: ":root{--accent:#2F6F5C;--sage:#2F6F5C;--paper:#F8FAF4;--soft:#EEF3E8;--line:#DCE5D3;--ink:#1D2A22;--muted:#5F6E63}body{background:var(--paper)}.btn-primary{background:var(--accent);border-color:var(--accent)}",
+  split: ":root{--accent:#2F7D6B;--pop:#F2B93B}.pan{background:#E6F2E4}.pan::after{background:linear-gradient(180deg,rgba(236,247,232,.55) 0%,rgba(236,247,232,0) 32%,rgba(236,247,232,0) 60%,rgba(236,247,232,.7) 100%)}",
+  journal: ":root{--accent:#1F7A5C;--soft:#F1F5EE}",
+  market: ":root{--accent:#1F7A66;--sun:#FFD966;--mint:#BFE9CF;--pink:#FFC4B8}",
 };
 
 module.exports = {
@@ -46,7 +50,7 @@ module.exports = {
   ldType: "AnimalShelter",
   ldExtra: {},
   hint: "animal sanctuary",
-  styles: ["atelier", "gallery", "motion"],
+  styles: ["atelier", "gallery", "motion"], // the other four layouts wait for Irfan's approval
   mediaDir: "sanctuary",
   nav: { home: "Home", menu: "Our animals", cta: "Adopt or visit", ctaHref: "index.html#order" },
   cats,
