@@ -30,6 +30,7 @@ The Admin area (Software inventory) shows each switch as the code reads it.
 
 | Variable | Default when missing | Set it to | What it does |
 |---|---|---|---|
+| `TEMPLATE_AUTOCHOOSE` | **off** | `1` to switch on | "bakery in Leeds" picks a ready template (15 industries, generic layouts only) and fills it with the typed details: no model, no credits. No match = the normal builder. |
 | `SECTION_LIBRARY` | **on** | `0` to switch off | Builds sites from the 20-section library (Website Builder V2). Off = the old free-written generator. |
 | `PREMIUM_PIPELINE` | **on** | `0` to switch off | The 24 curated looks, the 0–100 score and the review loop. Needs `SECTION_LIBRARY` on. |
 | `ESCALATION_HIERARCHY` | **on** | `0` to switch off | A design slot that fails its score escalates (retry → specialist → senior) instead of the plain loop. |

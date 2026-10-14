@@ -810,6 +810,13 @@ async function generateWebsite(description, options = {}) {
     if (result.businessInfoSummary) logBot('Builder', `Company details saved: ${result.businessInfoSummary}.`, 'ok');
     else logBot('Builder', businessInfo ? "Those details didn't look valid - building with placeholders you can replace later." : 'No company details - building with placeholders you can replace later.', 'info');
     projectId = result.projectId;
+    if (result.templateSite) {
+      // A ready template was chosen from what was typed: nothing to wait for, show it now.
+      window.history.replaceState({}, '', `builder.html?projectId=${projectId}`);
+      setPreviewStatus(false);
+      await loadExistingProject(projectId);
+      return { started: true };
+    }
     designsExpected = result.expectedVariants || 2;
     window.history.replaceState({}, '', `builder.html?projectId=${projectId}`);
     LastProject.remember(localStorage, projectId);

@@ -60,6 +60,7 @@ const adminOps = require("./lib/admin-ops");
 const adminOpsActions = require("./lib/admin-ops-actions");
 const sandboxLink = require("./lib/sandbox-link");
 const templateSite = require("./lib/template-site");
+const templateChooser = require("./lib/template-chooser");
 const publishedSites = require("./lib/published-sites");
 const pulseBrain = require("./bots/pulse-brain");
 const { normalizeBusinessInfo, describeBusinessInfo, applyBusinessInfoUpdate } = require("./lib/business-info");
@@ -6029,6 +6030,31 @@ app.post("/api/website-builder/start", security.rejectUnknownFields(["prompt", "
   const currentProjectCount = maxProjects === Infinity ? 0 : await builtProjectCount(req.user.id);
   if (currentProjectCount >= maxProjects) {
     return res.status(402).json({ error: `Project limit reached (${maxProjects} for the ${req.user.plan} plan). Upgrade for more, or delete an existing project.` });
+  }
+
+  // Auto-chooser (TEMPLATE_AUTOCHOOSE=1, off by default): "bakery in Leeds" -> a ready template filled with the details typed.
+  // No model, no credits. Nothing matched (or anything goes wrong) -> the section-library builder below, as before.
+  if (process.env.TEMPLATE_AUTOCHOOSE === "1") {
+    try {
+      const pick = templateChooser.choose(prompt, businessInfo);
+      if (pick && templateSite.has(pick.pack, pick.style) && templateSite.isHonest(pick.style)) {
+        const filled = templateChooser.valuesFrom(pick.pack, prompt, businessInfo);
+        const projectId = crypto.randomUUID();
+        const project = newProject(prompt, req.user.id);
+        project.type = "website";
+        project.businessInfo = businessInfo;
+        project.templateSite = templateSite.makeSite(pick.pack, pick.style, filled.values);
+        transition(project, "PLANNING");
+        transition(project, "BUILDING");
+        transition(project, "DONE");
+        PROJECTS.set(projectId, project);
+        persistInBackground(projectId, project);
+        logPulseInteraction(req.user.id, projectId, "generate-website-template", prompt);
+        return res.json({ projectId, state: "DONE", templateSite: true, pack: pick.pack, style: pick.style, businessInfoSummary: describeBusinessInfo(businessInfo) });
+      }
+    } catch (err) {
+      console.warn("[template-chooser] falling back to the builder:", err.message);
+    }
   }
 
   const estimatedCost = complexityDetector.estimateBaseCost("website");

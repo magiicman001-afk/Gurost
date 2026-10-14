@@ -128,3 +128,27 @@ test("the server sends template files with sendFile and keeps the link slash for
   assert.match(src, /publishedSites\.sendOut\(res, out\)/);
   assert.match(src, /engine === "template"\) return res\.redirect\(301/);
 });
+
+test("the auto-chooser is wired behind TEMPLATE_AUTOCHOOSE=1, before any credit check, and the page opens the result", () => {
+  const src = fs.readFileSync(path.join(__dirname, "..", "server.js"), "utf8");
+  const a = src.indexOf('process.env.TEMPLATE_AUTOCHOOSE === "1"');
+  const b = src.indexOf("complexityDetector.estimateBaseCost(\"website\")", a);
+  assert.ok(a > 0 && b > a, "the chooser runs before credits are checked");
+  assert.match(src, /templateSite\.isHonest\(pick\.style\)/);
+  assert.match(fs.readFileSync(path.join(__dirname, "..", "public", "builder.html"), "utf8"), /if \(result\.templateSite\)/);
+});
+
+test("end to end without a server: 'bakery in Leeds' -> chosen, filled, launched, no example business, fast", async () => {
+  const C = require("../lib/template-chooser");
+  const t0 = Date.now();
+  const pick = C.choose("bakery in Leeds", { name: "Luvky Bakes", phone: "07700 900123" });
+  assert.equal(pick.pack, "bakery");
+  assert.ok(T.isHonest(pick.style));
+  const filled = C.valuesFrom(pick.pack, "bakery in Leeds", { name: "Luvky Bakes", phone: "07700 900123" });
+  const db = fakeDb();
+  await P.launch(args(P.createStore(db), { type: "website", currentHtml: null, history: [], templateSite: T.makeSite(pick.pack, pick.style, filled.values) }));
+  assert.ok(Date.now() - t0 < 10000, "well inside the 10 second target");
+  const home = db.rows[0].published_html.pages["/index.html"];
+  assert.ok(home.includes("Luvky Bakes") && home.includes("Leeds") && !home.includes("Maple"));
+  assert.equal(C.choose("a quiz app for kids", null), null, "unknown industry falls back to the builder");
+});
