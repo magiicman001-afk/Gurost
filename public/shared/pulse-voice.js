@@ -178,6 +178,9 @@ function createPulseVoice({ projectId, getUserId, onCorrectionApplied, onError, 
  * whatever real mechanism actually fits that page.
  */
 
+// Mic debug (Dashboard ?micdebug=1): the page may define window.__micDebug(text); every call is best effort and does nothing otherwise.
+function micDebug(text) { try { if (window.__micDebug) window.__micDebug(text); } catch (e) { /* debug only */ } }
+
 const VOICE_NOT_SET_UP = "Voice is not set up yet. You can type instead.";
 
 // The first format this browser can really record. Chrome and Firefox give webm or ogg; iPhone Safari
@@ -264,9 +267,28 @@ function startRecordingSession() {
       // What the recorder really writes (it may differ from the request); the base type only.
       const mimeType = (recorder.mimeType || picked || "audio/mp4").split(";")[0];
       const chunks = [];
-      recorder.addEventListener("dataavailable", (e) => { if (e.data.size > 0) chunks.push(e.data); });
+      recorder.addEventListener("dataavailable", (e) => { if (e.data.size > 0) chunks.push(e.data); micDebug(`chunk ${e.data.size} bytes`); });
       recorder.start();
       const startedAt = Date.now();
+      let stopLevels = () => {};
+      if (window.__micDebug) { // only when debugging: what the phone really gives us, and whether it goes quiet or stops mid-recording
+        try {
+          const track = stream.getAudioTracks()[0];
+          const st = track && track.getSettings ? track.getSettings() : {};
+          micDebug(`mic ready: ${recorder.mimeType} rate=${st.sampleRate} echo=${st.echoCancellation} noise=${st.noiseSuppression} agc=${st.autoGainControl} muted=${track && track.muted}`);
+          if (track) { track.addEventListener("mute", () => micDebug("!! the phone MUTED the microphone track")); track.addEventListener("unmute", () => micDebug("microphone track unmuted")); track.addEventListener("ended", () => micDebug("!! microphone track ENDED")); }
+          recorder.addEventListener("error", (e) => micDebug(`!! recorder error: ${e.error && e.error.name}`));
+          recorder.addEventListener("pause", () => micDebug("!! recorder paused"));
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) {
+            const ac = new AC(); const an = ac.createAnalyser(); an.fftSize = 512;
+            ac.createMediaStreamSource(stream).connect(an);
+            const buf = new Uint8Array(an.fftSize);
+            const timer = setInterval(() => { an.getByteTimeDomainData(buf); let peak = 0; for (let i = 0; i < buf.length; i++) peak = Math.max(peak, Math.abs(buf[i] - 128)); micDebug(`level ${Math.round((Date.now() - startedAt) / 100) / 10}s: ${"#".repeat(Math.round(peak / 6))} ${peak}`); }, 500);
+            stopLevels = () => { clearInterval(timer); try { ac.close(); } catch (e) { /* debug only */ } };
+          }
+        } catch (e) { micDebug("debug setup failed: " + e.message); }
+      }
 
       resolveStart({
         // Microphone off now and the recording thrown away, never sent (the page went to the background).
@@ -281,6 +303,8 @@ function startRecordingSession() {
             recorder.addEventListener(
               "stop",
               async () => {
+                stopLevels();
+                micDebug(`recorder stopped after ${((Date.now() - startedAt) / 1000).toFixed(1)}s, ${chunks.length} chunk(s)`);
                 stream.getTracks().forEach((t) => t.stop());
                 try { if (onMicOff) onMicOff(); } catch {}
                 try {
@@ -301,6 +325,7 @@ function startRecordingSession() {
                     throw new Error(/not configured/i.test(msg) ? VOICE_NOT_SET_UP : msg);
                   }
                   const { transcript } = await response.json();
+                  micDebug(`sent ${blob.size} bytes (${sendType}); got ${String(transcript || "").length} characters back`);
                   resolveStop(transcript);
                 } catch (err) {
                   rejectStop(err);
@@ -345,6 +370,8 @@ function holdToTalk(button, handlers = {}) {
   let lastPointerAt = 0;
   let longTimer = null;
   let cancelWanted = false; // a long press let go while the microphone was still starting: drop that recording when it arrives
+  let cancelToTap = false; // the browser took the touch away while the microphone was still starting: carry on listening as a tap
+  let tapTimer = null; // a recording left running in tap mode is sent after this long, so the microphone never stays on
   const longPress = typeof handlers.onLongPress === "function";
   const fromPointer = () => Date.now() - lastPointerAt < 1000; // a mouse or finger sends pointer events AND mouse events: only one set counts
   prefetchVoiceStatus();
@@ -358,6 +385,7 @@ function holdToTalk(button, handlers = {}) {
   function finish(s) {
     session = null;
     tapMode = false;
+    clearTimeout(tapTimer);
     handlers.onRelease?.();
     s.stop(handlers.onMicOff).then((t) => handlers.onResult?.(t || "")).catch((err) => handlers.onError?.(err && err.message ? err.message : "Couldn't transcribe. You can type instead."));
   }
@@ -383,15 +411,26 @@ function holdToTalk(button, handlers = {}) {
         if (cancelWanted) { cancelWanted = false; s.cancel?.(); handlers.onRelease?.(); return; } // it became a long press
         session = s;
         handlers.onStart?.(s);
+        if (cancelToTap) { cancelToTap = false; keepListening(); return; }
         if (releaseWanted) settle(); // let go while the microphone was still starting (heldMs was measured at the release)
       })
       .catch((err) => { starting = false; releaseWanted = false; handlers.onRelease?.(); handlers.onError?.(micErrorText(err)); });
   }
 
+  // Carry on recording as a tap (the next tap sends). Used when the touch was taken away by the browser: a lost touch is NOT
+  // a let-go, and sending then would cut the sentence off in the middle. A recording left like this is sent after a minute.
+  function keepListening() {
+    tapMode = true;
+    clearTimeout(longTimer);
+    handlers.onTapMode?.();
+    clearTimeout(tapTimer);
+    tapTimer = setTimeout(() => { if (session && tapMode) finish(session); }, 60000);
+  }
+
   // Called on release. A quick press (a tap) keeps recording until the next tap; a held press stops and sends now.
   function settle() {
     if (!session) return;
-    if (heldMs < TAP_MS) { tapMode = true; handlers.onTapMode?.(); return; }
+    if (heldMs < TAP_MS) { keepListening(); return; }
     finish(session);
   }
 
@@ -412,15 +451,23 @@ function holdToTalk(button, handlers = {}) {
   }
 
   button.addEventListener("pointerdown", (e) => {
+    micDebug(`finger down (${e.pointerType})`);
     lastPointerAt = Date.now();
     try { button.setPointerCapture(e.pointerId); } catch {} // so the release is seen even if the finger slides off
     press();
   });
   // The mouse events that follow a pointer event are ignored, and the guard window restarts when the finger or button
   // LIFTS (after a long hold they would otherwise arrive more than a second after pointerdown and start a second recording).
-  const lifted = () => { lastPointerAt = Date.now(); release(); };
+  const lifted = () => { lastPointerAt = Date.now(); micDebug(`finger up after ${Date.now() - pressAt} ms`); release(); };
   button.addEventListener("pointerup", lifted);
-  button.addEventListener("pointercancel", lifted);
+  // pointercancel: the browser took the touch away (it did NOT lift). Never send what was said so far; keep listening.
+  button.addEventListener("pointercancel", () => {
+    lastPointerAt = Date.now();
+    micDebug(`!! touch taken away by the browser after ${Date.now() - pressAt} ms (pointercancel): still listening`);
+    if (ignoreRelease) { ignoreRelease = false; return; }
+    if (session && !tapMode) keepListening();
+    else if (starting) cancelToTap = true;
+  });
   button.addEventListener("mousedown", () => { if (!fromPointer()) press(); });
   button.addEventListener("mouseup", () => { if (!fromPointer()) release(); });
   return { press, release };

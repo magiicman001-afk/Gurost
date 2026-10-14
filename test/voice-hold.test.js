@@ -31,7 +31,7 @@ test("the helper uses pointer events and ignores mouse events that follow a touc
 });
 
 test("the emulated-mouse guard restarts when the finger lifts (a long hold used to start a second recording)", () => {
-  assert.match(voice, /const lifted = \(\) => \{ lastPointerAt = Date\.now\(\); release\(\); \}/);
+  assert.match(voice, /const lifted = \(\) => \{ lastPointerAt = Date\.now\(\); micDebug\(`finger up after \$\{Date\.now\(\) - pressAt\} ms`\); release\(\); \}/);
 });
 
 test("a release while the microphone is still starting is remembered and applied when it is ready", () => {
@@ -41,7 +41,7 @@ test("a release while the microphone is still starting is remembered and applied
 
 test("hold OR tap: a quick press keeps recording until the next press; a long press stops on release", () => {
   assert.match(voice, /const TAP_MS = 450/);
-  assert.match(voice, /if \(heldMs < TAP_MS\) \{ tapMode = true; handlers\.onTapMode\?\.\(\); return; \}/);
+  assert.match(voice, /if \(heldMs < TAP_MS\) \{ keepListening\(\); return; \}/);
   assert.match(voice, /if \(tapMode\) \{ ignoreRelease = true; finish\(session\); \}/);
   assert.match(voice, /if \(session && !tapMode\) settle\(\);/);
 });
