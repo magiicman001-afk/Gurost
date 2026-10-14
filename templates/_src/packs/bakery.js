@@ -15,7 +15,9 @@ module.exports = {
   ldType: "Bakery",
   ldExtra: { servesCuisine: "Bakery" },
   hint: "bakery",
-  styles: ["minimal", "bold", "editorial", "atelier", "gallery", "motion", "linen", "split", "journal", "market"],
+  photo: "professional food photograph, natural window light, shallow depth of field, rustic wooden surface, appetising, true-to-life colours, photorealistic, no text, no people",
+  videoQuery: "baking bread bakery",
+  styles: ["minimal", "bold", "editorial", "atelier", "gallery", "motion", "linen", "split", "journal", "market", "studio", "daylight", "hearth"],
   mediaDir: "bakery",
   nav: { home: "Home", menu: "Menu", cta: "Pre-order", ctaHref: "index.html#order" },
   cats,
@@ -66,7 +68,7 @@ module.exports = {
       menuHero: ["The <em>menu</em>", "Prices include VAT. V vegetarian, VG vegan, GF gluten free. Ask us about allergens."],
     },
   },
-  css: { atelier: "", gallery: "", motion: "", linen: "", split: "", journal: "", market: "" },
+  css: { atelier: "", gallery: "", motion: "", linen: "", split: "", journal: "", market: "", studio: "", daylight: "", hearth: "" },
   // what scripts/build-media.js draws for this industry: pictures (three looks) and the three hero loops
   media: {
     pal: { soft3d: true, sw: 0, bg: "#FFFFFF", ink: "#8A5A2B", crust: "#D99A4E", crustDark: "#A8672A", light: "#F6D8A6", cream: "#FFF4E2", accent: "#C2512F", accent2: "#F0A59A", shadow: "rgba(90,50,10,.38)", plate: "#FFF8EC" },

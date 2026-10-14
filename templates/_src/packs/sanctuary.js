@@ -32,7 +32,12 @@ const cats = [
     A("Willa", "In care &middot; Little owl", "A small owl with a big personality, almost ready to fly free.", { tags: [], star: true }),
     A("Ash", "In care &middot; Long-eared owl", "Quiet and watchful, on the mend after a road accident.", { tags: [] }),
   ] },
-].map((c) => ({ ...c, items: c.items.map((i) => ({ ...i, p: "", d: i.d })) }));
+].map((c) => ({
+  ...c,
+  photo: { dogs: "happy rescue dogs at an animal sanctuary", cats: "rescue cats relaxing at an animal sanctuary", small: "rabbits and guinea pigs in a sanctuary", wildlife: "an owl being cared for at a wildlife rescue" }[c.id],
+  // a photographic brief for each animal: its kind (the part of "meta" after the age), not its name
+  items: c.items.map((i) => ({ ...i, p: "", d: i.d, hint: { dogs: "a friendly {k} dog looking into the camera", cats: "a {k} cat sitting calmly", small: "a {k}", wildlife: "a {k} recovering at a wildlife rescue centre" }[c.id].replace("{k}", String(i.meta).split("&middot;").pop().trim().toLowerCase()) })),
+}));
 
 const T = {
   atelier: ":root{--accent:#2F7D6B;--soft:#F2F7F2;--line:#DFE9DF;--ink:#14201A;--muted:#5C6C62}.hero-box{background:#0d1a14}.hero-box::after{background:linear-gradient(180deg,rgba(6,18,12,.55) 0%,rgba(6,18,12,0) 36%,rgba(6,18,12,.74) 100%)}.tile::after{background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(8,26,18,.72))}.hero-box::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(6,18,12,.6),rgba(6,18,12,0) 68%)}.hero h1 em{color:#9BE3C2}@media(max-width:860px){.hero-box::after{background:linear-gradient(180deg,rgba(6,18,12,.55) 0%,rgba(6,18,12,.45) 30%,rgba(6,18,12,.86) 100%)}}",
@@ -42,6 +47,9 @@ const T = {
   split: ":root{--accent:#2F7D6B;--pop:#F2B93B}.pan{background:#E6F2E4}.pan::after{background:linear-gradient(180deg,rgba(236,247,232,.55) 0%,rgba(236,247,232,0) 32%,rgba(236,247,232,0) 60%,rgba(236,247,232,.7) 100%)}",
   journal: ":root{--accent:#1F7A5C;--soft:#F1F5EE}",
   market: ":root{--accent:#1F7A66;--sun:#FFD966;--mint:#BFE9CF;--pink:#FFC4B8}",
+  studio: ":root{--accent:#8FD6B5}.btn-primary{color:#0B1A13}.tag.star{color:#0B1A13}",
+  daylight: ":root{--accent:#2F7D6B}",
+  hearth: ":root{--accent:#2F6F5C;--deep:#1F3A2E;--paper:#F9FAF4;--soft:#EEF3E8;--line:#DCE5D3;--ink:#1D2A22;--muted:#5F6E63}body{background:var(--paper)}.site-header.is-stuck,.mpanel{background:rgba(249,250,244,.92)}",
 };
 
 module.exports = {
@@ -50,7 +58,9 @@ module.exports = {
   ldType: "AnimalShelter",
   ldExtra: {},
   hint: "animal sanctuary",
-  styles: ["atelier", "gallery", "motion"], // the other four layouts wait for Irfan's approval
+  photo: "natural-light documentary photograph, warm and honest, calm gentle mood, shallow depth of field, true-to-life colours, photorealistic, no text",
+  videoQuery: "dogs animal shelter",
+  styles: ["atelier", "gallery", "motion", "linen", "split", "journal", "market", "studio", "daylight", "hearth", "kindred", "stories", "commons"],
   mediaDir: "sanctuary",
   nav: { home: "Home", menu: "Our animals", cta: "Adopt or visit", ctaHref: "index.html#order" },
   cats,
@@ -58,6 +68,16 @@ module.exports = {
   seo: {
     home: { title: "Animal sanctuary", desc: "{{business_name}} is an animal sanctuary in {{city}}. Meet the animals looking for homes, plan a visit or donate." },
     menu: { title: "Our animals", desc: "Meet the dogs, cats, small animals and wildlife in our care at {{business_name}}, {{city}}." },
+  },
+  community: {
+    visitEyebrow: "Find us", visitH2: "Come and <em>say hello</em>", eventsEyebrow: "Coming up", eventsH2: "What is <em>on</em> at the sanctuary", waysEyebrow: "Get involved", waysH2: "Four ways to <em>help</em>",
+    events: [["14", "Nov", "Open day and dog walks", "Meet the dogs and take one for a walk. Free entry."], ["28", "Nov", "Christmas craft fair", "Stalls, hot chocolate and a raffle for the animals."], ["12", "Dec", "Carols in the barn", "Songs by lantern light with mince pies for everyone."]],
+    ways: [["Volunteer", "Walk dogs, groom cats or help in the barn. A few hours a week makes a real difference.", "Volunteer with us", "#order"], ["Foster", "Give an animal a quiet home while it waits for its forever family.", "Become a foster carer", "#order"], ["Sponsor", "Sponsor an animal and get updates and photographs as it settles in.", "Sponsor an animal", "{{donate_url}}"], ["Wish list", "Blankets, food and toys. Everything on our list is used within days.", "See the wish list", "#order"]],
+  },
+  donate: {
+    eyebrow: "Support the animals", h2: "Every <em>gift</em> goes straight to their care", lead: "We are a small charity and we depend on kind people. Give once, or every month, and we will show you exactly where it went.",
+    amounts: [10, 25, 50, 100], note: "You will finish on our secure donation page.",
+    gifts: [["&pound;10", "feeds a dog for a week"], ["&pound;25", "pays for a vaccination and a health check"], ["&pound;50", "neuters a cat so it can be rehomed"], ["&pound;100", "covers a month of care for a rescued owl"]],
   },
   form: (submit) => C.form("contact", { submit }),
   order: { eyebrow: "Visit or adopt", submit: "Send my enquiry" },
