@@ -4,15 +4,15 @@
  * favourites, sticky storytelling and a big type statement. Two pages: Home and Menu. Fonts: Young Serif + Outfit (SIL OFL).
  */
 const B = require("./plus-base");
-const { t, img, video, footerBits, MENU, TAGS } = B;
+const { t, img, video, footerBits } = B;
 
 const FONTS = [
   ["YoungSerif-Regular.ttf", "YoungSerif-Regular.ttf"], ["Outfit-Regular.ttf", "Outfit-Regular.ttf"], ["Outfit-Bold.ttf", "Outfit-Bold.ttf"],
   ["YoungSerif-OFL.txt", "OFL-YoungSerif.txt"], ["Outfit-OFL.txt", "OFL-Outfit.txt"],
 ];
-const MEDIA = [
-  ...["croissant", "loaf", "baguettes", "cupcake", "slice", "coffee", "roll", "wheat"].map((n) => [`img/gallery/${n}.webp`, `img/${n}.webp`]),
-  ["video/gallery-hero.mp4", "video/gallery-hero.mp4"], ["video/gallery-hero.webm", "video/gallery-hero.webm"], ["video/gallery-poster.webp", "video/gallery-poster.webp"],
+const media = (pack) => [
+  ...pack.media.motifs.map((n) => [`${pack.mediaDir}/img/gallery/${n}.webp`, `img/${n}.webp`]),
+  [`${pack.mediaDir}/video/gallery-hero.mp4`, "video/gallery-hero.mp4"], [`${pack.mediaDir}/video/gallery-hero.webm`, "video/gallery-hero.webm"], [`${pack.mediaDir}/video/gallery-poster.webp`, "video/gallery-poster.webp"],
 ];
 const PRELOAD = ["assets/fonts/YoungSerif-Regular.ttf"];
 
@@ -76,10 +76,10 @@ h1 em,h2 em{font-style:normal;color:var(--accent)}.lead{font-size:clamp(1.05rem,
 @media(max-width:1000px){.grid4{grid-template-columns:repeat(2,1fr)}}@media(max-width:420px){.grid4{gap:12px}.mc h3{font-size:1rem}.mc .row{flex-direction:column;gap:.2rem}}
 `;
 
-const ORDER = (h) => `<section class="sec" id="order" style="padding-top:0"><div class="wrap"><div class="order" data-reveal>
-<div><span class="eyebrow">Pre-order</span><h2 style="margin:1rem 0 .8rem">${h}</h2><p class="lead" style="margin:0">Pick a day and a time. We bake it, you collect it.</p>
+const ORDER = (pack, h) => `<section class="sec" id="order" style="padding-top:0"><div class="wrap"><div class="order" data-reveal>
+<div><span class="eyebrow">${pack.order.eyebrow}</span><h2 style="margin:1rem 0 .8rem">${h}</h2><p class="lead" style="margin:0">${pack.copy.gallery.orderLead}</p>
 ${B.C.hoursRows()}<address>${t("address_line1")}, ${t("address_line2")}<br><a href="tel:${t("phone_href")}">${t("phone")}</a></address></div>
-<div>${B.C.form("order", { submit: "Send my pre-order" })}</div></div></div></section>`;
+<div>${pack.form(pack.order.submit)}</div></div></div></section>`;
 
 function foot() {
   const f = footerBits();
@@ -89,42 +89,41 @@ function foot() {
 <div class="col"><b>Follow</b>${f.social}<b style="margin-top:.8rem">Legal</b>${f.legal}</div></div>
 <div class="base"><span>${f.copy}</span><span data-today></span></div></div></footer>`;
 }
+const stat = ([v, s]) => `<b data-count="${v}"${s ? ` data-suffix="${s}"` : ""}>${v}${s}</b>`;
 
-const items = () => MENU.flatMap((c) => c.items.map((i) => ({ ...i, art: i.art || c.art, cat: c.name })));
-
-function home() {
-  const stars = items().filter((i) => i.star);
-  const cards = stars.map((i) => `<a class="pc" href="index.html#order"><div class="ph">${img(i.art, i.n, { hint: "bakery " + i.n.toLowerCase() })}</div><div class="row"><h3>${i.n}</h3><span class="price">&pound;${i.p}</span></div><p>${i.d}</p><span class="add">Add to pre-order &rarr;</span></a>`).join("");
-  const words = MENU.map((c) => c.name).concat(MENU.map((c) => c.name)).map((n) => `<span>${n}</span>`).join("");
+function home(pack) {
+  const K = pack.copy.gallery, cats = pack.cats;
+  const stars = cats.flatMap((c) => c.items.map((i) => ({ ...i, art: i.art || c.art }))).filter((i) => i.star);
+  const cards = stars.map((i) => `<a class="pc" href="index.html#order"><div class="ph">${img(i.art, i.n, { hint: pack.hint + " " + i.n.toLowerCase() })}</div><div class="row"><h3>${i.n}</h3><span class="price">${i.meta}</span></div><p>${i.d}</p><span class="add">${K.fav[3]}</span></a>`).join("");
+  const words = cats.map((c) => c.name).concat(cats.map((c) => c.name)).map((n) => `<span>${n}</span>`).join("");
   const body = `
-<section class="hero"><div class="wrap"><div><span class="eyebrow">${t("city")} &middot; Since ${t("year_founded")}</span><h1 style="margin-top:1.2rem">Bread worth <em>the walk</em>.</h1><p class="lead">${t("tagline")}</p>
-<div class="cta-row"><a class="btn btn-primary" href="#order"><span>Pre-order</span></a><a class="btn" href="menu.html"><span>Browse the menu</span></a></div></div>
-<div class="vwrap">${video("gallery")}<div class="badge"><i></i>Baking now &middot; open ${t("hours_weekdays")}</div></div></div></section>
+<section class="hero"><div class="wrap"><div><span class="eyebrow">${K.heroEyebrow}</span><h1 style="margin-top:1.2rem">${K.heroH1}</h1><p class="lead">${t("tagline")}</p>
+<div class="cta-row"><a class="btn btn-primary" href="${K.cta1Href || "#order"}"><span>${K.cta1}</span></a><a class="btn" href="${K.cta2Href || "menu.html"}"><span>${K.cta2}</span></a></div></div>
+<div class="vwrap">${video("gallery")}<div class="badge"><i></i>${K.badge}</div></div></div></section>
 <div class="ticker" aria-hidden="true"><div>${words}${words}</div></div>
-<section class="sec"><div class="wrap head"><div><span class="eyebrow">Today's best</span><h2 style="margin-top:1rem">Our <em>favourites</em></h2></div><div class="arrows"><button type="button" data-rail-prev aria-label="Previous">&larr;</button><button type="button" data-rail-next aria-label="Next">&rarr;</button></div></div>
-<div class="railbox"><div class="rail" data-rail tabindex="0" aria-label="Favourite bakes">${cards}</div></div></section>
-<section class="sec" style="padding-top:0"><div class="wrap story"><div class="stick" data-reveal><span class="eyebrow">Our story</span><h2 style="margin:1rem 0 0">Made by hand, <em>never rushed</em></h2><p class="lead">${t("owner_name")} started ${t("business_name")} in ${t("year_founded")}. Every loaf is mixed, shaped and baked on site, the same way, every day.</p>
-<div class="facts"><div><b data-count="${t("years_baking")}">${t("years_baking")}</b><span>years baking</span></div><div><b data-count="36" data-suffix="h">36h</b><span>slow rise</span></div><div><b data-count="100" data-suffix="%">100%</b><span>real butter</span></div></div></div>
-<div class="panels"><article class="panel" data-reveal><div class="ph">${img("wheat", "Flour and wheat", { role: "featured", w: 960, h: 660, hint: "bakery flour wheat" })}</div><div class="tx"><h3>Good flour</h3><p>Stoneground and sourced close to home.</p></div></article>
-<article class="panel" data-reveal><div class="ph">${img("loaf", "Sourdough loaf", { w: 960, h: 660, hint: "sourdough loaf" })}</div><div class="tx"><h3>Slow fermentation</h3><p>Thirty-six hours for flavour and a better crumb.</p></div></article>
-<article class="panel" data-reveal><div class="ph">${img("croissant", "Butter croissant", { w: 960, h: 660, hint: "butter croissant" })}</div><div class="tx"><h3>Out of the oven</h3><p>Warm when you pick it up, as it should be.</p></div></article></div></div></section>
-<section class="sec" style="padding-top:0"><div class="wrap"><p class="statement" data-reveal><span>Baked</span> <span>in</span> <span><em>${t("city")}</em></span> <span>every</span> <span>morning.</span></p></div></section>
-${ORDER("Order ahead and <em>skip the queue</em>")}
+<section class="sec"><div class="wrap head"><div><span class="eyebrow">${K.fav[0]}</span><h2 style="margin-top:1rem">${K.fav[1]}</h2></div><div class="arrows"><button type="button" data-rail-prev aria-label="Previous">&larr;</button><button type="button" data-rail-next aria-label="Next">&rarr;</button></div></div>
+<div class="railbox"><div class="rail" data-rail tabindex="0" aria-label="${K.fav[2]}">${cards}</div></div></section>
+<section class="sec" style="padding-top:0"><div class="wrap story"><div class="stick" data-reveal><span class="eyebrow">${K.story.eyebrow}</span><h2 style="margin:1rem 0 0">${K.story.h2}</h2><p class="lead">${K.story.lead}</p>
+<div class="facts">${K.facts.map((x) => `<div>${stat(x)}<span>${x[2]}</span></div>`).join("")}</div></div>
+<div class="panels">${K.panels.map(([a, alt, h, p, hint, role]) => `<article class="panel" data-reveal><div class="ph">${img(a, alt, { role, w: 960, h: 660, hint })}</div><div class="tx"><h3>${h}</h3><p>${p}</p></div></article>`).join("\n")}</div></div></section>
+<section class="sec" style="padding-top:0"><div class="wrap"><p class="statement" data-reveal>${K.statement}</p></div></section>
+${ORDER(pack, K.orderHome)}
 ${foot()}`;
-  return B.page({ title: "Fresh bakery", desc: "Artisan bakery in {{city}}. Sourdough, pastries and coffee, baked fresh every morning.", key: "home", body, preload: PRELOAD });
+  return B.page({ title: pack.seo.home.title, desc: pack.seo.home.desc, key: "home", body, preload: PRELOAD, pack });
 }
 
-function menu() {
-  const chips = `<button type="button" data-filter="all" aria-pressed="true">All</button>` + MENU.map((c) => `<button type="button" data-filter="${c.id}" aria-pressed="false">${c.name}</button>`).join("");
-  const cats = MENU.map((c) => `<section class="cat" id="${c.id}" data-cat="${c.id}"><header><h2>${c.name}</h2><p>${c.blurb}</p></header><div class="grid4">${c.items.map((i) => `<article class="mc" data-reveal><div class="ph">${img(i.art || c.art, i.n, { hint: "bakery " + i.n.toLowerCase() })}</div><div class="row"><h3>${i.n}</h3><span class="price">&pound;${i.p}</span></div><p>${i.d}</p><div class="tags">${i.star ? '<span class="tag star">Favourite</span>' : ""}${i.tags.map((x) => `<span class="tag" title="${TAGS[x]}">${x}</span>`).join("")}</div></article>`).join("")}</div></section>`).join("");
-  const body = `<section class="mhero"><div class="wrap"><span class="eyebrow">Menu</span><h1 style="margin-top:1rem">The <em>full</em> menu</h1><p class="lead">Prices include VAT. V vegetarian, VG vegan, GF gluten free. Ask us about allergens.</p><div class="chips">${chips}</div></div></section>
-<div class="wrap">${cats}</div>
-${ORDER("Ready to <em>order</em>?")}
+function menu(pack) {
+  const K = pack.copy.gallery, cats = pack.cats;
+  const chips = `<button type="button" data-filter="all" aria-pressed="true">All</button>` + cats.map((c) => `<button type="button" data-filter="${c.id}" aria-pressed="false">${c.name}</button>`).join("");
+  const sec = cats.map((c) => `<section class="cat" id="${c.id}" data-cat="${c.id}"><header><h2>${c.name}</h2><p>${c.blurb}</p></header><div class="grid4">${c.items.map((i) => `<article class="mc" data-reveal><div class="ph">${img(i.art || c.art, i.n, { hint: pack.hint + " " + i.n.toLowerCase() })}</div><div class="row"><h3>${i.n}</h3><span class="price">${i.meta}</span></div><p>${i.d}</p><div class="tags">${i.star ? '<span class="tag star">Favourite</span>' : ""}${i.tags.map((x) => `<span class="tag" title="${pack.tags[x]}">${x}</span>`).join("")}</div></article>`).join("")}</div></section>`).join("");
+  const body = `<section class="mhero"><div class="wrap"><span class="eyebrow">${K.menuHero[0]}</span><h1 style="margin-top:1rem">${K.menuHero[1]}</h1><p class="lead">${K.menuHero[2]}</p><div class="chips">${chips}</div></div></section>
+<div class="wrap">${sec}</div>
+${ORDER(pack, K.orderMenu)}
 ${foot()}`;
-  return B.page({ title: "Menu", desc: "Our full menu: bread, pastries, cakes and coffee at {{business_name}}, {{city}}.", key: "menu", body, preload: PRELOAD });
+  return B.page({ title: pack.seo.menu.title, desc: pack.seo.menu.desc, key: "menu", body, preload: PRELOAD, pack });
 }
 
-function build() {
-  return { name: "gallery", themeColor: "#FFFFFF", fonts: FONTS, media: MEDIA, files: { "index.html": home(), "menu.html": menu(), "assets/style.css": CSS, "assets/site.js": B.C.SITE_JS + "\n" + B.PLUS_JS } };
+function build(pack = require("./packs/bakery")) {
+  return { name: "gallery", themeColor: "#FFFFFF", fonts: FONTS, media: media(pack), files: { "index.html": home(pack), "menu.html": menu(pack), "assets/style.css": CSS + pack.css.gallery, "assets/site.js": B.C.SITE_JS + "\n" + B.PLUS_JS } };
 }
 module.exports = { build };

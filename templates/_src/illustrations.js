@@ -16,14 +16,14 @@ const hexMix = (hex, to, amt) => {
   return "#" + c.map((v) => (v < 16 ? "0" : "") + v.toString(16)).join("");
 };
 
-function maker(P) {
+function maker(P, uid = "") {
   const sw = P.sw || 0;
   // P.soft3d: every flat colour becomes a soft gradient (light from the top left), so the art looks lit and rounded, like a clay render
   const defs = [], seen = {};
   const paint = (c) => {
     if (!P.soft3d || typeof c !== "string" || !/^#[0-9a-fA-F]{6}$/.test(c)) return c;
     if (!seen[c]) {
-      const id = "g" + defs.length;
+      const id = uid + "g" + defs.length;
       seen[c] = id;
       defs.push(`<radialGradient id="${id}" cx=".32" cy=".26" r=".95"><stop offset="0" stop-color="${hexMix(c, 255, 0.34)}"/><stop offset=".5" stop-color="${c}"/><stop offset="1" stop-color="${hexMix(c, 0, 0.26)}"/></radialGradient>`);
     }
@@ -175,11 +175,13 @@ const MOTIFS = {
 function art(name, P) {
   const fn = MOTIFS[name];
   if (!fn) throw new Error("unknown art motif: " + name);
-  const m = maker(P);
+  const m = maker(P, name + "-");
   let svg = fn(m);
   if (P.soft3d) m.defs.push('<filter id="blur" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="7"/></filter>');
   if (m.defs.length) svg = svg.replace('focusable="false">', `focusable="false"><defs>${m.defs.join("")}</defs>`);
   return svg;
 }
 
-module.exports = { art, MOTIFS: Object.keys(MOTIFS) };
+/** Other industries add their own motifs (templates/_src/illustrations-animals.js) with the same helpers. */
+const register = (more) => Object.assign(MOTIFS, more);
+module.exports = { art, MOTIFS: Object.keys(MOTIFS), register, kit: { f, wrap, shadow, hexMix } };

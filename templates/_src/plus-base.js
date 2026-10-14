@@ -15,17 +15,16 @@ const img = (name, alt, { role = "secondary", cls = "", w = 960, h = 1200, lazy 
 const video = (name, { cls = "" } = {}) =>
   `<video class="${cls}" data-hero-video autoplay muted loop playsinline preload="metadata" poster="assets/video/${name}-poster.webp" aria-hidden="true"><source src="assets/video/${name}-hero.mp4" type="video/mp4"><source src="assets/video/${name}-hero.webm" type="video/webm"></video>`;
 
-const links = [["index.html", "Home", "home"], ["menu.html", "Menu", "menu"]];
-
-function header(active) {
+function header(active, nav) {
+  const links = [["index.html", nav.home, "home"], ["menu.html", nav.menu, "menu"]];
   const li = links.map(([h, l, k]) => `<a href="${h}"${k === active ? ' aria-current="page"' : ""}>${l}</a>`).join("");
   return `<header class="site-header"><div class="bar wrap">
 <a class="brand" href="index.html">${t("business_name")}</a>
 <nav class="nav" aria-label="Main">${li}</nav>
-<a class="btn btn-primary bar-cta" href="index.html#order"><span>Pre-order</span></a>
+<a class="btn btn-primary bar-cta" href="${nav.ctaHref}"><span>${nav.cta}</span></a>
 <button class="burger" type="button" data-menu-toggle aria-expanded="false" aria-controls="menu" aria-label="Menu"><span></span><span></span></button>
 </div>
-<div class="mpanel" id="menu" data-menu><nav aria-label="Mobile">${li}<a href="index.html#order">Pre-order</a></nav></div></header>`;
+<div class="mpanel" id="menu" data-menu><nav aria-label="Mobile">${li}<a href="${nav.ctaHref}">${nav.cta}</a></nav></div></header>`;
 }
 
 function dialogs() {
@@ -45,10 +44,10 @@ function footerBits() {
 }
 
 /** Page shell. extraHead goes before </head> (a no-JS safety style makes sure nothing stays hidden). */
-function page({ title, desc, key, body, preload = [] }) {
-  const h = C.head({ title, desc, page: key, fontsPreload: preload }).replace("</head>", '<noscript><style>[data-reveal]{opacity:1!important;transform:none!important}</style></noscript>\n</head>');
+function page({ title, desc, key, body, preload = [], pack }) {
+  const h = C.head({ title, desc, page: key, fontsPreload: preload, ldType: pack.ldType, ldExtra: pack.ldExtra }).replace("</head>", '<noscript><style>[data-reveal]{opacity:1!important;transform:none!important}</style></noscript>\n</head>');
   return `${h}
-${header(key)}
+${header(key, pack.nav)}
 <main id="main">
 ${body}
 </main>

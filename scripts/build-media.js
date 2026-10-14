@@ -1,28 +1,30 @@
 "use strict";
 /**
- * Renders the pictures and looping videos for the premium-plus bakery templates. Everything is drawn here (original vector art,
- * gradients, particles): no stock files, no licences, no network. It needs Playwright (Chromium) and ffmpeg.
+ * Renders the pictures and looping videos for an industry pack's premium-plus templates. Everything is drawn here (original vector
+ * art, gradients, particles): no stock files, no licences, no network. It needs Playwright (Chromium) and ffmpeg.
  *
- *   node scripts/build-bakery-media.js [images|videos|all]     -> templates/_media/{img,video}
+ *   node scripts/build-media.js <industry> [images|videos|all] [videoName]     -> templates/_media/<industry>/{img,video}
  *
- * Images: 8 products x 3 looks (atelier, gallery, motion), WebP. Videos: one looping clip per template, MP4 + WebM + poster.
+ * The scene settings (colours, which pieces appear) come from `media` in templates/_src/packs/<industry>.js.
+ * Images: each motif in three looks (atelier, gallery, motion), WebP. Videos: one loop per layout, MP4 + WebM + poster.
  * Every video is an exact loop: all movement uses whole cycles of the clip length.
  */
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { execFileSync } = require("child_process");
-const { art, MOTIFS } = require("../templates/_src/illustrations");
+const { art } = require("../templates/_src/illustrations");
+require("../templates/_src/illustrations-animals");
 
-const OUT = path.join(__dirname, "..", "templates", "_media");
-const PAL = { soft3d: true, sw: 0, bg: "#FFFFFF", ink: "#8A5A2B", crust: "#D99A4E", crustDark: "#A8672A", light: "#F6D8A6", cream: "#FFF4E2", accent: "#C2512F", accent2: "#F0A59A", shadow: "rgba(90,50,10,.38)", plate: "#FFF8EC" };
-const PAL_DARK = { ...PAL, shadow: "rgba(0,0,0,.55)" };
-
-const SETS = {
-  atelier: { w: 960, h: 1200, bg: "radial-gradient(ellipse 70% 46% at 50% 40%,#FFFCF5 0%,#F6ECDC 55%,#E9D9BF 100%)", floor: "linear-gradient(180deg,transparent 0,transparent 62%,rgba(120,80,30,.10) 100%)", scale: 0.88, top: 0.2 },
-  gallery: { w: 960, h: 1200, bg: "#FFFFFF", scale: 0.8, top: 0.28, disc: { loaf: "#F7BF4F", croissant: "#F8BDAE", roll: "#C3DCC6", slice: "#F4C9D8", cupcake: "#D3C8F3", baguettes: "#FAD98F", coffee: "#C0DBEA", wheat: "#F2E0B4" } },
-  motion: { w: 1000, h: 1000, scale: 0.84, top: 0.14, tint: { loaf: "#FFD83D", croissant: "#FF8E6B", roll: "#8FE3C0", slice: "#FF9EC1", cupcake: "#B9A6FF", baguettes: "#FFB48A", coffee: "#7FD1FF", wheat: "#D6F06B" } },
-};
+const industry = process.argv[2];
+if (!industry || !fs.existsSync(path.join(__dirname, "..", "templates", "_src", "packs", industry + ".js"))) {
+  console.error("usage: node scripts/build-media.js <industry> [images|videos|all] [videoName]"); process.exit(1);
+}
+const M = require(`../templates/_src/packs/${industry}`).media;
+const OUT = path.join(__dirname, "..", "templates", "_media", industry);
+const PAL = M.pal;
+const PAL_DARK = { ...PAL, shadow: "rgba(0,0,0,.55)", ...(M.palDark || {}) };
+const SETS = M.sets;
 
 const GRAIN = `<canvas id="gr" style="position:absolute;inset:0;width:100%;height:100%;mix-blend-mode:multiply;pointer-events:none"></canvas><script>(function(){var c=document.getElementById("gr"),w=c.width=480,h=c.height=Math.round(480*innerHeight/innerWidth),x=c.getContext("2d"),d=x.createImageData(w,h),s=7;for(var i=0;i<d.data.length;i+=4){s=(s*16807)%2147483647;var v=190+(s%66);d.data[i]=d.data[i+1]=d.data[i+2]=v;d.data[i+3]=26}x.putImageData(d,0,0)})()</script>`;
 
@@ -54,25 +56,26 @@ function grain(){var g=document.getElementById("g"),w=g.width=640,h=g.height=360
 grain();
 `;
 
-function videoHtml(name, T) {
+function videoHtml(name, V) {
+  const T = V.T;
   const A = (m, pal = PAL) => art(m, pal);
   const wrap = (body, bg, extraCss = "") => `<!doctype html><meta charset="utf-8"><style>*{margin:0}html,body{width:1280px;height:720px;overflow:hidden;background:${bg}}canvas{position:absolute;left:0;top:0}.it{position:absolute;left:0;top:0;transform-origin:50% 90%;will-change:transform}.it svg{display:block;width:100%;height:100%}${extraCss}</style>
 <canvas id="c" width="1280" height="720"></canvas>${body}<canvas id="g" style="width:1280px;height:720px;mix-blend-mode:overlay;opacity:.55"></canvas><script>window.__T=${T};${COMMON_JS}`;
 
   if (name === "atelier") {
-    const items = [["loaf", 360, 560, 440, 0], ["croissant", 150, 760, 270, 0.33], ["roll", 880, 600, 250, 0.66]];
+    const items = V.items;
     const body = items.map(([m], i) => `<div class="it" id="i${i}">${A(m, PAL_DARK)}</div>`).join("");
-    return wrap(body, "#150B05") + `
+    return wrap(body, V.page) + `
 var items=${JSON.stringify(items)};
 var dust=mk(110,5,function(r){return{x:r()*W,y:r()*H,k:1+Math.floor(r()*2),a:.25+r()*.6,s:1+r()*2.6,ph:r()*TAU,dx:6+r()*22}});
-var wisps=mk(5,9,function(r,i){return{x:450+i*95+r()*30,h:.9+r()*.5,ph:r()*TAU,a:.5+r()*.4}});
+var wisps=${V.steam ? "mk(5,9,function(r,i){return{x:450+i*95+r()*30,h:.9+r()*.5,ph:r()*TAU,a:.5+r()*.4}})" : "[]"};
 window.render=function(t){var p=t/T*TAU;
- var g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,"#120904");g.addColorStop(.55,"#2A160A");g.addColorStop(1,"#3F2210");ctx.globalCompositeOperation="source-over";ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
- var og=ctx.createRadialGradient(W*.5,H*1.02,10,W*.5,H*1.02,H*(1.0+.05*Math.sin(p)));og.addColorStop(0,"rgba(255,150,60,"+(.62+.08*Math.sin(p))+")");og.addColorStop(1,"rgba(255,150,60,0)");ctx.fillStyle=og;ctx.fillRect(0,0,W,H);
+ var g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,"${V.sky[0]}");g.addColorStop(.55,"${V.sky[1]}");g.addColorStop(1,"${V.sky[2]}");ctx.globalCompositeOperation="source-over";ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ var og=ctx.createRadialGradient(W*.5,H*1.02,10,W*.5,H*1.02,H*(1.0+.05*Math.sin(p)));og.addColorStop(0,"rgba(${V.glow},"+(.62+.08*Math.sin(p))+")");og.addColorStop(1,"rgba(${V.glow},0)");ctx.fillStyle=og;ctx.fillRect(0,0,W,H);
  ctx.globalCompositeOperation="lighter";
- for(var b=0;b<3;b++){var bx=(280+b*360)+60*Math.sin(p+b*2.1),al=.07+.035*Math.sin(p*2+b);ctx.save();ctx.translate(bx,-60);ctx.rotate(.38);var lg=ctx.createLinearGradient(-90,0,90,0);lg.addColorStop(0,"rgba(255,200,120,0)");lg.addColorStop(.5,"rgba(255,214,150,"+al+")");lg.addColorStop(1,"rgba(255,200,120,0)");ctx.fillStyle=lg;ctx.fillRect(-90,0,180,1100);ctx.restore()}
- wisps.forEach(function(w){ctx.save();ctx.filter="blur(7px)";ctx.strokeStyle="rgba(255,238,215,"+(.12*w.a)+")";ctx.lineWidth=14;ctx.beginPath();for(var y=0;y<=300;y+=10){var yy=470-y*w.h,xx=w.x+Math.sin(y/38-p*2+w.ph)*(8+y*.09);if(y===0)ctx.moveTo(xx,yy);else ctx.lineTo(xx,yy)}ctx.stroke();ctx.restore()});
- dust.forEach(function(d){var y=((d.y-d.k*H*t/T)%H+H)%H,x=d.x+Math.sin(p*d.k+d.ph)*d.dx,a=d.a*(.55+.45*Math.sin(p*2+d.ph));ctx.fillStyle="rgba(255,236,205,"+a+")";ctx.beginPath();ctx.arc(x,y,d.s,0,TAU);ctx.fill()});
+ for(var b=0;b<3;b++){var bx=(280+b*360)+60*Math.sin(p+b*2.1),al=.07+.035*Math.sin(p*2+b);ctx.save();ctx.translate(bx,-60);ctx.rotate(.38);var lg=ctx.createLinearGradient(-90,0,90,0);lg.addColorStop(0,"rgba(${V.beam},0)");lg.addColorStop(.5,"rgba(${V.beam},"+al+")");lg.addColorStop(1,"rgba(${V.beam},0)");ctx.fillStyle=lg;ctx.fillRect(-90,0,180,1100);ctx.restore()}
+ wisps.forEach(function(w){ctx.save();ctx.filter="blur(7px)";ctx.strokeStyle="rgba(${V.steam || "255,255,255"},"+(.12*w.a)+")";ctx.lineWidth=14;ctx.beginPath();for(var y=0;y<=300;y+=10){var yy=470-y*w.h,xx=w.x+Math.sin(y/38-p*2+w.ph)*(8+y*.09);if(y===0)ctx.moveTo(xx,yy);else ctx.lineTo(xx,yy)}ctx.stroke();ctx.restore()});
+ dust.forEach(function(d){var y=((d.y-d.k*H*t/T)%H+H)%H,x=d.x+Math.sin(p*d.k+d.ph)*d.dx,a=d.a*(.55+.45*Math.sin(p*2+d.ph));ctx.fillStyle="rgba(${V.dust},"+a+")";ctx.beginPath();ctx.arc(x,y,d.s,0,TAU);ctx.fill()});
  ctx.globalCompositeOperation="source-over";
  items.forEach(function(it,i){var e=document.getElementById("i"+i),ph=it[4]*TAU,s=it[3],bob=Math.sin(p+ph)*10,rot=Math.sin(p+ph+1)*2.6;e.style.width=s+"px";e.style.height=s+"px";e.style.transform="translate("+(it[1])+"px,"+(it[2]-s*.9+bob)+"px) rotate("+rot+"deg)"});
  var vg=ctx.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.95);vg.addColorStop(0,"rgba(0,0,0,0)");vg.addColorStop(1,"rgba(0,0,0,.55)");ctx.fillStyle=vg;ctx.fillRect(0,0,W,H)};
@@ -80,15 +83,15 @@ window.render=function(t){var p=t/T*TAU;
   }
 
   if (name === "gallery") {
-    const items = ["loaf", "croissant", "roll", "cupcake", "baguettes"];
+    const items = V.items;
     const body = items.map((m, i) => `<div class="it" id="i${i}">${A(m)}</div><div class="it" id="s${i}" style="background:radial-gradient(ellipse,rgba(80,50,10,.34),transparent 70%);border-radius:50%"></div>`).join("");
     return wrap(body, "#fff") + `
 var items=${JSON.stringify(items)};
 window.render=function(t){var p=t/T*TAU;ctx.globalCompositeOperation="source-over";ctx.fillStyle="#fff";ctx.fillRect(0,0,W,H);
  var cx=W/2,cy=H*.5;
- var gs=ctx.createRadialGradient(cx,cy-20,20,cx,cy-20,300);gs.addColorStop(0,"#FFD36A");gs.addColorStop(.7,"#F7BF4F");gs.addColorStop(1,"#F2AE36");
+ var gs=ctx.createRadialGradient(cx,cy-20,20,cx,cy-20,300);gs.addColorStop(0,"${V.disc[0]}");gs.addColorStop(.7,"${V.disc[1]}");gs.addColorStop(1,"${V.disc[2]}");
  ctx.fillStyle=gs;ctx.beginPath();ctx.arc(cx,cy-20,262+6*Math.sin(p),0,TAU);ctx.fill();
- ctx.strokeStyle="rgba(247,191,79,.5)";ctx.lineWidth=2;for(var r=0;r<3;r++){ctx.beginPath();ctx.arc(cx,cy-20,310+r*44+8*Math.sin(p+r),0,TAU);ctx.stroke()}
+ ctx.strokeStyle="rgba(${V.ring},.5)";ctx.lineWidth=2;for(var r=0;r<3;r++){ctx.beginPath();ctx.arc(cx,cy-20,310+r*44+8*Math.sin(p+r),0,TAU);ctx.stroke()}
  var list=items.map(function(m,i){var th=p+i/items.length*TAU,z=Math.sin(th),x=cx+Math.cos(th)*400,y=cy+z*86+10,sc=.72+.28*(z+1)/2;return{i:i,x:x,y:y,sc:sc,z:z}}).sort(function(a,b){return a.z-b.z});
  list.forEach(function(o,k){var e=document.getElementById("i"+o.i),sh=document.getElementById("s"+o.i),s=250*o.sc;e.style.width=s+"px";e.style.height=s+"px";e.style.zIndex=10+k;e.style.transform="translate("+(o.x-s/2)+"px,"+(o.y-s*.82+Math.sin(p*2+o.i)*5)+"px)";
   sh.style.width=s*.8+"px";sh.style.height=s*.16+"px";sh.style.zIndex=5;sh.style.opacity=.5+.4*(o.z+1)/2;sh.style.transform="translate("+(o.x-s*.4)+"px,"+(o.y+s*.1)+"px)"})};
@@ -97,9 +100,9 @@ window.render=function(t){var p=t/T*TAU;ctx.globalCompositeOperation="source-ove
 
   // motion: slow liquid colour for text to be cut out of
   return wrap("", "#fff") + `
-var blobs=mk(7,21,function(r,i){return{x:r()*W,y:r()*H,r:260+r()*220,c:["#E8892B","#FF5A36","#FFC93C","#FF9EB5","#5A2A10","#FF7A2F","#F7B267"][i],hx:1+Math.floor(r()*2),hy:1+Math.floor(r()*2),ax:140+r()*220,ay:90+r()*160,ph:r()*TAU}});
+var blobs=mk(7,21,function(r,i){return{x:r()*W,y:r()*H,r:260+r()*220,c:${JSON.stringify(V.blobs)}[i],hx:1+Math.floor(r()*2),hy:1+Math.floor(r()*2),ax:140+r()*220,ay:90+r()*160,ph:r()*TAU}});
 var dust=mk(90,3,function(r){return{x:r()*W,y:r()*H,k:1+Math.floor(r()*2),a:.4+r()*.5,s:1+r()*3,ph:r()*TAU}});
-window.render=function(t){var p=t/T*TAU;ctx.globalCompositeOperation="source-over";ctx.fillStyle="#FFE9C7";ctx.fillRect(0,0,W,H);
+window.render=function(t){var p=t/T*TAU;ctx.globalCompositeOperation="source-over";ctx.fillStyle="${V.base}";ctx.fillRect(0,0,W,H);
  blobs.forEach(function(b){var x=b.x+Math.sin(p*b.hx+b.ph)*b.ax,y=b.y+Math.cos(p*b.hy+b.ph)*b.ay,g=ctx.createRadialGradient(x,y,0,x,y,b.r);g.addColorStop(0,b.c);g.addColorStop(1,b.c+"00");ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,b.r,0,TAU);ctx.fill()});
  dust.forEach(function(d){var y=((d.y-d.k*H*t/T)%H+H)%H,x=d.x+Math.sin(p+d.ph)*18;ctx.fillStyle="rgba(255,255,255,"+(d.a*(.5+.5*Math.sin(p*2+d.ph)))+")";ctx.beginPath();ctx.arc(x,y,d.s,0,TAU);ctx.fill()})};
 </script>`;
@@ -107,16 +110,16 @@ window.render=function(t){var p=t/T*TAU;ctx.globalCompositeOperation="source-ove
 
 // ------------------------------------------------------------------ run
 async function main() {
-  const what = process.argv[2] || "all";
+  const what = process.argv[3] || "all";
   const { chromium } = require("playwright");
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "bakery-media-"));
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "template-media-"));
   const browser = await chromium.launch();
   const out = (p) => { fs.mkdirSync(path.dirname(p), { recursive: true }); return p; };
 
   if (what === "images" || what === "all") {
     for (const [setName, S] of Object.entries(SETS)) {
       const page = await browser.newPage({ viewport: { width: S.w, height: S.h } });
-      for (const item of MOTIFS) {
+      for (const item of M.motifs) {
         const f = path.join(tmp, `${setName}-${item}.html`);
         fs.writeFileSync(f, productHtml(setName, item));
         await page.goto("file://" + f);
@@ -126,18 +129,18 @@ async function main() {
         execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-i", jpg, "-vf", `scale=${Math.round(S.w * 0.84)}:-1:flags=lanczos`, "-c:v", "libwebp", "-quality", "80", "-compression_level", "6", out(path.join(OUT, "img", setName, item + ".webp"))]);
       }
       await page.close();
-      console.log("images", setName, MOTIFS.length);
+      console.log("images", setName, M.motifs.length);
     }
   }
 
   if (what === "videos" || what === "all") {
-    const specs = { atelier: 8, gallery: 10, motion: 8 };
-    const only = process.argv[3];
-    for (const [name, T] of Object.entries(specs)) {
+    const only = process.argv[4];
+    for (const [name, V] of Object.entries(M.videos)) {
       if (only && only !== name) continue;
+      const T = V.T;
       const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
       const f = path.join(tmp, `video-${name}.html`);
-      fs.writeFileSync(f, videoHtml(name, T));
+      fs.writeFileSync(f, videoHtml(name, V));
       await page.goto("file://" + f);
       const fps = 25, n = T * fps, dir = path.join(tmp, "frames-" + name);
       fs.mkdirSync(dir, { recursive: true });

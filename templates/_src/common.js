@@ -42,10 +42,10 @@ const TAGS = { V: "Vegetarian", VG: "Vegan", GF: "Gluten free" };
 const nav = (active) => [["index.html", "Home", "home"], ["menu.html", "Menu", "menu"], ["about.html", "About", "about"], ["contact.html", "Contact", "contact"]].map(([href, label, key]) => ({ href, label, current: key === active }));
 
 /** The page head: title, description, social card, structured data for search engines, fonts and styles. */
-function head({ title, desc, page, fontsPreload = [] }) {
+function head({ title, desc, page, fontsPreload = [], ldType = "Bakery", ldExtra = { servesCuisine: "Bakery" } }) {
   const ld = {
-    "@context": "https://schema.org", "@type": "Bakery", name: "{{json:business_name}}", description: "{{json:tagline}}",
-    telephone: "{{json:phone}}", email: "{{json:email}}", servesCuisine: "Bakery",
+    "@context": "https://schema.org", "@type": ldType, name: "{{json:business_name}}", description: "{{json:tagline}}",
+    telephone: "{{json:phone}}", email: "{{json:email}}", ...ldExtra,
     address: { "@type": "PostalAddress", streetAddress: "{{json:address_line1}}", addressLocality: "{{json:city}}" },
     openingHours: ["{{json:hours_weekdays}}"], sameAs: ["{{json:instagram_url}}"],
   };
