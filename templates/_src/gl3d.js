@@ -8,10 +8,10 @@
  *
  *   tag("wineglass", { fallback: "<img ...>", c1: "#B5362B", c2: "#F0A23B", c3: "#2A1A14", label: "A glass of wine", cls: "hero3d" })
  */
-const MODELS = { dumbbell: 0, kettlebell: 1, wineglass: 2, cloche: 3, coupe: 4, pizza: 5, stopwatch: 6, bulb: 7, house: 8, wrench: 9, key: 10, tower: 11, tooth: 12, cross: 13, scales: 14, gavel: 15, wheel: 16, plug: 17, car: 18, bell: 19, globe: 20, suitcase: 21, lantern: 22 };
+const MODELS = { dumbbell: 0, kettlebell: 1, wineglass: 2, cloche: 3, coupe: 4, pizza: 5, stopwatch: 6, bulb: 7, house: 8, wrench: 9, key: 10, tower: 11, tooth: 12, cross: 13, scales: 14, gavel: 15, wheel: 16, plug: 17, car: 18, bell: 19, globe: 20, suitcase: 21, lantern: 22, gradcap: 23, pencil: 24, books: 25, trophy: 26 };
 /** camera per model: pitch (radians), target height, distance */
-const YAW = { dumbbell: 1.3, kettlebell: 0.6, wineglass: 0.6, cloche: 0.6, coupe: 0.8, pizza: 0.4, stopwatch: 0.5, bulb: 0.4, house: 0.7, wrench: 0.5, key: 0.5, tower: 0.7, tooth: 0.5, cross: 0.12, scales: 0.35, gavel: 0.6, wheel: 0.45, plug: 0.5, car: 0.75, bell: 0.5, globe: 0.4, suitcase: 0.6, lantern: 0.5 };
-const CAM = { dumbbell: [0.3, -0.2, 5.4], kettlebell: [0.28, -0.08, 5.0], wineglass: [0.2, 0.02, 4.7], cloche: [0.28, -0.3, 5.5], coupe: [0.26, -0.1, 4.6], pizza: [0.78, -0.9, 4.8], stopwatch: [0.2, -0.1, 5.0], bulb: [0.16, -0.05, 4.5], house: [0.42, -0.25, 5.0], wrench: [0.2, 0.0, 4.5], key: [0.18, 0.0, 4.6], tower: [0.3, 0.1, 6.0], tooth: [0.2, -0.1, 4.8], cross: [0.15, 0.0, 4.6], scales: [0.14, 0.0, 5.2], gavel: [0.3, -0.25, 5.0], wheel: [0.16, 0.0, 4.7], plug: [0.18, -0.05, 5.3], car: [0.2, -0.3, 4.8], bell: [0.22, -0.2, 4.6], globe: [0.15, -0.05, 5.0], suitcase: [0.2, -0.05, 5.2], lantern: [0.14, -0.05, 5.0] };
+const YAW = { dumbbell: 1.3, kettlebell: 0.6, wineglass: 0.6, cloche: 0.6, coupe: 0.8, pizza: 0.4, stopwatch: 0.5, bulb: 0.4, house: 0.7, wrench: 0.5, key: 0.5, tower: 0.7, tooth: 0.5, cross: 0.12, scales: 0.35, gavel: 0.6, wheel: 0.45, plug: 0.5, car: 0.75, bell: 0.5, globe: 0.4, suitcase: 0.6, lantern: 0.5, gradcap: 0.6, pencil: 0.5, books: 0.5, trophy: 0.5 };
+const CAM = { dumbbell: [0.3, -0.2, 5.4], kettlebell: [0.28, -0.08, 5.0], wineglass: [0.2, 0.02, 4.7], cloche: [0.28, -0.3, 5.5], coupe: [0.26, -0.1, 4.6], pizza: [0.78, -0.9, 4.8], stopwatch: [0.2, -0.1, 5.0], bulb: [0.16, -0.05, 4.5], house: [0.42, -0.25, 5.0], wrench: [0.2, 0.0, 4.5], key: [0.18, 0.0, 4.6], tower: [0.3, 0.1, 6.0], tooth: [0.2, -0.1, 4.8], cross: [0.15, 0.0, 4.6], scales: [0.14, 0.0, 5.2], gavel: [0.3, -0.25, 5.0], wheel: [0.16, 0.0, 4.7], plug: [0.18, -0.05, 5.3], car: [0.2, -0.3, 4.8], bell: [0.22, -0.2, 4.6], globe: [0.15, -0.05, 5.0], suitcase: [0.2, -0.05, 5.2], lantern: [0.14, -0.05, 5.0], gradcap: [0.3, -0.5, 4.3], pencil: [0.1, 0.0, 4.5], books: [0.22, -0.2, 5.0], trophy: [0.14, 0.0, 5.0] };
 
 
 /** Smooth lathe profiles (radius, height) for the two glasses; the bowl is sampled from a curve so it renders round, not faceted. */
@@ -248,6 +248,39 @@ vec2 map(vec3 p){
   r=U(r,vec2(max(sdEll(p-vec3(0,.36,0),vec3(.5,.32,.5)),-(p.y-.36)),0.));
   vec3 h=p-vec3(0,.68,0); r=U(r,vec2(max(length(vec2(length(h.xy)-.26,h.z))-.03,-h.y),0.));
   r=U(r,vec2(length(p-vec3(0,.7,0))-.05,4.));
+  return r;
+#elif MODEL==23
+  vec2 r=vec2(sdCylY(p-vec3(0,-.62,0),.22,.56,.08),1.);
+  vec3 b=p-vec3(0,-.3,0); b.xz=rot(.785)*b.xz; r=U(r,vec2(sdRB(b,vec3(.72,.035,.72))-.02,1.));
+  r=U(r,vec2(length(p-vec3(0,-.25,0))-.08,4.));
+  r=U(r,vec2(sdCap(p,vec3(0,-.25,0),vec3(.72,-.28,0),.022),4.));
+  r=U(r,vec2(sdCap(p,vec3(.72,-.28,0),vec3(.72,-.72,0),.05),4.));
+  r=U(r,vec2(sdCap(p,vec3(.72,-.7,0),vec3(.72,-.86,0),.1),4.));
+  r=U(r,vec2(sdCylY(p-vec3(0,-.96,0),.04,.85,.02),5.));
+  return r;
+#elif MODEL==24
+  float hx=max(abs(p.z),dot(abs(p.xz),vec2(.866025,.5)))-.2;
+  vec2 r=vec2(max(hx,abs(p.y+.15)-.62)-.012,1.);
+  r=U(r,vec2(max(hx+.0,abs(p.y+.8)-.14)-.01,0.));
+  r=U(r,vec2(sdCylY(p-vec3(0,-.97,0),.03,.19,.01),9.));
+  float t=clamp((p.y-.47)/.5,0.,1.); float cone=length(p.xz)-mix(.19,.02,t); cone=max(cone,max(p.y-.97,.47-p.y));
+  r=U(r,vec2(cone*.8,p.y>.8?0.:6.));
+  return r;
+#elif MODEL==25
+  vec2 r=vec2(1e5,0.);
+  for(int i=0;i<3;i++){ float fi=float(i); vec3 q=p-vec3(fi==1.?.06:(fi==2.?-.05:0.),-.82+fi*.28,0); q.xz=rot(fi==1.?.22:(fi==2.?-.18:0.))*q.xz; float w=fi==1.?.62:(fi==2.?.56:.7);
+    r=U(r,vec2(sdRB(q,vec3(w,.115,.48))-.02,fi==1.?8.:1.));
+    r=U(r,vec2(sdRB(q-vec3(.03,0,.04),vec3(w-.05,.09,.48))-.005,5.));
+    r=U(r,vec2(sdRB(q-vec3(-w,0,0),vec3(.025,.135,.5))-.01,fi==2.?4.:0.)); }
+  return r;
+#elif MODEL==26
+  float bowl=max(sdEll(p-vec3(0,.3,0),vec3(.64,.62,.64)),p.y-.64); bowl=max(bowl,-(length(p-vec3(0,.64,0))-.52));
+  vec2 r=vec2(bowl,4.);
+  r=U(r,vec2(sdCap(p,vec3(0,-.3,0),vec3(0,-.62,0),.09),4.));
+  r=U(r,vec2(length(p-vec3(0,-.5,0))-.17,4.));
+  r=U(r,vec2(sdCylY(p-vec3(0,-.76,0),.1,.4,.03),4.));
+  r=U(r,vec2(sdCylY(p-vec3(0,-.92,0),.08,.56,.03),1.));
+  for(int i=-1;i<=1;i+=2){ vec2 c=vec2(float(i)*.7,.3); float h=length(vec2(length(p.xy-c)-.24,p.z))-.045; r=U(r,vec2(max(h,-(abs(p.x)-.62)),4.)); }
   return r;
 #else
   vec3 q=p+vec3(0,.1,0);
