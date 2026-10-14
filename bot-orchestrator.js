@@ -28,16 +28,9 @@
  * handoff point, and `getHandoffTrail()` lets you see the full
  * coordination history for a given project/session.
  *
- * SQL (run once):
- *   create table bot_handoffs (
- *     id bigint generated always as identity primary key,
- *     context_id text not null,
- *     from_bot text not null,
- *     to_bot text not null,
- *     summary text,
- *     created_at timestamptz default now()
- *   );
- *   create index on bot_handoffs (context_id, created_at);
+ * The table is created by docs/migrations/2026-10-14_bot_handoffs.sql (id, from_bot, to_bot, project_id, payload jsonb,
+ * created_at; RLS on). The eight website-builder bots (bots/planner-bot.js ... bots/launch-bot.js) log through
+ * lib/bot-handoff.js; `recordHandoff` below writes the same table for the App Builder chain, with the summary in `payload`.
  */
 
 const { supabase } = require("./lib/db");
@@ -58,14 +51,23 @@ const BOT_ROLES = {
   "transformer-bot": { job: "Manufacturing/engineering business analysis and suggestions.", input: "company profile", output: "analysis/suggestions" },
   "image-bot": { job: "Sources and inserts stock imagery into generated pages.", input: "page HTML + style intent", output: "HTML with images" },
   "meeting-bot": { job: "Meeting consent, transcription evaluation, tailored summaries.", input: "audio transcript", output: "summary" },
-  "plan-mode": { job: "Pre-build planning, no code changes.", input: "task", output: "plan" }
+  "plan-mode": { job: "Pre-build planning, no code changes.", input: "task", output: "plan" },
+  // The eight Website Builder bots, in the order the work passes through them (bots/library-bot.js is the orchestrator).
+  "planner": { job: "Reads the request and decides what to build: which designs, premium or plain, which sections get words.", input: "prompt + options", output: "brief", file: "bots/planner-bot.js" },
+  "industry": { job: "Matches the request to an industry, its palette and page recipe.", input: "prompt + business name", output: "palette + recipe", file: "bots/industry-bot.js" },
+  "designer": { job: "Chooses the look: direction, curated premium look, learned best look.", input: "palette + slot", output: "look", file: "bots/designer-bot.js" },
+  "research": { job: "Gets the raw material: the words (the one copywriter model call) and the photos.", input: "brief + sections", output: "words + photos", file: "bots/site-research-bot.js" },
+  "builder": { job: "Puts the page together from the words, the owner's facts and the look; runs the quality gate.", input: "content + look", output: "page", file: "bots/builder-bot.js" },
+  "pulse": { job: "Watches the build: live preview, swaps, and what the quality gate saw (errors, contrast, layout).", input: "build events", output: "preview + findings", file: "bots/pulse-bot.js" },
+  "review": { job: "Scores a finished page against the premium rules.", input: "page", output: "score", file: "bots/site-review-bot.js" },
+  "launch": { job: "Delivers the finished design for the person to pick. Does not publish.", input: "page + score", output: "variant", file: "bots/launch-bot.js" }
 };
 
 async function recordHandoff(contextId, fromBot, toBot, summary) {
   if (!BOT_ROLES[fromBot] || !BOT_ROLES[toBot]) {
     console.warn(`[bot-orchestrator] Unregistered bot in handoff: ${fromBot} -> ${toBot}. Add it to BOT_ROLES.`);
   }
-  const { error } = await supabase.from("bot_handoffs").insert({ context_id: contextId, from_bot: fromBot, to_bot: toBot, summary });
+  const { error } = await supabase.from("bot_handoffs").insert({ project_id: contextId == null ? null : String(contextId), from_bot: fromBot, to_bot: toBot, payload: { summary: summary == null ? null : String(summary).slice(0, 300) } });
   if (error) console.warn("[bot-orchestrator] Failed to log handoff:", error.message);
 }
 
@@ -73,7 +75,7 @@ async function getHandoffTrail(contextId) {
   const { data, error } = await supabase
     .from("bot_handoffs")
     .select("*")
-    .eq("context_id", contextId)
+    .eq("project_id", String(contextId))
     .order("created_at", { ascending: true });
   if (error) throw new Error(`Failed to load handoff trail: ${error.message}`);
   return data;
