@@ -10,8 +10,9 @@ const { fillTemplate } = require("../templates/_src/fill");
 
 const PACK_DIR = path.join(__dirname, "..", "templates", "_src", "packs");
 const PACKS = fs.readdirSync(PACK_DIR).filter((f) => f.endsWith(".js")).map((f) => require(path.join(PACK_DIR, f)));
-const PAGES = { minimal: 6, bold: 6, editorial: 6, atelier: 2, gallery: 2, motion: 2, linen: 2, split: 2, journal: 2, market: 2 };
-const PLUS = ["atelier", "gallery", "motion", "linen", "split", "journal", "market"]; // premium plus: video, hints, pop-ups
+const PAGES = { minimal: 6, bold: 6, editorial: 6, atelier: 2, gallery: 2, motion: 2, linen: 2, split: 2, journal: 2, market: 2, studio: 2, daylight: 2, hearth: 2, kindred: 2, stories: 2, commons: 2 };
+const PLUS = ["atelier", "gallery", "motion", "linen", "split", "journal", "market", "studio", "daylight", "hearth", "kindred", "stories", "commons"]; // premium plus: video, hints, pop-ups
+const NO_VIDEO = ["kindred"]; // photo-led layouts with no hero loop
 const CORE = ["atelier", "gallery", "motion"]; // every industry must have at least these
 const each = (fn) => { for (const pack of PACKS) for (const s of pack.styles) fn(pack, s, path.join(__dirname, "..", "templates", pack.id)); };
 const html = (root, s) => fs.readdirSync(path.join(root, s)).filter((f) => f.endsWith(".html"));
@@ -56,9 +57,10 @@ test("premium plus styles: a video with a poster, picture hints and the legal po
   each((pack, s, root) => {
     if (!PLUS.includes(s)) return;
     const h = fs.readFileSync(path.join(root, s, "index.html"), "utf8");
-    assert.match(h, /<video[^>]*data-hero-video[^>]*poster=/, `${pack.id}/${s} video`);
+    if (!NO_VIDEO.includes(s)) assert.match(h, /<video[^>]*data-hero-video[^>]*poster=/, `${pack.id}/${s} video`);
     assert.ok((h.match(/data-gurost-image=/g) || []).length >= 4, `${pack.id}/${s} picture hints`);
     assert.match(h, /id="legal-privacy"/); assert.match(h, /id="legal-terms"/);
+    if (NO_VIDEO.includes(s)) return;
     for (const ext of ["mp4", "webm"]) assert.ok(fs.existsSync(path.join(root, s, "assets", "video", `${s}-hero.${ext}`)), `${pack.id}/${s} ${ext}`);
     assert.ok(fs.statSync(path.join(root, s, "assets", "video", `${s}-hero.mp4`)).size < 2 * 1024 * 1024, `${pack.id}/${s} video under 2 MB`);
   });

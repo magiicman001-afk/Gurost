@@ -45,8 +45,8 @@ function footerBits() {
 
 /** Page shell. extraHead goes before </head> (a no-JS safety style makes sure nothing stays hidden). */
 function page({ title, desc, key, body, preload = [], pack }) {
-  const h = C.head({ title, desc, page: key, fontsPreload: preload, ldType: pack.ldType, ldExtra: pack.ldExtra }).replace("</head>", '<noscript><style>[data-reveal]{opacity:1!important;transform:none!important}</style></noscript>\n</head>');
-  return `${h}
+  const h = C.head({ title, desc, page: key, fontsPreload: preload, ldType: pack.ldType, ldExtra: pack.ldExtra }).replace("</head>", '<noscript><style>[data-reveal]{opacity:1!important;transform:none!important;clip-path:none!important}</style></noscript>\n</head>');
+  return photoReady(`${h}
 ${header(key, pack.nav)}
 <main id="main">
 ${body}
@@ -55,7 +55,7 @@ ${dialogs()}
 <script src="assets/site.js" defer></script>
 </body>
 </html>
-`;
+`, pack);
 }
 
 /** Everything every plus template needs, written once: reset, header, forms, hours, dialog, reveal. Variables come from the template's :root. */
@@ -157,6 +157,20 @@ const PLUS_JS = `(function () {
 })();
 `;
 
+/** The photographic subject of an item or a category: its own brief when the pack gives one, else the industry word plus its name. */
+const hintOf = (pack, x) => x.hint || x.photo || (pack.hint + " " + String(x.n || x.name).toLowerCase());
+
+/**
+ * Makes every picture frame ready for real photographs (see bots/template-photos.js): the short subject stays as the stock-photo
+ * search (data-gurost-search), and the AI brief gets the industry's photographic style added. A hero loop gets a stock-video search.
+ */
+function photoReady(html, pack) {
+  let out = html.replace(/<img\b[^>]*?data-gurost-image="([^"]*)"[^>]*>/g, (tag, hint) =>
+    tag.replace(`data-gurost-image="${hint}"`, `data-gurost-search="${hint}" data-gurost-image="${hint}${pack.photo ? ", " + esc(pack.photo) : ""}"`));
+  if (pack.videoQuery) out = out.replace(/<video\b([^>]*?)data-hero-video/g, (m, pre) => `<video${pre}data-gurost-video="${esc(pack.videoQuery)}" data-hero-video`);
+  return out;
+}
+
 /** Media list for a layout that borrows another layout's pictures (imgSet) and hero loop (vidSet): [source in templates/_media, file in the template's assets]. */
 const mediaFor = (pack, layout, imgSet, vidSet) => [
   ...pack.media.motifs.map((n) => [`${pack.mediaDir}/img/${imgSet}/${n}.webp`, `img/${n}.webp`]),
@@ -164,4 +178,4 @@ const mediaFor = (pack, layout, imgSet, vidSet) => [
   [`${pack.mediaDir}/video/${vidSet}-poster.webp`, `video/${layout}-poster.webp`],
 ];
 
-module.exports = { mediaFor, C, t, esc, img, video, header, dialogs, footerBits, page, BASE_CSS, PLUS_JS, MENU: C.MENU, TAGS: C.TAGS };
+module.exports = { hintOf, photoReady, mediaFor, C, t, esc, img, video, header, dialogs, footerBits, page, BASE_CSS, PLUS_JS, MENU: C.MENU, TAGS: C.TAGS };

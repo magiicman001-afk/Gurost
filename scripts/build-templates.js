@@ -32,7 +32,12 @@ for (const pack of PACKS) {
       fs.mkdirSync(path.join(dir, "assets", "fonts"), { recursive: true });
       for (const [src, dest] of b.fonts) fs.copyFileSync(path.join(FONT_DIR, src), path.join(dir, "assets", "fonts", dest));
       // premium plus templates ship pictures and a looping video, built by scripts/build-media.js into templates/_media/<industry>
-      for (const [src, dest] of b.media || []) { fs.mkdirSync(path.dirname(path.join(dir, "assets", dest)), { recursive: true }); fs.copyFileSync(path.join(__dirname, "..", "templates", "_media", src), path.join(dir, "assets", dest)); }
+      // A real photograph (made once by scripts/generate-photos.py into templates/_media/<industry>/photo/<picture>.webp) wins over the drawn art of the same name.
+      for (const [src, dest] of b.media || []) {
+        const photo = path.join(__dirname, "..", "templates", "_media", pack.mediaDir, "photo", path.basename(dest));
+        const from = /^img\//.test(dest) && fs.existsSync(photo) ? photo : path.join(__dirname, "..", "templates", "_media", src);
+        fs.mkdirSync(path.dirname(path.join(dir, "assets", dest)), { recursive: true }); fs.copyFileSync(from, path.join(dir, "assets", dest));
+      }
     }
     console.log(pack.id, style, Object.keys(files).length, "files");
   }
