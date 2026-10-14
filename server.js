@@ -282,13 +282,14 @@ app.get(/^\/sites\/([a-z0-9-]{3,40})(\/.*)?$/, async (req, res) => {
   const slug = req.params[0];
   const row = publishedSites.validateSlug(slug).ok ? await siteStore.bySlug(slug) : null;
   const base = `/sites/${slug}`;
+  if (req.params[1] === undefined && row && row.published_html && row.published_html.engine === "template") return res.redirect(301, `${base}/`); // its links are relative
   const rel = req.params[1] || "/";
   let out;
   if (rel === "/robots.txt") out = { status: 200, type: "text/plain", body: "User-agent: *\nDisallow: /\n" };
   else if (rel === "/sitemap.xml") out = { status: 404, type: "text/plain", body: "Not found" };
   else out = publishedSites.serveFrozen(row, rel, { base });
   res.set(publishedSites.siteHeaders(row, { connectOrigin: PUBLIC_ORIGIN, noindex: true }));
-  res.status(out.status).type(out.type).send(out.body);
+  publishedSites.sendOut(res, out);
 });
 
 app.use(express.json({ limit: "5mb" }));
@@ -5293,10 +5294,10 @@ app.get("/api/project/:id/site-links", async (req, res) => {
   } catch (err) {
     ready = err.code !== "not-ready";
   }
-  const built = !!project.currentHtml;
+  const built = !!project.currentHtml || !!project.templateSite;
   res.json({
     built,
-    sandbox: built ? { url: `/builder/sandbox/${req.params.id}/${sandboxLink.makeToken(req.params.id)}/`, expiresInHours: sandboxLink.TTL_MS / 3600000, editable: true } : null,
+    sandbox: built ? { url: `/builder/sandbox/${req.params.id}/${sandboxLink.makeToken(req.params.id)}/`, expiresInHours: sandboxLink.TTL_MS / 3600000, editable: !project.templateSite } : null,
     published,
     publishingReady: ready,
     suggestedSlug: publishedSites.suggestSlug(project.businessInfo?.name || ""),
