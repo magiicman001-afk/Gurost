@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Privacy policy · {{business_name}}</title>
+<meta name="description" content="Privacy policy">
+<meta property="og:title" content="Privacy policy · {{business_name}}">
+<meta property="og:description" content="Privacy policy">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#F7F3EC">
+<link rel="preload" href="assets/fonts/InstrumentSerif-Regular.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="stylesheet" href="assets/style.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Bakery","name":"{{json:business_name}}","description":"{{json:tagline}}","telephone":"{{json:phone}}","email":"{{json:email}}","servesCuisine":"Bakery","address":{"@type":"PostalAddress","streetAddress":"{{json:address_line1}}","addressLocality":"{{json:city}}"},"openingHours":["{{json:hours_weekdays}}"],"sameAs":["{{json:instagram_url}}"]}</script>
+</head>
+<body data-page="privacy">
+<a class="skip" href="#main">Skip to content</a><header class="site-header"><div class="wrap bar">
+<a class="brand" href="index.html" aria-label="{{business_name}} home">{{business_name}}</a>
+<nav class="nav" aria-label="Main"><a href="index.html">Home</a><a href="menu.html">Menu</a><a href="about.html">About</a><a href="contact.html">Contact</a></nav>
+<a class="btn btn-ghost" href="contact.html#preorder">Pre-order</a>
+<button class="burger" type="button" aria-label="Menu" aria-expanded="false" data-menu-toggle><i></i></button>
+</div></header>
+<div class="drawer" data-menu aria-label="Menu"><a href="index.html">Home</a><a href="menu.html">Menu</a><a href="about.html">About</a><a href="contact.html">Contact</a><a href="contact.html#preorder">Pre-order</a><div class="meta">{{address_line1}}, {{city}}<br>{{phone}}</div></div><main id="main"><section class="phero"><div class="wrap legal"><span class="eyebrow">Legal</span><h1>Privacy policy</h1><div style="margin-top:2rem"><p>This page explains what {{business_name}} does with your details. It is a starting point generated with your website: please read it and replace anything that is not true for your business.</p><h2>What we collect</h2><p>Only what you type into our forms (for example your name, email, phone number and what you would like to order). We do not use advertising trackers on this website.</p><h2>Why</h2><p>To reply to you and to prepare your order. We keep it only as long as we need it.</p><h2>Your rights</h2><p>You can ask us what we hold about you, ask us to correct it or ask us to delete it. Email <a href="mailto:{{email}}">{{email}}</a>.</p></div></div></section></main><footer class="site-footer"><div class="wrap">
+<div class="fgrid">
+<div><div class="fbrand">{{business_name}}</div><p>{{tagline}}</p></div>
+<div><h4>Explore</h4><a href="index.html">Home</a><a href="menu.html">Menu</a><a href="about.html">About</a><a href="contact.html">Contact</a></div>
+<div><h4>Visit</h4><a href="{{maps_url}}" rel="noopener">{{address_line1}}</a><a href="{{maps_url}}" rel="noopener">{{address_line2}}</a><a href="tel:{{phone_href}}">{{phone}}</a><a href="mailto:{{email}}">{{email}}</a></div>
+<div><h4>Hours</h4><p style="margin:0">Mon to Fri<br>{{hours_weekdays}}</p><p>Sat {{hours_saturday}}<br>Sun {{hours_sunday}}</p><h4>Follow</h4><a href="{{instagram_url}}" rel="noopener">Instagram</a><a href="{{facebook_url}}" rel="noopener">Facebook</a></div>
+</div>
+<div class="fbottom"><span>© <span data-year>2026</span> {{business_name}}</span><span><a href="privacy.html">Privacy policy</a><a href="terms.html">Terms of service</a></span></div>
+</div></footer>
+<script src="assets/site.js"></script></body></html>

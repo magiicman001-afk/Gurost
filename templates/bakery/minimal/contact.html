@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Contact and pre-orders · {{business_name}}</title>
+<meta name="description" content="Pre-order, ask a question or find {{business_name}}.">
+<meta property="og:title" content="Contact and pre-orders · {{business_name}}">
+<meta property="og:description" content="Pre-order, ask a question or find {{business_name}}.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#F7F3EC">
+<link rel="preload" href="assets/fonts/InstrumentSerif-Regular.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="stylesheet" href="assets/style.css">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Bakery","name":"{{json:business_name}}","description":"{{json:tagline}}","telephone":"{{json:phone}}","email":"{{json:email}}","servesCuisine":"Bakery","address":{"@type":"PostalAddress","streetAddress":"{{json:address_line1}}","addressLocality":"{{json:city}}"},"openingHours":["{{json:hours_weekdays}}"],"sameAs":["{{json:instagram_url}}"]}</script>
+</head>
+<body data-page="contact">
+<a class="skip" href="#main">Skip to content</a><header class="site-header"><div class="wrap bar">
+<a class="brand" href="index.html" aria-label="{{business_name}} home">{{business_name}}</a>
+<nav class="nav" aria-label="Main"><a href="index.html">Home</a><a href="menu.html">Menu</a><a href="about.html">About</a><a href="contact.html" aria-current="page">Contact</a></nav>
+<a class="btn btn-ghost" href="contact.html#preorder">Pre-order</a>
+<button class="burger" type="button" aria-label="Menu" aria-expanded="false" data-menu-toggle><i></i></button>
+</div></header>
+<div class="drawer" data-menu aria-label="Menu"><a href="index.html">Home</a><a href="menu.html">Menu</a><a href="about.html">About</a><a href="contact.html">Contact</a><a href="contact.html#preorder">Pre-order</a><div class="meta">{{address_line1}}, {{city}}<br>{{phone}}</div></div><main id="main"><section class="phero"><div class="wrap"><span class="eyebrow" data-reveal>Get in touch</span><h1 data-reveal data-delay="80">Say <em>hello</em></h1><p class="lead" data-reveal data-delay="160">Pre-order for tomorrow, ask about a celebration cake or just tell us what you think.</p></div></section>
+<section class="wrap" style="padding-bottom:clamp(60px,9vw,130px)"><div class="contact-grid">
+<div data-reveal><div class="detail"><small>Visit</small><a href="{{maps_url}}" rel="noopener">{{address_line1}}, {{address_line2}}</a></div><div class="detail"><small>Call</small><a href="tel:{{phone_href}}">{{phone}}</a></div><div class="detail"><small>Email</small><a href="mailto:{{email}}">{{email}}</a></div><div class="detail"><small>Opening hours</small><table class="hours "><tbody>
+<tr data-days="1,2,3,4,5"><th scope="row">Monday to Friday</th><td>{{hours_weekdays}}</td></tr>
+<tr data-days="6"><th scope="row">Saturday</th><td>{{hours_saturday}}</td></tr>
+<tr data-days="0"><th scope="row">Sunday</th><td>{{hours_sunday}}</td></tr>
+</tbody></table></div><div class="detail" style="border:0"><small>Follow</small><a href="{{instagram_url}}" rel="noopener">Instagram</a> &nbsp;·&nbsp; <a href="{{facebook_url}}" rel="noopener">Facebook</a></div></div>
+<div id="preorder" data-reveal data-delay="120"><div class="tabs" role="tablist"><button role="tab" aria-selected="true" data-tab="order">Pre-order</button><button role="tab" aria-selected="false" data-tab="contact">Send a message</button></div>
+<div class="panel" data-panel="order"><form class="f " data-form data-form-kind="order" data-endpoint="{{form_endpoint}}" novalidate>
+<div class="f-row"><div class="f-field"><label for="order-name">Your name</label><input id="order-name" name="name" type="text" required autocomplete="name"></div><div class="f-field"><label for="order-phone">Phone</label><input id="order-phone" name="phone" type="tel" autocomplete="tel"></div></div><div class="f-field"><label for="order-email">Email</label><input id="order-email" name="email" type="email" required autocomplete="email"></div><div class="f-row"><div class="f-field"><label for="order-pickup date">Pick-up date</label><input id="order-pickup date" name="pickup date" type="date" required></div><div class="f-field"><label for="order-pickup time">Pick-up time</label><input id="order-pickup time" name="pickup time" type="time" ></div></div><div class="f-field"><label for="order-order">What would you like?</label><textarea id="order-order" name="order" rows="4" required placeholder="2 country sourdough, 6 butter croissants…"></textarea></div>
+<div class="f-hp" aria-hidden="true"><label>Leave this empty<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+<button class="btn btn-primary" type="submit"><span>Place pre-order</span></button>
+<p class="f-status" role="status" aria-live="polite"></p>
+</form></div><div class="panel" data-panel="contact" hidden><form class="f " data-form data-form-kind="contact" data-endpoint="{{form_endpoint}}" novalidate>
+<div class="f-row"><div class="f-field"><label for="contact-name">Your name</label><input id="contact-name" name="name" type="text" required autocomplete="name"></div><div class="f-field"><label for="contact-email">Email</label><input id="contact-email" name="email" type="email" required autocomplete="email"></div></div><div class="f-field"><label for="contact-about">What is it about?</label><input id="contact-about" name="about" type="text" ></div><div class="f-field"><label for="contact-message">Your message</label><textarea id="contact-message" name="message" rows="4" required></textarea></div>
+<div class="f-hp" aria-hidden="true"><label>Leave this empty<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+<button class="btn btn-primary" type="submit"><span>Send message</span></button>
+<p class="f-status" role="status" aria-live="polite"></p>
+</form></div></div>
+</div></section>
+<script>(function(){var tabs=[].slice.call(document.querySelectorAll("[data-tab]")),ps=[].slice.call(document.querySelectorAll("[data-panel]"));function show(k){tabs.forEach(function(t){t.setAttribute("aria-selected",t.getAttribute("data-tab")===k?"true":"false")});ps.forEach(function(p){p.hidden=p.getAttribute("data-panel")!==k})}tabs.forEach(function(t){t.addEventListener("click",function(){show(t.getAttribute("data-tab"))})});if(location.hash==="#message")show("contact")})();</script></main><footer class="site-footer"><div class="wrap">
+<div class="fgrid">
+<div><div class="fbrand">{{business_name}}</div><p>{{tagline}}</p></div>
+<div><h4>Explore</h4><a href="index.html">Home</a><a href="menu.html">Menu</a><a href="about.html">About</a><a href="contact.html">Contact</a></div>
+<div><h4>Visit</h4><a href="{{maps_url}}" rel="noopener">{{address_line1}}</a><a href="{{maps_url}}" rel="noopener">{{address_line2}}</a><a href="tel:{{phone_href}}">{{phone}}</a><a href="mailto:{{email}}">{{email}}</a></div>
+<div><h4>Hours</h4><p style="margin:0">Mon to Fri<br>{{hours_weekdays}}</p><p>Sat {{hours_saturday}}<br>Sun {{hours_sunday}}</p><h4>Follow</h4><a href="{{instagram_url}}" rel="noopener">Instagram</a><a href="{{facebook_url}}" rel="noopener">Facebook</a></div>
+</div>
+<div class="fbottom"><span>© <span data-year>2026</span> {{business_name}}</span><span><a href="privacy.html">Privacy policy</a><a href="terms.html">Terms of service</a></span></div>
+</div></footer>
+<script src="assets/site.js"></script></body></html>
