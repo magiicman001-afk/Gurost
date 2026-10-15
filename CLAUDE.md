@@ -209,6 +209,7 @@ If anything fails: `git revert` the update commit (small, logged) and write the 
 - `docs/INSFORGE_INTEGRATION_PLAN.md` - Phase 2 backend (after the Website Builder launch).
 - `docs/ADMIN_AREA_SPEC.md` - Admin Area: PARTLY BUILT (roles, dashboard, team, ops, Help and Guide: see the status line at the top of the spec); weekly report, email-plus-key sign-in and TOTP not built.
 - `docs/PRIVACY_POLICY.md` (NEEDS LEGAL REVIEW), `docs/AI_DATA_FLOW.md`, `docs/MARBLE_PREVIEW_ANIMATION_SPEC.md`; roadmap only, not built: `docs/IDLE_SITE_SUSPENSION_SPEC.md` (real target is deployed App Builder backends; build after ~500 live sites and a paid tier), `docs/FREE_AI_TOOLS.md` (GPU tools for images, 3D, video; Phase 2, after Stripe; several rows unchecked).
+- `docs/BUSINESS_ASSISTANT_2_SPEC.md` - Business Assistant 2.0 (8 floating personalities, the "does 80% of the team's work" engine, video calls): PLANNING ONLY, on HOLD, Phase 6. Builds on the existing assistant, department bots, approvals and memory; do not start.
 - `docs/ADMIN_GUIDE_SPEC.md`, `docs/WEEK_2_SECURITY_PLAN.md`, `docs/PREMIUM_PIPELINE_SPEC.md` + `_POLISH_PLAN.md`, `docs/DESIGN_MEMORY_SPEC.md`, `docs/ESCALATION_HIERARCHY_SPEC.md`, `docs/APP_BUILDER_STATUS.md`, `docs/MOBILE_APP_ROADMAP.md`, `docs/HOW_GUROST_WORKS.md` (master reference), `docs/TEAM_STATUS.md` (file ownership: read before editing).
 
 ## Verified live — 2026-09-30 (commit dcab3d1)
