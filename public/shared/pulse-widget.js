@@ -976,70 +976,61 @@
 
   // ---------------- Real Design Mode ----------------
   let designModeActive = false;
+  let designAckTimer = null;
+
+  // The preview is a sandboxed frame (no same-origin access), so the page inside it does the clicking: it gets "on" or
+  // "off" by message and reports each clicked element back (shared/code-boxes.js, "Design mode"). A preview that never
+  // answers (an app preview, a template page) is said so plainly instead of pretending the mode is on.
+  function sendDesignMode(on) {
+    const iframe = getPreviewIframe();
+    if (!iframe || !iframe.contentWindow) return false;
+    iframe.contentWindow.postMessage({ type: 'gurost-design-mode', on: !!on }, '*');
+    return true;
+  }
+
+  function setDesignMode(on, { say = true } = {}) {
+    const btn = document.getElementById('actDesignMode');
+    designModeActive = on;
+    if (btn) btn.classList.toggle('active', on);
+    clearTimeout(designAckTimer);
+    if (!on) {
+      sendDesignMode(false);
+      if (say) logStatus('Design Mode off.');
+      return;
+    }
+    if (!sendDesignMode(true)) { setDesignMode(false, { say: false }); logStatus('Design Mode needs a page in the preview. Build or open a site first.'); return; }
+    if (say) logStatus('Design Mode on. Tap any element on the page you want to change.');
+    // No answer = this preview cannot do it.
+    designAckTimer = setTimeout(() => {
+      if (!designModeActive) return;
+      setDesignMode(false, { say: false });
+      logStatus('Design Mode is not available on this preview yet. Describe the change to Pulse instead, for example "make the heading bigger".');
+    }, 1500);
+  }
 
   function setupDesignModeToggle() {
     const btn = document.getElementById('actDesignMode');
     if (!btn) return; // real, honest - only wired where the button genuinely exists in the panel HTML
-    btn.addEventListener('click', () => {
-      designModeActive = !designModeActive;
-      btn.classList.toggle('active', designModeActive);
-      logStatus(designModeActive ? 'Design Mode on — click any element on the page.' : 'Design Mode off.');
-      applyDesignModeListeners();
+    btn.addEventListener('click', () => setDesignMode(!designModeActive));
+    // Every re-render of the preview (an edit, undo, another page) is a new document: tell it the mode again.
+    const iframe = getPreviewIframe();
+    if (iframe) iframe.addEventListener('load', () => { if (designModeActive) sendDesignMode(true); });
+    window.addEventListener('message', (e) => {
+      const frame = getPreviewIframe();
+      if (!frame || e.source !== frame.contentWindow || !e.data) return;
+      if (e.data.type === 'gurost-design-ready') { clearTimeout(designAckTimer); return; }
+      if (e.data.type === 'gurost-design-click' && designModeActive) onDesignElementPicked(String(e.data.description || '').slice(0, 200));
     });
   }
 
-  function applyDesignModeListeners() {
-    const iframe = getPreviewIframe();
-    if (!iframe) return;
-    let doc;
-    try {
-      doc = iframe.contentDocument;
-    } catch {
-      return;
-    }
-    if (!doc) return;
-
-    if (designModeActive) {
-      doc.body.style.cursor = 'crosshair';
-      doc.addEventListener('click', handleDesignModeClick, true);
-    } else {
-      doc.body.style.cursor = '';
-      doc.removeEventListener('click', handleDesignModeClick, true);
-      doc.querySelectorAll('.pulse-design-highlight').forEach((el) => el.classList.remove('pulse-design-highlight'));
-    }
-  }
-
-  function handleDesignModeClick(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    const el = e.target;
-    const doc = el.ownerDocument;
-    doc.querySelectorAll('.pulse-design-highlight').forEach((h) => h.classList.remove('pulse-design-highlight'));
-
-    // Real, injected highlight style - only added once per real
-    // document, since srcdoc reloads give a fresh document each time.
-    if (!doc.getElementById('pulseDesignModeStyle')) {
-      const style = doc.createElement('style');
-      style.id = 'pulseDesignModeStyle';
-      style.textContent = '.pulse-design-highlight { outline: 2px solid #FF8C00 !important; outline-offset: 2px; }';
-      doc.head.appendChild(style);
-    }
-    el.classList.add('pulse-design-highlight');
-
-    // Real, genuine description of exactly which element was
-    // clicked - tag, real class list, and a short real text snippet -
-    // specific enough for the AI to know exactly what "this" refers
-    // to, not a vague reference.
-    const tag = el.tagName.toLowerCase();
-    const classes = el.className && typeof el.className === 'string' ? `.${el.className.trim().split(/\s+/).join('.')}` : '';
-    const textSnippet = (el.textContent || '').trim().slice(0, 40);
-    const elementDescription = `<${tag}${classes}>${textSnippet ? ` containing "${textSnippet}"` : ''}`;
-
+  function onDesignElementPicked(elementDescription) {
+    if (!elementDescription) return;
     togglePanel(true);
     const textarea = document.getElementById('pulseTextArea');
     textarea.placeholder = `What should change about ${elementDescription}?`;
     textarea.focus();
     textarea.dataset.designModeTarget = elementDescription;
+    logStatus('Selected ' + elementDescription + '. Say what should change.', { feed: false });
   }
 
   // Real, honest visibility - a button only shows if this specific

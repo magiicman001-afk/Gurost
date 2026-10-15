@@ -99,6 +99,48 @@ const CODE_BOX_INJECTION_SCRIPT = `
     if (!e.defaultPrevented) e.preventDefault();
   });
 
+  // Design mode (Pulse's Design button). The builder cannot reach into this sandboxed frame, so it sends "on" or "off" by
+  // message; while on, a tap on any element is described and sent back instead of following links or running the page.
+  var designOn = false;
+  function describeEl(el) {
+    var tag = el.tagName.toLowerCase();
+    var cls = typeof el.className === 'string' && el.className.trim() ? '.' + el.className.trim().split(/\\s+/).join('.') : '';
+    var text = (el.textContent || '').trim().replace(/\\s+/g, ' ').slice(0, 40);
+    return '<' + tag + cls + '>' + (text ? ' containing "' + text + '"' : '');
+  }
+  function onDesignClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+    var el = e.target;
+    if (!el || !el.tagName) return;
+    Array.prototype.forEach.call(document.querySelectorAll('.gurost-design-pick'), function(h) { h.classList.remove('gurost-design-pick'); });
+    var description = describeEl(el); // before the highlight class is added, so it is not part of the description
+    el.classList.add('gurost-design-pick');
+    window.parent.postMessage({ type: 'gurost-design-click', description: description }, '*');
+  }
+  window.addEventListener('message', function(e) {
+    if (e.source !== window.parent || !e.data || e.data.type !== 'gurost-design-mode') return;
+    var on = !!e.data.on;
+    if (on === designOn) { window.parent.postMessage({ type: 'gurost-design-ready' }, '*'); return; }
+    designOn = on;
+    if (on) {
+      if (!document.getElementById('gurostDesignStyle')) {
+        var st = document.createElement('style');
+        st.id = 'gurostDesignStyle';
+        st.textContent = '.gurost-design-pick{outline:2px solid #FF8C00!important;outline-offset:2px}';
+        document.head.appendChild(st);
+      }
+      document.body.style.cursor = 'crosshair';
+      window.addEventListener('click', onDesignClick, true);
+    } else {
+      document.body.style.cursor = '';
+      window.removeEventListener('click', onDesignClick, true);
+      Array.prototype.forEach.call(document.querySelectorAll('.gurost-design-pick'), function(h) { h.classList.remove('gurost-design-pick'); });
+    }
+    window.parent.postMessage({ type: 'gurost-design-ready' }, '*');
+  });
+
   // Edits re-render the preview; report where the visitor is so the
   // next render can open at the same place instead of jumping to the top.
   var scrollTimer = null;
