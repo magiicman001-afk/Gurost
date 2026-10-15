@@ -27,3 +27,15 @@ test("Upload: the uploaded file is shown with its link, only https links are use
   assert.ok(!/innerHTML/.test(fn), "no markup is built from the file name or link");
   assert.match(css, /#pulseUploadResult\.visible/);
 });
+
+test("Share: a template site's share link opens the site (pages and files), as a folder so relative links work", () => {
+  const src = fs.readFileSync(path.join(__dirname, "..", "server.js"), "utf8");
+  const at = src.indexOf('app.get(/^\\/shared\\/');
+  assert.ok(at > 0, "the shared route takes an optional path after the token");
+  const block = src.slice(at, src.indexOf("\n});", at));
+  assert.match(block, /project\?\.templateSite/);
+  assert.match(block, /res\.redirect\(301, `\/shared\/\$\{token\}\/`\)/, "/shared/<token> goes to /shared/<token>/");
+  assert.match(block, /templateSite\.respond\(project\.templateSite, rel/);
+  assert.match(block, /sandboxSharedPage\(res\)/, "still runs in the sandbox");
+  assert.match(block, /rel !== "\/"\) return res\.status\(404\)/, "an ordinary site still has exactly one address");
+});

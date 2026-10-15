@@ -5542,11 +5542,20 @@ app.post("/api/project/:id/share", async (req, res) => {
 // placed here as a reminder it must sit BEFORE
 // app.use("/api", auth.requireAuth) if you want it reachable without
 // login, same real reasoning as /api/contact above.
-app.get("/shared/:token", async (req, res) => {
+app.get(/^\/shared\/([A-Za-z0-9_-]{8,64})(\/.*)?$/, async (req, res) => {
   try {
-    const { data: share } = await supabase.from("project_shares").select("project_id").eq("token", req.params.token).maybeSingle();
+    const [token, rel] = [req.params[0], req.params[1]];
+    const { data: share } = await supabase.from("project_shares").select("project_id").eq("token", token).maybeSingle();
     if (!share) return res.status(404).send("This share link isn't valid.");
     const project = PROJECTS.get(share.project_id) || (await projectState.hydrateProjectIfMissing(share.project_id));
+    // A template site is many files (pages, fonts, pictures) with relative links, so it is shared as a folder: /shared/<token>/
+    if (project?.templateSite) {
+      if (rel === undefined) return res.redirect(301, `/shared/${token}/`);
+      sandboxSharedPage(res);
+      res.set({ "X-Robots-Tag": "noindex, nofollow", "Referrer-Policy": "no-referrer" });
+      return sendTemplatePage(res, templateSite.respond(project.templateSite, rel, { formEndpoint: `${process.env.PUBLIC_URL || "https://gurost.onrender.com"}/api/site-forms/${share.project_id}` }), { cacheAssets: true });
+    }
+    if (rel !== undefined && rel !== "/") return res.status(404).send("Not found.");
     if (!project?.currentHtml) return res.status(404).send("Nothing to show for this project yet.");
     res.setHeader("Content-Type", "text/html");
     // A generated site runs in an opaque origin of its own: it can't read
