@@ -179,6 +179,10 @@ If anything fails: `git revert` the update commit (small, logged) and write the 
   approval card; inbox reading opt-in; no delete/archive (scopes never requested). Off until `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `SECRETS_KEY` are on Render and
   `docs/migrations/2026-10-16_gmail_connections.sql` is run. Google verification needed before customers can connect. NOT verified live. Phase 7 (Calendar) is next.
 
+- 2026-10-16: Business Assistant 2.0 phase 7, CALENDAR (`lib/calendar.js`, `lib/tools/calendar-google.js`, `/api/calendar/*`, Settings > Calendar). View opt-in; add an event only after the approval card, no guests,
+  no change/delete code. Off until Google client id/secret (Gmail pair is the fallback) and `SECRETS_KEY` are on Render and `docs/migrations/2026-10-16_calendar_connections.sql` is run. NOT verified live.
+  Business Assistant 2.0 phases 1-7 are all built.
+
 ## Known bugs (open)
 - Bug P: FIXED (`9f42f6c`, `0dbec59`): 8 individual bots, each with its own avatar and name.
 - Bug BB: FIXED (`2008b66`): the preview page's sticky controls covered the section on phones.

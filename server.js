@@ -1016,7 +1016,7 @@ app.get("/api/admin/proactive-log", requireAdminAuth, adminAccess.needs("bots"),
   catch (err) { res.status(503).json({ error: "The proactive log is not ready yet: run docs/migrations/2026-10-15_bot_nudges.sql in Supabase." }); }
 });
 app.get("/api/admin/connected-tools", requireAdminAuth, adminAccess.needs("bots"), async (req, res) => {
-  try { res.json(require("./lib/connected-tools").build({ gmail: await gmailLib.shared().adminSummary() })); }
+  try { res.json(require("./lib/connected-tools").build({ gmail: await gmailLib.shared().adminSummary(), calendar: await calendarLib.shared().adminSummary() })); }
   catch (err) { console.error("[admin] connected tools failed:", err.message); res.status(500).json({ error: "Could not check the connected tools." }); }
 });
 app.get("/api/admin/build-logs", requireAdminAuth, adminAccess.needs("builds"), validateInput({ query: { projectId: { type: "string", max: 64, pattern: /^[A-Za-z0-9_-]+$/ }, userId: { type: "string", max: 64, pattern: /^[A-Za-z0-9_-]+$/ }, bot: { type: "string", max: 20, pattern: /^[a-z]+$/ }, result: { type: "enum", values: ["success", "fail", "escalate"] }, limit: { type: "int", min: 1, max: 1000 } } }), async (req, res) => {
@@ -2923,6 +2923,54 @@ app.post("/api/gmail/disconnect", gmailLimiter, security.rejectUnknownFields([])
     gmailAudit(req, "gmail-disconnect", true, out.revoked ? "revoked at Google and deleted" : "deleted here; Google revoke not confirmed");
     res.json(out);
   } catch (err) { console.error("[gmail] disconnect failed:", err.message); res.status(500).json({ error: "Could not disconnect just now." }); }
+});
+
+// ---------------------------------------------------------------------------
+// Google Calendar (phase 7). Same shape as Gmail: connect, status, viewing opt-in, disconnect. Viewing and adding events are
+// TOOLS in lib/tools/calendar-google.js; adding goes through the approval routes below. No change or delete exists.
+// ---------------------------------------------------------------------------
+const calendarLib = require("./lib/calendar");
+const calendarAudit = (req, tool, ok, output) => auditLog.record(require("./lib/db").supabase, { event: "tool_call", userId: req.user.id, botType: "planner", ip: req.ip, tool, ok, input: "", output });
+
+app.get("/api/calendar/status", gmailLimiter, async (req, res) => {
+  try { res.json(await calendarLib.shared().status(req.user.id)); }
+  catch (err) { console.error("[calendar] status failed:", err.message); res.status(500).json({ error: "Could not check Calendar just now." }); }
+});
+
+app.post("/api/calendar/connect", gmailLimiter, security.rejectUnknownFields(["view", "create"]), auth.requireBusinessAssistant, (req, res) => {
+  const url = calendarLib.shared().authUrl(req.user.id, { view: req.body.view === true, create: req.body.create === true });
+  if (!url) return res.status(req.body.view === true || req.body.create === true ? 503 : 400).json({ error: req.body.view === true || req.body.create === true ? "Calendar is not set up on this server yet." : "Choose what Calendar may do first." });
+  calendarAudit(req, "calendar-connect-start", true, `${req.body.view === true ? "view " : ""}${req.body.create === true ? "add-events" : ""}`.trim());
+  res.json({ url });
+});
+
+app.get("/api/calendar/callback", gmailLimiter, auth.requireBusinessAssistant, async (req, res) => {
+  const q = req.query || {};
+  try {
+    const out = await calendarLib.shared().complete(req.user.id, { code: typeof q.code === "string" ? q.code : "", state: typeof q.state === "string" ? q.state : "", error: typeof q.error === "string" ? q.error : "" });
+    calendarAudit(req, "calendar-connect", out.ok, out.ok ? `connected${out.canCreate ? ", can add events" : ", view only"}` : String(out.reason));
+    res.redirect(`/settings.html?calendar=${out.ok ? "connected" : encodeURIComponent(out.reason === "denied" ? "denied" : "error")}`);
+  } catch (err) {
+    console.error("[calendar] callback failed:", err.message);
+    res.redirect("/settings.html?calendar=error");
+  }
+});
+
+app.post("/api/calendar/viewing", gmailLimiter, security.rejectUnknownFields(["on"]), async (req, res) => {
+  try {
+    const out = await calendarLib.shared().setViewing(req.user.id, req.body.on === true);
+    if (!out.ok) return res.status(out.reason === "needs_consent" ? 409 : 404).json({ error: out.reason === "needs_consent" ? "Google has not been asked for that permission yet." : "Calendar is not connected.", needsConsent: out.reason === "needs_consent" });
+    calendarAudit(req, "calendar-viewing", true, out.viewing ? "turned on" : "turned off");
+    res.json(out);
+  } catch (err) { console.error("[calendar] viewing failed:", err.message); res.status(500).json({ error: "Could not change that just now." }); }
+});
+
+app.post("/api/calendar/disconnect", gmailLimiter, security.rejectUnknownFields([]), async (req, res) => {
+  try {
+    const out = await calendarLib.shared().disconnect(req.user.id);
+    calendarAudit(req, "calendar-disconnect", true, out.revoked ? "revoked at Google and deleted" : "deleted here; Google revoke not confirmed");
+    res.json(out);
+  } catch (err) { console.error("[calendar] disconnect failed:", err.message); res.status(500).json({ error: "Could not disconnect just now." }); }
 });
 
 // ---------------------------------------------------------------------------
@@ -5962,6 +6010,7 @@ app.delete("/api/account", security.rejectUnknownFields(["confirmEmail"]), async
       try { await userData.cancelStripeSubscriptions(require("stripe")(process.env.STRIPE_SECRET_KEY), profile.stripe_customer_id); }
       catch (err) { console.error("[account-delete] stripe cancel failed:", err.message); return res.status(502).json({ error: "We could not stop your subscription, so nothing was deleted. Please try again or email support@gurost.com." }); }
     }
+    try { await require("./lib/calendar").shared().disconnect(req.user.id); } catch (e) { /* best effort, as for Gmail */ }
     try { await require("./lib/gmail").shared().disconnect(req.user.id); } catch (e) { /* the row is deleted with the rest below; the Google revoke is best effort */ }
     const report = await userData.deleteUserData(supabase, { id: req.user.id, email: req.user.email });
     const who = crypto.createHash("sha256").update(String(req.user.id)).digest("hex").slice(0, 16); // not reversible, no personal data in the log

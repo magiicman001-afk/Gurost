@@ -85,6 +85,16 @@
     <p class="text-xs text-[var(--muted)] mt-2">Your assistants can save drafts in your Gmail and send an email only after you press Approve. Reading your inbox is a separate choice and is off unless you turn it on. We never delete or archive mail, and we do not store your mail. Business Assistant plans only.</p>
   </section>
 
+  <!-- Calendar -->
+  <section>
+    <h2 class="font-display font-bold text-lg mb-4">Calendar</h2>
+    <div class="border border-[var(--line)] rounded-2xl p-5">
+      <p class="font-semibold text-sm">Your own Google Calendar, for your assistants</p>
+      <div id="calendarBox"></div>
+    </div>
+    <p class="text-xs text-[var(--muted)] mt-2">Seeing your events and adding events are two separate choices. An event is added only after you press Approve, on your own calendar with no guests, so nobody gets an invitation. We never change or delete events, and we do not store your events. Business Assistant plans only.</p>
+  </section>
+
   <!-- API Keys -->
   <section>
     <h2 class="font-display font-bold text-lg mb-4">API Keys</h2>
@@ -227,12 +237,14 @@
 
 <script src="shared/api-client.js"></script>
 <script src="shared/gmail-settings.js"></script>
+<script src="shared/calendar-settings.js"></script>
 <script>
 const PLAN_DISPLAY_NAMES = { free: 'Free', pro: 'Plus', unlimited: 'Max', ultimate: 'Custom' };
 
 document.addEventListener('DOMContentLoaded', async () => {
   if (!GurostAPI.requireLogin()) return;
   try { GurostGmailSettings.mount(document.getElementById('gmailBox'), GurostAPI); } catch (e) { /* the page works without it */ }
+  try { GurostCalendarSettings.mount(document.getElementById('calendarBox'), GurostAPI); } catch (e) { /* the page works without it */ }
 
   try {
     const me = await GurostAPI.call('/api/me');

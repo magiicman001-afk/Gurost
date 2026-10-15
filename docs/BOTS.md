@@ -40,3 +40,10 @@ Personality is used for conversation only. It is never added to the calls that w
 - Cannot delete, archive, label or change mail: there is no such tool, and the Google permissions that allow it are never requested (a test checks the code for them).
 - Tokens: refresh token sealed with `SECRETS_KEY` in `gmail_connections` (RLS on, no policies). Disconnect (and account deletion) revoke at Google and delete the row.
 - Honest limits: Google treats these as restricted permissions. Until the app passes Google's verification (and, for inbox reading, a security assessment), only test users added in the Google console can connect. Not verified live. The privacy policy and `docs/AI_DATA_FLOW.md` were updated first.
+
+## Calendar (Business Assistant 2.0, phase 7)
+- Code: `lib/calendar.js`, `lib/tools/calendar-google.js` (2 tools), routes `/api/calendar/*` in `server.js`, Settings section (`public/shared/calendar-settings.js`), admin Connected Tools tab. Built on the same pattern as Gmail (sealed token in `calendar_connections`, signed state tagged `cal` so a Gmail state cannot be replayed).
+- The person chooses at connect time: SEE upcoming events (title, time, place only; 25 events max, 1-14 days; untrusted data) and/or ADD events. Viewing is off until chosen.
+- `calendar_create_event` is `needsApproval` (parked in `assistant_pending_actions`, 30 minutes). It adds ONE event, never with guests (`sendUpdates=none`), 20 a day max. The older `calendar_event` tool (card + .ics) stays as the draft.
+- No change or delete: no tool, no PUT/PATCH/DELETE call (a test scans). Honest limit: Google has no add-only permission, so the create scope technically also covers change and delete; the guarantee is our code.
+- Not verified live. Needs the Google OAuth client, the second redirect, the migration and (for customers) Google verification.
