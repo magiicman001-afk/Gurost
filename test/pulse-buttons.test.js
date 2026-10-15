@@ -39,3 +39,30 @@ test("Share: a template site's share link opens the site (pages and files), as a
   assert.match(block, /sandboxSharedPage\(res\)/, "still runs in the sandbox");
   assert.match(block, /rel !== "\/"\) return res\.status\(404\)/, "an ordinary site still has exactly one address");
 });
+
+test("Deploy: on the Website Builder it is Launch (Gurost hosting through the Full site panel), never another host's address", () => {
+  assert.match(widget, /lastChild\.textContent = 'Launch'/);
+  const at = widget.indexOf("document.getElementById('actDeploy').addEventListener");
+  const block = widget.slice(at, widget.indexOf("document.getElementById('actShare')"));
+  assert.match(block, /if \(onWebsiteBuilder\)[\s\S]*openSitePanel\(projectId, \{ forceOpen: true \}\)/);
+  assert.match(block, /return runAction\('deploy'/, "the App Builder keeps its own deploy");
+  assert.ok(!/vercel/i.test(block), "no customer-facing mention of Vercel");
+  assert.ok(!/Vercel/.test(widget.slice(widget.indexOf("const ACTION_START"), widget.indexOf("async function runAction"))), "the 'started' line does not name a host");
+});
+
+test("Template sites: GitHub and Download say plainly they are not available yet and point to Launch, and ask the server nothing", () => {
+  const builder = fs.readFileSync(path.join(__dirname, "..", "public", "builder.html"), "utf8");
+  assert.match(builder, /isTemplate: \(\) => templateMode/);
+  assert.match(widget, /TEMPLATE_NO_FILES\('Saving to GitHub'\)/);
+  assert.match(widget, /TEMPLATE_NO_FILES\('Download'\)/);
+  const gh = widget.slice(widget.indexOf("async function runGithubSave"), widget.indexOf("async function setGithubAutoSave"));
+  assert.ok(gh.indexOf("TEMPLATE_NO_FILES") < gh.indexOf("/github`"), "the check comes before the request");
+});
+
+test("Preview and View Code get the panel out of the way and flash where they took you", () => {
+  assert.match(widget, /function revealOutsidePanel[\s\S]*togglePanel\(false\)[\s\S]*pulse-flash/);
+  assert.match(widget, /revealOutsidePanel\(frame\)/);
+  assert.match(widget, /if \(open\) togglePanel\(false\)/);
+  assert.match(css, /\.pulse-flash/);
+  assert.match(css, /prefers-reduced-motion[\s\S]*\.pulse-flash/);
+});

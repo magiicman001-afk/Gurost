@@ -208,6 +208,7 @@
   async function runGithubSave({ quiet = false } = {}) {
     const projectId = window.gurostBuilder?.getProjectId?.();
     if (!projectId) throw new Error('Nothing to push yet.');
+    if (window.gurostBuilder?.isTemplate?.()) throw new Error(TEMPLATE_NO_FILES('Saving to GitHub'));
     if (ghBusy) return null;
     ghBusy = true;
     try {
@@ -1052,6 +1053,32 @@
     } catch { badge.hidden = true; }
   }
 
+  // The Full site panel (draft and live addresses, Launch). forceOpen: Launch must show it, never toggle it shut.
+  function openSitePanel(projectId, { forceOpen = false } = {}) {
+    const panel = document.getElementById('pulseSitePanel');
+    if (forceOpen) panel.classList.add('visible'); else panel.classList.toggle('visible');
+    if (!panel.classList.contains('visible')) return;
+    panel.scrollIntoView({ block: 'nearest' });
+    const go = () => window.GurostSitePanel.render(panel, projectId);
+    if (window.GurostSitePanel) return go();
+    const sc = document.createElement('script');
+    sc.src = 'shared/site-panel.js';
+    sc.onload = go;
+    sc.onerror = () => { panel.textContent = 'Could not load the site panel.'; };
+    document.head.appendChild(sc);
+  }
+
+  // The Pulse panel sits on top of the page, so "show me the preview / code" has to get out of the way, then draw the eye.
+  function revealOutsidePanel(el) {
+    if (!el) return;
+    togglePanel(false);
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.remove('pulse-flash');
+    void el.offsetWidth;
+    el.classList.add('pulse-flash');
+    setTimeout(() => el.classList.remove('pulse-flash'), 1600);
+  }
+
   function setupActionButtons() {
     const gb = window.gurostBuilder;
     const show = (id, condition) => {
@@ -1078,16 +1105,7 @@
     document.getElementById('actSite').addEventListener('click', () => {
       const projectId = gb.getProjectId?.();
       if (!projectId) { logStatus('Start a build first - then your full site opens here.'); return; }
-      const panel = document.getElementById('pulseSitePanel');
-      panel.classList.toggle('visible');
-      if (!panel.classList.contains('visible')) return;
-      const go = () => window.GurostSitePanel.render(panel, projectId);
-      if (window.GurostSitePanel) return go();
-      const sc = document.createElement('script');
-      sc.src = 'shared/site-panel.js';
-      sc.onload = go;
-      sc.onerror = () => { panel.textContent = 'Could not load the site panel.'; };
-      document.head.appendChild(sc);
+      openSitePanel(projectId);
     });
     document.getElementById('actSubmissions').addEventListener('click', () => {
       const projectId = gb.getProjectId?.();
@@ -1115,11 +1133,26 @@
       updateUndoRedoButtons(result?.canUndo, result?.canRedo);
     }));
 
-    document.getElementById('actDeploy').addEventListener('click', () => runAction('deploy', async () => {
-      const result = await gb.deploy();
-      const url = result?.deployUrl || result?.deploy?.frontend?.url;
-      logStatus(url ? `Live at ${url}` : 'Deployed.');
-    }));
+    // Website Builder: customers go live on Gurost hosting (their own address), through Launch in the Full site panel.
+    // Deploy-to-another-host stays for the App Builder only.
+    if (onWebsiteBuilder) {
+      const label = document.getElementById('actDeploy');
+      if (label && label.lastChild) label.lastChild.textContent = 'Launch';
+    }
+    document.getElementById('actDeploy').addEventListener('click', () => {
+      if (onWebsiteBuilder) {
+        const projectId = gb.getProjectId?.();
+        if (!projectId) { logStatus('Start a build first, then launch it here.'); return; }
+        openSitePanel(projectId, { forceOpen: true });
+        logStatus('Pick your site name and press Launch. Your site goes live at your own Gurost address.');
+        return;
+      }
+      return runAction('deploy', async () => {
+        const result = await gb.deploy();
+        const url = result?.deployUrl || result?.deploy?.frontend?.url;
+        logStatus(url ? `Live at ${url}` : 'Deployed.');
+      });
+    });
 
     document.getElementById('actShare').addEventListener('click', () => runAction('share', async () => {
       const result = await gb.share();
@@ -1224,22 +1257,25 @@
         // Builders: the code is a drawer over the bot conversation.
         const open = document.getElementById('codePane')?.classList.contains('hidden');
         gb.toggleCode();
-        gb.logActivity?.(open ? 'Showing the code — close it to return to the conversation.' : 'Code closed.', 'ok');
+        gb.logActivity?.(open ? 'Showing the code. Close it to return to the conversation.' : 'Code closed.', 'ok');
+        if (open) togglePanel(false); // the panel would cover the code it just opened
         return;
       }
       // Pages without a drawer: bring the code into view.
-      document.getElementById('codeContent')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      revealOutsidePanel(document.getElementById('codeContent'));
     });
 
     document.getElementById('actPreview').addEventListener('click', () => {
-      gb.logActivity?.('Showing the live preview.', 'ok');
       const frame = document.getElementById('previewFrame') || document.getElementById('previewFrameAfter');
-      frame?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (!frame) { logStatus('There is no preview to show yet. Build a site first.'); return; }
+      gb.logActivity?.('Showing the live preview.', 'ok');
+      revealOutsidePanel(frame);
     });
 
     document.getElementById('actDownload').addEventListener('click', () => runAction('download', async () => {
       const projectId = gb.getProjectId?.();
       if (!projectId) throw new Error('Nothing to download yet.');
+      if (gb.isTemplate?.()) throw new Error(TEMPLATE_NO_FILES('Download'));
       logStatus('Preparing your download…');
       const res = await window.GurostAPI.fetch(`${window.GurostAPI.API_BASE}/api/wrap`, {
         method: 'POST',
@@ -1330,8 +1366,10 @@
   // button during the call, surfaces a real, honest error in the
   // status log rather than failing silently.
   // "Started" line for the bot feed; each action logs its own result.
+  // Template sites live in Gurost as a filled template, not as files of their own, so the file actions say so and point to Launch.
+  const TEMPLATE_NO_FILES = (what) => `${what} is not available for template sites yet. Your site is kept safe in Gurost; press Launch to put it online.`;
   const ACTION_START = {
-    save: 'Saving project…', deploy: 'Deploying to Vercel…', github: 'Saving to GitHub…',
+    save: 'Saving project…', deploy: 'Deploying…', github: 'Saving to GitHub…',
     image: 'Generating image…', share: 'Creating a share link…', undo: 'Undoing the last change…',
     redo: 'Redoing the change…', upload: 'Uploading file…', history: 'Opening history…'
   };

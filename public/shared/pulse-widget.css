@@ -270,3 +270,8 @@
 #pulseUploadResult p { margin: 0 0 8px; font-size: 12px; line-height: 1.4; }
 #pulseUploadResult div { display: flex; gap: 8px; }
 #pulseUploadResult button { flex: 1; font-size: 12px; padding: 8px; border-radius: 8px; border: 1px solid #E9E9EF; background: white; cursor: pointer; }
+
+/* Preview / View Code: a short orange outline shows where the panel just sent you. */
+.pulse-flash { outline: 3px solid #FF8C00; outline-offset: 3px; animation: pulse-flash-fade 1.6s ease-out forwards; }
+@keyframes pulse-flash-fade { 0% { outline-color: #FF8C00; } 70% { outline-color: #FF8C00; } 100% { outline-color: transparent; } }
+@media (prefers-reduced-motion: reduce) { .pulse-flash { animation: none; } }

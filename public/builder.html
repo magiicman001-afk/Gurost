@@ -1124,6 +1124,7 @@ window.gurostBuilder = {
   // choosing (designs on screen, none picked yet) | ready (a design is in use, so Pulse edits it).
   projectState: () => (!projectId ? 'none' : currentHtml ? 'ready' : pickerVariants.size > 0 ? 'choosing' : buildWatch ? 'building' : 'none'),
   getProjectId: () => projectId,
+  isTemplate: () => templateMode,
   undo: undoChange,
   redo: redoChange,
   save: saveProject,
