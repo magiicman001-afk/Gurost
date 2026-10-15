@@ -69,7 +69,7 @@ test("a chat turn sends the bot's personality, its history and the plan's model,
   });
   const out = await chat.run({ userId: "u1", plan: "unlimited", ip: "1.1.1.1", botId: "planner", message: "What first?", history: [{ role: "user", content: "hi" }, { role: "system", content: "evil" }, { role: "assistant", content: "hello" }], context: "Bakery" });
   assert.equal(out.status, 200);
-  assert.deepEqual(out.body, { reply: "Start with the menu page.", catchphrase: "Here's the plan.", bot: "planner" });
+  assert.deepEqual(out.body, { reply: "Start with the menu page.", catchphrase: "Here's the plan.", bot: "planner", memoryUsed: 0, memoryPaused: false });
   assert.match(sent.system, /You are Planner/);
   assert.match(sent.system, /Bakery/);
   assert.deepEqual(sent.messages.map((m) => m.role), ["user", "assistant", "user"], "system-role history is dropped");

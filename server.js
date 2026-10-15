@@ -2634,6 +2634,7 @@ app.delete("/api/memory", async (req, res) => {
     const db = require("./lib/db").supabase;
     await botMemory.forgetAll(db, req.user.id);
     await botMemory.clearHistory(db, req.user.id);
+    await botMemory.faceForgetAll(db, req.user.id).catch(() => {}); // the 8 assistants' memory (table may not exist yet)
     auditLog.record(db, { event: "memory", userId: req.user.id, ip: req.ip, tool: "memory_forget_all", ok: true, output: "all notes and saved chats forgotten" });
     res.json({ ok: true });
   } catch (err) {
@@ -2716,6 +2717,62 @@ const requireFaceId = (req, res) => {
   return false;
 };
 
+// Memory for the faces (phase 5): lib/bot-memory.js. What a chat reads, what it saves, and the person's controls.
+// Paused (the same switch as the department bots): nothing is read and nothing is saved. Every read, save and forget is
+// written to the audit trail as a count, never the text.
+const faceMemoryFor = (req) => {
+  const db = require("./lib/db").supabase;
+  const note = (tool, output) => auditLog.record(db, { event: "memory", userId: req.user.id, ip: req.ip, tool, ok: true, output });
+  return {
+    prepare: (a) => botMemory.facePrepare(db, a),
+    remember: async ({ userId, botId, projectId, userText, botText }) => {
+      await botMemory.faceRecordExchange(db, { userId, botId, userText, botText });
+      // One cheap check for lasting facts (the same free model and the same safety filter as the department bots).
+      const saved = await memoryExtract.learnFromExchange({
+        userText, botType: botId,
+        call: (a) => claudeClient.callClaude({ ...a, model: modelForTier("free"), context: { userId, ip: req.ip } }),
+        list: async () => (await botMemory.faceList(db, userId, { botId: botMemory.SHARED, projectId })).items.map((i) => ({ key: i.key, value: i.value })),
+        save: (items) => botMemory.faceSaveFacts(db, { userId, projectId, userText, items })
+      });
+      if (saved) note("memory_save", `${saved} note(s) saved from a chat with ${botId}`);
+    }
+  };
+};
+const memoryLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 120, standardHeaders: true, legacyHeaders: false, keyGenerator: (req) => req.user?.id || req.ip, message: { error: "Please try again a little later." } });
+const MEM_ID = /^[0-9a-f-]{36}$/i;
+const memBotOk = (b) => b === undefined || b === "" || botPersonalities.has(b) || b === "shared";
+
+app.get("/api/bots/memory", memoryLimiter, async (req, res) => {
+  const bot = typeof req.query.bot === "string" ? req.query.bot : "";
+  if (!memBotOk(bot)) return res.status(400).json({ error: "Unknown assistant." });
+  try {
+    const db = require("./lib/db").supabase;
+    const paused = await botMemory.isPaused(db, req.user.id).catch(() => false);
+    const { items, turns } = paused ? { items: [], turns: [] } : await botMemory.faceList(db, req.user.id, { botId: bot || undefined, projectId: typeof req.query.projectId === "string" ? req.query.projectId : "" });
+    res.json({ paused, items, turns });
+  } catch (err) {
+    console.error("[bots] memory list failed:", err.message);
+    res.json({ paused: false, items: [], turns: [], notReady: true });
+  }
+});
+app.delete("/api/bots/memory/:id", memoryLimiter, async (req, res) => {
+  if (!MEM_ID.test(req.params.id)) return res.status(400).json({ error: "Bad request." });
+  try {
+    await botMemory.faceForgetOne(require("./lib/db").supabase, req.user.id, req.params.id);
+    auditLog.record(require("./lib/db").supabase, { event: "memory", userId: req.user.id, ip: req.ip, tool: "memory_forget_one", ok: true, output: "1 assistant note forgotten" });
+    res.json({ ok: true });
+  } catch (err) { res.status(503).json({ error: "Could not forget that just now. Please try again." }); }
+});
+app.delete("/api/bots/memory", memoryLimiter, async (req, res) => {
+  const bot = typeof req.query.bot === "string" ? req.query.bot : "";
+  if (!memBotOk(bot)) return res.status(400).json({ error: "Unknown assistant." });
+  try {
+    await botMemory.faceForgetAll(require("./lib/db").supabase, req.user.id, bot || undefined);
+    auditLog.record(require("./lib/db").supabase, { event: "memory", userId: req.user.id, ip: req.ip, tool: "memory_forget_all", ok: true, output: bot ? `everything ${bot} remembered was forgotten` : "everything the assistant team remembered was forgotten" });
+    res.json({ ok: true });
+  } catch (err) { res.status(503).json({ error: "Could not forget that just now. Please try again." }); }
+});
+
 app.get("/api/bots/personalities", (req, res) => res.json({ bots: botPersonalities.publicView() }));
 
 app.post("/api/bots/:bot/chat", botChatLimiter, security.rejectUnknownFields(["message", "history", "projectId"]), async (req, res) => {
@@ -2726,9 +2783,10 @@ app.post("/api/bots/:bot/chat", botChatLimiter, security.rejectUnknownFields(["m
   let context = "";
   const proj = typeof req.body.projectId === "string" ? PROJECTS.get(req.body.projectId) : null;
   if (proj && (proj.userId === req.user.id || auth.isAdmin(req.user.email))) context = String(proj.prompt || "");
-  const chat = require("./lib/bot-chat").createBotChat({ claudeClient, modelRouter, friendlyError: () => "I could not answer just now. Please try again in a moment." });
-  const out = await chat.run({ userId: req.user.id, plan: req.user.plan, ip: req.ip, botId: req.params.bot, message, history: req.body.history, context });
-  auditLog.record(require("./lib/db").supabase, { event: "chat", userId: req.user.id, botType: req.params.bot, ip: req.ip, tool: "face-chat", ok: out.status === 200, input: `[${message.length} chars]`, output: out.status === 200 ? "replied" : "failed" });
+  const chat = require("./lib/bot-chat").createBotChat({ claudeClient, modelRouter, memory: faceMemoryFor(req), friendlyError: () => "I could not answer just now. Please try again in a moment." });
+  const projectId = proj && (proj.userId === req.user.id || auth.isAdmin(req.user.email)) ? req.body.projectId : "";
+  const out = await chat.run({ userId: req.user.id, plan: req.user.plan, ip: req.ip, botId: req.params.bot, message, history: req.body.history, context, projectId });
+  auditLog.record(require("./lib/db").supabase, { event: "chat", userId: req.user.id, botType: req.params.bot, ip: req.ip, tool: "face-chat", ok: out.status === 200, input: `[${message.length} chars]`, output: out.status === 200 ? `replied; memory ${out.body.memoryPaused ? "paused" : "used " + (out.body.memoryUsed || 0) + " note(s)"}` : "failed" });
   res.status(out.status).json(out.body);
 });
 
@@ -2765,10 +2823,14 @@ app.get("/api/bots/nudges", nudgeLimiter, async (req, res) => {
       const logs = await buildLog.queryLogs(db, { projectId: pid, userId: req.user.id, limit: 60, newestFirst: true }).catch(() => []);
       const pub = await siteStore.byProject(pid).catch(() => undefined);
       const reviews = (proj.variants || []).filter((v) => v && v.premium && typeof v.premium.score === "number").map((v) => ({ id: v.id, label: v.label || v.id, score: v.premium.score, passed: v.premium.passed, reasons: v.premium.reasons || [] }));
-      await nudgeEngine.scan({ userId: req.user.id, snapshot: {
+      const scanned = await nudgeEngine.scan({ userId: req.user.id, snapshot: {
         projectId: pid, built: !!(proj.currentHtml || proj.templateSite || (proj.variants || []).length), picked: !!(proj.selectedVariantId || proj.templateSite),
         published: pub === undefined ? null : !!(pub && pub.status !== "removed"), businessInfo: proj.businessInfo || null, reviews, logs: logs.map((l) => ({ bot: l.bot, result: l.result, decision: l.decision, reason: l.reason, task: l.task, created_at: l.created_at }))
       } });
+      // What a bot flagged is remembered by that bot (unless memory is paused), so it can follow up when asked.
+      if (scanned && scanned.addedRows && scanned.addedRows.length && !(await botMemory.isPaused(db, req.user.id).catch(() => true))) {
+        for (const n of scanned.addedRows) botMemory.faceRememberFlag(db, { userId: req.user.id, projectId: pid, botId: n.bot, kind: n.kind, text: n.text }).catch(() => {});
+      }
     }
     res.json({ nudges: await nudgeEngine.pending(req.user.id), mode: await nudgeEngine.getMode(req.user.id) });
   } catch (err) {

@@ -97,7 +97,7 @@
     if (pid) body.projectId = pid;
     var data = await window.GurostAPI.call("/api/bots/" + bot.id + "/chat", { method: "POST", body: body });
     if (!data || !data.reply) throw new Error("I got an empty answer. Please try again.");
-    return { reply: String(data.reply), catchphrase: data.catchphrase ? String(data.catchphrase) : "" };
+    return { reply: String(data.reply), catchphrase: data.catchphrase ? String(data.catchphrase) : "", memoryUsed: Number(data.memoryUsed) || 0, memoryPaused: data.memoryPaused === true };
   }
 
   var audioNow = null;
@@ -282,6 +282,70 @@
     setTimeout(pollNudges, 3000);
     setInterval(pollNudges, 60000);
 
+    // ---- memory (phase 5): earlier conversation with this bot, and the person's controls ----
+    var earlierShown = {};
+    function loadEarlier(bot, log) {
+      if (earlierShown[bot.id] || (histories[bot.id] || []).length || !nudgeOk()) return;
+      earlierShown[bot.id] = true;
+      var pid = projectIdNow();
+      nudgeCall("/api/bots/memory?bot=" + bot.id + (pid ? "&projectId=" + encodeURIComponent(pid) : "")).then(function (r) {
+        if (!r || !r.turns || !r.turns.length || openId !== bot.id || (histories[bot.id] || []).length) return;
+        histories[bot.id] = r.turns.map(function (t) { return { role: t.role, content: t.content }; });
+        var first = log.firstChild, bar = el("div", "gbw-earlier", "Earlier with " + bot.name);
+        log.insertBefore(bar, first ? first.nextSibling : null);
+        var anchor = bar.nextSibling;
+        r.turns.forEach(function (t) {
+          var m = el("div", "gbw-msg gbw-old " + (t.role === "user" ? "gbw-me-msg" : "gbw-bot-msg"));
+          m.appendChild(el("span", "gbw-who", t.role === "user" ? "You" : bot.name)); m.appendChild(el("p", "", String(t.content)));
+          log.insertBefore(m, anchor);
+        });
+      });
+    }
+    function openMemory(bot) {
+      var m = document.createElement("div"); m.className = "gbc-back";
+      var box = el("div", "gbc-box gbw-mem"); box.setAttribute("role", "dialog"); box.setAttribute("aria-modal", "true"); box.setAttribute("aria-label", "What " + bot.name + " remembers");
+      m.appendChild(box); document.body.appendChild(m);
+      function close() { if (m.parentNode) m.parentNode.removeChild(m); }
+      m.addEventListener("click", function (e) { if (e.target === m) close(); });
+      var h = el("h2", "", "What " + bot.name + " remembers"); box.appendChild(h);
+      box.appendChild(el("p", "gbc-small", "Notes the team uses to avoid starting cold. You are in charge: forget any of it, or pause memory. Recent chats are kept 30 days, lasting facts a year."));
+      var pausedRow = el("label", "gbc-check"), pcb = el("input"); pcb.type = "checkbox";
+      pausedRow.appendChild(pcb); pausedRow.appendChild(el("span", "", "Pause memory (nothing is read or saved while this is on)"));
+      box.appendChild(pausedRow);
+      var listEl = el("div", "gbw-mem-list"); box.appendChild(listEl);
+      var actions = el("div", "gbc-actions");
+      var forgetBot = el("button", "gbc-btn gbc-ghost", "Forget everything " + bot.name + " knows"), forgetAll = el("button", "gbc-btn gbc-ghost", "Forget everything the team knows"), done = el("button", "gbc-btn gbc-go", "Done");
+      [forgetBot, forgetAll, done].forEach(function (b) { b.type = "button"; });
+      actions.appendChild(forgetBot); actions.appendChild(forgetAll); actions.appendChild(done); box.appendChild(actions);
+      done.addEventListener("click", close);
+      var scopeWord = { shared: "Team", bot: bot.name, project: "This project" };
+      function render(items, msg) {
+        listEl.textContent = "";
+        if (msg) { listEl.appendChild(el("p", "gbc-small", msg)); return; }
+        if (!items.length) { listEl.appendChild(el("p", "gbc-small", "Nothing saved yet.")); return; }
+        items.forEach(function (it) {
+          var row = el("div", "gbw-mem-row"), t = el("div", "gbw-mem-text");
+          t.appendChild(el("b", "", scopeWord[it.scope] || "Team")); t.appendChild(document.createTextNode(" " + String(it.key).replace(/^said:/, "I told you: ") + ": " + it.value));
+          var f = el("button", "gbc-btn gbc-ghost gbw-mem-x", "Forget"); f.type = "button"; f.setAttribute("aria-label", "Forget this note");
+          f.addEventListener("click", function () { f.disabled = true; nudgeCall("/api/bots/memory/" + it.id, "DELETE").then(function (r) { if (r) row.parentNode.removeChild(row); else f.disabled = false; }); });
+          row.appendChild(t); row.appendChild(f); listEl.appendChild(row);
+        });
+      }
+      function reload() {
+        var pid = projectIdNow();
+        render([], "Loading\u2026");
+        nudgeCall("/api/bots/memory?bot=" + bot.id + (pid ? "&projectId=" + encodeURIComponent(pid) : "")).then(function (r) {
+          if (!r) { render([], "I could not load this just now. Please try again."); return; }
+          pcb.checked = r.paused === true;
+          render(r.items || [], r.paused ? "Memory is paused, so nothing is shown or used." : r.notReady ? "Memory is not switched on yet." : "");
+        });
+      }
+      pcb.addEventListener("change", function () { nudgeCall("/api/memory/settings", "PUT", { paused: pcb.checked }).then(function (r) { if (!r) pcb.checked = !pcb.checked; else reload(); }); });
+      forgetBot.addEventListener("click", function () { nudgeCall("/api/bots/memory?bot=" + bot.id, "DELETE").then(function (r) { if (r) { histories[bot.id] = []; reload(); } }); });
+      forgetAll.addEventListener("click", function () { nudgeCall("/api/bots/memory", "DELETE").then(function (r) { if (r) { histories = {}; reload(); } }); });
+      reload(); done.focus();
+    }
+
     // A small Listen button under a bot message: plays it in that bot's own voice.
     function listenable(m, bot) {
       var b = el("button", "gbw-listen", "Listen");
@@ -358,6 +422,8 @@
             hist.push({ role: "user", content: text }, { role: "assistant", content: reply });
             if (hist.length > 20) hist.splice(0, hist.length - 20);
             if (r && r.catchphrase) wait.appendChild(el("span", "gbw-catch", r.catchphrase));
+            if (r && r.memoryUsed > 0) wait.appendChild(el("span", "gbw-why", "Used " + r.memoryUsed + " saved note" + (r.memoryUsed === 1 ? "" : "s") + " (see What I remember)."));
+            else if (r && r.memoryPaused) wait.appendChild(el("span", "gbw-why", "Memory is paused: nothing was read or saved."));
             listenable(wait, bot);
           })
           .catch(function (err) { wait.classList.remove("gbw-wait"); wait.classList.add("gbw-err"); wait.lastChild.textContent = (err && err.message) || "That did not work. Please try again."; if (state.hidden.indexOf(bot.id) < 0) setState(bot.id, "alert"); setTimeout(function () { if (states[bot.id] === "alert" && !alerts[bot.id]) setState(bot.id, "idle"); }, 1800); })
@@ -369,7 +435,10 @@
       sel.setAttribute("aria-label", "How often the assistants speak up on their own");
       sel.addEventListener("change", function () { nudgeMode = sel.value; nudgeCall("/api/bots/nudges/settings", "PUT", { mode: sel.value }); });
       speak.appendChild(sel);
+      var memBtn = el("button", "gbw-call", "What I remember"); memBtn.type = "button"; memBtn.addEventListener("click", function () { openMemory(bot); });
+      speak.insertBefore(memBtn, speak.firstChild);
       panel.appendChild(head); panel.appendChild(log); panel.appendChild(form); panel.appendChild(speak);
+      loadEarlier(bot, log);
       if (!window.matchMedia || !window.matchMedia("(pointer: coarse)").matches) input.focus();
     }
 

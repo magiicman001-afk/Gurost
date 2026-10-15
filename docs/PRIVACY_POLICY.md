@@ -99,6 +99,7 @@ memory notes if memory is on) go to OpenRouter and the model maker it picks. We 
 | Server and security logs | 30 to 90 days |
 | Session records | Until expired + 30 days |
 | Build logs and events | 90 days |
+| Assistant team memory: recent conversations with each assistant (30 days) and lasting notes such as what your business sells (1 year); you can pause it, forget one note, one assistant's notes or everything, at any time | 30 days or 1 year, or until you forget it |
 | Assistant nudges (a short sentence an assistant said unasked, and which build or score it came from) | 90 days |
 | Video call records (which assistant, when, how many seconds; no audio, video or words) | 90 days |
 | Voice recordings | Not kept |
