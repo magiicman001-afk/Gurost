@@ -175,6 +175,10 @@ If anything fails: `git revert` the update commit (small, logged) and write the 
 - Session idle timeout: NOT built. Today there is none (15-minute cookie renews while active, 30-day fixed session). Irfan confirmed 30 minutes with a warning at 28.
   It touches Laptop Claude's session module plus several files, so it waits for Irfan's "go" and Laptop Claude (migration for a last-active column; the `user_sessions` table exists in the live database since 2026-10-13).
 
+- 2026-10-16: Business Assistant 2.0 phase 6, GMAIL (`lib/gmail.js`, `lib/tools/gmail.js`, `/api/gmail/*`, Settings > Gmail, admin Connected Tools). Draft-only; send only after the
+  approval card; inbox reading opt-in; no delete/archive (scopes never requested). Off until `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `SECRETS_KEY` are on Render and
+  `docs/migrations/2026-10-16_gmail_connections.sql` is run. Google verification needed before customers can connect. NOT verified live. Phase 7 (Calendar) is next.
+
 ## Known bugs (open)
 - Bug P: FIXED (`9f42f6c`, `0dbec59`): 8 individual bots, each with its own avatar and name.
 - Bug BB: FIXED (`2008b66`): the preview page's sticky controls covered the section on phones.

@@ -1015,6 +1015,10 @@ app.get("/api/admin/proactive-log", requireAdminAuth, adminAccess.needs("bots"),
   try { res.json(await nudgeEngine.adminLog(100)); }
   catch (err) { res.status(503).json({ error: "The proactive log is not ready yet: run docs/migrations/2026-10-15_bot_nudges.sql in Supabase." }); }
 });
+app.get("/api/admin/connected-tools", requireAdminAuth, adminAccess.needs("bots"), async (req, res) => {
+  try { res.json(require("./lib/connected-tools").build({ gmail: await gmailLib.shared().adminSummary() })); }
+  catch (err) { console.error("[admin] connected tools failed:", err.message); res.status(500).json({ error: "Could not check the connected tools." }); }
+});
 app.get("/api/admin/build-logs", requireAdminAuth, adminAccess.needs("builds"), validateInput({ query: { projectId: { type: "string", max: 64, pattern: /^[A-Za-z0-9_-]+$/ }, userId: { type: "string", max: 64, pattern: /^[A-Za-z0-9_-]+$/ }, bot: { type: "string", max: 20, pattern: /^[a-z]+$/ }, result: { type: "enum", values: ["success", "fail", "escalate"] }, limit: { type: "int", min: 1, max: 1000 } } }), async (req, res) => {
   try {
     const rows = await buildLog.queryLogs(supabase, { projectId: req.query.projectId, userId: req.query.userId, bot: req.query.bot, result: req.query.result, limit: Number(req.query.limit) || 600, newestFirst: true });
@@ -2870,6 +2874,55 @@ app.post("/api/bots/call/:id/end", async (req, res) => {
   if (!isUuid(req.params.id)) return res.status(400).json({ error: "Bad request." });
   const out = await botCalls.end({ userId: req.user.id, callId: req.params.id });
   res.status(out.status).json(out.body);
+});
+
+// ---------------------------------------------------------------------------
+// Gmail (phase 6). Connect, status, inbox opt-in, disconnect. Drafting, sending (after approval) and reading are TOOLS in
+// lib/tools/gmail.js; sending goes through the approval routes below. We never ask Google for delete or archive rights.
+// ---------------------------------------------------------------------------
+const gmailLib = require("./lib/gmail");
+const gmailLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false, keyGenerator: (req) => req.user?.id || req.ip, message: { error: "Too many Gmail requests. Please try again a little later." } });
+const gmailAudit = (req, tool, ok, output) => auditLog.record(require("./lib/db").supabase, { event: "tool_call", userId: req.user.id, botType: "email", ip: req.ip, tool, ok, input: "", output });
+
+app.get("/api/gmail/status", gmailLimiter, async (req, res) => {
+  try { res.json(await gmailLib.shared().status(req.user.id)); }
+  catch (err) { console.error("[gmail] status failed:", err.message); res.status(500).json({ error: "Could not check Gmail just now." }); }
+});
+
+app.post("/api/gmail/connect", gmailLimiter, security.rejectUnknownFields(["readInbox"]), auth.requireBusinessAssistant, (req, res) => {
+  const url = gmailLib.shared().authUrl(req.user.id, { readInbox: req.body.readInbox === true });
+  if (!url) return res.status(503).json({ error: "Gmail is not set up on this server yet." });
+  gmailAudit(req, "gmail-connect-start", true, req.body.readInbox === true ? "with inbox reading" : "drafts and sending only");
+  res.json({ url });
+});
+
+app.get("/api/gmail/callback", gmailLimiter, auth.requireBusinessAssistant, async (req, res) => {
+  const q = req.query || {};
+  try {
+    const out = await gmailLib.shared().complete(req.user.id, { code: typeof q.code === "string" ? q.code : "", state: typeof q.state === "string" ? q.state : "", error: typeof q.error === "string" ? q.error : "" });
+    gmailAudit(req, "gmail-connect", out.ok, out.ok ? (out.readInbox ? "connected, inbox reading on" : "connected") : String(out.reason));
+    res.redirect(`/settings.html?gmail=${out.ok ? "connected" : encodeURIComponent(out.reason === "denied" ? "denied" : "error")}`);
+  } catch (err) {
+    console.error("[gmail] callback failed:", err.message);
+    res.redirect("/settings.html?gmail=error");
+  }
+});
+
+app.post("/api/gmail/read-inbox", gmailLimiter, security.rejectUnknownFields(["on"]), async (req, res) => {
+  try {
+    const out = await gmailLib.shared().setReadInbox(req.user.id, req.body.on === true);
+    if (!out.ok) return res.status(out.reason === "needs_consent" ? 409 : 404).json({ error: out.reason === "needs_consent" ? "Google has not been asked for inbox permission yet." : "Gmail is not connected.", needsConsent: out.reason === "needs_consent" });
+    gmailAudit(req, "gmail-read-inbox", true, out.readInbox ? "turned on" : "turned off");
+    res.json(out);
+  } catch (err) { console.error("[gmail] read-inbox failed:", err.message); res.status(500).json({ error: "Could not change that just now." }); }
+});
+
+app.post("/api/gmail/disconnect", gmailLimiter, security.rejectUnknownFields([]), async (req, res) => {
+  try {
+    const out = await gmailLib.shared().disconnect(req.user.id);
+    gmailAudit(req, "gmail-disconnect", true, out.revoked ? "revoked at Google and deleted" : "deleted here; Google revoke not confirmed");
+    res.json(out);
+  } catch (err) { console.error("[gmail] disconnect failed:", err.message); res.status(500).json({ error: "Could not disconnect just now." }); }
 });
 
 // ---------------------------------------------------------------------------
@@ -5909,6 +5962,7 @@ app.delete("/api/account", security.rejectUnknownFields(["confirmEmail"]), async
       try { await userData.cancelStripeSubscriptions(require("stripe")(process.env.STRIPE_SECRET_KEY), profile.stripe_customer_id); }
       catch (err) { console.error("[account-delete] stripe cancel failed:", err.message); return res.status(502).json({ error: "We could not stop your subscription, so nothing was deleted. Please try again or email support@gurost.com." }); }
     }
+    try { await require("./lib/gmail").shared().disconnect(req.user.id); } catch (e) { /* the row is deleted with the rest below; the Google revoke is best effort */ }
     const report = await userData.deleteUserData(supabase, { id: req.user.id, email: req.user.email });
     const who = crypto.createHash("sha256").update(String(req.user.id)).digest("hex").slice(0, 16); // not reversible, no personal data in the log
     const counts = { deleted: report.deleted, anonymised: report.anonymised, files: report.files, failed: report.failed };
