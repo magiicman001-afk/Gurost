@@ -185,7 +185,12 @@ If anything fails: `git revert` the update commit (small, logged) and write the 
 
 - 2026-10-16: COMPANY SCOUT (`lib/company-scout.js`, `/api/scout/*`, "Scout my business" on the Business Assistant page, admin Scout Runs). Reads the owner's public website + up to 4 Brave searches, AI writes sourced
   statements (each needs a source id and a word-for-word quote; the server deletes any it cannot match), fixes come from the rule-based checklist, owner must Confirm before anything is saved to `research_data`.
-  5 runs/person/month. Needs `docs/migrations/2026-10-16_company_scout.sql`, `BRAVE_SEARCH_API_KEY`, OpenRouter credit. NOT verified live. Next: the Weekly plan.
+  5 runs/person/month. Needs `docs/migrations/2026-10-16_company_scout.sql`, `BRAVE_SEARCH_API_KEY`, OpenRouter credit. NOT verified live.
+
+- 2026-10-16: WEEKLY PLAN (`lib/weekly-plan.js`, `/api/weekly-plan/*`, "My week" on the Business Assistant page, admin Weekly Plans). Monday plan (off until the person switches it on) or "Plan my week": up to 5 proposals from confirmed
+  Scout fixes + calendar (only if viewing is on) + reminders; each must cite a real input (the server drops the rest and writes the evidence); AI failure falls back to a plain rules plan. The person presses Draft this / Skip; a draft is text on the page, nothing is sent
+  or saved. The module has no tools, Gmail or calendar access (a test enforces it). 3 a week, 8 a month. Needs `docs/migrations/2026-10-16_weekly_plan.sql`. NOT verified live. Next: the live end-to-end test (needs Irfan's migrations and keys).
+  Known page bug seen in the 375px check (not from this work): on assistant.html the company-profile inputs and a nav link overflow the phone width.
 
 ## Known bugs (open)
 - Bug P: FIXED (`9f42f6c`, `0dbec59`): 8 individual bots, each with its own avatar and name.

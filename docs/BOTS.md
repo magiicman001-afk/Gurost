@@ -56,3 +56,13 @@ Personality is used for conversation only. It is never added to the calls that w
 - Cost caps: 5 runs per person per month (`SCOUT_RUNS_PER_MONTH`), a run counts only once a search or the AI was used, one run at a time, a global daily cap (`SCOUT_GLOBAL_PER_DAY`). A stuck run is closed after 10 minutes.
 - Try the page reader on a real site (internet needed, no cost): `node scripts/scout-try.js https://example.com bakery_cafe`.
 - Not verified live (the sandbox has no outside network). Needs the migration, `BRAVE_SEARCH_API_KEY` and OpenRouter credit.
+
+## Weekly plan (the safe version of "thinking for itself")
+- Code: `lib/weekly-plan.js`, routes `/api/weekly-plan/*` in `server.js`, screen `public/shared/weekly-plan.js` ("My week" on the Business Assistant page), admin tab Weekly Plans (counts only), migration `docs/migrations/2026-10-16_weekly_plan.sql`. This is NOT the older `week-ahead-briefing.js` (platform usage and social drafts); both exist.
+- One assistant, the Planner, proposes up to 5 things for the week from three inputs the person already gave us: confirmed Scout fixes (`company_profiles.research_data`), calendar events for 7 days (ONLY if Calendar is connected and viewing is on) and open reminders (`lib/reminders.js`; there is no separate tasks store yet, so reminders are the task source).
+- Every Monday 7am server time (`WEEKLY_PLAN_CRON`) for people who switched it on (OFF by default) and are on Max/Custom; once per week; a notice is sent. "Plan my week" runs it on demand.
+- Nothing invented: each proposal must name one input id (F fix, E event, R reminder). The server drops any that name nothing real and writes the evidence line itself. Event and reminder text is untrusted and is told to the model as data. If the AI cannot answer, a plain rule-based plan from the top fixes and overdue reminders is shown and labelled.
+- The Planner cannot act: no tool registry, no Gmail, no calendar write, no network. The person presses "Draft this" (that press is the approval) or "Skip". A draft is text on the page with a Copy button; nothing is sent or saved anywhere. A test fails if the module starts touching tools, Gmail or the calendar.
+- Caps: 3 plans a week, 8 a month, a global daily cap, 10 drafts per plan. Stored 90 days; in the export and deletion list.
+- Not built: saving a draft straight to Gmail or adding an event from the plan (both would go through the existing approval cards); per-person time zones for Monday.
+- Not verified live: needs the migration and OpenRouter credit.

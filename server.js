@@ -1023,6 +1023,10 @@ app.get("/api/admin/scout-runs", requireAdminAuth, adminAccess.needs("bots"), as
   try { res.json(await require("./lib/company-scout").shared().adminLog(100)); }
   catch (err) { res.status(503).json({ error: "The Scout log is not ready yet: run docs/migrations/2026-10-16_company_scout.sql in Supabase." }); }
 });
+app.get("/api/admin/weekly-plans", requireAdminAuth, adminAccess.needs("bots"), async (req, res) => {
+  try { res.json(await require("./lib/weekly-plan").shared().adminLog(100)); }
+  catch (err) { res.status(503).json({ error: "The Weekly plan log is not ready yet: run docs/migrations/2026-10-16_weekly_plan.sql in Supabase." }); }
+});
 app.get("/api/admin/build-logs", requireAdminAuth, adminAccess.needs("builds"), validateInput({ query: { projectId: { type: "string", max: 64, pattern: /^[A-Za-z0-9_-]+$/ }, userId: { type: "string", max: 64, pattern: /^[A-Za-z0-9_-]+$/ }, bot: { type: "string", max: 20, pattern: /^[a-z]+$/ }, result: { type: "enum", values: ["success", "fail", "escalate"] }, limit: { type: "int", min: 1, max: 1000 } } }), async (req, res) => {
   try {
     const rows = await buildLog.queryLogs(supabase, { projectId: req.query.projectId, userId: req.query.userId, bot: req.query.bot, result: req.query.result, limit: Number(req.query.limit) || 600, newestFirst: true });
@@ -3199,6 +3203,51 @@ app.post("/api/scout/runs/:id/discard", scoutLimiter, security.rejectUnknownFiel
   if (!isUuid(req.params.id)) return res.status(400).json({ error: "Bad request." });
   try { const out = await scoutService().discard(req.user.id, req.params.id); scoutAudit(req, "scout-discard", out.status === 200, "discarded"); res.status(out.status).json(out.body); }
   catch (err) { console.error("[scout] discard failed:", err.message); res.status(500).json({ error: "Could not discard just now." }); }
+});
+
+// ---------------------------------------------------------------------------
+// Weekly plan: every Monday (if switched on) or on "Plan my week", the Planner proposes up to 5 things to do, from the owner's
+// confirmed Scout fixes, calendar (only if viewing is on) and reminders. The owner ticks what to draft; a draft is text on the
+// page, nothing is sent, saved to Gmail or added to a calendar. See lib/weekly-plan.js.
+// ---------------------------------------------------------------------------
+const weeklyPlanLib = require("./lib/weekly-plan");
+const weeklyPlanLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 120, standardHeaders: true, legacyHeaders: false, keyGenerator: (req) => req.user?.id || req.ip, message: { error: "Too many requests. Please try again a little later." } });
+const weeklyPlanService = () => weeklyPlanLib.shared();
+const weeklyPlanCall = (userId, plan, ip, maxTokens = 1200) => async ({ system, user }) => (await claudeClient.callClaude({ system, messages: [{ role: "user", content: user }], maxTokens, model: modelForTier(plan, { complex: false }), parse: (t) => String(t || "").trim(), context: { userId, ip } })).parsed;
+const weeklyPlanAudit = (req, tool, ok, output) => auditLog.record(require("./lib/db").supabase, { event: "tool_call", userId: req.user.id, botType: "planner", ip: req.ip, tool, ok, input: "", output });
+
+app.get("/api/weekly-plan", weeklyPlanLimiter, async (req, res) => {
+  try { res.json(await weeklyPlanService().current(req.user.id)); }
+  catch (err) { console.error("[weekly-plan] status failed:", err.message); res.status(500).json({ error: "Could not load your plan just now." }); }
+});
+
+app.post("/api/weekly-plan/run", weeklyPlanLimiter, security.rejectUnknownFields([]), auth.requireBusinessAssistant, async (req, res) => {
+  try {
+    const out = await weeklyPlanService().generate(req.user.id, { trigger: "manual", call: weeklyPlanCall(req.user.id, req.user.plan, req.ip) });
+    weeklyPlanAudit(req, "weekly-plan-run", out.status === 200, out.status === 200 ? `${out.body.plan.items.length} items (${out.body.plan.source})` : String(out.body.error || "refused").slice(0, 80));
+    res.status(out.status).json(out.body);
+  } catch (err) { console.error("[weekly-plan] run failed:", err.message); res.status(500).json({ error: "Could not make the plan just now." }); }
+});
+
+app.post("/api/weekly-plan/setting", weeklyPlanLimiter, security.rejectUnknownFields(["enabled"]), auth.requireBusinessAssistant, async (req, res) => {
+  if (typeof req.body.enabled !== "boolean") return res.status(400).json({ error: "Bad request." });
+  try { const out = await weeklyPlanService().setEnabled(req.user.id, req.body.enabled); weeklyPlanAudit(req, "weekly-plan-setting", out.status === 200, req.body.enabled ? "on" : "off"); res.status(out.status).json(out.body); }
+  catch (err) { console.error("[weekly-plan] setting failed:", err.message); res.status(500).json({ error: "Could not save that setting." }); }
+});
+
+app.post("/api/weekly-plan/:id/items/:itemId/decision", weeklyPlanLimiter, security.rejectUnknownFields(["action"]), auth.requireBusinessAssistant, async (req, res) => {
+  if (!isUuid(req.params.id) || !/^i[0-9]{1,2}$/.test(req.params.itemId)) return res.status(400).json({ error: "Bad request." });
+  try { const out = await weeklyPlanService().decide(req.user.id, req.params.id, req.params.itemId, String(req.body.action || "")); weeklyPlanAudit(req, "weekly-plan-" + String(req.body.action || "").slice(0, 10), out.status === 200, "decision"); res.status(out.status).json(out.body); }
+  catch (err) { console.error("[weekly-plan] decision failed:", err.message); res.status(500).json({ error: "Could not save that just now." }); }
+});
+
+app.post("/api/weekly-plan/:id/items/:itemId/draft", weeklyPlanLimiter, security.rejectUnknownFields([]), auth.requireBusinessAssistant, async (req, res) => {
+  if (!isUuid(req.params.id) || !/^i[0-9]{1,2}$/.test(req.params.itemId)) return res.status(400).json({ error: "Bad request." });
+  try {
+    const out = await weeklyPlanService().draft(req.user.id, req.params.id, req.params.itemId, { call: weeklyPlanCall(req.user.id, req.user.plan, req.ip, 700) });
+    weeklyPlanAudit(req, "weekly-plan-draft", out.status === 200, out.status === 200 ? "drafted" : String(out.body.error || "refused").slice(0, 80));
+    res.status(out.status).json(out.body);
+  } catch (err) { console.error("[weekly-plan] draft failed:", err.message); res.status(500).json({ error: "Could not write that draft just now." }); }
 });
 
 app.post("/api/company-profile/findings/:id/social-draft", security.rejectUnknownFields([]), async (req, res) => {
@@ -6903,6 +6952,7 @@ httpServer.listen(PORT, () => {
   reminders.startReminderPolling();
   selfHealing.startHealingLoop();
   weekAheadBriefing.startWeeklyBriefingScheduler();
+  try { weeklyPlanLib.startMondayJob({ callFor: (userId, plan) => weeklyPlanCall(userId, plan, null) }); } catch (err) { console.warn("[weekly-plan] Monday job not started:", err.message); }
   // Daily retention cleanup (lib/retention.js): deletes data older than the privacy policy allows; logs counts only.
   try {
     require("./lib/retention").startRetentionJob(supabase, {

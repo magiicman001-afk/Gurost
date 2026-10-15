@@ -115,6 +115,7 @@ const TABS = [
   { id: 'proactive', label: 'Proactive Log', section: 'bots' },
   { id: 'tools', label: 'Connected Tools', section: 'bots' },
   { id: 'scout', label: 'Scout Runs', section: 'bots' },
+  { id: 'plans', label: 'Weekly Plans', section: 'bots' },
   { id: 'guide', label: 'Guide', section: null }, // every role: the section is null, so it is always shown
 ];
 
@@ -230,6 +231,7 @@ async function loadTab(tab) {
     else if (tab === 'proactive') await renderProactive(el);
     else if (tab === 'tools') await renderTools(el);
     else if (tab === 'scout') await renderScoutRuns(el);
+    else if (tab === 'plans') await renderWeeklyPlans(el);
     else if (tab === 'guide') await AdminGuide.renderGuide(el);
   } catch (err) {
     el.innerHTML = `<p class="text-sm text-red-600">${escapeHtml(err.message)}</p>`;
@@ -659,6 +661,25 @@ async function renderScoutRuns(el) {
   head.appendChild(hr); table.appendChild(head);
   const body = mk('tbody');
   rows.forEach((r) => { const tr = mk('tr'); [new Date(r.when).toLocaleString(), r.user, r.status, r.counted ? 'yes' : 'no', r.searches, r.pages, r.statements, r.fixes, r.removed, r.secs == null ? '-' : r.secs, r.error || '-'].forEach((v) => { const td = mk('td', null, String(v)); td.style.wordBreak = 'break-word'; tr.appendChild(td); }); body.appendChild(tr); });
+  table.appendChild(body); wrap.appendChild(table); el.appendChild(wrap);
+}
+
+// Weekly plans: counts only (never the proposals or drafts). Text only, never HTML.
+async function renderWeeklyPlans(el) {
+  el.textContent = '';
+  const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  let data;
+  try { data = await adminCall('/api/admin/weekly-plans'); }
+  catch (e) { el.appendChild(mk('p', 'text-sm text-red-600', (e && e.message) || 'The Weekly plan log could not be loaded.')); return; }
+  const rows = data.rows || [];
+  el.appendChild(mk('p', 'text-xs text-[var(--muted)] mb-3', 'Each weekly plan the Planner made for a customer. Counts only; the proposals and drafts are never shown here.'));
+  el.appendChild(mk('p', 'text-sm mb-3', rows.length ? 'Total ' + data.total + '    |    ' + Object.entries(data.bySource || {}).map(([k, n]) => k + ': ' + n).join('   ') : 'No plans yet.'));
+  if (!rows.length) return;
+  const wrap = mk('div', 'overflow-x-auto'), table = mk('table'), head = mk('thead'), hr = mk('tr');
+  ['When', 'User', 'Source', 'Trigger', 'Items', 'Approved', 'Drafted', 'Skipped', 'Fixes in', 'Events in', 'Reminders in'].forEach((h) => hr.appendChild(mk('th', null, h)));
+  head.appendChild(hr); table.appendChild(head);
+  const body = mk('tbody');
+  rows.forEach((r) => { const tr = mk('tr'); [new Date(r.when).toLocaleString(), r.user, r.source, r.trigger, r.items, r.approved, r.drafted, r.skipped, r.fixes, r.events, r.reminders].forEach((v) => { const td = mk('td', null, String(v)); td.style.wordBreak = 'break-word'; tr.appendChild(td); }); body.appendChild(tr); });
   table.appendChild(body); wrap.appendChild(table); el.appendChild(wrap);
 }
 

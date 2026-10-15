@@ -87,6 +87,12 @@
     <div id="companyScoutBox"></div>
   </section>
 
+  <!-- Weekly plan: the Planner proposes the week; the owner ticks what to draft; drafts are text only -->
+  <section id="weeklyPlan" class="mb-10 reveal border border-[var(--line)] rounded-2xl p-6">
+    <h2 class="font-display font-bold text-lg mb-1">My week</h2>
+    <div id="weeklyPlanBox"></div>
+  </section>
+
   <!-- What to improve: findings from the company research, each with a Fix button -->
   <section id="companyFindings" class="mb-10 reveal border border-[var(--line)] rounded-2xl p-6" hidden>
     <h2 class="font-display font-bold text-lg mb-1">What to improve</h2>
@@ -223,6 +229,8 @@
 <script src="shared/company-findings.js"></script>
 <script src="shared/company-scout.js"></script>
 <script>try { GurostCompanyScout.mount(document.getElementById("companyScoutBox"), GurostAPI); } catch (e) { /* the page works without Scout */ }</script>
+<script src="shared/weekly-plan.js"></script>
+<script>try { GurostWeeklyPlan.mount(document.getElementById("weeklyPlanBox"), GurostAPI); } catch (e) { /* the page works without the plan */ }</script>
 <script src="shared/voice-vad.js"></script>
 <script src="shared/voice-chat.js"></script>
 <script src="shared/approval-cards.js"></script>
