@@ -2745,6 +2745,30 @@ app.post("/api/bots/:bot/speak", botSpeakLimiter, security.rejectUnknownFields([
   }
 });
 
+// Video calls with a bot (phase 3). Paid plans only; text chat above stays free. LiveKit carries the room, the
+// person's browser does the listening and speaking (public/shared/bot-video-call.js). Nothing but who, which bot and
+// how long is stored (table bot_calls), and a monthly minutes cap applies (lib/livekit.js).
+const botCalls = require("./lib/livekit").createCallService({ db: require("./lib/db").supabase });
+const botCallLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 12, standardHeaders: true, legacyHeaders: false, keyGenerator: (req) => req.user?.id || req.ip, message: { error: "That is a lot of calls for one hour. Please try again a little later." } });
+
+app.get("/api/bots/call/status", async (req, res) => {
+  try { res.json(await botCalls.status({ userId: req.user.id, plan: req.user.plan })); }
+  catch (err) { console.error("[bots] call status failed:", err.message); res.status(500).json({ error: "Could not check calls just now." }); }
+});
+
+app.post("/api/bots/:bot/call/start", botCallLimiter, security.rejectUnknownFields(["recordingConsent"]), async (req, res) => {
+  if (!requireFaceId(req, res)) return;
+  const out = await botCalls.start({ userId: req.user.id, plan: req.user.plan, botId: req.params.bot, recordingConsent: req.body.recordingConsent === true });
+  auditLog.record(require("./lib/db").supabase, { event: "chat", userId: req.user.id, botType: req.params.bot, ip: req.ip, tool: "video-call-start", ok: out.status === 200, input: req.body.recordingConsent === true ? "recording agreed" : "no recording", output: out.status === 200 ? "started" : String(out.body.reason || "failed") });
+  res.status(out.status).json(out.body);
+});
+
+app.post("/api/bots/call/:id/end", async (req, res) => {
+  if (!isUuid(req.params.id)) return res.status(400).json({ error: "Bad request." });
+  const out = await botCalls.end({ userId: req.user.id, callId: req.params.id });
+  res.status(out.status).json(out.body);
+});
+
 // ---------------------------------------------------------------------------
 // Approval gates: actions a bot wants to take wait here for the user's decision.
 // Only the signed-in owner of an action can approve, edit or cancel it.

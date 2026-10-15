@@ -270,6 +270,17 @@
       m.appendChild(b);
     }
 
+    // The call screen lives in its own script, loaded only when someone taps "Video call".
+    function startCall(bot) {
+      function go() { window.GurostBotCall.start(bot, { setState: setState }); }
+      if (window.GurostBotCall) return go();
+      var sc = document.createElement("script");
+      sc.src = "/shared/bot-video-call.js";
+      sc.onload = go;
+      sc.onerror = function () { var log = panel.querySelector(".gbw-log"); if (log) addMsg(log, bot.name, "I could not load the call screen. Please try again.", "gbw-bot-msg gbw-err"); };
+      document.head.appendChild(sc);
+    }
+
     function openPanel(bot, pending) {
       panel.textContent = "";
       panel.hidden = false;
@@ -281,7 +292,9 @@
       t.appendChild(el("span", "", bot.role));
       var x = el("button", "gbw-x", "×"); x.type = "button"; x.setAttribute("aria-label", "Close " + bot.name);
       x.addEventListener("click", closePanel);
-      head.appendChild(img); head.appendChild(t); head.appendChild(x);
+      var vc = el("button", "gbw-call", "Video call"); vc.type = "button"; vc.setAttribute("aria-label", "Start a video call with " + bot.name);
+      vc.addEventListener("click", function () { startCall(bot); });
+      head.appendChild(img); head.appendChild(t); head.appendChild(vc); head.appendChild(x);
       var log = el("div", "gbw-log");
       // A waiting alert replaces the opener: "I'm watching. All good." must never sit above a problem.
       if (!pending) addMsg(log, bot.name, bot.opens, "gbw-bot-msg");

@@ -53,7 +53,8 @@ The Admin area (Software inventory) shows each switch as the code reads it.
 | `GEMINI_API_KEY` | Gemini images (last resort) | Image skipped when nothing else supplies one |
 | `OPENAI_API_KEY` | OpenAI image fallback | Skipped |
 | `DEEPGRAM_API_KEY` | Voice: speech to text, text to speech | Voice says "not set up"; typing still works |
-| `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `LIVEKIT_URL` | Voice rooms / meetings | Meetings unavailable |
+| `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` (or `LIVEKIT_SECRET`), `LIVEKIT_URL` (starts `wss://`) | Voice rooms / meetings and bot video calls | Meetings and calls unavailable |
+| `VIDEO_MINUTES_PER_MONTH` | Call minutes per paid account per month (default 120; one call is at most 30 minutes) | 120 |
 | `POSTMARK_SERVER_TOKEN` (or `POSTMARK_API_KEY`), `POSTMARK_FROM_EMAIL` | Email (password reset, alerts) | Password reset says email is not set up; no account is revealed |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_PRO`, `STRIPE_PRICE_UNLIMITED`, `STRIPE_PRICE_ULTIMATE`, `STRIPE_PRICE_TOPUP_50`, `STRIPE_PRICE_TOPUP_100`, `STRIPE_PRICE_TOPUP_250`, `STRIPE_PRICE_BUSINESS_ASSISTANT_BASE`, `STRIPE_PRICE_BUSINESS_ASSISTANT_BOT` | Payments (not live yet) | Upgrade buttons fail; free plan works |
 | `BILLING_SUCCESS_URL`, `BILLING_CANCEL_URL` | Where Stripe returns people | Code defaults |
@@ -118,7 +119,7 @@ Set by Render itself (never set by hand): `PORT`, `RENDER_GIT_COMMIT`. Local onl
    defaults are wrong.
 5. **Photos:** `PIXABAY_API_KEY`. Optional `FAL_KEY` for premium images.
 6. **Email:** `POSTMARK_SERVER_TOKEN`, `POSTMARK_FROM_EMAIL` (needed for password resets).
-7. **Voice (optional):** `DEEPGRAM_API_KEY`; LiveKit trio for meetings.
+7. **Voice (optional):** `DEEPGRAM_API_KEY`; LiveKit trio for meetings. Bot video calls also need `docs/migrations/2026-10-15_bot_calls.sql` run in Supabase (calls refuse to start without it, so no call can go unmetered), and a paid-plan account to try them.
 8. **Feature switches:** nothing to set — the library, premium looks and escalation are on by default. Set
    `DESIGN_MEMORY=1` when you want learning on. Leave `CSP_ENFORCE` unset until the CSP reports are clean.
 9. **Admin:** `ADMIN_EMAILS`; `RENDER_API_KEY` + `RENDER_SERVICE_ID` for the redeploy button.

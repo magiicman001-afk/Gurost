@@ -67,7 +67,7 @@ Each provider gets only what its one job needs. "May be off" means the feature r
 | fal.ai, Gemini image | Image generation (may be off) | The image description |
 | Pixabay, Unsplash, Openverse | Stock photo search | A search phrase from your business description |
 | Deepgram | Voice to text and back | Your audio while a voice conversation is open |
-| LiveKit | Live voice sessions (may be off) | Audio stream |
+| LiveKit | Video calls with an assistant (paid plans; off until switched on) | Your camera, microphone and any screen you choose to share, while a call is open. The assistant itself is not in the LiveKit room: your browser sends short speech clips to Deepgram to be turned into text, and the text goes to the AI as in any chat. Call recordings are made in your browser and saved on your own device; Gurost does not receive them |
 | Brave Search | Web research for the Research agent | The search phrase |
 | E2B | Sandbox that runs generated code to test it | The generated code for your project |
 | Telegram, WhatsApp (Meta) | Only if you connect your own bot | Messages sent through your bot |
@@ -99,6 +99,7 @@ memory notes if memory is on) go to OpenRouter and the model maker it picks. We 
 | Server and security logs | 30 to 90 days |
 | Session records | Until expired + 30 days |
 | Build logs and events | 90 days |
+| Video call records (which assistant, when, how many seconds; no audio, video or words) | 90 days |
 | Voice recordings | Not kept |
 
 ## 7. Your rights, and how to use them in Gurost

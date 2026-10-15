@@ -17,6 +17,7 @@ Other direct calls are listed in section 3.
 | Pulse | Your instruction, the current page or file, your last few Pulse prompts (from `pulse_learning_log`) | What you typed |
 | Business Assistant bots | Your message, recent conversation, saved memory notes (only if memory is on), company profile fields the tool reads | What you typed; notes the bots saved |
 | The 8 assistant faces (widget chat, 2026-10-15) | Your message, your last 10 messages with that bot, and your project's business description if a project is open. Same gateway and models as other chats; no new provider. "Listen" sends the reply text (max 600 characters) to Deepgram to be spoken | What you typed; your project |
+| Video call with an assistant (2026-10-15, paid plans, off until LiveKit is set up) | Camera, microphone and any shared screen go to LiveKit (WebRTC) for the call. Your speech is cut into short clips and sent to Deepgram for text; the text then goes to the model exactly as in the widget chat; the reply is spoken by Deepgram. The assistant is NOT a LiveKit participant, so LiveKit never carries the assistant's voice. Recording stays in the browser and on your device. Stored by Gurost: which bot, when, seconds (`bot_calls`) | Your voice, camera and screen while the call is open |
 | Research agent | Search phrases (also to Brave Search) | Derived from your request |
 | Reminders, briefings | The reminder or briefing text | What you saved |
 | Meeting bot | Transcript text you provide | What you provided |
