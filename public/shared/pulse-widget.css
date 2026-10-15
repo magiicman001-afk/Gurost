@@ -224,6 +224,7 @@
 #pulseImagePrompt { width: 100%; border: 1px solid #E9E9EF; border-radius: 8px; padding: 8px; font-size: 12px; font-family: inherit; resize: vertical; margin-bottom: 8px; }
 #pulseImageGenerate { width: 100%; background: var(--pulse-orange); color: white; border: none; border-radius: 8px; padding: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
 #pulseImageResult { margin-top: 10px; }
+#pulseImageResult .pulse-image-error { margin: 0; padding: 8px 10px; border-radius: 8px; background: #FFF4F2; border: 1px solid #F3C9C2; color: #8A2A1B; font-size: 12px; line-height: 1.4; }
 #pulseImageResult img { width: 100%; border-radius: 8px; margin-bottom: 8px; }
 #pulseImageResult button { width: 100%; font-size: 11px; padding: 6px; border-radius: 8px; border: 1px solid #E9E9EF; background: white; cursor: pointer; }
 

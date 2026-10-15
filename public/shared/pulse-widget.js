@@ -1140,13 +1140,33 @@
       if (!prompt) { logStatus('Describe the image first.'); return; }
       const resultEl = document.getElementById('pulseImageResult');
       resultEl.innerHTML = '<p>Generating…</p>';
-      const res = await (window.GurostAPI?.fetch || fetch)('/api/image/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description: prompt })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Image generation failed.');
+      // Whatever goes wrong, the panel must stop saying "Generating…" and say what happened, in plain words.
+      const showImageError = (message) => {
+        resultEl.textContent = '';
+        const p = document.createElement('p');
+        p.className = 'pulse-image-error';
+        p.setAttribute('role', 'alert');
+        p.textContent = message;
+        resultEl.appendChild(p);
+      };
+      let data;
+      try {
+        const res = await (window.GurostAPI?.fetch || fetch)('/api/image/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ description: prompt })
+        });
+        data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || `The image service answered with an error (${res.status}).`);
+        if (!data.base64) throw new Error('The image service sent nothing back.');
+      } catch (err) {
+        const raw = String(err && err.message || '');
+        const friendly = /quota|billing|credit|insufficient|exhaust|prepay|payment|\b402\b|\b429\b|rate.?limit/i.test(raw)
+          ? 'Image creation is paused right now: the image service has no credit left. Your site is not affected. Try again later.'
+          : `Could not create the image: ${(safeErr(raw) || 'unknown error').replace(/[.\s]+$/, '')}. Try again, or describe the image differently.`;
+        showImageError(friendly);
+        throw new Error(friendly);
+      }
       const dataUrl = `data:${data.mimeType};base64,${data.base64}`;
       resultEl.innerHTML = `<img src="${escapeText(dataUrl)}" alt="${escapeText(prompt)}"/><button id="pulseImageCopyUrl">Copy as data URL</button>`;
       document.getElementById('pulseImageCopyUrl').addEventListener('click', () => {
