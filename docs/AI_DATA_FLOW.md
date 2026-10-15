@@ -16,6 +16,7 @@ Other direct calls are listed in section 3.
 | Website and App Builder, Amend Website | Your prompt, business name and description, chosen style and industry, the page being edited, uploaded text, your corrections | What you typed or uploaded |
 | Pulse | Your instruction, the current page or file, your last few Pulse prompts (from `pulse_learning_log`) | What you typed |
 | Business Assistant bots | Your message, recent conversation, saved memory notes (only if memory is on), company profile fields the tool reads | What you typed; notes the bots saved |
+| The 8 assistant faces (widget chat, 2026-10-15) | Your message, your last 10 messages with that bot, and your project's business description if a project is open. Same gateway and models as other chats; no new provider. "Listen" sends the reply text (max 600 characters) to Deepgram to be spoken | What you typed; your project |
 | Research agent | Search phrases (also to Brave Search) | Derived from your request |
 | Reminders, briefings | The reminder or briefing text | What you saved |
 | Meeting bot | Transcript text you provide | What you provided |

@@ -22,3 +22,7 @@ Every pass is a row in `bot_handoffs` (`lib/bot-handoff.js`): `from_bot, to_bot,
 
 ## Cost
 No new model calls: still one copywriter call per build, and none for "Show 2 more". No GPU. Tests: `test/eight-bots.test.js`.
+
+## The 8 faces in the widget (Business Assistant 2.0, phases 1-2)
+`public/shared/bot-widgets.js` shows the same 8 bots as a strip on the right edge. Each has a personality in `lib/bot-personalities.js` (tone, opinions, boundaries, hardcoded catchphrases, its own Deepgram voice and playback rate). Chat: `POST /api/bots/:bot/chat` (`lib/bot-chat.js`; advice and drafts only, no tools; 40 chats per account per hour). Speech: `POST /api/bots/:bot/speak` (the voice is chosen by the server from the personality; 60 per hour). Animation states: idle, working, speaking, alert; other scripts can call `GurostBotWidgets.alert(botId, text)` (phase 4 uses this).
+Personality is used for conversation only. It is never added to the calls that write a website's copy or return JSON. Voice names are Deepgram Aura-2 names chosen from their list and not yet heard live: confirm each one on the first real listen.

@@ -19,15 +19,16 @@
   // The 8 faces (public/avatars/<img>.png). `opens` is the first line each one says; phase 2 moves voice and opinions
   // into lib/bot-personalities.js, this table only carries what the widget needs to show.
   var BOTS = [
-    { id: "planner", name: "Planner", img: "planner", color: "#3b6fd4", role: "Plans the work and the next step", opens: "Right, let me think about this properly." },
-    { id: "designer", name: "Designer", img: "designer", color: "#fb7185", role: "Look, layout and colour", opens: "Oh, I've got ideas for this." },
-    { id: "industry", name: "Industry", img: "industry", color: "#2dd4bf", role: "Knows your kind of business", opens: "I know this industry." },
-    { id: "builder", name: "Builder", img: "builder", color: "#fb923c", role: "Builds and fixes the pages", opens: "Let's build it." },
-    { id: "pulse", name: "Pulse", img: "pulse", color: "#fbbf24", role: "Watches for problems", opens: "I'm watching. All good." },
-    { id: "research", name: "Research", img: "research", color: "#a78bfa", role: "Finds things out", opens: "Give me a minute, I'll find it." },
-    { id: "review", name: "Review", img: "review", color: "#f87171", role: "Checks the quality", opens: "Let me check this properly." },
-    { id: "launch", name: "Launch", img: "launch", color: "#4ade80", role: "Gets you live", opens: "Ready when you are." }
+    { id: "planner", rate: 0.96, name: "Planner", img: "planner", color: "#3b6fd4", role: "Plans the work and the next step", opens: "Right, let me think about this properly." },
+    { id: "designer", rate: 1.04, name: "Designer", img: "designer", color: "#fb7185", role: "Look, layout and colour", opens: "Oh, I've got ideas for this." },
+    { id: "industry", rate: 1.0, name: "Industry", img: "industry", color: "#2dd4bf", role: "Knows your kind of business", opens: "I know this industry." },
+    { id: "builder", rate: 1.04, name: "Builder", img: "builder", color: "#fb923c", role: "Builds and fixes the pages", opens: "Let's build it." },
+    { id: "pulse", rate: 0.94, name: "Pulse", img: "pulse", color: "#fbbf24", role: "Watches for problems", opens: "I'm watching. All good." },
+    { id: "research", rate: 1.06, name: "Research", img: "research", color: "#a78bfa", role: "Finds things out", opens: "Give me a minute, I'll find it." },
+    { id: "review", rate: 0.98, name: "Review", img: "review", color: "#f87171", role: "Checks the quality", opens: "Let me check this properly." },
+    { id: "launch", rate: 1.02, name: "Launch", img: "launch", color: "#4ade80", role: "Gets you live", opens: "Ready when you are." }
   ];
+  var STATES = ["idle", "working", "speaking", "alert"];
   var BOT_IDS = BOTS.map(function (b) { return b.id; });
 
   function defaultState() { return { top: null, hidden: [], collapsed: false }; }
@@ -87,17 +88,39 @@
     return null;
   }
 
-  // The default conversation: the Business Assistant route, which needs a paid plan and a project. Every failure is
-  // shown in plain words, never swallowed.
-  async function defaultReply(bot, text) {
+  // The default conversation: this bot's own chat route (its personality, drafts and advice only). Every failure is
+  // shown in plain words, never swallowed. A project is optional: it adds context when the page has one.
+  async function defaultReply(bot, text, history) {
     if (!window.GurostAPI || !window.GurostAPI.call) throw new Error("Chat is not connected on this page yet. Open the builder or your dashboard.");
+    var body = { message: text, history: history || [] };
     var pid = projectIdNow();
-    if (!pid) throw new Error("Open a project first, then I can work on it with you.");
-    var data = await window.GurostAPI.call("/api/assistant", { method: "POST", body: { projectId: pid, task: "(" + bot.name + ") " + text } });
-    var out = data && data.output;
-    var reply = out && (out.content || out.text);
-    if (!reply) throw new Error("I got an empty answer. Please try again.");
-    return typeof reply === "string" ? reply : JSON.stringify(reply);
+    if (pid) body.projectId = pid;
+    var data = await window.GurostAPI.call("/api/bots/" + bot.id + "/chat", { method: "POST", body: body });
+    if (!data || !data.reply) throw new Error("I got an empty answer. Please try again.");
+    return { reply: String(data.reply), catchphrase: data.catchphrase ? String(data.catchphrase) : "" };
+  }
+
+  var audioNow = null;
+  // Speaks text in the bot's own voice (the server picks the voice). Resolves when it ends; rejects with a plain message.
+  async function speakAs(bot, text, onStart) {
+    var f = (window.GurostAPI && window.GurostAPI.fetch) || window.fetch.bind(window);
+    var res = await f("/api/bots/" + bot.id + "/speak", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ text: text }) });
+    if (!res.ok) {
+      var msg = "I could not speak just now. You can read the answer instead.";
+      try { var j = await res.json(); if (j && j.error) msg = j.error; } catch (e) {}
+      throw new Error(msg);
+    }
+    var url = URL.createObjectURL(await res.blob());
+    if (audioNow) { try { audioNow.pause(); } catch (e) {} }
+    var a = new Audio(url);
+    audioNow = a;
+    a.playbackRate = bot.rate || 1;
+    if ("preservesPitch" in a) a.preservesPitch = false; // pitch follows the bot's rate: a slower bot sounds lower
+    return new Promise(function (resolve, reject) {
+      a.onended = function () { URL.revokeObjectURL(url); resolve(); };
+      a.onerror = function () { URL.revokeObjectURL(url); reject(new Error("I could not play that. You can read the answer instead.")); };
+      a.play().then(function () { if (onStart) onStart(); }).catch(function () { reject(new Error("Your browser blocked the sound. Tap Listen again.")); });
+    });
   }
 
   function mount(opts) {
@@ -107,6 +130,9 @@
     try { storage = window.localStorage; } catch (e) {}
     var state = loadState(storage);
     var openId = null;
+    var states = {}; // botId -> "working" | "speaking" | "alert" (idle when absent)
+    var alerts = {}; // botId -> pending alert text
+    var histories = {}; // botId -> last messages, for the model
 
     var host = el("div");
     host.id = "gurostBotWidgets";
@@ -147,6 +173,7 @@
         btn.style.setProperty("--gbw-d", (i * 0.35).toFixed(2) + "s");
         btn.setAttribute("aria-label", b.name + ": " + b.role);
         if (openId === b.id) btn.classList.add("gbw-open");
+        btn.dataset.state = states[b.id] || "idle";
         var img = el("img");
         img.src = "/avatars/" + b.img + ".png";
         img.alt = "";
@@ -193,12 +220,30 @@
     function restoreAll() { state.hidden = []; persist(); renderStrip(); place(); }
     restore.addEventListener("click", restoreAll);
 
+    function setState(id, st) {
+      if (STATES.indexOf(st) < 0 || !botById(id)) return false;
+      if (st === "idle") delete states[id]; else states[id] = st;
+      var b = list.querySelector('[data-bot="' + id + '"]');
+      if (b) b.dataset.state = st;
+      return true;
+    }
+    // A bot speaks up: its avatar flashes until the person opens it, and the message waits inside.
+    function alertBot(id, text) {
+      if (!botById(id)) return false;
+      if (state.hidden.indexOf(id) >= 0) { state.hidden.splice(state.hidden.indexOf(id), 1); persist(); renderStrip(); }
+      alerts[id] = String(text || botById(id).opens).slice(0, 400);
+      setState(id, "alert");
+      return true;
+    }
+
     function closePanel() { openId = null; panel.hidden = true; panel.textContent = ""; renderStrip(); }
 
     function toggleBot(id) {
       if (openId === id) { closePanel(); return; }
       openId = id;
-      openPanel(botById(id));
+      var pending = alerts[id]; delete alerts[id];
+      if (states[id] === "alert") setState(id, "idle");
+      openPanel(botById(id), pending);
       renderStrip();
     }
 
@@ -211,7 +256,21 @@
       return m;
     }
 
-    function openPanel(bot) {
+    // A small Listen button under a bot message: plays it in that bot's own voice.
+    function listenable(m, bot) {
+      var b = el("button", "gbw-listen", "Listen");
+      b.type = "button";
+      b.setAttribute("aria-label", "Listen to " + bot.name);
+      b.addEventListener("click", function () {
+        b.disabled = true; setState(bot.id, "working");
+        speakAs(bot, m.querySelector("p").textContent, function () { setState(bot.id, "speaking"); })
+          .catch(function (err) { var e2 = el("span", "gbw-listen-err", (err && err.message) || "I could not speak just now."); m.appendChild(e2); })
+          .then(function () { b.disabled = false; setState(bot.id, "idle"); });
+      });
+      m.appendChild(b);
+    }
+
+    function openPanel(bot, pending) {
       panel.textContent = "";
       panel.hidden = false;
       panel.style.setProperty("--gbw-c", bot.color);
@@ -224,7 +283,10 @@
       x.addEventListener("click", closePanel);
       head.appendChild(img); head.appendChild(t); head.appendChild(x);
       var log = el("div", "gbw-log");
-      addMsg(log, bot.name, bot.opens, "gbw-bot-msg");
+      // A waiting alert replaces the opener: "I'm watching. All good." must never sit above a problem.
+      if (!pending) addMsg(log, bot.name, bot.opens, "gbw-bot-msg");
+      if (pending) listenable(addMsg(log, bot.name, pending, "gbw-bot-msg gbw-flagged"), bot);
+      (histories[bot.id] || []).forEach(function (h) { var m = addMsg(log, h.role === "user" ? "You" : bot.name, h.content, h.role === "user" ? "gbw-me-msg" : "gbw-bot-msg"); if (h.role !== "user") listenable(m, bot); });
       var form = el("form", "gbw-form");
       var input = el("input"); input.type = "text"; input.maxLength = 600; input.placeholder = "Ask " + bot.name + "…";
       input.setAttribute("aria-label", "Message to " + bot.name);
@@ -237,12 +299,20 @@
         if (!text) return;
         input.value = ""; send.disabled = true;
         addMsg(log, "You", text, "gbw-me-msg");
-        var wait = addMsg(log, bot.name, "Working on it…", "gbw-bot-msg gbw-wait");
-        host.classList.add("gbw-busy");
-        Promise.resolve().then(function () { return (handlers[bot.id] || function (t2) { return defaultReply(bot, t2); })(text); })
-          .then(function (reply) { wait.classList.remove("gbw-wait"); wait.lastChild.textContent = String(reply); })
-          .catch(function (err) { wait.classList.remove("gbw-wait"); wait.classList.add("gbw-err"); wait.lastChild.textContent = (err && err.message) || "That did not work. Please try again."; })
-          .then(function () { send.disabled = false; host.classList.remove("gbw-busy"); log.scrollTop = log.scrollHeight; });
+        var wait = addMsg(log, bot.name, "Working on it\u2026", "gbw-bot-msg gbw-wait");
+        host.classList.add("gbw-busy"); setState(bot.id, "working");
+        var hist = (histories[bot.id] = histories[bot.id] || []);
+        Promise.resolve().then(function () { return (handlers[bot.id] || function (t2) { return defaultReply(bot, t2, hist.slice(-10)); })(text); })
+          .then(function (r) {
+            var reply = r && typeof r === "object" ? String(r.reply) : String(r);
+            wait.classList.remove("gbw-wait"); wait.lastChild.textContent = reply;
+            hist.push({ role: "user", content: text }, { role: "assistant", content: reply });
+            if (hist.length > 20) hist.splice(0, hist.length - 20);
+            if (r && r.catchphrase) wait.appendChild(el("span", "gbw-catch", r.catchphrase));
+            listenable(wait, bot);
+          })
+          .catch(function (err) { wait.classList.remove("gbw-wait"); wait.classList.add("gbw-err"); wait.lastChild.textContent = (err && err.message) || "That did not work. Please try again."; if (state.hidden.indexOf(bot.id) < 0) setState(bot.id, "alert"); setTimeout(function () { if (states[bot.id] === "alert" && !alerts[bot.id]) setState(bot.id, "idle"); }, 1800); })
+          .then(function () { send.disabled = false; host.classList.remove("gbw-busy"); if (states[bot.id] === "working") setState(bot.id, "idle"); log.scrollTop = log.scrollHeight; });
       });
       panel.appendChild(head); panel.appendChild(log); panel.appendChild(form);
       if (!window.matchMedia || !window.matchMedia("(pointer: coarse)").matches) input.focus();
@@ -275,13 +345,18 @@
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && openId) closePanel(); });
     window.addEventListener("resize", place);
     renderStrip(); place();
-    return { host: host, open: toggleBot, close: closePanel, restore: restoreAll, state: function () { return JSON.parse(JSON.stringify(state)); } };
+    return { host: host, setState: setState, alert: alertBot, open: toggleBot, close: closePanel, restore: restoreAll, state: function () { return JSON.parse(JSON.stringify(state)); } };
   }
 
+  var api = null;
   function autoMount() {
-    function go() { try { mount(); } catch (e) { if (window.console) console.warn("[bot-widgets] could not start: " + e.message); } }
+    function go() { try { api.instance = mount(); } catch (e) { if (window.console) console.warn("[bot-widgets] could not start: " + e.message); } }
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", go); else go();
   }
 
-  return { BOTS: BOTS, STORE_KEY: STORE_KEY, clampTop: clampTop, loadState: loadState, saveState: saveState, gesture: gesture, visibleBots: visibleBots, mount: mount, setHandler: setHandler, autoMount: autoMount };
+  api = { BOTS: BOTS, STORE_KEY: STORE_KEY, clampTop: clampTop, loadState: loadState, saveState: saveState, gesture: gesture, visibleBots: visibleBots, STATES: STATES, mount: mount, setHandler: setHandler, autoMount: autoMount,
+    // For other scripts (phase 4 proactive engine): make a bot flash and speak up, or change its animation state.
+    alert: function (id, text) { return api.instance ? api.instance.alert(id, text) : false; },
+    setState: function (id, st) { return api.instance ? api.instance.setState(id, st) : false; } };
+  return api;
 });

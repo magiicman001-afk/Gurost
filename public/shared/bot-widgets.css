@@ -89,3 +89,27 @@
 @media (prefers-reduced-motion: reduce) {
   .gbw-bot { animation: none; transition: none; }
 }
+
+/* Phase 2: animated states. idle = the gentle breathing above; working = active pulse; speaking = glow; alert = colour flash. */
+.gbw-bot[data-state="working"] { animation: gbw-work 0.9s ease-in-out infinite; }
+.gbw-bot[data-state="speaking"] { animation: gbw-speak 1.1s ease-in-out infinite; }
+.gbw-bot[data-state="alert"] { animation: gbw-alert 0.8s steps(2, jump-none) infinite; }
+.gbw-bot[data-state="alert"]::after {
+  content: ""; position: absolute; top: -2px; right: -2px; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--gbw-c); border: 2px solid #0f121c;
+}
+@keyframes gbw-work { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 2px var(--gbw-c); } 50% { transform: scale(1.12); box-shadow: 0 0 0 5px color-mix(in srgb, var(--gbw-c) 45%, transparent); } }
+@keyframes gbw-speak { 0%, 100% { box-shadow: 0 0 6px 1px var(--gbw-c); } 50% { box-shadow: 0 0 20px 7px var(--gbw-c); } }
+@keyframes gbw-alert { 0% { background: color-mix(in srgb, var(--gbw-c) 22%, #0f121c); } 100% { background: var(--gbw-c); } }
+.gbw-listen { align-self: flex-start; margin-top: 4px; border: 1px solid rgba(255, 255, 255, 0.25); background: transparent; color: inherit; font-size: 11px; border-radius: 8px; padding: 2px 8px; cursor: pointer; }
+.gbw-listen:disabled { opacity: 0.5; cursor: default; }
+.gbw-listen-err { display: block; font-size: 11px; margin-top: 4px; color: #fca5a5; }
+.gbw-catch { display: block; font-size: 11.5px; font-style: italic; opacity: 0.75; margin-top: 3px; }
+.gbw-flagged { box-shadow: inset 3px 0 0 var(--gbw-c); }
+@media (prefers-reduced-motion: reduce) {
+  /* motion off, but the state must still be visible: a steady ring, and the alert dot stays */
+  .gbw-bot[data-state] { animation: none; }
+  .gbw-bot[data-state="working"] { box-shadow: 0 0 0 4px color-mix(in srgb, var(--gbw-c) 55%, transparent); }
+  .gbw-bot[data-state="speaking"] { box-shadow: 0 0 14px 4px var(--gbw-c); }
+  .gbw-bot[data-state="alert"] { background: var(--gbw-c); }
+}

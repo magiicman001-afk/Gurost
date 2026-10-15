@@ -2697,6 +2697,55 @@ app.post("/api/department-bots/:bot/chat", security.rejectUnknownFields(["messag
 });
 
 // ---------------------------------------------------------------------------
+// THE 8 FACES (Business Assistant 2.0, phase 2): Planner, Designer, Industry, Builder, Pulse, Research,
+// Review, Launch. Each has its own personality and voice (lib/bot-personalities.js). Chat only: advice and
+// drafts, no tools, so nothing is sent, published or changed from here. Cost cap: 40 chats and 60 spoken
+// replies per account per hour (on top of the general per-account limit).
+// ---------------------------------------------------------------------------
+const botPersonalities = require("./lib/bot-personalities");
+const botChatLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 40, standardHeaders: true, legacyHeaders: false, keyGenerator: (req) => req.user?.id || req.ip, message: { error: "That is a lot of chatting for one hour. Please try again a little later." } });
+const botSpeakLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 60, standardHeaders: true, legacyHeaders: false, keyGenerator: (req) => req.user?.id || req.ip, message: { error: "That is a lot of spoken replies for one hour. Please try again a little later." } });
+const requireFaceId = (req, res) => {
+  if (botPersonalities.has(req.params.bot)) return true;
+  res.status(404).json({ error: "Unknown assistant." });
+  return false;
+};
+
+app.get("/api/bots/personalities", (req, res) => res.json({ bots: botPersonalities.publicView() }));
+
+app.post("/api/bots/:bot/chat", botChatLimiter, security.rejectUnknownFields(["message", "history", "projectId"]), async (req, res) => {
+  if (!requireFaceId(req, res)) return;
+  const message = security.sanitizeText(req.body.message, 4000);
+  if (!message) return res.status(400).json({ error: "Write a message first." });
+  // Project details are used only when the project is this person's own (or the caller is an admin).
+  let context = "";
+  const proj = typeof req.body.projectId === "string" ? PROJECTS.get(req.body.projectId) : null;
+  if (proj && (proj.userId === req.user.id || auth.isAdmin(req.user.email))) context = String(proj.prompt || "");
+  const chat = require("./lib/bot-chat").createBotChat({ claudeClient, modelRouter, friendlyError: () => "I could not answer just now. Please try again in a moment." });
+  const out = await chat.run({ userId: req.user.id, plan: req.user.plan, ip: req.ip, botId: req.params.bot, message, history: req.body.history, context });
+  auditLog.record(require("./lib/db").supabase, { event: "chat", userId: req.user.id, botType: req.params.bot, ip: req.ip, tool: "face-chat", ok: out.status === 200, input: `[${message.length} chars]`, output: out.status === 200 ? "replied" : "failed" });
+  res.status(out.status).json(out.body);
+});
+
+// Speaks text in the bot's own voice. The voice comes from the personality table, never from the request.
+app.post("/api/bots/:bot/speak", botSpeakLimiter, security.rejectUnknownFields(["text"]), async (req, res) => {
+  if (!requireFaceId(req, res)) return;
+  if (!voiceChat.voiceAvailable()) return res.status(503).json({ error: "Voice is not set up yet. You can read the answer instead." });
+  const text = voiceChat.plainSpeech(security.sanitizeText(req.body.text, 1500)).slice(0, voiceChat.MAX_SPOKEN_CHARS);
+  if (!text) return res.status(400).json({ error: "Nothing to say." });
+  try {
+    const v = botPersonalities.voiceFor(req.params.bot);
+    const audio = await require("./guide/voice-client").speak(text, v.model);
+    res.set("Content-Type", "audio/mpeg");
+    res.set("X-Bot-Rate", String(v.rate));
+    res.send(audio);
+  } catch (err) {
+    console.error("[bots] speak failed:", err.message);
+    res.status(502).json({ error: "I could not speak just now. You can read the answer instead." });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // Approval gates: actions a bot wants to take wait here for the user's decision.
 // Only the signed-in owner of an action can approve, edit or cancel it.
 // ---------------------------------------------------------------------------
