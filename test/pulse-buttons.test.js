@@ -16,3 +16,14 @@ test("Image: a failure replaces 'Generating…' with a plain message, and a spen
   assert.match(block, /if \(!data\.base64\)/, "an empty answer is an error, not a blank panel");
   assert.match(css, /\.pulse-image-error/);
 });
+
+test("Upload: the uploaded file is shown with its link, only https links are used, and the card offers 'Use it on my site'", () => {
+  assert.match(widget, /id="pulseUploadResult"/);
+  assert.match(widget, /showUploadResult\(data\)/);
+  const fn = widget.slice(widget.indexOf("function showUploadResult"), widget.indexOf("// Real, shared wrapper for every action button"));
+  assert.match(fn, /\^https:/, "only an https link is used");
+  assert.match(fn, /Use it on my site/);
+  assert.match(fn, /textContent = `Uploaded:/, "the file name is written as text, never as markup");
+  assert.ok(!/innerHTML/.test(fn), "no markup is built from the file name or link");
+  assert.match(css, /#pulseUploadResult\.visible/);
+});

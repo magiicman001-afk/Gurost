@@ -606,6 +606,7 @@
           <div id="pulseHistoryPanel" class="hidden">
             <div id="pulseHistoryList"></div>
           </div>
+          <div id="pulseUploadResult" class="hidden"></div>
           <input type="file" id="pulseUploadInput" class="hidden" style="display:none;"/>
         </div>
       </div>
@@ -1280,8 +1281,49 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Upload failed.');
         logStatus('Uploaded: ' + data.fileName);
+        showUploadResult(data);
       });
     });
+  }
+
+  // After an upload: show what was uploaded and what can be done with it. The file is stored, but it is not on the site
+  // until the person asks for it, so the card offers the link and a ready-made start of that request.
+  function showUploadResult(data) {
+    const box = document.getElementById('pulseUploadResult');
+    if (!box) return;
+    box.textContent = '';
+    const url = typeof data.url === 'string' && /^https:\/\//i.test(data.url) ? data.url : '';
+    if (!url) { box.classList.remove('visible'); return; }
+    if (/\.(png|jpe?g|webp|gif|svg)(\?|$)/i.test(url)) {
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = String(data.fileName || 'Uploaded image');
+      box.appendChild(img);
+    }
+    const name = document.createElement('p');
+    name.textContent = `Uploaded: ${data.fileName || 'your file'}. It is saved, but not on your site yet.`;
+    box.appendChild(name);
+    const use = document.createElement('button');
+    use.type = 'button';
+    use.textContent = 'Use it on my site';
+    use.addEventListener('click', () => {
+      togglePanel(true);
+      const textarea = document.getElementById('pulseTextArea');
+      textarea.value = `Use this picture on my site: ${url} as `;
+      textarea.focus();
+      logStatus('Finish the sentence (for example "the main picture at the top") and send it.', { feed: false });
+    });
+    const copy = document.createElement('button');
+    copy.type = 'button';
+    copy.textContent = 'Copy link';
+    copy.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(url); logStatus('Link copied.', { feed: false }); }
+      catch { logStatus('Could not copy. The link is: ' + url, { feed: false }); }
+    });
+    const row = document.createElement('div');
+    row.append(use, copy);
+    box.appendChild(row);
+    box.classList.add('visible');
   }
 
   // Real, shared wrapper for every action button - disables the
