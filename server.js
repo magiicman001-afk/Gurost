@@ -1019,6 +1019,10 @@ app.get("/api/admin/connected-tools", requireAdminAuth, adminAccess.needs("bots"
   try { res.json(require("./lib/connected-tools").build({ gmail: await gmailLib.shared().adminSummary(), calendar: await calendarLib.shared().adminSummary() })); }
   catch (err) { console.error("[admin] connected tools failed:", err.message); res.status(500).json({ error: "Could not check the connected tools." }); }
 });
+app.get("/api/admin/scout-runs", requireAdminAuth, adminAccess.needs("bots"), async (req, res) => {
+  try { res.json(await require("./lib/company-scout").shared().adminLog(100)); }
+  catch (err) { res.status(503).json({ error: "The Scout log is not ready yet: run docs/migrations/2026-10-16_company_scout.sql in Supabase." }); }
+});
 app.get("/api/admin/build-logs", requireAdminAuth, adminAccess.needs("builds"), validateInput({ query: { projectId: { type: "string", max: 64, pattern: /^[A-Za-z0-9_-]+$/ }, userId: { type: "string", max: 64, pattern: /^[A-Za-z0-9_-]+$/ }, bot: { type: "string", max: 20, pattern: /^[a-z]+$/ }, result: { type: "enum", values: ["success", "fail", "escalate"] }, limit: { type: "int", min: 1, max: 1000 } } }), async (req, res) => {
   try {
     const rows = await buildLog.queryLogs(supabase, { projectId: req.query.projectId, userId: req.query.userId, bot: req.query.bot, result: req.query.result, limit: Number(req.query.limit) || 600, newestFirst: true });
@@ -3147,6 +3151,54 @@ app.get("/api/company-profile/findings", async (req, res) => {
     console.error("[company-profile] findings failed:", err.message);
     res.status(500).json({ error: "Could not load your findings." });
   }
+});
+
+// ---------------------------------------------------------------------------
+// Company Scout: reads the owner's public website, searches the web, and WRITES the findings (research_data) the screens above
+// show, but only after the owner presses Confirm. 5 runs a month per person. See lib/company-scout.js.
+// ---------------------------------------------------------------------------
+const scoutLib = require("./lib/company-scout");
+const scoutLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 60, standardHeaders: true, legacyHeaders: false, keyGenerator: (req) => req.user?.id || req.ip, message: { error: "Too many requests. Please try again a little later." } });
+const scoutService = () => scoutLib.shared();
+const scoutAudit = (req, tool, ok, output) => auditLog.record(require("./lib/db").supabase, { event: "tool_call", userId: req.user.id, botType: "research", ip: req.ip, tool, ok, input: "", output });
+
+app.get("/api/scout/status", scoutLimiter, async (req, res) => {
+  try { res.json(await scoutService().latest(req.user.id)); }
+  catch (err) { console.error("[scout] status failed:", err.message); res.status(500).json({ error: "Could not check Scout just now." }); }
+});
+
+app.post("/api/scout/run", scoutLimiter, security.rejectUnknownFields([]), auth.requireBusinessAssistant, async (req, res) => {
+  try {
+    const row = await loadProfileWithResearch(req.user.id);
+    if (!row) return res.status(400).json({ error: "Fill in your company profile first (name and website), then scout." });
+    const profile = { ...profileFromRow(row), industryLabel: (companyProfile.INDUSTRIES.find((i) => i.id === row.industry) || {}).label };
+    const out = await scoutService().start(req.user.id, profile, {
+      call: async ({ system, user }) => (await claudeClient.callClaude({ system, messages: [{ role: "user", content: user }], maxTokens: 1800, model: modelForTier(req.user.plan, { complex: false }), parse: (t) => String(t || "").trim(), context: { userId: req.user.id, ip: req.ip } })).parsed
+    });
+    scoutAudit(req, "scout-start", out.status === 200, out.status === 200 ? "started" : String(out.body.error || "refused").slice(0, 80));
+    res.status(out.status).json(out.body);
+  } catch (err) { console.error("[scout] run failed:", err.message); res.status(500).json({ error: "Could not start Scout just now." }); }
+});
+
+app.get("/api/scout/runs/:id", scoutLimiter, async (req, res) => {
+  if (!isUuid(req.params.id)) return res.status(400).json({ error: "Bad request." });
+  try { const r = await scoutService().get(req.user.id, req.params.id); r ? res.json(r) : res.status(404).json({ error: "That scout was not found." }); }
+  catch (err) { console.error("[scout] get failed:", err.message); res.status(500).json({ error: "Could not load that scout." }); }
+});
+
+app.post("/api/scout/runs/:id/confirm", scoutLimiter, security.rejectUnknownFields(["drop"]), async (req, res) => {
+  if (!isUuid(req.params.id)) return res.status(400).json({ error: "Bad request." });
+  try {
+    const out = await scoutService().confirm(req.user.id, req.params.id, { drop: req.body.drop });
+    scoutAudit(req, "scout-confirm", out.status === 200, out.status === 200 ? `${out.body.kept} items kept` : "not confirmed");
+    res.status(out.status).json(out.body);
+  } catch (err) { console.error("[scout] confirm failed:", err.message); res.status(500).json({ error: "Could not confirm just now." }); }
+});
+
+app.post("/api/scout/runs/:id/discard", scoutLimiter, security.rejectUnknownFields([]), async (req, res) => {
+  if (!isUuid(req.params.id)) return res.status(400).json({ error: "Bad request." });
+  try { const out = await scoutService().discard(req.user.id, req.params.id); scoutAudit(req, "scout-discard", out.status === 200, "discarded"); res.status(out.status).json(out.body); }
+  catch (err) { console.error("[scout] discard failed:", err.message); res.status(500).json({ error: "Could not discard just now." }); }
 });
 
 app.post("/api/company-profile/findings/:id/social-draft", security.rejectUnknownFields([]), async (req, res) => {

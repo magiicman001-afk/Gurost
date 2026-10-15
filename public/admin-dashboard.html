@@ -114,6 +114,7 @@ const TABS = [
   { id: 'audit', label: 'Assistant Audit', section: 'security' },
   { id: 'proactive', label: 'Proactive Log', section: 'bots' },
   { id: 'tools', label: 'Connected Tools', section: 'bots' },
+  { id: 'scout', label: 'Scout Runs', section: 'bots' },
   { id: 'guide', label: 'Guide', section: null }, // every role: the section is null, so it is always shown
 ];
 
@@ -228,6 +229,7 @@ async function loadTab(tab) {
     else if (tab === 'audit') await renderAudit(el);
     else if (tab === 'proactive') await renderProactive(el);
     else if (tab === 'tools') await renderTools(el);
+    else if (tab === 'scout') await renderScoutRuns(el);
     else if (tab === 'guide') await AdminGuide.renderGuide(el);
   } catch (err) {
     el.innerHTML = `<p class="text-sm text-red-600">${escapeHtml(err.message)}</p>`;
@@ -639,6 +641,25 @@ async function renderTools(el) {
     if (t.note) card.appendChild(mk('p', 'text-xs text-[var(--muted)] mt-1', t.note));
     el.appendChild(card);
   });
+}
+
+// Company Scout runs: counts and timings only (never what was found). Text only, never HTML.
+async function renderScoutRuns(el) {
+  el.textContent = '';
+  const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  let data;
+  try { data = await adminCall('/api/admin/scout-runs'); }
+  catch (e) { el.appendChild(mk('p', 'text-sm text-red-600', (e && e.message) || 'The Scout log could not be loaded.')); return; }
+  const rows = data.rows || [];
+  el.appendChild(mk('p', 'text-xs text-[var(--muted)] mb-3', 'Each time a customer scouted their own business. Counts and timings only; what Scout found is never shown here.'));
+  el.appendChild(mk('p', 'text-sm mb-3', rows.length ? 'Total ' + data.total + '    |    ' + Object.entries(data.byStatus || {}).map(([k, n]) => k + ': ' + n).join('   ') : 'No scouts yet.'));
+  if (!rows.length) return;
+  const wrap = mk('div', 'overflow-x-auto'), table = mk('table'), head = mk('thead'), hr = mk('tr');
+  ['When', 'User', 'Status', 'Counted', 'Searches', 'Pages', 'Statements', 'Fixes', 'Removed', 'Secs', 'Error'].forEach((h) => hr.appendChild(mk('th', null, h)));
+  head.appendChild(hr); table.appendChild(head);
+  const body = mk('tbody');
+  rows.forEach((r) => { const tr = mk('tr'); [new Date(r.when).toLocaleString(), r.user, r.status, r.counted ? 'yes' : 'no', r.searches, r.pages, r.statements, r.fixes, r.removed, r.secs == null ? '-' : r.secs, r.error || '-'].forEach((v) => { const td = mk('td', null, String(v)); td.style.wordBreak = 'break-word'; tr.appendChild(td); }); body.appendChild(tr); });
+  table.appendChild(body); wrap.appendChild(table); el.appendChild(wrap);
 }
 
 // Business Assistant audit trail: newest first, with filters. Every value is

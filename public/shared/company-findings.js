@@ -26,6 +26,8 @@
     var c = el('div', 'rounded-xl border border-[var(--line)] p-4');
     c.appendChild(el('h3', 'font-semibold text-sm mb-1', f.title));
     if (f.why) c.appendChild(el('p', 'text-sm text-[var(--muted)] mb-2', f.why));
+    if (f.evidence) c.appendChild(el('p', 'text-xs text-[var(--muted)] mb-2', f.evidence));
+    if (f.source && f.source.url) { var sl = el('p', 'text-xs text-[var(--muted)] mb-2', 'Source: ' + f.source.url.replace(/^https?:\/\/(www\.)?/, '').slice(0, 80) + (f.readAt ? ' · read ' + String(f.readAt).slice(0, 10) : '') + ' · Public information - can be wrong'); c.appendChild(sl); }
     var tags = el('div', 'flex flex-wrap gap-2 mb-3');
     tags.appendChild(chip(f.quickWin ? 'Quick win' : 'Bigger project'));
     tags.appendChild(chip(AREA[f.area] || f.area));
@@ -65,6 +67,20 @@
     }
   }
 
+  function renderScout(box, s) {
+    box.appendChild(el('p', 'text-xs font-semibold text-[var(--muted)] mb-2', s.label + (s.ranAt ? ' · scouted ' + String(s.ranAt).slice(0, 10) : '')));
+    [['What your business does', s.summary], ['How you compare', s.competitors]].forEach(function (part) {
+      if (!part[1] || !part[1].length) return;
+      box.appendChild(el('h3', 'font-semibold text-sm mb-1', part[0]));
+      part[1].forEach(function (c) {
+        var row = el('div', 'text-sm mb-2');
+        row.appendChild(el('p', null, (c.name ? c.name + ': ' : '') + c.text));
+        row.appendChild(el('p', 'text-xs text-[var(--muted)]', (c.source && c.source.url ? 'Source: ' + c.source.url.replace(/^https?:\/\/(www\.)?/, '').slice(0, 80) : '') + (c.readAt ? ' · read ' + String(c.readAt).slice(0, 10) : '')));
+        box.appendChild(row);
+      });
+    });
+  }
+
   async function load() {
     try {
       var data = await GurostAPI.call('/api/company-profile/findings');
@@ -72,8 +88,9 @@
       if (data.amendKey) amendKey = data.amendKey;
       root.hidden = false;
       var list = document.getElementById('cfList'); list.textContent = '';
+      var sc = document.getElementById('cfScout'); if (sc) { sc.textContent = ''; if (data.scout) renderScout(sc, data.scout); }
       if (!data.researched) {
-        document.getElementById('cfIntro').textContent = 'No research has been run on your company yet. When it has, what to improve will show up here.';
+        document.getElementById('cfIntro').textContent = 'No research has been confirmed yet. Press "Scout my business" above; once you confirm it, what to improve shows up here.';
         return;
       }
       if (!data.findings.length) {

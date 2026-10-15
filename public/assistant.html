@@ -81,10 +81,17 @@
     </div>
   </section>
 
+  <!-- Company Scout: reads the public website and the web, shows the result, and only a Confirm saves it -->
+  <section id="companyScout" class="mb-10 reveal border border-[var(--line)] rounded-2xl p-6">
+    <h2 class="font-display font-bold text-lg mb-1">Scout my business</h2>
+    <div id="companyScoutBox"></div>
+  </section>
+
   <!-- What to improve: findings from the company research, each with a Fix button -->
   <section id="companyFindings" class="mb-10 reveal border border-[var(--line)] rounded-2xl p-6" hidden>
     <h2 class="font-display font-bold text-lg mb-1">What to improve</h2>
     <p id="cfIntro" class="text-sm text-[var(--muted)] mb-4"></p>
+    <div id="cfScout" class="mb-4"></div>
     <div id="cfList" class="grid gap-3"></div>
   </section>
 
@@ -214,6 +221,8 @@
 <script src="shared/pulse-voice.js"></script>
 <script src="shared/company-profile.js"></script>
 <script src="shared/company-findings.js"></script>
+<script src="shared/company-scout.js"></script>
+<script>try { GurostCompanyScout.mount(document.getElementById("companyScoutBox"), GurostAPI); } catch (e) { /* the page works without Scout */ }</script>
 <script src="shared/voice-vad.js"></script>
 <script src="shared/voice-chat.js"></script>
 <script src="shared/approval-cards.js"></script>

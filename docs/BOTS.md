@@ -47,3 +47,12 @@ Personality is used for conversation only. It is never added to the calls that w
 - `calendar_create_event` is `needsApproval` (parked in `assistant_pending_actions`, 30 minutes). It adds ONE event, never with guests (`sendUpdates=none`), 20 a day max. The older `calendar_event` tool (card + .ics) stays as the draft.
 - No change or delete: no tool, no PUT/PATCH/DELETE call (a test scans). Honest limit: Google has no add-only permission, so the create scope technically also covers change and delete; the guarantee is our code.
 - Not verified live. Needs the Google OAuth client, the second redirect, the migration and (for customers) Google verification.
+
+## Company Scout (the research step behind "What to improve")
+- Code: `lib/company-scout.js`, routes `/api/scout/*` in `server.js`, screen `public/shared/company-scout.js` (Business Assistant page), admin tab Scout Runs. Confirmed results are stored in `company_profiles.research_data`, which the findings screens (`lib/fix-it.js`) and the assistants (`lib/tools/company-profile.js`) already read.
+- Reads: the owner's OWN public website (home page plus up to 4 linked pages such as About or Contact; robots.txt obeyed; every redirect hop checked by `assertSafeUrl`; HTML only; 400 KB cap) and up to 4 Brave searches (name reviews, similar businesses, name plus domain, one social handle via a `site:` search). It does NOT log in anywhere and does NOT read social networks: for a handle it sees only public search snippets.
+- Nothing invented: the AI must give a source id and a word-for-word quote (25-200 chars) for each statement; the server deletes any statement whose quote is not in that source and tells the owner how many were removed. The fix list comes from `lib/industry-checklists.js` (plain rules, no AI) with the evidence found or "not found in the pages I read".
+- Every statement and fix shows its source link and the date it was read, under the label "Public information - can be wrong". Nothing is used until the owner presses Confirm (and each item can be removed first).
+- Cost caps: 5 runs per person per month (`SCOUT_RUNS_PER_MONTH`), a run counts only once a search or the AI was used, one run at a time, a global daily cap (`SCOUT_GLOBAL_PER_DAY`). A stuck run is closed after 10 minutes.
+- Try the page reader on a real site (internet needed, no cost): `node scripts/scout-try.js https://example.com bakery_cafe`.
+- Not verified live (the sandbox has no outside network). Needs the migration, `BRAVE_SEARCH_API_KEY` and OpenRouter credit.

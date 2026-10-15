@@ -183,6 +183,10 @@ If anything fails: `git revert` the update commit (small, logged) and write the 
   no change/delete code. Off until Google client id/secret (Gmail pair is the fallback) and `SECRETS_KEY` are on Render and `docs/migrations/2026-10-16_calendar_connections.sql` is run. NOT verified live.
   Business Assistant 2.0 phases 1-7 are all built.
 
+- 2026-10-16: COMPANY SCOUT (`lib/company-scout.js`, `/api/scout/*`, "Scout my business" on the Business Assistant page, admin Scout Runs). Reads the owner's public website + up to 4 Brave searches, AI writes sourced
+  statements (each needs a source id and a word-for-word quote; the server deletes any it cannot match), fixes come from the rule-based checklist, owner must Confirm before anything is saved to `research_data`.
+  5 runs/person/month. Needs `docs/migrations/2026-10-16_company_scout.sql`, `BRAVE_SEARCH_API_KEY`, OpenRouter credit. NOT verified live. Next: the Weekly plan.
+
 ## Known bugs (open)
 - Bug P: FIXED (`9f42f6c`, `0dbec59`): 8 individual bots, each with its own avatar and name.
 - Bug BB: FIXED (`2008b66`): the preview page's sticky controls covered the section on phones.
