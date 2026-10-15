@@ -119,7 +119,7 @@ Set by Render itself (never set by hand): `PORT`, `RENDER_GIT_COMMIT`. Local onl
    defaults are wrong.
 5. **Photos:** `PIXABAY_API_KEY`. Optional `FAL_KEY` for premium images.
 6. **Email:** `POSTMARK_SERVER_TOKEN`, `POSTMARK_FROM_EMAIL` (needed for password resets).
-7. **Voice (optional):** `DEEPGRAM_API_KEY`; LiveKit trio for meetings. Bot video calls also need `docs/migrations/2026-10-15_bot_calls.sql` run in Supabase (calls refuse to start without it, so no call can go unmetered), and a paid-plan account to try them.
+7. **Voice (optional):** `DEEPGRAM_API_KEY`; LiveKit trio for meetings. Bot video calls also need `docs/migrations/2026-10-15_bot_calls.sql` run in Supabase (calls refuse to start without it, so no call can go unmetered), and a paid-plan account to try them. Proactive nudges need `docs/migrations/2026-10-15_bot_nudges.sql` (nobody is nudged until it is run).
 8. **Feature switches:** nothing to set — the library, premium looks and escalation are on by default. Set
    `DESIGN_MEMORY=1` when you want learning on. Leave `CSP_ENFORCE` unset until the CSP reports are clean.
 9. **Admin:** `ADMIN_EMAILS`; `RENDER_API_KEY` + `RENDER_SERVICE_ID` for the redeploy button.

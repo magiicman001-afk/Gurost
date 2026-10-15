@@ -131,7 +131,8 @@
     var state = loadState(storage);
     var openId = null;
     var states = {}; // botId -> "working" | "speaking" | "alert" (idle when absent)
-    var alerts = {}; // botId -> pending alert text
+    var alerts = {}; // botId -> { text, why, id } waiting for the person
+    var notes = {}; // botId -> true while a quiet note is waiting
     var histories = {}; // botId -> last messages, for the model
 
     var host = el("div");
@@ -174,6 +175,7 @@
         btn.setAttribute("aria-label", b.name + ": " + b.role);
         if (openId === b.id) btn.classList.add("gbw-open");
         btn.dataset.state = states[b.id] || "idle";
+        if (notes[b.id]) btn.dataset.note = "1";
         var img = el("img");
         img.src = "/avatars/" + b.img + ".png";
         img.alt = "";
@@ -227,12 +229,16 @@
       if (b) b.dataset.state = st;
       return true;
     }
-    // A bot speaks up: its avatar flashes until the person opens it, and the message waits inside.
-    function alertBot(id, text) {
+    // A bot speaks up: its avatar flashes (or, for a quiet note, shows a steady dot) until the person opens it, and the
+    // message waits inside. opts: { why: "the evidence line", id: "nudge id", soft: true for a quiet note }.
+    function alertBot(id, text, opts) {
+      opts = opts || {};
       if (!botById(id)) return false;
       if (state.hidden.indexOf(id) >= 0) { state.hidden.splice(state.hidden.indexOf(id), 1); persist(); renderStrip(); }
-      alerts[id] = String(text || botById(id).opens).slice(0, 400);
-      setState(id, "alert");
+      alerts[id] = { text: String(text || botById(id).opens).slice(0, 500), why: opts.why ? String(opts.why).slice(0, 300) : "", id: opts.id || null };
+      var b = list.querySelector('[data-bot="' + id + '"]');
+      if (opts.soft) { notes[id] = true; if (b) b.dataset.note = "1"; }
+      else setState(id, "alert");
       return true;
     }
 
@@ -241,7 +247,7 @@
     function toggleBot(id) {
       if (openId === id) { closePanel(); return; }
       openId = id;
-      var pending = alerts[id]; delete alerts[id];
+      var pending = alerts[id]; delete alerts[id]; delete notes[id];
       if (states[id] === "alert") setState(id, "idle");
       openPanel(botById(id), pending);
       renderStrip();
@@ -255,6 +261,26 @@
       log.scrollTop = log.scrollHeight;
       return m;
     }
+
+    // ---- proactive nudges (phase 4): ask the server every minute whether a bot has something to say ----
+    var nudgeMode = "normal", knownNudges = {};
+    function nudgeOk() { try { return !!(window.GurostAPI && window.GurostAPI.call && /(?:^|;\s*)gurost_li=1(?:;|$)/.test(document.cookie)); } catch (e) { return false; } }
+    function nudgeCall(path, method, body) { if (!nudgeOk()) return Promise.resolve(null); return window.GurostAPI.call(path, { method: method || "GET", body: body }).catch(function () { return null; }); }
+    function pollNudges() {
+      if (!nudgeOk() || document.visibilityState === "hidden") return;
+      var pid = projectIdNow();
+      nudgeCall("/api/bots/nudges" + (pid ? "?projectId=" + encodeURIComponent(pid) : "")).then(function (r) {
+        if (!r) return;
+        if (r.mode) nudgeMode = r.mode;
+        (r.nudges || []).forEach(function (n) {
+          if (!n || !n.id || knownNudges[n.id]) return;
+          knownNudges[n.id] = true;
+          alertBot(n.bot, n.text, { why: n.why, id: n.id, soft: n.severity !== "alert" });
+        });
+      });
+    }
+    setTimeout(pollNudges, 3000);
+    setInterval(pollNudges, 60000);
 
     // A small Listen button under a bot message: plays it in that bot's own voice.
     function listenable(m, bot) {
@@ -298,7 +324,17 @@
       var log = el("div", "gbw-log");
       // A waiting alert replaces the opener: "I'm watching. All good." must never sit above a problem.
       if (!pending) addMsg(log, bot.name, bot.opens, "gbw-bot-msg");
-      if (pending) listenable(addMsg(log, bot.name, pending, "gbw-bot-msg gbw-flagged"), bot);
+      if (pending) {
+        var fm = addMsg(log, bot.name, pending.text, "gbw-bot-msg gbw-flagged");
+        if (pending.why) fm.appendChild(el("span", "gbw-why", "Because: " + pending.why));
+        listenable(fm, bot);
+        if (pending.id) {
+          nudgeCall("/api/bots/nudges/" + pending.id + "/seen", "POST");
+          var gotit = el("button", "gbw-listen", "Got it"); gotit.type = "button";
+          gotit.addEventListener("click", function () { nudgeCall("/api/bots/nudges/" + pending.id + "/dismissed", "POST"); gotit.disabled = true; gotit.textContent = "Noted"; });
+          fm.appendChild(gotit);
+        }
+      }
       (histories[bot.id] || []).forEach(function (h) { var m = addMsg(log, h.role === "user" ? "You" : bot.name, h.content, h.role === "user" ? "gbw-me-msg" : "gbw-bot-msg"); if (h.role !== "user") listenable(m, bot); });
       var form = el("form", "gbw-form");
       var input = el("input"); input.type = "text"; input.maxLength = 600; input.placeholder = "Ask " + bot.name + "…";
@@ -327,7 +363,13 @@
           .catch(function (err) { wait.classList.remove("gbw-wait"); wait.classList.add("gbw-err"); wait.lastChild.textContent = (err && err.message) || "That did not work. Please try again."; if (state.hidden.indexOf(bot.id) < 0) setState(bot.id, "alert"); setTimeout(function () { if (states[bot.id] === "alert" && !alerts[bot.id]) setState(bot.id, "idle"); }, 1800); })
           .then(function () { send.disabled = false; host.classList.remove("gbw-busy"); if (states[bot.id] === "working") setState(bot.id, "idle"); log.scrollTop = log.scrollHeight; });
       });
-      panel.appendChild(head); panel.appendChild(log); panel.appendChild(form);
+      var speak = el("label", "gbw-speak"), sel = el("select");
+      speak.appendChild(el("span", "", "Speak up unasked:"));
+      [["normal", "Normal"], ["quiet", "Quiet"], ["off", "Off"]].forEach(function (o) { var op = el("option", "", o[1]); op.value = o[0]; if (o[0] === nudgeMode) op.selected = true; sel.appendChild(op); });
+      sel.setAttribute("aria-label", "How often the assistants speak up on their own");
+      sel.addEventListener("change", function () { nudgeMode = sel.value; nudgeCall("/api/bots/nudges/settings", "PUT", { mode: sel.value }); });
+      speak.appendChild(sel);
+      panel.appendChild(head); panel.appendChild(log); panel.appendChild(form); panel.appendChild(speak);
       if (!window.matchMedia || !window.matchMedia("(pointer: coarse)").matches) input.focus();
     }
 
@@ -369,7 +411,7 @@
 
   api = { BOTS: BOTS, STORE_KEY: STORE_KEY, clampTop: clampTop, loadState: loadState, saveState: saveState, gesture: gesture, visibleBots: visibleBots, STATES: STATES, mount: mount, setHandler: setHandler, autoMount: autoMount,
     // For other scripts (phase 4 proactive engine): make a bot flash and speak up, or change its animation state.
-    alert: function (id, text) { return api.instance ? api.instance.alert(id, text) : false; },
+    alert: function (id, text, opts) { return api.instance ? api.instance.alert(id, text, opts) : false; },
     setState: function (id, st) { return api.instance ? api.instance.setState(id, st) : false; } };
   return api;
 });

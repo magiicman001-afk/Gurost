@@ -112,6 +112,7 @@ const TABS = [
   { id: 'payments', label: 'Payments', section: 'revenue' },
   { id: 'bots', label: 'Bot Activity', section: 'bots' },
   { id: 'audit', label: 'Assistant Audit', section: 'security' },
+  { id: 'proactive', label: 'Proactive Log', section: 'bots' },
   { id: 'guide', label: 'Guide', section: null }, // every role: the section is null, so it is always shown
 ];
 
@@ -224,6 +225,7 @@ async function loadTab(tab) {
     else if (tab === 'payments') await renderPayments(el);
     else if (tab === 'bots') await renderBots(el);
     else if (tab === 'audit') await renderAudit(el);
+    else if (tab === 'proactive') await renderProactive(el);
     else if (tab === 'guide') await AdminGuide.renderGuide(el);
   } catch (err) {
     el.innerHTML = `<p class="text-sm text-red-600">${escapeHtml(err.message)}</p>`;
@@ -593,6 +595,30 @@ async function renderBots(el) {
       <thead><tr><th>When</th><th>User</th><th>Action</th><th>Prompt</th></tr></thead>
       <tbody>${list.map((a) => `<tr><td style="white-space:nowrap">${escapeHtml(new Date(a.created_at).toLocaleString())}</td><td>${escapeHtml(String(a.user_id || '').slice(0, 8))}…</td><td>${pill(a.action_type || '-', '#e0f2fe', '#075985')}</td><td style="word-break:break-word">${escapeHtml((a.prompt || '').slice(0, 80))}</td></tr>`).join('')}</tbody>
     </table></div>`;
+}
+
+// Proactive log: what each assistant said without being asked, and what happened to it. Text only, never HTML.
+async function renderProactive(el) {
+  el.textContent = '';
+  const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  let data;
+  try { data = await adminCall('/api/admin/proactive-log'); }
+  catch (e) { el.appendChild(mk('p', 'text-sm text-red-600', (e && e.message) || 'The proactive log could not be loaded.')); return; }
+  const rows = data.rows || [];
+  el.appendChild(mk('p', 'text-xs text-[var(--muted)] mb-3', 'What the assistants said unasked (plain rules, no AI cost). New = waiting, Seen = opened, Dismissed = "Got it". Each line shows the evidence it came from.'));
+  const sum = Object.entries(data.byBot || {}).map(([b, n]) => b + ': ' + n).join('   ') + '    |    ' + Object.entries(data.byStatus || {}).map(([b, n]) => b + ': ' + n).join('   ');
+  el.appendChild(mk('p', 'text-sm mb-3', rows.length ? sum : 'Nothing yet: no assistant has spoken up.'));
+  if (!rows.length) return;
+  const wrap = mk('div', 'overflow-x-auto'), table = mk('table'), head = mk('thead'), hr = mk('tr');
+  ['When', 'User', 'Bot', 'Kind', 'Status', 'Said', 'Evidence'].forEach((h) => hr.appendChild(mk('th', null, h)));
+  head.appendChild(hr); table.appendChild(head);
+  const body = mk('tbody');
+  rows.forEach((r) => {
+    const tr = mk('tr');
+    [new Date(r.created_at).toLocaleString(), String(r.user_id || '').slice(0, 8) + '…', r.bot_id, r.kind + (r.severity === 'alert' ? ' (alert)' : ''), r.status, r.text, r.why || '-'].forEach((v) => { const td = mk('td', null, v); td.style.wordBreak = 'break-word'; tr.appendChild(td); });
+    body.appendChild(tr);
+  });
+  table.appendChild(body); wrap.appendChild(table); el.appendChild(wrap);
 }
 
 // Business Assistant audit trail: newest first, with filters. Every value is

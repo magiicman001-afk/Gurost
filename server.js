@@ -1010,6 +1010,11 @@ app.get("/api/admin/projects/saved", requireAdminAuth, adminAccess.needs("projec
   }
 });
 // Every bot action of every build, grouped into builds so the whole escalation chain reads in order. Always on.
+// The proactive log: what each bot said without being asked, to whom (shortened id), and what happened to it.
+app.get("/api/admin/proactive-log", requireAdminAuth, adminAccess.needs("bots"), async (req, res) => {
+  try { res.json(await nudgeEngine.adminLog(100)); }
+  catch (err) { res.status(503).json({ error: "The proactive log is not ready yet: run docs/migrations/2026-10-15_bot_nudges.sql in Supabase." }); }
+});
 app.get("/api/admin/build-logs", requireAdminAuth, adminAccess.needs("builds"), validateInput({ query: { projectId: { type: "string", max: 64, pattern: /^[A-Za-z0-9_-]+$/ }, userId: { type: "string", max: 64, pattern: /^[A-Za-z0-9_-]+$/ }, bot: { type: "string", max: 20, pattern: /^[a-z]+$/ }, result: { type: "enum", values: ["success", "fail", "escalate"] }, limit: { type: "int", min: 1, max: 1000 } } }), async (req, res) => {
   try {
     const rows = await buildLog.queryLogs(supabase, { projectId: req.query.projectId, userId: req.query.userId, bot: req.query.bot, result: req.query.result, limit: Number(req.query.limit) || 600, newestFirst: true });
@@ -2743,6 +2748,42 @@ app.post("/api/bots/:bot/speak", botSpeakLimiter, security.rejectUnknownFields([
     console.error("[bots] speak failed:", err.message);
     res.status(502).json({ error: "I could not speak just now. You can read the answer instead." });
   }
+});
+
+// Proactive nudges (phase 4): bots speak up without being asked. Plain rules, no model, no cost (lib/proactive-engine.js).
+// The widget asks for them about once a minute while a page is open; the person can set normal, quiet or off.
+const nudgeEngine = require("./lib/proactive-engine").createEngine({ db: require("./lib/db").supabase });
+const nudgeLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 150, standardHeaders: true, legacyHeaders: false, keyGenerator: (req) => req.user?.id || req.ip, message: { error: "Please try again a little later." } });
+const NUDGE_ID = /^[A-Za-z0-9_-]{8,64}$/;
+
+app.get("/api/bots/nudges", nudgeLimiter, async (req, res) => {
+  try {
+    const pid = typeof req.query.projectId === "string" ? req.query.projectId : "";
+    const proj = NUDGE_ID.test(pid) ? PROJECTS.get(pid) : null;
+    if (proj && proj.userId === req.user.id) {
+      const db = require("./lib/db").supabase;
+      const logs = await buildLog.queryLogs(db, { projectId: pid, userId: req.user.id, limit: 60, newestFirst: true }).catch(() => []);
+      const pub = await siteStore.byProject(pid).catch(() => undefined);
+      const reviews = (proj.variants || []).filter((v) => v && v.premium && typeof v.premium.score === "number").map((v) => ({ id: v.id, label: v.label || v.id, score: v.premium.score, passed: v.premium.passed, reasons: v.premium.reasons || [] }));
+      await nudgeEngine.scan({ userId: req.user.id, snapshot: {
+        projectId: pid, built: !!(proj.currentHtml || proj.templateSite || (proj.variants || []).length), picked: !!(proj.selectedVariantId || proj.templateSite),
+        published: pub === undefined ? null : !!(pub && pub.status !== "removed"), businessInfo: proj.businessInfo || null, reviews, logs: logs.map((l) => ({ bot: l.bot, result: l.result, decision: l.decision, reason: l.reason, task: l.task, created_at: l.created_at }))
+      } });
+    }
+    res.json({ nudges: await nudgeEngine.pending(req.user.id), mode: await nudgeEngine.getMode(req.user.id) });
+  } catch (err) {
+    console.error("[nudges] list failed:", err.message);
+    res.json({ nudges: [], mode: "normal" });
+  }
+});
+app.put("/api/bots/nudges/settings", nudgeLimiter, security.rejectUnknownFields(["mode"]), async (req, res) => {
+  const out = await nudgeEngine.setMode(req.user.id, req.body.mode);
+  res.status(out.status).json(out.body);
+});
+app.post("/api/bots/nudges/:id/:action(seen|dismissed)", nudgeLimiter, async (req, res) => {
+  if (!NUDGE_ID.test(req.params.id)) return res.status(400).json({ error: "Bad request." });
+  const out = await nudgeEngine.mark(req.user.id, req.params.id, req.params.action);
+  res.status(out.status).json(out.body);
 });
 
 // Video calls with a bot (phase 3). Paid plans only; text chat above stays free. LiveKit carries the room, the
