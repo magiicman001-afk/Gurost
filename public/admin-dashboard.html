@@ -24,6 +24,7 @@
   @media (max-width: 640px) { #tabBar { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; } .tab-btn { white-space: nowrap; flex: none; } main { padding: 16px; } }
   .badge { padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
 </style>
+<link href="shared/bot-widgets.css" rel="stylesheet"/>
 </head>
 <body class="antialiased">
 
@@ -124,6 +125,10 @@ function selectTab(id) {
 }
 
 async function showDashboard(name) {
+  // The assistant team appears only after the admin has signed in, never on the login screen.
+  if (!window.GurostBotWidgets && !document.getElementById('botWidgetsScript')) {
+    const bw = document.createElement('script'); bw.id = 'botWidgetsScript'; bw.src = 'shared/bot-widgets.js'; document.body.appendChild(bw);
+  }
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('dashboardScreen').classList.remove('hidden');
   let me;

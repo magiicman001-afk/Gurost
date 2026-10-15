@@ -1,0 +1,91 @@
+/* GUROST bot widgets (Business Assistant 2.0, phase 1). Strip on the right edge, panel opens to its left
+   (a bottom sheet on phones). z-index sits under the Pulse widget (9999) so the ball is never covered. */
+#gurostBotWidgets {
+  --gbw-top: 120px;
+  position: fixed; top: 0; right: 0; z-index: 9000;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  pointer-events: none;
+}
+#gurostBotWidgets > * { pointer-events: auto; }
+.gbw-strip {
+  position: fixed; top: var(--gbw-top); right: 0;
+  width: 52px; padding: 4px 0 8px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: rgba(15, 18, 28, 0.82);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.10); border-right: 0;
+  border-radius: 16px 0 0 16px;
+  box-shadow: -6px 6px 24px rgba(0, 0, 0, 0.35);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+.gbw-list { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.gbw-collapsed .gbw-list, .gbw-collapsed .gbw-restore { display: none; }
+.gbw-grip {
+  width: 44px; height: 20px; border: 0; background: transparent; cursor: grab; touch-action: none;
+  display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent;
+}
+.gbw-dragging .gbw-grip { cursor: grabbing; }
+.gbw-grip-dots { width: 22px; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.45); }
+.gbw-grip:focus-visible, .gbw-bot:focus-visible, .gbw-restore:focus-visible, .gbw-x:focus-visible, .gbw-send:focus-visible {
+  outline: 2px solid #fff; outline-offset: 2px;
+}
+.gbw-bot {
+  position: relative; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%;
+  background: color-mix(in srgb, var(--gbw-c) 22%, #0f121c);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--gbw-c) 70%, transparent);
+  cursor: pointer; touch-action: pan-y; -webkit-tap-highlight-color: transparent;
+  display: flex; align-items: center; justify-content: center;
+  animation: gbw-breathe 4.2s ease-in-out infinite; animation-delay: var(--gbw-d, 0s);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.gbw-bot img { width: 36px; height: 36px; object-fit: contain; pointer-events: none; }
+.gbw-bot:hover, .gbw-bot.gbw-open { box-shadow: 0 0 0 3px var(--gbw-c), 0 0 14px color-mix(in srgb, var(--gbw-c) 60%, transparent); }
+.gbw-restore {
+  width: 32px; height: 32px; border-radius: 50%; border: 1px dashed rgba(255, 255, 255, 0.5);
+  background: transparent; color: #fff; font-size: 18px; line-height: 1; cursor: pointer;
+}
+.gbw-restore[hidden] { display: none; }
+@keyframes gbw-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+
+.gbw-panel {
+  position: fixed; top: var(--gbw-top); right: 60px;
+  width: min(340px, calc(100vw - 76px)); max-height: min(460px, calc(100vh - var(--gbw-top) - 96px));
+  display: flex; flex-direction: column;
+  background: #12151f; color: #eef0f6; border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--gbw-c) 55%, transparent);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5); overflow: hidden;
+}
+.gbw-panel[hidden] { display: none; }
+.gbw-head { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: color-mix(in srgb, var(--gbw-c) 20%, #12151f); }
+.gbw-head img { width: 40px; height: 40px; object-fit: contain; flex-shrink: 0; }
+.gbw-title { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.gbw-title strong { font-size: 14px; }
+.gbw-title span { font-size: 11.5px; opacity: 0.75; }
+.gbw-x { border: 0; background: transparent; color: #fff; font-size: 24px; line-height: 1; width: 36px; height: 36px; cursor: pointer; border-radius: 8px; }
+.gbw-log { flex: 1; overflow-y: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; min-height: 80px; }
+.gbw-msg { max-width: 92%; font-size: 13px; line-height: 1.4; padding: 7px 10px; border-radius: 12px; overflow-wrap: anywhere; }
+.gbw-msg p { margin: 2px 0 0; white-space: pre-wrap; }
+.gbw-who { font-size: 10.5px; font-weight: 600; opacity: 0.7; }
+.gbw-bot-msg { background: color-mix(in srgb, var(--gbw-c) 18%, #1b1f2d); align-self: flex-start; }
+.gbw-me-msg { background: #2a3045; align-self: flex-end; }
+.gbw-err { background: #4a1d22; }
+.gbw-wait p { opacity: 0.7; }
+.gbw-form { display: flex; gap: 6px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid rgba(255, 255, 255, 0.08); }
+.gbw-form input {
+  flex: 1; min-width: 0; font-size: 16px; /* 16px stops iPhone zoom on focus */
+  background: #1b1f2d; color: #fff; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 10px; padding: 8px 10px;
+}
+.gbw-send { border: 0; border-radius: 10px; padding: 0 14px; font-weight: 600; background: var(--gbw-c); color: #0b0d14; cursor: pointer; min-height: 40px; }
+.gbw-send:disabled { opacity: 0.5; cursor: default; }
+
+@media (max-width: 520px) {
+  .gbw-panel {
+    top: auto; right: 0; left: 0; bottom: 0; width: auto; max-height: 62vh;
+    border-radius: 16px 16px 0 0; padding-bottom: 0;
+  }
+  /* keep the Pulse ball (bottom-right) free while a sheet is up: the sheet sits above it */
+  #gurostBotWidgets { z-index: 10001; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gbw-bot { animation: none; transition: none; }
+}
