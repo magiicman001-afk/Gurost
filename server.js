@@ -5090,6 +5090,7 @@ app.post("/api/project/:id/save", async (req, res) => {
     await projectState.persistProjectState(req.params.id, req.user.id, project);
     res.json({ saved: true, savedAt: new Date().toISOString() });
   } catch (err) {
+    if (err.code === "persist-failed") return res.status(503).json({ saved: false, error: "Your project could not be saved right now, so it is only on this screen. Please try Save again in a moment." });
     res.status(500).json({ error: err.message });
   }
 });

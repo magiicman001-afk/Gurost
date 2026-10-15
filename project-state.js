@@ -140,7 +140,11 @@ function fromRow(row) {
  */
 async function persistProjectState(projectId, userId, project) {
   const { error } = await supabase.from("project_state").upsert(toRow(projectId, userId, project));
-  if (error) console.warn("[project-state] Failed to persist:", error.message);
+  if (error) {
+    console.warn("[project-state] Failed to persist:", error.message);
+    // Say so. Background saves catch this and carry on; the Save button must not report "saved" for a write that failed.
+    throw Object.assign(new Error(`The project could not be written to the database (${error.message}).`), { code: "persist-failed" });
+  }
 }
 
 /**
